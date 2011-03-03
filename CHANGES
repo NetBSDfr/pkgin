@@ -1,0 +1,167 @@
+20110301
+	pkgin can now upgrade pkg_install with user's approval
+
+20110228
+	url_stat's size is declared as off_t, will be > SSIZE_MAX on
+	32 bits systems. Added a fix for this.
+
+20110227
+	Added -P, print package version instead of globs in sd, srd, sfd
+	Added warning for repositories with 0-lenght FILE_SIZE
+	Added -V (verbosity) flag
+	Moved integer flags to uint8_t
+
+20110221
+	Wiped out file.c, ftpio.c, path.c, str.c, pexec.c, pkg_io.c,
+	pen.c, strsep.c, lpkg.c, iterate.c
+	Inform about logging
+
+20110207
+	Replaced naive repository arch check by MACHINE_ARCH check
+
+20110206
+	Bump to SQLite 3.7.5
+
+20110205
+	Added statvfs64 support
+	Redirect stderr to logfile while pkg_{add,delete}
+
+20110204
+	Feature request: -F / force-reinstall
+	Feature request: PR 43049
+
+20110130
+	Merged 0.4.0 to HEAD
+	MINIX patches from Gautam are now upstream
+	Re-added download-only
+	Makefile.in / configure.ac cleanup
+	Integrated some of bapt's patches
+	- chroot
+	- bandwidth calculation
+
+20110122
+	pkgin 0.4.0
+	SQLite "Amalgamation" version is now part of the tree,
+	No more databases/sqlite3 dependency needed
+
+20110120
+	pkgin 0.3.3.4, never say "this is the last release"
+	Fixed a non-critical bug: some packages were marked
+	for upgrade more than once.
+
+20110119
+	pkgin 0.3.3.3, hopefully the last 0.3 release
+	Double dewey match fixed, i.e. foo>=1.2.3<3.0
+	Duplicate entries for remove and upgrade fixed
+	"Missing package in repository" case handled
+
+20100123:
+	Many cleanups from stacktic
+	- Replaced strstr's with str{n}cmp when possible
+	- #ifdef'ed PROVIDES
+	- Queries are now const chars
+
+20100102:
+	Solaris 10 support
+	Mac OS X support
+	Many cleanups from stacktic
+
+20100101:
+	Many fixes by stacktic :
+	- Added -n (no-flag)
+	- Various memleaks fixed
+	- pkgname comparison fix
+	- Cleaned up trailing spaces
+	- Got rid of recursion !
+
+20091206:
+	Added -l status flags
+
+20091203:
+	autoconf support
+	percentage redraw fix (jmcneill)
+	variables cleanups (PKG_SYSCONFDIR, VARBASE) (sketch)
+	auto-lookup for SUMEXTS, removed options.mk (sketch)
+	opensolaris fixes (sketch)
+	repositories.conf variables substitution (tuxillo)
+	impact mutex (Johannes Hofmann)
+	SunOS 5.8 support (Mikhail T.)
+
+20090608:
+	pkgin-20090608 imported to pkgsrc as pkgin-0.2.5
+
+20090605:
+	Added the long awaited repositories file
+	${PREFIX}/etc/pkgin/repositories.conf
+
+20090527:
+	Glue between keep-state and pkgdb "automatic" flag.
+
+20090526:
+	pkgin now handles removal of packages when an upgrade would
+	break dependencies, i.e. upgrading php from version 4 to 5
+	will break php4-modules dependencies. Modules will be removed
+	before php-4 is upgraded.
+
+20090516:
+	Database modification. See the MIGRATION file for details on
+	how to safely rebuild your database.
+
+	mtime check over pkg_summary files on repositories, don't
+	update pkgin database if mtime have not changed.
+
+20090515:
+	Database modification, see 20090507 to rebuild it
+
+	pkgin now records local pkgdb mtime so it does not rebuild
+	its database when pkgdb is not updated
+
+20090509:
+	Parameters have changed.
+	Instead of getopt()-style flags, pkgin is now using commands.
+
+	i.e.:
+
+	# pkgin install foo
+	# pkgin remove foo
+
+	Only -y and -h have been kept.
+
+20090508:
+	pkg_dry name change !
+
+	pkg_dry is now known as pkgin
+
+20090508:
+	Added -c flag, clean cache: delete all downloaded packages from
+	/var/db/pkg_dry/cache
+
+20090507:
+	A database rebuild is needed, along with a regeneration of
+	the ddb_create.h header in order to support multi-repository.
+
+	Record your keepables packages :
+
+	$ pkg_dry -p|cut -d' ' -f1 > pkg_dry.keep
+
+	Remove the database
+
+	# rm -f /var/db/pkg_dry/pkg_dry.db
+
+	Set the PKG_REPOS variable to your repository(ies) :
+
+	# PKG_REPOS=ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All
+	# export PKG_REPOS
+
+	Rebuild pkg_dry
+
+	$ rm -f ddb_create.h
+	$ make
+
+	Regenerate the database
+
+	# pkg_dry -u
+
+	Mark your keepables packages
+
+	# for pkg in `cat pkg_dry.keep`; do pkg_dry -k $pkg; done

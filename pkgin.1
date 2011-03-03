@@ -1,0 +1,236 @@
+.\" $NetBSD: pkgin.1,v 1.0 2009/04/24 18:49:08 guigui2 Exp $
+.\"
+.\" View with following command: nroff -msafer -man pkgin.1 | more
+.\"
+.Dd Dec 6, 2009
+.Dt PKGIN 1
+.Os
+.Sh NAME
+.Nm pkgin
+.Nd A tool to manage pkgsrc binary packages.
+.Sh SYNOPSIS
+.Nm
+.Op Fl dfFhPvVyn
+.Op Fl l Ar limit_chars
+.Op Fl c Ar chroot_path
+.Ar command
+.Op Ar package Ar ...
+.Sh DESCRIPTION
+The
+.Nm
+command is aimed at being an apt /
+yum like tool for managing pkgsrc binary packages.
+It relies on
+.Xr pkg_summary 5
+for installation, removal and upgrade
+of packages and associated dependencies, using a remote repository.
+.Sh OPTIONS
+The following command line arguments are supported:
+.Bl -tag -width indent
+.It Fl d
+Download only.
+.It Fl f
+Force database update.
+.It Fl F
+Force package reinstall.
+.It Fl h
+Displays help for the command.
+.It Fl P
+Displays packages versions instead of globs (sd, sfd, srd)
+.It Fl v
+Displays
+.Nm
+version
+.It Fl V
+Be verbose when (un)installing
+.It Fl y
+Assumes "yes" as default answer, except for autoremove.
+.It Fl n
+Assumes "no" as default answer.
+.It Fl l Ar limit_chars
+Only include the packages with the specified status flags.
+.It Fl c Ar chroot_path
+Enable chrooting pkgin in the given repository
+.El
+.Pp
+The
+.Nm
+utility provides several commands:
+.Pp
+.Bl -tag -width Fl -compact
+.It Cm autoremove
+Automatically removes orphan dependencies.
+.It Cm avail
+Lists all packages available in the repository.
+.It Cm clean
+Delete downloaded packages from the cache directory.
+.Ar package . 
+.It Cm full-upgrade
+Upgrade all packages to their newer versions present in the
+repository.
+.It Cm install Ar package Ar ...
+Performs installation or upgrade of
+.Ar package .
+If more than one packages are specified on the command-line, all
+will be installed (or upgraded).
+.It Cm keep Ar package Ar ...
+Marks
+.Ar package
+as "non auto-removable".
+This means that a package that has, for instance, been compiled
+manually from pkgsrc, can't be removed through a
+.Nm
+upgrade.
+More than one package can be specified on the command-line, to mark
+several packages as non-removable in a single command.
+.It Cm list
+Lists all packages installed locally on a system. If the
+.Ar l
+modifier is added to this command, show only packages matching the status flag.
+.It Cm remove Ar package Ar ...
+Removes
+.Ar package
+as well as all packages depending on it.
+When more than one package are specified, they will all be uninstalled.
+By default, it will prompt you to confirm before package removals.
+.It Cm search Ar pattern
+Performs a regular expression search for a pattern in the repository.
+.It Cm show-deps 
+Displays all direct dependencies for
+.It Cm show-full-deps Ar package
+Displays all direct dependencies recursively for
+.Ar package .
+.It Cm show-keep
+Display "non auto-removable" packages.
+.It Cm show-rev-deps Ar package 
+Displays all reverse direct dependencies for 
+.Ar package .
+If more than one package is specified,
+.Nm
+will show recursively reverse direct dependencies for all packages
+on the command-line.
+.It Cm unkeep Ar package Ar ...
+Marks
+.Ar package
+as "auto-removable".
+If no other package depends on it, it will be removed when using
+the autoremove modifier.
+.It Cm update
+Creates and populates the initial database.
+Must be run after the variable
+.It Cm upgrade
+Upgrade keepable packages to their newer versions present in the
+repository.
+If the installed dependencies match the listed needed dependencies,
+don't upgrade them.
+.El
+.Sh STATUS FLAGS
+.Pp
+When using the
+.Ar l
+flag along with the
+.Ar list
+command, the following status flag must be set:
+.Bl -tag -width indent
+.It Li =
+The installed version of the package is current.
+.It Li \&<
+The installed version of the package is older than the current version.
+.It Li \&>
+The installed version of the package is newer than the current version.
+.Sh ENVIRONMENT
+.Bl -tag -width indent
+.It Ev PKG_REPOS
+The 
+.Ev PKG_REPOS
+environment variable can be pointed to a suitable repository or a list of
+space separated repositories in order to override
+.Pa  /usr/pkg/etc/pkgin/repositories.conf
+.Sh FILES
+.Bl -tag -width Ds -compact
+.It /usr/pkg/etc/pkgin/repositories.conf
+This file contains a list of repositories that
+.Nm
+will use.
+.El
+.Sh EXAMPLES
+.Pp
+Setup the initial database:
+.Bd -literal
+# echo ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All > /usr/pkg/etc/pkgin/repositories.conf
+# pkgin update
+processing local summary...
+updating database: 100%
+downloading pkg_summary.bz2: 100%
+processing remote summary (ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All)...
+updating database: 100%
+.Ed
+.Pp
+Listing all packages available in the repository: 
+.Bd -literal
+# pkgin avail | more
+[...]
+autoconf-2.63        Generates automatic source code configuration scripts
+aumix-gtk-2.8nb3     Set mix levels (ncurses and GTK+ 2.0 interfaces)
+aumix-2.8nb7         Set mix levels (ncurses interface only)
+august-0.63b         Simple Tk-based HTML editor
+audacity-1.2.6nb3    Audio editor
+[...]
+.Ed
+.Pp
+Install packages and their dependencies:
+.Bd -literal
+# pkgin install links eterm
+nothing to upgrade.
+11 packages to be installed: tiff-3.8.2nb4 png-1.2.35 libungif-4.1.4nb1 libltdl-1.5.26 jpeg-6bnb4 pcre-7.8 perl-5.10.0nb5 libast-0.6.1nb3 imlib2-1.4.2nb1 links-2.2nb1 eterm-0.9.4nb1 (25M to download, 64M to install)
+proceed ? [y/N]
+.Ed
+.Pp
+Remove packages and their reverse dependencies:
+.Bd -literal
+# pkgin remove links eterm
+2 packages to delete: links-2.2nb1 eterm-0.9.4nb1
+proceed ? [y/N]
+.Ed
+.Pp
+Remove orphan dependencies:
+.Bd -literal
+# pkgin autoremove
+in order to remove packages from the autoremove list, flag those with the -k modifier.
+9 packages to be autoremoved: libast-0.6.1nb3 pcre-7.8 imlib2-1.4.2nb1 tiff-3.8.2nb4 png-1.2.35 libungif-4.1.4nb1 libltdl-1.5.26 perl-5.10.0nb5 jpeg-6bnb4
+proceed ? [y/N]
+.Ed
+.Pp
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_info 1 ,
+.Xr pkg_summary 5 ,
+.Xr pkgsrc 7
+.Sh AUTHORS
+.Bl -tag -width indent -compact
+.It Emile Do "iMil" Dc Heitor
+Initial work and ongoing development.
+.El
+.Sh CONTRIBUTORS
+.Bl -tag -width indent -compact
+.It Jeremy C. Reed
+Testing and refinements.
+.It Arnaud Ysmal
+Tests and patches
+.It Claude Charpentier
+SQLite schema, and SQL queries debugging.
+.It Guillaume Lasmayous
+Man page
+.It Antonio Huete Jimenez
+DragonFly port
+.It Min Sik Kim
+Darwin port
+.It Filip Hajny
+SunOS port
+.It Baptiste Daroussin
+FreeBSD port and patches
+.It Gautam B.T.
+MINIX port
+.El
+.Sh BUGS
+Probably many to be found.

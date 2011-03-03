@@ -1,0 +1,11 @@
+Emile "iMil" Heitor <imil@gcu.info> - main developer
+Claude "zatmania" Charpentier <zatmania@gotofreedom.org> - SQL
+Guillaume "GuiGui2" Lasmayous <guigui2@guigui2.net> - tests and manpage
+Jeremy C. Reed <reed@reedmedia.net> - intensive tests and feedbacks
+Arnaud "stacktic" Ysmal <stacktic@NetBSD.org> - intensive tests + patches
+Antonio Huete "tuxillo" Jimenez <ahuete.devel@gmail.com> - DragonFly port
+Min Sik Kim <minskim@bawi.org> - Darwin port
+Filip Hajny <filip@joyent.com> - SunOS port
+Johannes Hofmann <Johannes.Hofmann@gmx.de> - bugfix
+Baptiste Daroussin <baptiste.daroussin@gmail.com> - FreeBSD port + patches
+Gautam B.T. <gautam.bt@gmail.com> - MINIX port

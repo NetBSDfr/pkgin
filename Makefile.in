@@ -1,0 +1,116 @@
+# $Id: Makefile.in,v 1.1 2011/03/03 14:43:09 imilh Exp $
+
+PROG=		pkgin
+VERSION=	@PACKAGE_VERSION@
+SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
+		pkglist.c download.c order.c impact.c autoremove.c fsops.c \
+		pkgindb_queries.c
+# included from libinstall
+SRCS+=		automatic.c decompress.c dewey.c fexec.c global.c \
+		opattern.c pkgdb.c var.c
+
+SRCS+=		@SRCS@
+
+DPSRCS=	pkgindb_create.h
+
+CC=		@CC@
+
+OPSYS!=		uname
+OS_VER!=	uname -r
+OS_ARCH!=	uname -p
+
+# satisfy mk.conf
+BSD_PKG_MK=	1
+.for MK_CONF in "/etc/mk.conf @prefix@/etc/mk.conf /etc/pkgsrc.conf"
+.	if exists(${MK_CONF})
+.		include "${MK_CONF}"
+.	endif
+.endfor
+
+.if ${OPSYS} == "Minix"
+PKGTOOLS?=	${PKG_TOOLS_BIN}
+CPPFLAGS+=	-D_POSIX_SOURCE -D_MINIX
+LDADD+=		-lsqlite3
+.else
+SRCS+=		sqlite3.c
+.endif
+
+LOCALBASE?=		@prefix@
+PKG_SYSCONFDIR?=	${LOCALBASE}/etc
+VARBASE?=		/var
+PKG_DBDIR?=		${VARBASE}/db/pkg
+
+PKGIN_VERSION=	"${VERSION} for ${OPSYS}-${OS_VER} ${OS_ARCH}"
+
+CPPFLAGS+=	-DPKGIN_VERSION=\"${PKGIN_VERSION}\"
+
+MKMAN=		no
+
+.include <bsd.own.mk>
+
+.PATH:	external sqlite
+
+.if defined(DEBUG)
+CPPFLAGS+=	-DDEBUG
+PKGIN_DB!=	pwd
+.else
+PKGIN_DB=	${VARBASE}/db/pkgin
+.endif
+
+.if ${OPSYS} == "NetBSD"
+WARNS=	2
+PKGTOOLS?=	/usr/sbin
+CPPFLAGS+=	-DNETBSD
+.else
+PKGTOOLS?=	${LOCALBASE}/sbin
+.endif
+
+CPPFLAGS+=	@CPPFLAGS@
+CPPFLAGS+=	-g
+
+CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
+		-DPKG_SYSCONFDIR=\"${PKG_SYSCONFDIR}\"		\
+		-DPKG_DBDIR="\"${PKG_DBDIR}\""			\
+		-DDEF_LOG_DIR="\"${PKG_DBDIR}\""		\
+		-DPKGIN_DB=\"${PKGIN_DB}\"			\
+		-DPKGTOOLS=\"${PKGTOOLS}\"
+
+CPPFLAGS+=	-DHAVE_CONFIG_H
+CPPFLAGS+=	-D_FILE_OFFSET_BITS=64
+CPPFLAGS+=	-D_LARGEFILE_SOURCE -D_LARGE_FILES
+CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${MACHINE_ARCH}\"
+CPPFLAGS+=	-Iexternal -I. -Isqlite -I${LOCALBASE}/include
+
+LDADD+=		-L${LOCALBASE}/lib @RPATH@,${LOCALBASE}/lib	\
+		-lbz2 -lz -larchive @LIBS@
+
+pkgindb_create.h:
+	@SEDCMD=@SED@ ./mkpkgindb.sh > pkgindb_create.h
+
+# maintainer helpers
+
+PKGINCVS=":pserver:anoncvs@cvs.gcu.info:/cvs"
+CURDATE!=date +%Y%m%d
+WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
+CURDIR!=pwd
+
+dist:
+	mkdir -p export
+	cd export && rm -rf pkgin* && cvs -d ${PKGINCVS} co pkgin &&     \
+	tar zcvf pkgin-${CURDATE}.tar.gz pkgin
+
+publish:
+	scp export/pkgin-*.tar.gz korriban:www/public/NetBSD/
+
+bump:
+	rm -f ${WIPHOME}/pkgin/distinfo ${WIPHOME}/../distfiles/pkgin-*
+	perl -pi -e "s/pkgin-[0-9]+/pkgin-${CURDATE}/"  \
+		${WIPHOME}/pkgin/Makefile
+	cd ${WIPHOME}/pkgin && make makesum
+
+shar:
+	cd ${WIPHOME}/pkgin && shar `find . -print -maxdepth 1|grep -v CVS` >	\
+		${CURDIR}/export/pkgin-pkgsrc-wip.shar
+	scp export/pkgin-*.shar korriban:www/public/NetBSD/
+
+.include <bsd.prog.mk>
