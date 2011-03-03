@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.1 2011/03/03 14:43:09 imilh Exp $
+# $Id: Makefile.in,v 1.1.1.1 2011/03/03 14:43:09 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@

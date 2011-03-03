@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.1 2011/03/03 14:43:13 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.1.1.1 2011/03/03 14:43:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.

@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.1 2011/03/03 14:43:09 imilh Exp $ */
+/* $Id: cmd.h,v 1.1.1.1 2011/03/03 14:43:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
