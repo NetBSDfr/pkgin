@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.1 2011/03/03 14:43:09 imilh Exp $
+# $Id: Makefile.in,v 1.2 2011/03/05 23:28:36 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -89,7 +89,7 @@ pkgindb_create.h:
 
 # maintainer helpers
 
-PKGINCVS=":pserver:anoncvs@cvs.gcu.info:/cvs"
+PKGINCVS="imilh@pkgin.cvs.sourceforge.net:/cvsroot/pkgin"
 CURDATE!=date +%Y%m%d
 WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
 CURDIR!=pwd
@@ -100,7 +100,7 @@ dist:
 	tar zcvf pkgin-${CURDATE}.tar.gz pkgin
 
 publish:
-	scp export/pkgin-*.tar.gz korriban:www/public/NetBSD/
+	scp export/pkgin-*.tar.gz imilh,pkgin@frs.sourceforge.net:/home/frs/project/p/pk/pkgin
 
 bump:
 	rm -f ${WIPHOME}/pkgin/distinfo ${WIPHOME}/../distfiles/pkgin-*
