@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.2 2011/03/05 23:28:36 imilh Exp $
+# $Id: Makefile.in,v 1.3 2011/03/05 23:42:00 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -89,7 +89,7 @@ pkgindb_create.h:
 
 # maintainer helpers
 
-PKGINCVS="imilh@pkgin.cvs.sourceforge.net:/cvsroot/pkgin"
+PKGINCVS=":pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin"
 CURDATE!=date +%Y%m%d
 WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
 CURDIR!=pwd
