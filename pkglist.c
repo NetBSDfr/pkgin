@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.1 2011/03/03 14:43:13 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2 2011/04/03 16:17:08 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -209,8 +209,10 @@ search_pkg(const char *pattern)
 	regex_t		re;
 	int			rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
+	int		matched_pkgs;
 
 	localplisthead = rec_pkglist(LOCAL_PKGS_QUERY);
+	matched_pkgs = 0;
 
 	if ((plisthead = rec_pkglist(REMOTE_PKGS_QUERY)) != NULL) {
 		if ((rc = regcomp(&re, pattern, REG_EXTENDED|REG_NOSUB|REG_ICASE))
@@ -224,6 +226,8 @@ search_pkg(const char *pattern)
 
 			if (regexec(&re, plist->pkgname, 0, NULL, 0) == 0 ||
 				regexec(&re, plist->comment, 0, NULL, 0) == 0) {
+
+				matched_pkgs = 1;
 
 				if (localplisthead != NULL) {
 					rc = pkg_is_installed(localplisthead, plist->pkgname);
@@ -250,7 +254,10 @@ search_pkg(const char *pattern)
 
 		regfree(&re);
 
-		printf(MSG_IS_INSTALLED_CODE);
+		if (matched_pkgs == 1)
+			printf(MSG_IS_INSTALLED_CODE);
+		else
+			printf(MSG_NO_SEARCH_RESULTS, pattern);
 	}
 }
 

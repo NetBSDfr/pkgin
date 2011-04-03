@@ -9,3 +9,4 @@ Filip Hajny <filip@joyent.com> - SunOS port
 Johannes Hofmann <Johannes.Hofmann@gmx.de> - bugfix
 Baptiste Daroussin <baptiste.daroussin@gmail.com> - FreeBSD port + patches
 Gautam B.T. <gautam.bt@gmail.com> - MINIX port
+Thomas Adam <thomas@xteddy.org> - patches
