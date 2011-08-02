@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.1 2011/03/03 14:43:13 imilh Exp $ */
+/* $Id: summary.c,v 1.2 2011/08/02 20:33:08 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -97,6 +97,7 @@ fetch_summary(char *cur_repo)
 {
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile	*file = NULL;
+	fetchIO	*f = NULL;
 	char	*decompressed_input;
 	size_t	decompressed_len;
 	time_t	sum_mtime;
@@ -111,7 +112,7 @@ fetch_summary(char *cur_repo)
 
 		snprintf(buf, BUFSIZ, "%s/%s.%s", cur_repo, PKG_SUMMARY, sumexts[i]);
 
-		if ((file = download_file(buf, &sum_mtime)) != NULL)
+		if ((file = download_file(f, buf, &sum_mtime)) != NULL)
 			break; /* pkg_summary found and not up-to-date */
 
 		if (sum_mtime < 0) /* pkg_summary found, but up-to-date */

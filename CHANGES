@@ -1,3 +1,6 @@
+20110802
+	Fixed the "too many connexions" problem with libfetch and FTP
+
 20110306
 	Release 0.4.2
 	Moving to SF.net

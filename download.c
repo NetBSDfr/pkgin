@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.2 2011/03/08 21:10:55 imilh Exp $ */
+/* $Id: download.c,v 1.3 2011/08/02 20:33:08 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -33,7 +33,7 @@
 #include "pkgin.h"
 
 Dlfile *
-download_file(char *url, time_t *db_mtime)
+download_file(fetchIO *f, char *url, time_t *db_mtime)
 {
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile			*file;
@@ -43,7 +43,6 @@ download_file(char *url, time_t *db_mtime)
 	ssize_t			cur_fetched;
 	time_t			begin_dl, now;
 	struct url_stat	st;
-	fetchIO			*f = NULL;
 	int				retry = 3;
 
 	if ((fetchStatURL(url, &st, "") < 0) || st.size == -1) {
