@@ -1,4 +1,5 @@
 20110802
+	Release 0.4.2.1
 	Fixed the "too many connexions" problem with libfetch and FTP
 
 20110306
