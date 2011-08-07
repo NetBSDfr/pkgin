@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.3 2011/08/02 20:33:08 imilh Exp $ */
+/* $Id: download.c,v 1.4 2011/08/07 16:28:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -31,6 +31,9 @@
  */
 
 #include "pkgin.h"
+
+/* Nasty workaround for buggy libfetch */
+int fetchTimeout = 2;
 
 Dlfile *
 download_file(fetchIO *f, char *url, time_t *db_mtime)
@@ -124,7 +127,6 @@ download_file(fetchIO *f, char *url, time_t *db_mtime)
 		fflush(stdout);
 	}
 
-	fetchIO_close(f);
 
 	file->buf[buf_len] = '\0';
 	file->size = buf_len;
@@ -133,6 +135,8 @@ download_file(fetchIO *f, char *url, time_t *db_mtime)
 		errx(EXIT_FAILURE, "empty download, exiting.\n");
 
 	printf("\n");
+
+	fetchIO_close(f);
 
 	return file;
 }

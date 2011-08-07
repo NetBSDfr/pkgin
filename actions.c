@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.2 2011/08/02 20:33:08 imilh Exp $ */
+/* $Id: actions.c,v 1.3 2011/08/07 16:28:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -120,6 +120,7 @@ pkg_download(Deptreehead *installhead)
 
 		XFREE(dlpkg->buf);
 		XFREE(dlpkg);
+
 	} /* download loop */
 }
 
