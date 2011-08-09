@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.5 2011/08/09 11:38:34 imilh Exp $ */
+/* $Id: download.c,v 1.6 2011/08/09 11:45:22 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -31,6 +31,8 @@
  */
 
 #include "pkgin.h"
+
+int fetchTimeout = 15; /* wait 15 seconds before timeout */
 
 Dlfile *
 download_file(char *str_url, time_t *db_mtime)
