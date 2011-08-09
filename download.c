@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.6 2011/08/09 11:45:22 imilh Exp $ */
+/* $Id: download.c,v 1.7 2011/08/09 21:13:16 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -34,12 +34,12 @@
 
 int fetchTimeout = 15; /* wait 15 seconds before timeout */
 
+/* if db_mtime == NULL, we're downloading a package, pkg_summary otherwise */
 Dlfile *
 download_file(char *str_url, time_t *db_mtime)
 {
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile			*file;
-	static int	  	retry = 1;
 	char			*p;
 	char			sz[8];
 	size_t			buf_len, buf_fetched;
@@ -51,18 +51,11 @@ download_file(char *str_url, time_t *db_mtime)
 
 	url = fetchParseURL(str_url);
 
-	f = fetchXGet(url, &st, "");
-	if (f == NULL) {
-		if (retry == 0)
-			errx(EXIT_FAILURE, "could not fetch url: %s: %s",
-				str_url, fetchLastErrString);
-		retry--;
-
+	if ((f = fetchXGet(url, &st, "")) == NULL)
 		return NULL;
-	}
 
 	if (st.size == -1) {
-		if (db_mtime != NULL)
+		if (db_mtime != NULL) /* we're downloading pkg_summary */
 			*db_mtime = 0;
 
 		return NULL;
