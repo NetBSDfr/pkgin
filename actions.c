@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.3 2011/08/07 16:28:14 imilh Exp $ */
+/* $Id: actions.c,v 1.4 2011/08/09 11:38:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -67,7 +67,6 @@ static void
 pkg_download(Deptreehead *installhead)
 {
 	FILE		*fp;
-	fetchIO		*f = NULL;
 	Pkgdeptree	*pinstall;
 	struct stat	st;
 	Dlfile		*dlpkg;
@@ -105,7 +104,7 @@ pkg_download(Deptreehead *installhead)
 		strlcat(pkg, pinstall->depname, sizeof(pkg));
 		strlcat(pkg, PKG_EXT, sizeof(pkg));
 
-		if ((dlpkg = download_file(f, pkg, NULL)) == NULL) {
+		if ((dlpkg = download_file(pkg, NULL)) == NULL) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depname);
 			if (!check_yesno())
 				errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL,
@@ -122,6 +121,7 @@ pkg_download(Deptreehead *installhead)
 		XFREE(dlpkg);
 
 	} /* download loop */
+
 }
 
 /* package removal */

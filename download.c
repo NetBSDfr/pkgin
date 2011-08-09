@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.4 2011/08/07 16:28:14 imilh Exp $ */
+/* $Id: download.c,v 1.5 2011/08/09 11:38:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -32,23 +32,34 @@
 
 #include "pkgin.h"
 
-/* Nasty workaround for buggy libfetch */
-int fetchTimeout = 2;
-
 Dlfile *
-download_file(fetchIO *f, char *url, time_t *db_mtime)
+download_file(char *str_url, time_t *db_mtime)
 {
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile			*file;
+	static int	  	retry = 1;
 	char			*p;
 	char			sz[8];
 	size_t			buf_len, buf_fetched;
 	ssize_t			cur_fetched;
 	time_t			begin_dl, now;
 	struct url_stat	st;
-	int				retry = 3;
+	struct url		*url;
+	fetchIO			*f = NULL;
 
-	if ((fetchStatURL(url, &st, "") < 0) || st.size == -1) {
+	url = fetchParseURL(str_url);
+
+	f = fetchXGet(url, &st, "");
+	if (f == NULL) {
+		if (retry == 0)
+			errx(EXIT_FAILURE, "could not fetch url: %s: %s",
+				str_url, fetchLastErrString);
+		retry--;
+
+		return NULL;
+	}
+
+	if (st.size == -1) {
 		if (db_mtime != NULL)
 			*db_mtime = 0;
 
@@ -60,31 +71,19 @@ download_file(fetchIO *f, char *url, time_t *db_mtime)
 			/* local db is up-to-date */
 			*db_mtime = -1; /* used to identify return type */
 
+			fetchIO_close(f);
+
 			return NULL;
 		}
 
 		*db_mtime = st.mtime;
 	}
 
-	while (f == NULL) {
-		f = fetchXGetURL(url, &st, "");
-		if (f == NULL) {
-			fprintf(stderr, "%s: fetch failure (%s)%s\n",
-				getprogname(), fetchLastErrString,
-				retry == 1 ? "" : ", retrying");
-			sleep(1);
-			--retry;
-		}
-		if (retry == 0)
-			errx(EXIT_FAILURE, "could not fetch url: %s: %s",
-				url, fetchLastErrString);
-	}
 
-
-	if ((p = strrchr(url, '/')) != NULL)
+	if ((p = strrchr(str_url, '/')) != NULL)
 		p++;
 	else
-		p = (char *)url; /* should not happen */
+		p = (char *)str_url; /* should not happen */
 
 #ifndef _MINIX /* XXX: SSIZE_MAX fails under MINIX */
 	/* st.size is an off_t, it will be > SSIZE_MAX on 32 bits systems */

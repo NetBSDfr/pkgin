@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.2 2011/08/02 20:33:08 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3 2011/08/09 11:38:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -154,7 +154,7 @@ extern char  		lslimit;
 extern char			pkgtools_flags[];
 
 /* download.c*/
-Dlfile		*download_file(fetchIO *, char *, time_t *);
+Dlfile		*download_file(char *, time_t *);
 /* summary.c */
 void		update_db(int, char **);
 /* depends.c */
