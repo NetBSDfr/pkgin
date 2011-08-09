@@ -1,3 +1,8 @@
+20110809
+	Release 0.4.2.2
+	Cleaned up download.c
+	SQLite upgraded to 3.7.7.1
+
 20110802
 	Release 0.4.2.1
 	Fixed the "too many connexions" problem with libfetch and FTP
