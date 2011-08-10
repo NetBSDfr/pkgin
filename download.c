@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.8 2011/08/09 21:58:27 imilh Exp $ */
+/* $Id: download.c,v 1.9 2011/08/10 12:53:58 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -31,6 +31,7 @@
  */
 
 #include "pkgin.h"
+#include "progressmeter.h"
 
 int fetchTimeout = 15; /* wait 15 seconds before timeout */
 
@@ -41,9 +42,10 @@ download_file(char *str_url, time_t *db_mtime)
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile			*file;
 	char			*p;
-	char			sz[8];
+//	char			sz[8];
 	size_t			buf_len, buf_fetched;
 	ssize_t			cur_fetched;
+	off_t			statsize;
 	time_t			begin_dl, now;
 	struct url_stat	st;
 	struct url		*url;
@@ -96,6 +98,9 @@ download_file(char *str_url, time_t *db_mtime)
 	buf_fetched = 0;
 	begin_dl = time(NULL);
 
+	statsize = 0;
+	start_progress_meter(p, buf_len, &statsize);
+
 	while (buf_fetched < buf_len) {
 		cur_fetched = fetchIO_read(f, file->buf + buf_fetched,
 			buf_len - buf_fetched);
@@ -106,21 +111,11 @@ download_file(char *str_url, time_t *db_mtime)
 				fetchLastErrString);
 
 		buf_fetched += cur_fetched;
+		statsize += cur_fetched;
 		now = time(NULL);
-
-		if ((now - begin_dl) > 0)
-			humanize_number(sz, 8, (int64_t)(buf_fetched / (now - begin_dl)),
-				"bps", HN_AUTOSCALE, HN_B | HN_DECIMAL | HN_NOSPACE);
-		else
-			humanize_number(sz, 8, (int64_t)buf_fetched,
-				"bps", HN_AUTOSCALE, HN_B | HN_DECIMAL | HN_NOSPACE);
-
-		printf(MSG_DOWNLOADING_PCT, p, sz,
-			(int)(((float)buf_fetched / (float)buf_len) * 100));
-
-		fflush(stdout);
 	}
 
+	stop_progress_meter();
 
 	file->buf[buf_len] = '\0';
 	file->size = buf_len;
@@ -128,7 +123,6 @@ download_file(char *str_url, time_t *db_mtime)
 	if (file->buf[0] == '\0')
 		errx(EXIT_FAILURE, "empty download, exiting.\n");
 
-	printf("\n");
 
 	fetchIO_close(f);
 
