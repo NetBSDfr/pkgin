@@ -24,5 +24,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef HAVE_SYS_TERMIOS_H
+#include <sys/termios.h>
+#elif HAVE_TERMIOS_H
+#include <termios.h>
+#endif
+
+
 void	start_progress_meter(char *, off_t, off_t *);
 void	stop_progress_meter(void);

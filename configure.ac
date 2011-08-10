@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.4 2011/08/10 15:20:42 imilh Exp $
+# $Id: configure.ac,v 1.5 2011/08/10 20:59:44 imilh Exp $
 
 AC_PREREQ([2.61])
 AC_INIT([pkgin], [0.4.3], [imil@NetBSD.org])
@@ -64,7 +64,7 @@ AC_SEARCH_LIBS([fetchGetURL], [fetch],,
 )
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h inttypes.h limits.h locale.h netdb.h stdint.h stdlib.h string.h sys/file.h sys/param.h sys/statvfs.h sys/time.h unistd.h sys/queue.h ctype.h stdio.h assert.h err.h stdarg.h sys/wait.h errno.h dirent.h regex.h sys/poll.h sys/signal.h signal.h termcap.h fnmatch.h sys/utsname.h nbcompat.h nbcompat/string.h util.h libutil.h])
+AC_CHECK_HEADERS([fcntl.h inttypes.h limits.h locale.h netdb.h stdint.h stdlib.h string.h sys/file.h sys/param.h sys/statvfs.h sys/time.h unistd.h sys/queue.h ctype.h stdio.h assert.h err.h stdarg.h sys/wait.h errno.h dirent.h regex.h sys/poll.h sys/signal.h signal.h termcap.h fnmatch.h sys/utsname.h nbcompat.h nbcompat/string.h util.h libutil.h sys/termios.h termios.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT64_T
