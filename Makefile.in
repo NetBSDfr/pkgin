@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.3 2011/03/05 23:42:00 imilh Exp $
+# $Id: Makefile.in,v 1.4 2011/08/10 10:00:27 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -46,6 +46,10 @@ CPPFLAGS+=	-DPKGIN_VERSION=\"${PKGIN_VERSION}\"
 
 MKMAN=		no
 
+BINDIR?=	${LOCALBASE}/bin
+CONFIGFILES=	repositories.conf
+FILESDIR_repositories.conf=	${PKG_SYSCONFDIR}/pkgin
+
 .include <bsd.own.mk>
 
 .PATH:	external sqlite
@@ -87,6 +91,8 @@ LDADD+=		-L${LOCALBASE}/lib @RPATH@,${LOCALBASE}/lib	\
 pkgindb_create.h:
 	@SEDCMD=@SED@ ./mkpkgindb.sh > pkgindb_create.h
 
+afterinstall:	configinstall
+
 # maintainer helpers
 
 PKGINCVS=":pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin"
@@ -109,7 +115,8 @@ bump:
 	cd ${WIPHOME}/pkgin && make makesum
 
 shar:
-	cd ${WIPHOME}/pkgin && shar `find . -print -maxdepth 1|grep -v CVS` >	\
+	cd ${WIPHOME}/pkgin && shar `find .	\
+	-print -maxdepth 1|grep -v CVS` >	\
 		${CURDIR}/export/pkgin-pkgsrc-wip.shar
 	scp export/pkgin-*.shar korriban:www/public/NetBSD/
 
