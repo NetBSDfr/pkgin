@@ -82,7 +82,7 @@ can_output(void)
 #ifdef HAVE_TCGETPGRP /* MINIX, again */
 	return (getpgrp() == tcgetpgrp(STDOUT_FILENO));
 #else
-	return 1
+	return 1;
 #endif
 }
 
