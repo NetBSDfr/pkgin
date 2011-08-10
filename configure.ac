@@ -1,4 +1,4 @@
-# $Id: configure.ac,v 1.5 2011/08/10 20:59:44 imilh Exp $
+# $Id: configure.ac,v 1.6 2011/08/10 22:44:55 imilh Exp $
 
 AC_PREREQ([2.61])
 AC_INIT([pkgin], [0.4.3], [imil@NetBSD.org])
@@ -24,7 +24,7 @@ AC_ARG_WITH(includes,
 	,
 )
 
-AC_CHECK_FUNCS([dup2 getcwd localeconv memmove memset mkdir putenv regcomp rmdir setenv strcasecmp strchr strcspn strdup strncasecmp strpbrk strrchr strstr strtol freopen])
+AC_CHECK_FUNCS([dup2 getcwd localeconv memmove memset mkdir putenv regcomp rmdir setenv strcasecmp strchr strcspn strdup strncasecmp strpbrk strrchr strstr strtol freopen tcgetpgrp])
 
 AC_CHECK_FUNC([pthread_create],,
 	AC_CHECK_LIB(pthread, pthread_create,,
