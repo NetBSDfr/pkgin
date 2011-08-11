@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.5 2011/08/10 12:53:58 imilh Exp $
+# $Id: Makefile.in,v 1.6 2011/08/11 14:39:42 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -8,6 +8,7 @@ SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
 # included from libinstall
 SRCS+=		automatic.c decompress.c dewey.c fexec.c global.c \
 		opattern.c pkgdb.c var.c
+# included from openssh
 SRCS+=		progressmeter.c
 
 SRCS+=		@SRCS@
