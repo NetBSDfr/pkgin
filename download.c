@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.9 2011/08/10 12:53:58 imilh Exp $ */
+/* $Id: download.c,v 1.10 2011/08/11 01:31:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -42,7 +42,6 @@ download_file(char *str_url, time_t *db_mtime)
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile			*file;
 	char			*p;
-//	char			sz[8];
 	size_t			buf_len, buf_fetched;
 	ssize_t			cur_fetched;
 	off_t			statsize;
