@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.6 2011/08/11 14:39:42 imilh Exp $
+# $Id: Makefile.in,v 1.7 2011/08/12 10:19:41 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -38,6 +38,7 @@ SRCS+=		sqlite3.c
 .endif
 
 LOCALBASE?=		@prefix@
+BINDIR?=		${LOCALBASE}/bin
 PKG_SYSCONFDIR?=	${LOCALBASE}/etc
 VARBASE?=		/var
 PKG_DBDIR?=		${VARBASE}/db/pkg
@@ -48,9 +49,6 @@ CPPFLAGS+=	-DPKGIN_VERSION=\"${PKGIN_VERSION}\"
 
 MKMAN=		no
 
-BINDIR?=	${LOCALBASE}/bin
-CONFIGFILES=	repositories.conf
-FILESDIR_repositories.conf=	${PKG_SYSCONFDIR}/pkgin
 
 .include <bsd.own.mk>
 
@@ -94,6 +92,17 @@ pkgindb_create.h:
 	@SEDCMD=@SED@ ./mkpkgindb.sh > pkgindb_create.h
 
 afterinstall:	configinstall
+
+beforeinstall:
+	${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755 ${DESTDIR}${BINDIR}
+	${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755		\
+		${DESTDIR}${PKG_SYSCONFDIR}/pkgin
+
+install:
+	test -f ${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf ||	\
+		${INSTALL_FILE} -o ${BINOWN} -g ${BINGRP} -m 644	\
+			repositories.conf				\
+		${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf
 
 # maintainer helpers
 
