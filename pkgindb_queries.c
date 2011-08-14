@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.1.1.1.2.1 2011/08/14 13:41:44 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.1.1.1.2.2 2011/08/14 18:36:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -149,4 +149,4 @@ const char INSERT_SINGLE_VALUE[] =
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME) VALUES (%d,\"%s\");";
 
 const char INSERT_DEPENDS_VALUES[] = 
-	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %_DEWEY) VALUES (%d,\"%s\",\"%s\");";
+	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %s_DEWEY) VALUES (%d,\"%s\",\"%s\");";

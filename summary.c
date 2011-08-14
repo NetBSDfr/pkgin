@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3.2.1 2011/08/14 13:41:44 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.2 2011/08/14 18:36:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -299,7 +299,7 @@ child_table(const char *fmt, ...)
 	va_list	ap;
 
 	va_start(ap, fmt);
-	snprintf(buf, BUFSIZ, fmt, ap);
+	vsnprintf(buf, BUFSIZ, fmt, ap);
 	va_end(ap);
 
 	/* append query to commit_list */
