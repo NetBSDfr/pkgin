@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3 2011/08/09 11:38:34 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.1 2011/08/14 13:41:44 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -278,14 +278,29 @@ prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
 	commit_list[commit_idx] = commit_query;
 }
 
+/* add item to the main SLIST */
 static void
-child_table(int pkgid, const char *table, char *val)
+add_to_slist(char *field, char*value)
 {
-	char buf[BUFSIZ];
+	Insertlist		*insert;
 
-	snprintf(buf, BUFSIZ,
-		"INSERT INTO %s (PKG_ID,%s_PKGNAME) VALUES (%d,\"%s\");",
-		table, table, pkgid, val);
+	XMALLOC(insert, sizeof(Insertlist));
+	XSTRDUP(insert->field, field);
+	XSTRDUP(insert->value, value);
+
+	SLIST_INSERT_HEAD(&inserthead, insert, next);
+}
+
+/* fill-in secondary tables */
+static void
+child_table(const char *fmt, ...)
+{
+	char	buf[BUFSIZ];
+	va_list	ap;
+
+	va_start(ap, fmt);
+	snprintf(buf, BUFSIZ, fmt, ap);
+	va_end(ap);
 
 	/* append query to commit_list */
 	commit_idx++;
@@ -299,7 +314,6 @@ update_col(struct Summary sum, int pkgid, char *line)
 	static uint8_t	said = 0;
 	int				i;
 	char			*val, *p, buf[BUFSIZ];
-	Insertlist		*insert;
 
 	/* check MACHINE_ARCH */
 	if (!said && (val = field_record("MACHINE_ARCH", line)) != NULL) {
@@ -313,14 +327,23 @@ update_col(struct Summary sum, int pkgid, char *line)
 	}
 
 	/* DEPENDS */
-	if ((val = field_record("DEPENDS", line)) != NULL)
-		child_table(pkgid, sum.deps, val);
+	if ((val = field_record("DEPENDS", line)) != NULL) {
+		if ((p = get_pkgname_from_depend(val)) != NULL) {
+			child_table(INSERT_DEPENDS_VALUES,	\
+				sum.deps, sum.deps, sum.deps,	\
+				pkgid, p, val);
+			XFREE(p);
+		} else
+			printf(MSG_COULD_NOT_GET_PKGNAME, val);
+	}
 	/* REQUIRES */
 	if ((val = field_record("REQUIRES", line)) != NULL)
-		child_table(pkgid, sum.requires, val);
+		child_table(INSERT_SINGLE_VALUE,		\
+			sum.requires, sum.requires, pkgid, val);
 	/* PROVIDES */
 	if ((val = field_record("PROVIDES", line)) != NULL)
-		child_table(pkgid, sum.provides, val);
+		child_table(INSERT_SINGLE_VALUE,		\
+			sum.provides, sum.provides, pkgid, val);
 
 	for (i = 0; i < cols.num; i++) {
 		snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
@@ -338,15 +361,10 @@ update_col(struct Summary sum, int pkgid, char *line)
 					if (*p == '"')
 						*p = '`';
 
-
-			XMALLOC(insert, sizeof(Insertlist));
-			XSTRDUP(insert->field, cols.name[i]);
-			XSTRDUP(insert->value, val);
-
-			SLIST_INSERT_HEAD(&inserthead, insert, next);
+			add_to_slist(cols.name[i], val);
 
 			/* update query size */
-			query_size += strlen(insert->field) + strlen(insert->value) + 5;
+			query_size += strlen(cols.name[i]) + strlen(val) + 5;
 			/* 5 = strlen(\"\",) */
 		}
 	}
@@ -357,9 +375,8 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 {
 	int			i;
 	static int	pkgid = 1;
-	char		*pkgname, **psum, query[BUFSIZ];
+	char		*pkgname, *pkgvers, **psum, query[BUFSIZ];
 	const char	*alnum = ALNUM;
-	Insertlist	*insert;
 
 	if (summary == NULL) {
 		pkgindb_close();
@@ -401,11 +418,12 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 		/* PKGNAME record, should always be true  */
 		if ((pkgname = field_record("PKGNAME", *psum)) != NULL) {
 
-			XMALLOC(insert, sizeof(Insertlist));
-			XSTRDUP(insert->field, "PKGNAME");
-			XSTRDUP(insert->value, pkgname);
+			/* split PKGNAME and VERSION */
+			pkgvers = strrchr(pkgname, '-');
+			*pkgvers++ = '\0';
 
-			SLIST_INSERT_HEAD(&inserthead, insert, next);
+			add_to_slist("PKGNAME", pkgname);
+			add_to_slist("PKGVERS", pkgvers);
 
 			/* nice little counter */
 			progress(pkgname[0]);
