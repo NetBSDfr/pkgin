@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.1.2.1 2011/08/14 18:41:24 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.1.2.2 2011/08/15 09:26:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -50,8 +50,7 @@ clear_pattern(char *depend)
 static void
 cleanup_version(char *pkgname)
 {
-	char	*exten, *tmp;
-	int		stripit = 0, gotalpha = 0, len = strlen(pkgname);
+	char	*exten;
 
 	/* have we got foo-something ? */
 	if ((exten = strrchr(pkgname, '-')) == NULL)

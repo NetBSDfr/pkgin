@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2 2011/04/03 16:17:08 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.1 2011/08/15 09:26:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -44,14 +44,24 @@ free_pkglist(Plisthead *plisthead)
 	while (!SLIST_EMPTY(plisthead)) {
 		plist = SLIST_FIRST(plisthead);
 		SLIST_REMOVE_HEAD(plisthead, next);
+		XFREE(plist->fullpkgname);
 		XFREE(plist->pkgname);
+		XFREE(plist->pkgvers);
 		XFREE(plist->comment);
 		XFREE(plist);
 	}
 	XFREE(plisthead);
 }
 
-/* sqlite callback, record package list */
+#define FULLPKGNAME	argv[0]
+#define PKGNAME		argv[1]
+#define PKGVERS		argv[2]
+#define COMMENT		argv[3]
+#define FILE_SIZE	argv[4]
+#define SIZE_PKG	argv[5]
+/* 
+ * sqlite callback, record package list
+ */
 static int
 pdb_rec_pkglist(void *param, int argc, char **argv, char **colname)
 {
@@ -61,35 +71,37 @@ pdb_rec_pkglist(void *param, int argc, char **argv, char **colname)
 	if (argv == NULL)
 		return PDB_ERR;
 
-	/* PKGNAME was empty, probably a package installed
+	/* FULLPKGNAME was empty, probably a package installed
 	 * from pkgsrc or wip that does not exist in
 	 * pkg_summary(5), return
 	 */
-	if (argv[0] == NULL)
+	if (FULLPKGNAME == NULL)
 		return PDB_OK;
 
 	XMALLOC(plist, sizeof(Pkglist));
-	XSTRDUP(plist->pkgname, argv[0]);
+	XSTRDUP(plist->fullpkgname, FULLPKGNAME);
 
 	plist->size_pkg = 0;
 	plist->file_size = 0;
 
 	/* classic pkglist, has COMMENT and SIZEs */
 	if (argc > 1) {
-		if (argv[1] == NULL) {
+		if (COMMENT == NULL) {
 			/* COMMENT or SIZEs were empty
 			 * not a valid pkg_summary(5) entry, return
 			 */
-			XFREE(plist->pkgname);
+			XFREE(plist->fullpkgname);
 			XFREE(plist);
 			return PDB_OK;
 		}
 
-		XSTRDUP(plist->comment, argv[1]);
-		if (argv[2] != NULL)
-			plist->file_size = strtol(argv[2], (char **)NULL, 10);
-		if (argv[3] != NULL)
-			plist->size_pkg = strtol(argv[3], (char **)NULL, 10);
+		XSTRDUP(plist->pkgname, PKGNAME);
+		XSTRDUP(plist->pkgvers, PKGVERS);
+		XSTRDUP(plist->comment, COMMENT);
+		if (FILE_SIZE != NULL)
+			plist->file_size = strtol(FILE_SIZE, (char **)NULL, 10);
+		if (SIZE_PKG != NULL)
+			plist->size_pkg = strtol(SIZE_PKG, (char **)NULL, 10);
 
 	} else
 		/* conflicts or requires list, only pkgname needed */
@@ -116,34 +128,22 @@ rec_pkglist(const char *pkgquery)
 	return NULL;
 }
 
+/* compare pkg version */
 static int
-pkg_is_installed(Plisthead *plisthead, char *pkgname)
+pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
 {
 	Pkglist		*pkglist;
-	int			cmplen;
-	char		*dashp;
-
-	if ((dashp = strrchr(pkgname, '-')) == NULL)
-		return -1;
-
-	cmplen = dashp - pkgname;
 
 	SLIST_FOREACH(pkglist, plisthead, next) {
-	    	dashp = strrchr(pkglist->pkgname, '-');
-		if (dashp == NULL)
-		    	err(EXIT_FAILURE, "oops");
+		/* make sure packages match */
+		if (strcmp(pkglist->pkgname, pkg->pkgname) != 0)
+			continue;
 
-	    	/* make sure foo-1 does not match foo-bin-1 */
-	    	if ((dashp - pkglist->pkgname) != cmplen)
-		    	continue;
-
-		if (strncmp(pkgname, pkglist->pkgname, cmplen) != 0)
-		    	continue;
-
-		if (strcmp(dashp, pkgname + cmplen) == 0)
+		/* exact same version */
+		if (strcmp(pkglist->pkgvers, pkg->pkgvers) == 0)
 			return 0;
 
-		return version_check(pkglist->pkgname, pkgname);
+		return version_check(pkglist->fullpkgname, pkg->fullpkgname);
 	}
 
 	return -1;
@@ -167,7 +167,7 @@ list_pkgs(const char *pkgquery, int lstype)
 		if ((plisthead = rec_pkglist(REMOTE_PKGS_QUERY)) != NULL) {
 
 			SLIST_FOREACH(plist, plisthead, next) {
-				rc = pkg_is_installed(localplisthead, plist->pkgname);
+				rc = pkg_is_installed(localplisthead, plist);
 
 				pkgstatus = '\0';
 
@@ -180,7 +180,7 @@ list_pkgs(const char *pkgquery, int lstype)
 
 				if (pkgstatus != '\0') {
 					snprintf(outpkg, BUFSIZ, "%s %c",
-						plist->pkgname, pkgstatus);
+						plist->fullpkgname, pkgstatus);
 					printf("%-20s %s\n", outpkg, plist->comment);
 				}
 
@@ -193,7 +193,7 @@ list_pkgs(const char *pkgquery, int lstype)
 
 	if ((plisthead = rec_pkglist(pkgquery)) != NULL) {
 		SLIST_FOREACH(plist, plisthead, next)
-			printf("%-20s %s\n", plist->pkgname, plist->comment);
+			printf("%-20s %s\n", plist->fullpkgname, plist->comment);
 
 		free_pkglist(plisthead);
 	}
@@ -230,7 +230,7 @@ search_pkg(const char *pattern)
 				matched_pkgs = 1;
 
 				if (localplisthead != NULL) {
-					rc = pkg_is_installed(localplisthead, plist->pkgname);
+					rc = pkg_is_installed(localplisthead, plist);
 
 					if (rc == 0)
 						is_inst = PKG_EQUAL;
@@ -241,7 +241,7 @@ search_pkg(const char *pattern)
 
 				}
 
-				snprintf(outpkg, BUFSIZ, "%s %c", plist->pkgname, is_inst);
+				snprintf(outpkg, BUFSIZ, "%s %c", plist->fullpkgname, is_inst);
 
 				printf("%-20s %s\n", outpkg, plist->comment);
 			}

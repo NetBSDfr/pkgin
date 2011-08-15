@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.1 2011/08/14 13:41:44 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.2 2011/08/15 09:26:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -121,7 +121,9 @@ typedef struct Pkgdeptree {
 } Pkgdeptree;
 
 typedef struct Pkglist {
-	char *pkgname; /* foo-1.0 */
+	char *fullpkgname; /* foo-1.0 */
+	char *pkgname; /* foo */
+	char *pkgvers; /* 1.0 */
 	char *comment; /* comment */
 	int64_t file_size; /* binary package size */
 	int64_t size_pkg; /* installed package size */
