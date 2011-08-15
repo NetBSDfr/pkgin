@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.3 2011/08/15 16:44:00 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.4 2011/08/15 22:23:43 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -280,13 +280,14 @@ deps_impact(Impacthead *impacthead,
 
 /* is pkgname already in impact list ? */
 static uint8_t
-pkg_in_impact(Impacthead *impacthead, char *pkgname)
+pkg_in_impact(Impacthead *impacthead, char *depname)
 {
 	Pkgimpact	*pimpact;
 
-	SLIST_FOREACH(pimpact, impacthead, next)
-		if (strncmp(pimpact->depname, pkgname, strlen(pkgname)) == 0)
+	SLIST_FOREACH(pimpact, impacthead, next) {
+		if (strcmp(pimpact->depname, depname) == 0)
 			return 1;
+	}
 
 	return 0;
 }

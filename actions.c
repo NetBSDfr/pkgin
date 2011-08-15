@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4 2011/08/09 11:38:34 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.1 2011/08/15 22:23:43 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -149,7 +149,7 @@ do_pkg_remove(Deptreehead *removehead)
 			continue;
 
 		/* pkg_install cannot be deleted */
-		if (strncmp(premove->depname, PKG_INSTALL, strlen(PKG_INSTALL)) == 0) {
+		if (strcmp(premove->depname, PKG_INSTALL) == 0) {
 			printf(MSG_NOT_REMOVING, PKG_INSTALL);
 			continue;
 		}
@@ -652,31 +652,26 @@ narrow_match(Plisthead *remoteplisthead,
 	char *pkgname, const char *fullpkgname)
 {
 	Pkglist	*pkglist;
-	char	*rpkgname, *best_match = NULL;
+	char	*best_match = NULL;
 	int		pkglen, fullpkglen, i, matchlen = 0;
 
 	pkglen = strlen(pkgname);
 	fullpkglen = strlen(fullpkgname);
 
 	SLIST_FOREACH(pkglist, remoteplisthead, next) {
-		XSTRDUP(rpkgname, pkglist->pkgname);
-		trunc_str(rpkgname, '-', STR_BACKWARD);
-
-		if (strlen(rpkgname) == pkglen &&
-			strncmp(pkgname, rpkgname, pkglen) == 0) {
+		if (strlen(pkglist->pkgname) == pkglen &&
+			strncmp(pkgname, pkglist->pkgname, pkglen) == 0) {
 
 			for (i = 0;
-				 i < fullpkglen && fullpkgname[i] == pkglist->pkgname[i];
+				 i < fullpkglen && fullpkgname[i] == pkglist->fullpkgname[i];
 				i++);
 
 			if (i > matchlen) {
 				matchlen = i;
-				XSTRDUP(best_match, pkglist->pkgname);
+				XSTRDUP(best_match, pkglist->fullpkgname);
 			}
 
 		}
-
-		XFREE(rpkgname);
 	} /* SLIST_FOREACH remoteplisthead */
 	XFREE(pkgname);
 
@@ -698,10 +693,9 @@ record_upgrades(Plisthead *plisthead, Plisthead *remoteplisthead)
 	count = 0;
 	SLIST_FOREACH(pkglist, plisthead, next) {
 		XSTRDUP(pkgargs[count], pkglist->pkgname);
-		trunc_str(pkgargs[count], '-', STR_BACKWARD);
 
 		pkgargs[count] = narrow_match(remoteplisthead,
-			pkgargs[count], pkglist->pkgname);
+			pkgargs[count], pkglist->fullpkgname);
 
 		if (pkgargs[count] == NULL)
 			continue;
