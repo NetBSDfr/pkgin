@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.2 2011/08/15 15:16:37 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.3 2011/08/15 16:44:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -53,7 +53,6 @@
  */
 
 #include "pkgin.h"
-#include "dewey.h"
 
 /* free impact list */
 void
@@ -85,26 +84,6 @@ dep_present(Impacthead *impacthead, char *depname)
 			return 1;
 
 	return 0;
-}
-
-/* similar to opattern.c's pkg_order but without pattern */
-int
-version_check(char *first_pkg, char *second_pkg)
-{
-	char *first_ver, *second_ver;
-
-	first_ver = strrchr(first_pkg, '-');
-	second_ver = strrchr(second_pkg, '-');
-
-	if (first_ver == NULL)
-		return 2;
-	if (second_ver == NULL)
-		return 1;
-
-	if (dewey_cmp(first_ver + 1, DEWEY_GT, second_ver + 1))
-		return 1;
-	else
-		return 2;
 }
 
 static void
@@ -200,24 +179,19 @@ static int
 deps_impact(Impacthead *impacthead,
 	Plisthead *localplisthead, Plisthead *remoteplisthead, Pkgdeptree *pdp)
 {
-	int			matchlen, toupgrade;
+	int			toupgrade;
 	Pkgimpact	*pimpact;
 	Pkglist		*plist, *mapplist;
-	char		*localmatch, *remotepkg, *matchname;
+	char		*remotepkg;
 
 	/* local package list is empty */
 	if (localplisthead == NULL)
 		return 1;
 
-	/* build match name */
-	matchlen = strlen(pdp->matchname) + 2;
-	XMALLOC(matchname, matchlen * sizeof(char));
-	snprintf(matchname, matchlen, "%s%c", pdp->matchname, DELIMITER);
-
 	/* record corresponding package on remote list*/
 	if ((mapplist = map_pkg_to_dep(remoteplisthead, pdp->depname)) == NULL)
 		return 1; /* no corresponding package in list */
-	XSTRDUP(remotepkg, mapplist->pkgname);
+	XSTRDUP(remotepkg, mapplist->fullpkgname);
 
 	/* create initial impact entry with a DONOTHING status, permitting
 	 * to check if this dependency has already been recorded
@@ -232,10 +206,9 @@ deps_impact(Impacthead *impacthead,
 
 	/* parse local packages to see if depedency is installed*/
 	SLIST_FOREACH(plist, localplisthead, next) {
-		localmatch = end_expr(localplisthead, plist->pkgname); /* foo| */
 
 		/* match, package is installed */
-		if (strncmp(localmatch, matchname, strlen(localmatch)) == 0) {
+		if (strcmp(plist->pkgname, pdp->matchname) == 0) {
 
 			/* default action when local package match */
 			toupgrade = TOUPGRADE;
@@ -243,26 +216,25 @@ deps_impact(Impacthead *impacthead,
 			/* installed version does not match dep requirement
 			 * OR force reinstall, pkgkeep being use to inform -F was given
 			 */
-			if (!pkg_match(pdp->depname, plist->pkgname) || pdp->pkgkeep < 0) {
+			if (!pkg_match(pdp->depname, plist->fullpkgname) ||
+				pdp->pkgkeep < 0) {
 
 				/* local pkgname didn't match deps, remote pkg has a
 				 * lesser version than local package.
 				*/
-				if (version_check(plist->pkgname, remotepkg) == 1) {
+				if (version_check(plist->fullpkgname, remotepkg) == 1) {
 					/*
 					 * proposing a downgrade is definitely not useful,
 					 * not sure what I want to do with this...
 					 */
 						toupgrade = DONOTHING;
-						XFREE(localmatch);
-						XFREE(matchname);
 
 						return 1;
 				}
 
 				/* insert as an upgrade */
 				/* oldpkg is used when building removal order list */
-				XSTRDUP(pimpact->oldpkg, plist->pkgname);
+				XSTRDUP(pimpact->oldpkg, plist->fullpkgname);
 
 				pimpact->action = toupgrade;
 
@@ -277,8 +249,6 @@ deps_impact(Impacthead *impacthead,
 				/* does this upgrade break depedencies ? (php-4 -> php-5) */
 				break_depends(impacthead, pimpact);
 			}
-			XFREE(localmatch);
-			XFREE(matchname);
 
 			return 1;
 		} /* if installed package match */
@@ -288,11 +258,9 @@ deps_impact(Impacthead *impacthead,
 		 * dependency, i.e. libflashsupport-pulse, ghostscript-esp...
 		 * would probably lead to conflict if recorded, pass.
 		 */
-		if (pkg_match(pdp->depname, plist->pkgname)) {
-			XFREE(matchname);
+		if (pkg_match(pdp->depname, plist->fullpkgname))
 			return 1;
-		}
-		XFREE(localmatch);
+
 	} /* SLIST_FOREACH plist */
 
 	if (!dep_present(impacthead, pdp->matchname)) {
@@ -306,8 +274,6 @@ deps_impact(Impacthead *impacthead,
 		pimpact->file_size = mapplist->file_size;
 		pimpact->size_pkg = mapplist->size_pkg;
 	}
-
-	XFREE(matchname);
 
 	return 1;
 }

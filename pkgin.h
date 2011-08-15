@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.3 2011/08/15 15:16:37 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.4 2011/08/15 16:44:01 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -46,6 +46,7 @@
 #include "tools.h"
 #include "pkg_str.h"
 #include "lib.h"
+#include "dewey.h"
 
 #ifndef PKGTOOLS
 #define PKGTOOLS "/usr/sbin"
@@ -110,16 +111,6 @@ typedef struct Dlfile {
 	size_t size;
 } Dlfile;
 
-typedef struct Pkgdeptree {
-	char *depname; /* foo>=1.0 */
-	char *matchname; /* foo */
-	int computed; /* recursion memory */
-	int level; /* recursion level */
-	int pkgkeep; /* autoremovable package ? */
-	int64_t file_size; /* binary package size, used in order.c and actions.c */
-	SLIST_ENTRY(Pkgdeptree) next;
-} Pkgdeptree;
-
 typedef struct Pkglist {
 	char *fullpkgname; /* foo-1.0 */
 	char *pkgname; /* foo */
@@ -129,6 +120,16 @@ typedef struct Pkglist {
 	int64_t size_pkg; /* installed package size */
 	SLIST_ENTRY(Pkglist) next;
 } Pkglist;
+
+typedef struct Pkgdeptree {
+	char *depname; /* foo>=1.0 for direct deps, foo-1.0 for reverse deps */
+	char *matchname; /* foo */
+	int computed; /* recursion memory */
+	int level; /* recursion level */
+	int pkgkeep; /* autoremovable package ? */
+	int64_t file_size; /* binary package size, used in order.c and actions.c */
+	SLIST_ENTRY(Pkgdeptree) next;
+} Pkgdeptree;
 
 typedef struct Pkgimpact {
 	char *depname; /* depencendy pattern: perl-[0-9]* */
@@ -172,7 +173,6 @@ Plisthead	*rec_pkglist(const char *);
 void		free_pkglist(Plisthead *);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
-char		*find_exact_pkg(Plisthead *, const char *);
 int			count_samepkg(Plisthead *, const char *);
 Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 char		*end_expr(Plisthead *, const char *);
@@ -189,7 +189,6 @@ Deptreehead	*order_install(Impacthead *);
 /* impact.c */
 Impacthead	*pkg_impact(char **);
 void		free_impact(Impacthead *impacthead);
-int			version_check(char *, char *);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);
@@ -202,5 +201,7 @@ char		*read_repos(void);
 /* pkg_str.c */
 char		*get_pkgname_from_depend(char *);
 int			exact_pkgfmt(const char *);
+char		*find_exact_pkg(Plisthead *, const char *);
+int			version_check(char *, char *);
 
 #endif

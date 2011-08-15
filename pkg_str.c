@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.1.2.3 2011/08/15 15:16:37 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.1.2.4 2011/08/15 16:44:01 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -89,6 +89,26 @@ find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
 	}
 
 	return NULL;
+}
+
+/* similar to opattern.c's pkg_order but without pattern */
+int
+version_check(char *first_pkg, char *second_pkg)
+{
+	char *first_ver, *second_ver;
+
+	first_ver = strrchr(first_pkg, '-');
+	second_ver = strrchr(second_pkg, '-');
+
+	if (first_ver == NULL)
+		return 2;
+	if (second_ver == NULL)
+		return 1;
+
+	if (dewey_cmp(first_ver + 1, DEWEY_GT, second_ver + 1))
+		return 1;
+	else
+		return 2;
 }
 
 static void
