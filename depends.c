@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.1 2011/08/15 15:16:37 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.2 2011/08/15 15:27:02 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -147,7 +147,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Deptreehead *pdphead)
 			snprintf(query, BUFSIZ, depquery, pdp->matchname);
 			pkgindb_doquery(query, pdb_rec_direct_deps, pdphead);
 
-#ifdef 0
+#if 0
 			printf("%i: p: %s, l: %d\n", level, pdp->depname,
 			    pdp->level);
 #endif
