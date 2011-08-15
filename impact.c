@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.1 2011/08/13 12:21:18 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.2 2011/08/15 15:16:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -87,18 +87,6 @@ dep_present(Impacthead *impacthead, char *depname)
 	return 0;
 }
 
-/* return a pkgname corresponding to a dependency */
-Pkglist *
-map_pkg_to_dep(Plisthead *plisthead, char *depname)
-{
-	Pkglist	*plist;
-
-	SLIST_FOREACH(plist, plisthead, next)
-		if (pkg_match(depname, plist->pkgname))
-			return plist;
-
-	return NULL;
-}
 /* similar to opattern.c's pkg_order but without pattern */
 int
 version_check(char *first_pkg, char *second_pkg)
@@ -322,71 +310,6 @@ deps_impact(Impacthead *impacthead,
 	XFREE(matchname);
 
 	return 1;
-}
-
-/* count if there's many packages with the same basename */
-int
-count_samepkg(Plisthead *plisthead, const char *pkgname)
-{
-	Pkglist	*pkglist;
-	char	*plistpkg = NULL, **samepkg = NULL;
-	int		count = 0, num = 0, pkglen, pkgfmt = 0;
-
-	/* record if it's a versionned pkgname */
-	if (exact_pkgfmt(pkgname))
-		pkgfmt = 1;
-
-	/* count if there's many packages with this name */
-	SLIST_FOREACH(pkglist, plisthead, next) {
-
-		XSTRDUP(plistpkg, pkglist->pkgname);
-
-		pkglen = strlen(pkgname);
-
-		/* pkgname len from list is smaller than argument */
-		if (strlen(plistpkg) < pkglen) {
-			XFREE(plistpkg);
-			continue;
-		}
-
-		/* pkgname argument contains a version, foo-3.* */
-		if (pkgfmt)
-			/* cut plistpkg foo-3.2.1 to foo-3 */
-			plistpkg[pkglen] = '\0';
-		else {
-			/* was not a versionned parameter,
-			 * check if plistpkg next chars are -[0-9]
-			 */
-			if (plistpkg[pkglen] != '-' &&
-				!isdigit((int)plistpkg[pkglen + 1])) {
-				XFREE(plistpkg);
-				continue;
-			}
-			/* truncate foo-3.2.1 to foo */
-			trunc_str(plistpkg, '-', STR_BACKWARD);
-			pkglen = max(strlen(pkgname), strlen(plistpkg));
-		}
-
-		if (strncmp(pkgname, plistpkg, pkglen) == 0) {
-			XREALLOC(samepkg, (count + 2) * sizeof(char *));
-			XSTRDUP(samepkg[count], pkglist->pkgname);
-			samepkg[count + 1] = NULL;
-
-			count++;
-		}
-
-		XFREE(plistpkg);
-	}
-
-	if (count > 1) { /* there was more than one reference */
-		printf(MSG_MORE_THAN_ONE_VER, getprogname());
-		for (num = 0; num < count; num++)
-			printf("%s\n", samepkg[num]);
-	}
-
-	free_list(samepkg);
-
-	return count;
 }
 
 /* is pkgname already in impact list ? */

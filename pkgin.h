@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.2 2011/08/15 09:26:12 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.3 2011/08/15 15:16:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -161,7 +161,6 @@ Dlfile		*download_file(char *, time_t *);
 /* summary.c */
 void		update_db(int, char **);
 /* depends.c */
-int			exact_pkgfmt(const char *);
 char 		*match_dep_ext(char *, const char *);
 void		show_direct_depends(const char *);
 void		show_full_dep_tree(const char *, const char *, const char *);
@@ -174,6 +173,8 @@ void		free_pkglist(Plisthead *);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 char		*find_exact_pkg(Plisthead *, const char *);
+int			count_samepkg(Plisthead *, const char *);
+Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 char		*end_expr(Plisthead *, const char *);
 /* actions.c */
 int			check_yesno(void);
@@ -188,8 +189,6 @@ Deptreehead	*order_install(Impacthead *);
 /* impact.c */
 Impacthead	*pkg_impact(char **);
 void		free_impact(Impacthead *impacthead);
-Pkglist		*map_pkg_to_dep(Plisthead *, char *);
-int			count_samepkg(Plisthead *, const char *);
 int			version_check(char *, char *);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);
@@ -200,5 +199,8 @@ int			fs_has_room(const char *, int64_t);
 void		clean_cache(void);
 void		create_dirs(void);
 char		*read_repos(void);
+/* pkg_str.c */
+char		*get_pkgname_from_depend(char *);
+int			exact_pkgfmt(const char *);
 
 #endif

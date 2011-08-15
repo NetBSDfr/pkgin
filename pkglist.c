@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.1 2011/08/15 09:26:12 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.2 2011/08/15 15:16:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -53,6 +53,7 @@ free_pkglist(Plisthead *plisthead)
 	XFREE(plisthead);
 }
 
+/* SQLite results columns */
 #define FULLPKGNAME	argv[0]
 #define PKGNAME		argv[1]
 #define PKGVERS		argv[2]
@@ -60,7 +61,7 @@ free_pkglist(Plisthead *plisthead)
 #define FILE_SIZE	argv[4]
 #define SIZE_PKG	argv[5]
 /* 
- * sqlite callback, record package list
+ * SQLite callback, record package list
  */
 static int
 pdb_rec_pkglist(void *param, int argc, char **argv, char **colname)
@@ -261,41 +262,80 @@ search_pkg(const char *pattern)
 	}
 }
 
-char *
-find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
+/* count if there's many packages with the same basename */
+int
+count_samepkg(Plisthead *plisthead, const char *pkgname)
 {
 	Pkglist	*pkglist;
-	char	*pkgname, *tmppkg;
-	int		tmplen, exact;
+	char	*plistpkg = NULL, **samepkg = NULL;
+	int		count = 0, num = 0, pkglen, pkgfmt = 0;
 
-	/* truncate argument if it contains a version */
-	exact = exact_pkgfmt(pkgarg);
+	/* record if it's a versionned pkgname */
+	if (exact_pkgfmt(pkgname))
+		pkgfmt = 1;
 
-	/* check for package existence */
+	/* count if there's many packages with this name */
 	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(tmppkg, pkglist->pkgname);
 
-		if (!exact) {
-			/*
-			 * pkgname was not in exact format, i.e. foo-bar
-			 * instead of foo-bar-1, truncate tmppkg :
-			 * foo-bar-1.0 -> foo-bar
-			 * and set len to tmppkg
+		XSTRDUP(plistpkg, pkglist->pkgname);
+
+		pkglen = strlen(pkgname);
+
+		/* pkgname len from list is smaller than argument */
+		if (strlen(plistpkg) < pkglen) {
+			XFREE(plistpkg);
+			continue;
+		}
+
+		/* pkgname argument contains a version, foo-3.* */
+		if (pkgfmt)
+			/* cut plistpkg foo-3.2.1 to foo-3 */
+			plistpkg[pkglen] = '\0';
+		else {
+			/* was not a versionned parameter,
+			 * check if plistpkg next chars are -[0-9]
 			 */
-			trunc_str(tmppkg, '-', STR_BACKWARD);
+			if (plistpkg[pkglen] != '-' &&
+				!isdigit((int)plistpkg[pkglen + 1])) {
+				XFREE(plistpkg);
+				continue;
+			}
+			/* truncate foo-3.2.1 to foo */
+			trunc_str(plistpkg, '-', STR_BACKWARD);
+			pkglen = max(strlen(pkgname), strlen(plistpkg));
 		}
-		/* tmplen = strlen("foo-1{.vers}") */
-		tmplen = strlen(tmppkg);
 
-		if (strlen(pkgarg) == tmplen &&
-			strncmp(tmppkg, pkgarg, tmplen) == 0) {
-			XFREE(tmppkg);
+		if (strncmp(pkgname, plistpkg, pkglen) == 0) {
+			XREALLOC(samepkg, (count + 2) * sizeof(char *));
+			XSTRDUP(samepkg[count], pkglist->pkgname);
+			samepkg[count + 1] = NULL;
 
-			XSTRDUP(pkgname, pkglist->pkgname);
-			return pkgname;
+			count++;
 		}
-		XFREE(tmppkg);
+
+		XFREE(plistpkg);
 	}
+
+	if (count > 1) { /* there was more than one reference */
+		printf(MSG_MORE_THAN_ONE_VER, getprogname());
+		for (num = 0; num < count; num++)
+			printf("%s\n", samepkg[num]);
+	}
+
+	free_list(samepkg);
+
+	return count;
+}
+
+/* return a pkgname corresponding to a dependency */
+Pkglist *
+map_pkg_to_dep(Plisthead *plisthead, char *depname)
+{
+	Pkglist	*plist;
+
+	SLIST_FOREACH(plist, plisthead, next)
+		if (pkg_match(depname, plist->fullpkgname))
+			return plist;
 
 	return NULL;
 }

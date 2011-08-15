@@ -117,3 +117,39 @@ CREATE INDEX IF NOT EXISTS [idx_local_pkg_description] ON [LOCAL_PKG](
 CREATE INDEX IF NOT EXISTS [idx_local_pkg_name] ON [LOCAL_PKG](
 [PKGNAME]  ASC
 );
+
+CREATE INDEX IF NOT EXISTS [idx_local_deps_pkg_id_pkg_name] ON [LOCAL_DEPS](
+[PKG_ID]  ASC,
+[LOCAL_DEPS_PKGNAME]  ASC
+);
+CREATE INDEX IF NOT EXISTS [idx_remote_deps_pkg_id_remote_pkg_name] ON [REMOTE_DEPS](
+[PKG_ID]  ASC,
+[REMOTE_DEPS_PKGNAME]  ASC
+);
+
+CREATE INDEX IF NOT EXISTS [idx_local_conflicts_pkg_id_local_pkg_name] ON [LOCAL_CONFLICTS](
+[PKG_ID]  ASC,
+[LOCAL_CONFLICTS_PKGNAME]  ASC
+);
+CREATE INDEX IF NOT EXISTS [idx_remote_conflicts_pkg_id_remote_pkg_name] ON [REMOTE_CONFLICTS](
+[PKG_ID]  ASC,
+[REMOTE_CONFLICTS_PKGNAME]  ASC
+);
+
+CREATE INDEX IF NOT EXISTS [idx_local_requires_pkg_id_local_pkg_name] ON [LOCAL_REQUIRES](
+[PKG_ID]  ASC,
+[LOCAL_REQUIRES_PKGNAME]  ASC
+);
+CREATE INDEX IF NOT EXISTS [idx_remote_requires_pkg_id_remote_pkg_name] ON [REMOTE_REQUIRES](
+[PKG_ID]  ASC,
+[REMOTE_REQUIRES_PKGNAME]  ASC
+);
+
+CREATE INDEX IF NOT EXISTS [idx_local_provides_pkg_id_local_pkg_name] ON [LOCAL_PROVIDES](
+[PKG_ID]  ASC,
+[LOCAL_PROVIDES_PKGNAME]  ASC
+);
+CREATE INDEX IF NOT EXISTS [idx_remote_provides_pkg_id_remote_pkg_name] ON [REMOTE_PROVIDES](
+[PKG_ID]  ASC,
+[REMOTE_PROVIDES_PKGNAME]  ASC
+);

@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1 2011/03/03 14:43:12 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.1 2011/08/15 15:16:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -46,6 +46,7 @@ free_deptree(Deptreehead *deptreehead)
 		pdp = SLIST_FIRST(deptreehead);
 		SLIST_REMOVE_HEAD(deptreehead, next);
 		XFREE(pdp->depname);
+		XFREE(pdp->matchname);
 		XFREE(pdp);
 	}
 }
@@ -63,23 +64,11 @@ match_dep_ext(char *depname, const char *ext)
 	return pdep;
 }
 
-/* basic full package format detection */
-int
-exact_pkgfmt(const char *pkgname)
-{
-	char	*p;
-
-	if ((p = strrchr(pkgname, '-')) == NULL)
-		return 0;
-
-	p++;
-
-	/* naive assumption, will fail with foo-100bar, hopefully, there's
-	 * only a few packages needing to be fully specified
-	 */
-	return isdigit((int)*p);
-}
-
+/* dewey for direct deps, full pkgname for reverse deps*/
+#define DEPS_FULLPKG		argv[0]
+/* pkgname for direct deps and reverse deps */
+#define DEPS_PKGNAME		argv[1]
+#define PKG_KEEP			argv[2]
 /* sqlite callback
  * DIRECT_DEPS or REVERSE_DEPS result, feeds a Pkgdeptree SLIST
  * Deptreehead is the head of Pkgdeptree
@@ -87,37 +76,25 @@ exact_pkgfmt(const char *pkgname)
 static int
 pdb_rec_direct_deps(void *param, int argc, char **argv, char **colname)
 {
-	int			argvlen;
-	char		*depname;
 	Pkgdeptree	*deptree, *pdp;
 	Deptreehead	*pdphead = (Deptreehead *)param;
 
 	if (argv == NULL)
 		return PDB_ERR;
 
-	depname = end_expr(plisthead, argv[0]); /* foo| */
-	argvlen = strlen(depname);
-
 	/* dependency already recorded, do not insert on list  */
-	SLIST_FOREACH(pdp, pdphead, next) {
-		if (strlen(pdp->matchname) + 1 == argvlen &&
-		    strncmp(depname, pdp->matchname, argvlen - 1) == 0) {
-			XFREE(depname);
+	SLIST_FOREACH(pdp, pdphead, next)
+		if (strcmp(DEPS_PKGNAME, pdp->matchname) == 0)
 			/* proceed to next result */
 			return PDB_OK;
-		}
-	}
-
-	/* remove delimiter */
-	depname[argvlen - 1] = '\0';
 
 	XMALLOC(deptree, sizeof(Pkgdeptree));
-	XSTRDUP(deptree->depname, argv[0]);
-	deptree->matchname = depname;
+	XSTRDUP(deptree->depname, DEPS_FULLPKG);
+	XSTRDUP(deptree->matchname, DEPS_PKGNAME);
 	deptree->computed = 0;
 	deptree->level = 0;
 	/* used in LOCAL_REVERSE_DEPS / autoremove.c */
-	if (argc > 1 && argv[1] != NULL)
+	if (argc > 2 && PKG_KEEP != NULL)
 		deptree->pkgkeep = 1;
 	else
 		deptree->pkgkeep = 0;
@@ -129,10 +106,10 @@ pdb_rec_direct_deps(void *param, int argc, char **argv, char **colname)
 
 /* recursively parse dependencies: this is our central function  */
 void
-full_dep_tree(const char *pkgname, const char * depquery, Deptreehead *pdphead)
+full_dep_tree(const char *pkgname, const char *depquery, Deptreehead *pdphead)
 {
 	Pkgdeptree	*pdp;
-	int		level;
+	int			level;
 	char		query[BUFSIZ];
 
 	query[0] = '\0';
@@ -170,7 +147,7 @@ full_dep_tree(const char *pkgname, const char * depquery, Deptreehead *pdphead)
 			snprintf(query, BUFSIZ, depquery, pdp->matchname);
 			pkgindb_doquery(query, pdb_rec_direct_deps, pdphead);
 
-#if 0
+#ifdef 0
 			printf("%i: p: %s, l: %d\n", level, pdp->depname,
 			    pdp->level);
 #endif
@@ -198,10 +175,7 @@ show_direct_depends(const char *pkgname)
 	if (count_samepkg(plisthead, pkgname) < 2) {
 		SLIST_INIT(&deptreehead);
 
-		if (exact_pkgfmt(pkgname))
-			snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
-		else
-			snprintf(query, BUFSIZ, DIRECT_DEPS, pkgname);
+		snprintf(query, BUFSIZ, DIRECT_DEPS, pkgname);
 
 		if (pkgindb_doquery(query, pdb_rec_direct_deps, &deptreehead) == 0) {
 			printf(MSG_DIRECT_DEPS_FOR, pkgname);
@@ -209,7 +183,7 @@ show_direct_depends(const char *pkgname)
 				if (package_version && 
 					(mapplist = map_pkg_to_dep(plisthead, pdp->depname))
 					!= NULL)
-					printf("\t%s\n", mapplist->pkgname);
+					printf("\t%s\n", mapplist->fullpkgname);
 				else
 					printf("\t%s\n", pdp->depname);
 			}
@@ -255,7 +229,7 @@ show_full_dep_tree(const char *pkgname, const char *depquery, const char *msg)
 	SLIST_FOREACH(pdp, &deptreehead, next) {
 		if (package_version && 
 			(mapplist = map_pkg_to_dep(plisthead, pdp->depname)) != NULL)
-			printf("\t%s\n", mapplist->pkgname);
+			printf("\t%s\n", mapplist->fullpkgname);
 		else
 			printf("\t%s\n", pdp->depname);
 	}
