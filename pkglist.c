@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.2 2011/08/15 15:16:37 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.3 2011/08/15 20:55:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -277,7 +277,7 @@ count_samepkg(Plisthead *plisthead, const char *pkgname)
 	/* count if there's many packages with this name */
 	SLIST_FOREACH(pkglist, plisthead, next) {
 
-		XSTRDUP(plistpkg, pkglist->pkgname);
+		XSTRDUP(plistpkg, pkglist->fullpkgname);
 
 		pkglen = strlen(pkgname);
 
@@ -307,7 +307,7 @@ count_samepkg(Plisthead *plisthead, const char *pkgname)
 
 		if (strncmp(pkgname, plistpkg, pkglen) == 0) {
 			XREALLOC(samepkg, (count + 2) * sizeof(char *));
-			XSTRDUP(samepkg[count], pkglist->pkgname);
+			XSTRDUP(samepkg[count], pkglist->fullpkgname);
 			samepkg[count + 1] = NULL;
 
 			count++;

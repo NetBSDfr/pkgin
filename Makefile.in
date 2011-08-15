@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.7.2.1 2011/08/14 13:41:44 imilh Exp $
+# $Id: Makefile.in,v 1.7.2.2 2011/08/15 20:55:27 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -55,7 +55,7 @@ MKMAN=		no
 .PATH:	external sqlite
 
 .if defined(DEBUG)
-CPPFLAGS+=	-DDEBUG
+CPPFLAGS+=	-DDEBUG -O0
 PKGIN_DB!=	pwd
 .else
 PKGIN_DB=	${VARBASE}/db/pkgin
