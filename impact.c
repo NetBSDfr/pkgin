@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.5 2011/08/16 11:16:35 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.6 2011/08/16 21:17:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -68,7 +68,7 @@ free_impact(Impacthead *impacthead)
 		SLIST_REMOVE_HEAD(impacthead, next);
 		XFREE(pimpact->depname);
 		XFREE(pimpact->oldpkg);
-		XFREE(pimpact->pkgname);
+		XFREE(pimpact->fullpkgname);
 		XFREE(pimpact);
 	}
 }
@@ -80,7 +80,8 @@ dep_present(Impacthead *impacthead, char *depname)
 	Pkgimpact *pimpact;
 
 	SLIST_FOREACH(pimpact, impacthead, next)
-		if (pimpact->pkgname != NULL && pkg_match(depname, pimpact->pkgname))
+		if (pimpact->fullpkgname != NULL &&
+			pkg_match(depname, pimpact->fullpkgname))
 			return 1;
 
 	return 0;
@@ -140,7 +141,7 @@ break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
 		 * new package to be installed matches
 		 */
 		SLIST_FOREACH(fdp, &fdphead, next)
-			if (pkg_match(fdp->depname, pimpact->pkgname)) {
+			if (pkg_match(fdp->depname, pimpact->fullpkgname)) {
 				dep_break = 0;
 				break;
 			}
@@ -164,7 +165,7 @@ break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
 		/* dependency break, insert rdp in remove-list */
 		XMALLOC(rmimpact, sizeof(Pkgimpact));
 		XSTRDUP(rmimpact->depname, rdp->depname);
-		XSTRDUP(rmimpact->pkgname, rdp->depname);
+		XSTRDUP(rmimpact->fullpkgname, rdp->depname);
 		XSTRDUP(rmimpact->oldpkg, rdp->depname);
 		rmimpact->action = TOREMOVE;
 		rmimpact->level = 0;
@@ -201,7 +202,7 @@ deps_impact(Impacthead *impacthead,
 
 	pimpact->action = DONOTHING;
 	pimpact->oldpkg = NULL;
-	pimpact->pkgname = NULL;
+	pimpact->fullpkgname = NULL;
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
@@ -239,7 +240,7 @@ deps_impact(Impacthead *impacthead,
 
 				pimpact->action = toupgrade;
 
-				pimpact->pkgname = remotepkg;
+				pimpact->fullpkgname = remotepkg;
 				/* record package dependency deepness */
 				pimpact->level = pdp->level;
 				/* record binary package size */
@@ -268,7 +269,7 @@ deps_impact(Impacthead *impacthead,
 		pimpact->oldpkg = NULL;
 		pimpact->action = TOINSTALL;
 
-		pimpact->pkgname = remotepkg;
+		pimpact->fullpkgname = remotepkg;
 		/* record package dependency deepness */
 		pimpact->level = pdp->level;
 
@@ -435,7 +436,7 @@ impactend:
 			SLIST_REMOVE(impacthead, pimpact, Pkgimpact, next);
 
 			XFREE(pimpact->depname);
-			XFREE(pimpact->pkgname);
+			XFREE(pimpact->fullpkgname);
 			XFREE(pimpact->oldpkg);
 			XFREE(pimpact);
 		}

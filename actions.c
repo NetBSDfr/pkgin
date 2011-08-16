@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.3 2011/08/16 18:04:00 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.4 2011/08/16 21:17:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -263,7 +263,7 @@ pkg_met_reqs(Impacthead *impacthead)
 	/* first, parse impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		/* retreive requires list for package */
-		snprintf(query, BUFSIZ, GET_REQUIRES_QUERY, pimpact->pkgname);
+		snprintf(query, BUFSIZ, GET_REQUIRES_QUERY, pimpact->fullpkgname);
 		requireshead = rec_pkglist(query);
 
 		if (requireshead == NULL) /* empty requires list (very unlikely) */
@@ -279,7 +279,7 @@ pkg_met_reqs(Impacthead *impacthead)
 				    sizeof(LOCALBASE) - 1)) != 0) {
 				if (stat(requires->fullpkgname, &sb) < 0) {
 					printf(MSG_REQT_NOT_PRESENT,
-						requires->fullpkgname, pimpact->pkgname);
+						requires->fullpkgname, pimpact->fullpkgname);
 
 					met_reqs = 0;
 				}
@@ -314,7 +314,7 @@ pkg_met_reqs(Impacthead *impacthead)
 				/* re-parse impact list to retreive PROVIDES */
 				SLIST_FOREACH(impactprov, impacthead, next) {
 					snprintf(query, BUFSIZ, GET_PROVIDES_QUERY,
-						impactprov->pkgname);
+						impactprov->fullpkgname);
 					provideshead = rec_pkglist(query);
 
 					if (provideshead == NULL)
@@ -375,7 +375,7 @@ pkg_has_conflicts(Plisthead *conflictshead, Pkgimpact *pimpact)
 
 	/* check conflicts */
 	SLIST_FOREACH(conflicts, conflictshead, next) {
-		if (pkg_match(conflicts->fullpkgname, pimpact->pkgname)) {
+		if (pkg_match(conflicts->fullpkgname, pimpact->fullpkgname)) {
 
 			/* got a conflict, retrieve conflicting local package */
 			snprintf(query, BUFSIZ,
@@ -386,7 +386,7 @@ pkg_has_conflicts(Plisthead *conflictshead, Pkgimpact *pimpact)
 					pdb_get_value, conflict_pkg) == 0)
 
 				printf(MSG_CONFLICT_PKG,
-					pimpact->pkgname, conflict_pkg);
+					pimpact->fullpkgname, conflict_pkg);
 
 			XFREE(conflict_pkg);
 
@@ -443,7 +443,7 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		}
 
 		snprintf(pkgpath, BUFSIZ, "%s/%s%s",
-			pkgin_cache, pimpact->pkgname, PKG_EXT);
+			pkgin_cache, pimpact->fullpkgname, PKG_EXT);
 
 		/* if package is not already downloaded or size mismatch, d/l it */
 		if (stat(pkgpath, &st) < 0 || st.st_size != pimpact->file_size)

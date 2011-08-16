@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.1.1.1.2.1 2011/08/16 18:04:01 imilh Exp $ */
+/* $Id: order.c,v 1.1.1.1.2.2 2011/08/16 21:17:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -141,7 +141,7 @@ upgrade_dep_deepness(Impacthead *impacthead)
 		pimpact->level = 1;
 
 		/* depname received from impact is in full package format */
-		XSTRDUP(pkgname, pimpact->pkgname);
+		XSTRDUP(pkgname, pimpact->fullpkgname);
 
 		if ((p = strrchr(pkgname, '-')) != NULL)
 			*p = '\0';
@@ -152,7 +152,8 @@ upgrade_dep_deepness(Impacthead *impacthead)
 		    	pimpact->level = SLIST_FIRST(&lvldeptree)->level + 1;
 
 #if 0
-		printf("%s (%s) -> %d\n", pimpact->pkgname, pkgname, pimpact->level);
+		printf("%s (%s) -> %d\n",
+			pimpact->fullpkgname, pkgname, pimpact->level);
 #endif
 
 		XFREE(pkgname);
@@ -228,7 +229,7 @@ order_install(Impacthead *impacthead)
 			if ((pimpact->action == TOUPGRADE ||
 					pimpact->action == TOINSTALL) && pimpact->level == i) {
 				XMALLOC(pdp, sizeof(Pkgdeptree));
-				XSTRDUP(pdp->depname, pimpact->pkgname);
+				XSTRDUP(pdp->depname, pimpact->fullpkgname);
 				pdp->matchname = NULL; /* safety */
 				pdp->level = pimpact->level;
 				/* record package size for download check */

@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.3 2011/08/15 20:55:27 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.4 2011/08/16 21:17:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -338,48 +338,4 @@ map_pkg_to_dep(Plisthead *plisthead, char *depname)
 			return plist;
 
 	return NULL;
-}
-
-/* end an expression with a delimiter */
-char *
-end_expr(Plisthead *plisthead, const char *str)
-{
-	Pkglist	*pkglist;
-	char	*expr, *p;
-	uint8_t	was_dep = 0;
-
-	/* enough space to add a delimiter */
-	XMALLOC(expr, (strlen(str) + 2) * sizeof(char));
-	XSTRCPY(expr, str);
-
-	/* really don't want to fight with {foo,bar>=2.0}, rely on pkg_match()
-	 * XXX: this makes us load pkg_summary db in full_dep_tree()
-	 */
-	if (strpbrk(expr, "*?[{") != NULL) {
-		SLIST_FOREACH(pkglist, plisthead, next) {
-			if (pkg_match(expr, pkglist->pkgname)) {
-				XFREE(expr);
-				XSTRDUP(expr, pkglist->pkgname);
-				break;
-			}
-		}
-	}
-
-	/* simple package/dependency case, parse string backwards
-	 * until we find a delimiter: foo>=1.0, bar>=1.2<2.0
-	 */
-	while ((p = match_dep_ext(expr, "<>=")) != NULL) {
-		*p++ = DELIMITER; /* terminate expr */
-		*p = '\0';
-		was_dep = 1;
-	}
-	/* expr was not a dewey pattern, it's a full package name,
-	 * strip the final dash if found
-	 */
-	if (!was_dep && (p = strrchr(expr, '-')) != NULL) {
-		*p++ = DELIMITER; /* terminate expr */
-		*p = '\0';
-	}
-
-	return expr;
 }
