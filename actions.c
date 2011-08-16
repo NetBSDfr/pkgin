@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.4 2011/08/16 21:17:55 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.5 2011/08/16 21:56:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -487,16 +487,26 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		removehead = order_upgrade_remove(impacthead);
 
 		SLIST_FOREACH(premove, removehead, next) {
-			if (premove->computed == TOUPGRADE)
+			if (premove->computed == TOUPGRADE) {
 				toupgrade = action_list(toupgrade, premove->depname);
+#ifdef DEBUG
+				printf("package: %s - level: %d\n",
+					premove->depname, premove->level);
+#endif
+			}
 		}
 		printf(MSG_PKGS_TO_UPGRADE, upgradenum, toupgrade);
 		printf("\n");
 
 		if (removenum > 0) {
 			SLIST_FOREACH(premove, removehead, next) {
-				if (premove->computed == TOREMOVE)
+				if (premove->computed == TOREMOVE) {
 					toremove = action_list(toremove, premove->depname);
+#ifdef DEBUG
+					printf("package: %s - level: %d\n",
+						premove->depname, premove->level);
+#endif
+				}
 			}
 			printf(MSG_PKGS_TO_REMOVE, removenum, toremove);
 			printf("\n");
@@ -509,8 +519,13 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		/* record ordered install list */
 		installhead = order_install(impacthead);
 
-		SLIST_FOREACH(pinstall, installhead, next)
+		SLIST_FOREACH(pinstall, installhead, next) {
 			toinstall = action_list(toinstall, pinstall->depname);
+#ifdef DEBUG
+			printf("package: %s - level: %d\n",
+				pinstall->depname, pinstall->level);
+#endif
+		}
 
 		printf(MSG_PKGS_TO_INSTALL, installnum, toinstall, h_fsize, h_psize);
 		printf("\n");

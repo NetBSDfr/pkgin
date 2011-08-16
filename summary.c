@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3.2.3 2011/08/14 18:57:34 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.4 2011/08/16 21:56:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -568,7 +568,7 @@ update_db(int which, char **pkgkeep)
 			/* restore keep-list */
 			if (keeplisthead != NULL) {
 				SLIST_FOREACH(pkglist, keeplisthead, next) {
-					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->pkgname);
+					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->fullpkgname);
 					pkgindb_doquery(buf, NULL, NULL);
 				}
 				free_pkglist(keeplisthead);
@@ -581,7 +581,7 @@ update_db(int which, char **pkgkeep)
 				if ((nokeeplisthead =
 						rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
 					SLIST_FOREACH(pkglist, nokeeplisthead, next)
-						mark_as_automatic_installed(pkglist->pkgname, 1);
+						mark_as_automatic_installed(pkglist->fullpkgname, 1);
 
 					free_pkglist(nokeeplisthead);
 				}
@@ -593,8 +593,9 @@ update_db(int which, char **pkgkeep)
 				 */
 				if ((plisthead = rec_pkglist(LOCAL_PKGS_QUERY)) != NULL) {
 					SLIST_FOREACH(pkglist, plisthead, next)
-						if (!is_automatic_installed(pkglist->pkgname)) {
-							snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->pkgname);
+						if (!is_automatic_installed(pkglist->fullpkgname)) {
+							snprintf(buf, BUFSIZ, KEEP_PKG,
+								pkglist->fullpkgname);
 							pkgindb_doquery(buf, NULL, NULL);
 						}
 
