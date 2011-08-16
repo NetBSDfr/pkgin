@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.2 2011/08/16 11:16:35 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.3 2011/08/16 18:04:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -275,11 +275,11 @@ pkg_met_reqs(Impacthead *impacthead)
 			foundreq = 0;
 
 			/* for performance sake, first check basesys */
-			if ((strncmp(requires->pkgname, LOCALBASE,
+			if ((strncmp(requires->fullpkgname, LOCALBASE,
 				    sizeof(LOCALBASE) - 1)) != 0) {
-				if (stat(requires->pkgname, &sb) < 0) {
+				if (stat(requires->fullpkgname, &sb) < 0) {
 					printf(MSG_REQT_NOT_PRESENT,
-						requires->pkgname, pimpact->pkgname);
+						requires->fullpkgname, pimpact->pkgname);
 
 					met_reqs = 0;
 				}
@@ -297,9 +297,9 @@ pkg_met_reqs(Impacthead *impacthead)
 			/* search what local packages provide */
 			provideshead = rec_pkglist(LOCAL_PROVIDES);
 			SLIST_FOREACH(provides, provideshead, next) {
-				if (strncmp(provides->pkgname,
-						requires->pkgname,
-						strlen(requires->pkgname)) == 0) {
+				if (strncmp(provides->fullpkgname,
+						requires->fullpkgname,
+						strlen(requires->fullpkgname)) == 0) {
 
 					foundreq = 1;
 
@@ -322,9 +322,9 @@ pkg_met_reqs(Impacthead *impacthead)
 
 					/* then parse provides list for every package */
 					SLIST_FOREACH(provides, provideshead, next) {
-						if (strncmp(provides->pkgname,
-								requires->pkgname,
-								strlen(requires->pkgname)) == 0) {
+						if (strncmp(provides->fullpkgname,
+								requires->fullpkgname,
+								strlen(requires->fullpkgname)) == 0) {
 
 							foundreq = 1;
 
@@ -350,7 +350,7 @@ pkg_met_reqs(Impacthead *impacthead)
 			 * matching LOCALBASE, which is hardcoded to "/usr/pkg"
 			 */
 			if (!foundreq) {
-				printf(MSG_REQT_NOT_PRESENT_BUT, requires->pkgname);
+				printf(MSG_REQT_NOT_PRESENT_BUT, requires->fullpkgname);
 
 				foundreq = 1;
 			}

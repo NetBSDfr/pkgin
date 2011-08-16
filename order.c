@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.1 2011/03/03 14:43:12 imilh Exp $ */
+/* $Id: order.c,v 1.1.1.1.2.1 2011/08/16 18:04:01 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -118,7 +118,7 @@ order_remove(Deptreehead *deptreehead)
 static void
 upgrade_dep_deepness(Impacthead *impacthead)
 {
-	char		*depname, *p;
+	char		*pkgname, *p;
 	Pkgimpact	*pimpact;
 	Deptreehead	lvldeptree;
 	Plisthead	*plisthead;
@@ -140,22 +140,22 @@ upgrade_dep_deepness(Impacthead *impacthead)
 
 		pimpact->level = 1;
 
-		/* depname received from impact is in real dependency format */
-		depname = end_expr(plisthead, pimpact->depname);
+		/* depname received from impact is in full package format */
+		XSTRDUP(pkgname, pimpact->pkgname);
 
-		if ((p = strrchr(depname, DELIMITER)) != NULL)
+		if ((p = strrchr(pkgname, '-')) != NULL)
 			*p = '\0';
 
-		full_dep_tree(depname, LOCAL_REVERSE_DEPS, &lvldeptree);
+		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, &lvldeptree);
 
 		if (!SLIST_EMPTY(&lvldeptree))
 		    	pimpact->level = SLIST_FIRST(&lvldeptree)->level + 1;
 
 #if 0
-		printf("%s (%s) -> %d\n", pimpact->depname, depname, pimpact->level);
+		printf("%s (%s) -> %d\n", pimpact->pkgname, pkgname, pimpact->level);
 #endif
 
-		XFREE(depname);
+		XFREE(pkgname);
 		free_deptree(&lvldeptree);
 	}
 
