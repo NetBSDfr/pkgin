@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.1 2011/08/15 22:23:43 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.2 2011/08/16 11:16:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -375,11 +375,11 @@ pkg_has_conflicts(Plisthead *conflictshead, Pkgimpact *pimpact)
 
 	/* check conflicts */
 	SLIST_FOREACH(conflicts, conflictshead, next) {
-		if (pkg_match(conflicts->pkgname, pimpact->pkgname)) {
+		if (pkg_match(conflicts->fullpkgname, pimpact->pkgname)) {
 
 			/* got a conflict, retrieve conflicting local package */
 			snprintf(query, BUFSIZ,
-				GET_CONFLICT_QUERY, conflicts->pkgname);
+				GET_CONFLICT_QUERY, conflicts->fullpkgname);
 
 			XMALLOC(conflict_pkg, BUFSIZ * sizeof(char));
 			if (pkgindb_doquery(query,

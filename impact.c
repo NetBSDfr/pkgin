@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.4 2011/08/15 22:23:43 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.5 2011/08/16 11:16:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -198,6 +198,7 @@ deps_impact(Impacthead *impacthead,
 	 */
 	XMALLOC(pimpact, sizeof(Pkgimpact));
 	XSTRDUP(pimpact->depname, pdp->depname);
+
 	pimpact->action = DONOTHING;
 	pimpact->oldpkg = NULL;
 	pimpact->pkgname = NULL;
