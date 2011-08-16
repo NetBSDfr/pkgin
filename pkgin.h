@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.4 2011/08/15 16:44:01 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.5 2011/08/16 09:11:40 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -44,7 +44,6 @@
 #include "messages.h"
 #include "pkgindb.h"
 #include "tools.h"
-#include "pkg_str.h"
 #include "lib.h"
 #include "dewey.h"
 
