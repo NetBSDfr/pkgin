@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.6 2011/08/16 21:17:55 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.7 2011/08/17 22:31:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -30,11 +30,11 @@
  *
  */
 
-/* pkg_impact() calculates "impact" of installing a package
+/**
+ * pkg_impact() calculates "impact" of installing a package
  * it is the heart of package install / update
- */
-
-/* pkg_impact rationale
+ *
+ * pkg_impact rationale:
  *
  * pkg_impact() receive a package list as an argument.
  * Those are the packages to be installed / upgraded.
@@ -54,11 +54,13 @@
 
 #include "pkgin.h"
 
-/* free impact list */
+/**
+ * free impact list
+ */
 void
 free_impact(Impacthead *impacthead)
 {
-	Pkgimpact *pimpact;
+	Pkg *pimpact;
 
 	if (impacthead == NULL)
 		return;
@@ -66,39 +68,41 @@ free_impact(Impacthead *impacthead)
 	while (!SLIST_EMPTY(impacthead)) {
 		pimpact = SLIST_FIRST(impacthead);
 		SLIST_REMOVE_HEAD(impacthead, next);
-		XFREE(pimpact->depname);
-		XFREE(pimpact->oldpkg);
-		XFREE(pimpact->fullpkgname);
+		XFREE(pimpact->depend);
+		XFREE(pimpact->old);
+		XFREE(pimpact->full);
 		XFREE(pimpact);
 	}
 }
 
-/* check wether or not a dependency is already recorded in the impact list */
+/**
+ * check wether or not a dependency is already recorded in the impact list
+ */
 static int
 dep_present(Impacthead *impacthead, char *depname)
 {
-	Pkgimpact *pimpact;
+	Pkg *pimpact;
 
 	SLIST_FOREACH(pimpact, impacthead, next)
-		if (pimpact->fullpkgname != NULL &&
-			pkg_match(depname, pimpact->fullpkgname))
+		if (pimpact->full != NULL &&
+			pkg_match(depname, pimpact->full))
 			return 1;
 
 	return 0;
 }
 
 static void
-break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
+break_depends(Impacthead *impacthead, Pkg *pimpact)
 {
-	Pkgimpact	*rmimpact;
+	Pkg			*rmimpact;
 	Deptreehead	rdphead, fdphead;
-	Pkgdeptree	*rdp, *fdp;
+	Pkg			*rdp, *fdp;
 	char		*pkgname, *rpkg;
 	int			dep_break, exists;
 
 	SLIST_INIT(&rdphead);
 
-	XSTRDUP(pkgname, pimpact->oldpkg);
+	XSTRDUP(pkgname, pimpact->old);
 	trunc_str(pkgname, '-', STR_BACKWARD);
 
 	/* fetch old package reverse dependencies */
@@ -112,7 +116,7 @@ break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
 		SLIST_INIT(&fdphead);
 
 		/* reverse dependency is a full package name, use it and strip it */
-		XSTRDUP(rpkg, rdp->depname);
+		XSTRDUP(rpkg, rdp->depend);
 		trunc_str(rpkg, '-', STR_BACKWARD);
 
 		/* fetch dependencies for rdp */
@@ -141,7 +145,7 @@ break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
 		 * new package to be installed matches
 		 */
 		SLIST_FOREACH(fdp, &fdphead, next)
-			if (pkg_match(fdp->depname, pimpact->fullpkgname)) {
+			if (pkg_match(fdp->depend, pimpact->full)) {
 				dep_break = 0;
 				break;
 			}
@@ -154,7 +158,7 @@ break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
 		exists = 0;
 		/* check if rdp was already on impact list */
 		SLIST_FOREACH(rmimpact, impacthead, next)
-			if (strcmp(rmimpact->depname, rdp->depname) == 0) {
+			if (strcmp(rmimpact->depend, rdp->depend) == 0) {
 				exists = 1;
 				break;
 			}
@@ -163,10 +167,10 @@ break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
 			continue;
 
 		/* dependency break, insert rdp in remove-list */
-		XMALLOC(rmimpact, sizeof(Pkgimpact));
-		XSTRDUP(rmimpact->depname, rdp->depname);
-		XSTRDUP(rmimpact->fullpkgname, rdp->depname);
-		XSTRDUP(rmimpact->oldpkg, rdp->depname);
+		XMALLOC(rmimpact, sizeof(Pkg));
+		XSTRDUP(rmimpact->depend, rdp->depend);
+		XSTRDUP(rmimpact->full, rdp->depend);
+		XSTRDUP(rmimpact->old, rdp->depend);
 		rmimpact->action = TOREMOVE;
 		rmimpact->level = 0;
 
@@ -175,14 +179,16 @@ break_depends(Impacthead *impacthead, Pkgimpact *pimpact)
 	free_deptree(&rdphead);
 }
 
-/* loop through local packages and match for upgrades */
+/**
+ * loop through local packages and match for upgrades
+ */
 static int
 deps_impact(Impacthead *impacthead,
-	Plisthead *localplisthead, Plisthead *remoteplisthead, Pkgdeptree *pdp)
+	Plisthead *localplisthead, Plisthead *remoteplisthead, Pkg *pdp)
 {
 	int			toupgrade;
-	Pkgimpact	*pimpact;
-	Pkglist		*plist, *mapplist;
+	Pkg			*pimpact;
+	Pkg			*plist, *mapplist;
 	char		*remotepkg;
 
 	/* local package list is empty */
@@ -190,19 +196,19 @@ deps_impact(Impacthead *impacthead,
 		return 1;
 
 	/* record corresponding package on remote list*/
-	if ((mapplist = map_pkg_to_dep(remoteplisthead, pdp->depname)) == NULL)
+	if ((mapplist = map_pkg_to_dep(remoteplisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
-	XSTRDUP(remotepkg, mapplist->fullpkgname);
+	XSTRDUP(remotepkg, mapplist->full);
 
 	/* create initial impact entry with a DONOTHING status, permitting
 	 * to check if this dependency has already been recorded
 	 */
 	XMALLOC(pimpact, sizeof(Pkgimpact));
-	XSTRDUP(pimpact->depname, pdp->depname);
+	XSTRDUP(pimpact->depend, pdp->depend);
 
 	pimpact->action = DONOTHING;
-	pimpact->oldpkg = NULL;
-	pimpact->fullpkgname = NULL;
+	pimpact->old = NULL;
+	pimpact->full = NULL;
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
@@ -210,7 +216,7 @@ deps_impact(Impacthead *impacthead,
 	SLIST_FOREACH(plist, localplisthead, next) {
 
 		/* match, package is installed */
-		if (strcmp(plist->pkgname, pdp->matchname) == 0) {
+		if (strcmp(plist->name, pdp->name) == 0) {
 
 			/* default action when local package match */
 			toupgrade = TOUPGRADE;
@@ -218,13 +224,12 @@ deps_impact(Impacthead *impacthead,
 			/* installed version does not match dep requirement
 			 * OR force reinstall, pkgkeep being use to inform -F was given
 			 */
-			if (!pkg_match(pdp->depname, plist->fullpkgname) ||
-				pdp->pkgkeep < 0) {
+			if (!pkg_match(pdp->depend, plist->full) || pdp->keep < 0) {
 
 				/* local pkgname didn't match deps, remote pkg has a
 				 * lesser version than local package.
 				*/
-				if (version_check(plist->fullpkgname, remotepkg) == 1) {
+				if (version_check(plist->full, remotepkg) == 1) {
 					/*
 					 * proposing a downgrade is definitely not useful,
 					 * not sure what I want to do with this...
@@ -236,11 +241,11 @@ deps_impact(Impacthead *impacthead,
 
 				/* insert as an upgrade */
 				/* oldpkg is used when building removal order list */
-				XSTRDUP(pimpact->oldpkg, plist->fullpkgname);
+				XSTRDUP(pimpact->old, plist->full);
 
 				pimpact->action = toupgrade;
 
-				pimpact->fullpkgname = remotepkg;
+				pimpact->full = remotepkg;
 				/* record package dependency deepness */
 				pimpact->level = pdp->level;
 				/* record binary package size */
@@ -260,16 +265,16 @@ deps_impact(Impacthead *impacthead,
 		 * dependency, i.e. libflashsupport-pulse, ghostscript-esp...
 		 * would probably lead to conflict if recorded, pass.
 		 */
-		if (pkg_match(pdp->depname, plist->fullpkgname))
+		if (pkg_match(pdp->depend, plist->full))
 			return 1;
 
 	} /* SLIST_FOREACH plist */
 
-	if (!dep_present(impacthead, pdp->matchname)) {
-		pimpact->oldpkg = NULL;
+	if (!dep_present(impacthead, pdp->name)) {
+		pimpact->old = NULL;
 		pimpact->action = TOINSTALL;
 
-		pimpact->fullpkgname = remotepkg;
+		pimpact->full = remotepkg;
 		/* record package dependency deepness */
 		pimpact->level = pdp->level;
 
@@ -280,14 +285,16 @@ deps_impact(Impacthead *impacthead,
 	return 1;
 }
 
-/* is pkgname already in impact list ? */
+/**
+ * is pkgname already in impact list ?
+ */
 static uint8_t
 pkg_in_impact(Impacthead *impacthead, char *depname)
 {
-	Pkgimpact	*pimpact;
+	Pkg *pimpact;
 
 	SLIST_FOREACH(pimpact, impacthead, next) {
-		if (strcmp(pimpact->depname, depname) == 0)
+		if (strcmp(pimpact->depend, depname) == 0)
 			return 1;
 	}
 
@@ -304,8 +311,8 @@ pkg_impact(char **pkgargs)
 	Plisthead	*remoteplisthead;
 	Deptreehead	pdphead;
 	Impacthead	*impacthead;
-	Pkgimpact	*pimpact, *tmpimpact;
-	Pkgdeptree	*pdp;
+	Pkg			*pimpact, *tmpimpact;
+	Pkg			*pdp;
 	char		**ppkgargs, *pkgname = NULL;
 #ifndef DEBUG
 	char		tmpicon;
@@ -366,7 +373,7 @@ pkg_impact(char **pkgargs)
 		SLIST_FOREACH(pdp, &pdphead, next) {
 
 			/* is dependency already recorded in impact list ? */
-			if (pkg_in_impact(impacthead, pdp->depname))
+			if (pkg_in_impact(impacthead, pdp->depend))
 				continue;
 
 			/* compare needed deps with local packages */
@@ -387,32 +394,31 @@ pkg_impact(char **pkgargs)
 		if ((pkgname = find_exact_pkg(remoteplisthead, *ppkgargs)) == NULL)
 			continue; /* should not happen, package name is verified */
 
-		/* use a Pkgdeptree for convenience */
-		XMALLOC(pdp, sizeof(Pkgdeptree));
-		XSTRDUP(pdp->matchname, pkgname);
-		trunc_str(pdp->matchname, '-', STR_BACKWARD);
+		XMALLOC(pdp, sizeof(Pkg));
+		XSTRDUP(pdp->name, pkgname);
+		trunc_str(pdp->name, '-', STR_BACKWARD);
 
 		/* pkgname is not already recorded */
 		if (!pkg_in_impact(impacthead, pkgname)) {
 			/* passing pkgname as depname */
-			XSTRDUP(pdp->depname, pkgname);
+			XSTRDUP(pdp->depend, pkgname);
 
 			/* reset pkgkeep */
-			pdp->pkgkeep = 0;
+			pdp->keep = 0;
 
 			if (force_reinstall)
 				/* use pkgkeep field to inform deps_impact the package
 				 * has to be reinstalled. It is NOT the normal use for
 				 * the pkgkeep field, it is just used as a temporary field
 				 */
-				pdp->pkgkeep = -1;
+				pdp->keep = -1;
 
 			deps_impact(impacthead, localplisthead, remoteplisthead, pdp);
 
-			XFREE(pdp->depname);
+			XFREE(pdp->depend);
 		}
 
-		XFREE(pdp->matchname);
+		XFREE(pdp->name);
 		XFREE(pdp);
 
 		XFREE(pkgname);
@@ -433,11 +439,11 @@ impactend:
 	SLIST_FOREACH_MUTABLE(pimpact, impacthead, next, tmpimpact) {
 		if (pimpact->action == DONOTHING) {
 
-			SLIST_REMOVE(impacthead, pimpact, Pkgimpact, next);
+			SLIST_REMOVE(impacthead, pimpact, Pkg, next);
 
-			XFREE(pimpact->depname);
-			XFREE(pimpact->fullpkgname);
-			XFREE(pimpact->oldpkg);
+			XFREE(pimpact->depend);
+			XFREE(pimpact->full);
+			XFREE(pimpact->old);
 			XFREE(pimpact);
 		}
 	} /* SLIST_FOREACH_MUTABLE impacthead */

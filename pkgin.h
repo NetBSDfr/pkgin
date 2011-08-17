@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.7 2011/08/16 21:17:55 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.8 2011/08/17 22:31:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -110,45 +110,56 @@ typedef struct Dlfile {
 	size_t size;
 } Dlfile;
 
-/* Package list */
-typedef struct Pkglist {
-	char *fullpkgname; /* foo-1.0 */
-	char *pkgname; /* foo */
-	char *pkgvers; /* 1.0 */
-	char *comment; /* comment */
-	int64_t file_size; /* binary package size */
-	int64_t size_pkg; /* installed package size */
-	SLIST_ENTRY(Pkglist) next;
-} Pkglist;
-
-/* Package dependency tree */
+/**
+ * \struct Pkgdeptree
+ * \brief Package dependency tree
+ */
 typedef struct Pkgdeptree {
-	char *depname; /* foo>=1.0 for direct deps, foo-1.0 for reverse deps */
-	char *matchname; /* foo */
-	int computed; /* recursion memory */
-	int level; /* recursion level */
-	int pkgkeep; /* autoremovable package ? */
-	int64_t file_size; /* binary package size, used in order.c and actions.c */
-	SLIST_ENTRY(Pkgdeptree) next;
+	int		computed; /*!< recursion memory */
+	int		keep; /*!< autoremovable package ? */
 } Pkgdeptree;
 
-/* Impact list */
+/**
+ * \struct Pkgimpact
+ * \brief Impact list
+ */
 typedef struct Pkgimpact {
-    /* depencendy pattern: perl-[0-9]* (direct) or full pkgname (reverse) */
-	char *depname;
-	/* real dependency name: perl-5.10, full remote package */
-	char *fullpkgname;
-	char *oldpkg; /* package to upgrade: perl-5.8 */
-	int action; /* TOINSTALL or TOUPGRADE */
-	int level; /* dependency level, inherited from full dependency list */
-	int64_t file_size; /* binary package size */
-	int64_t size_pkg; /* installed package size */
-	SLIST_ENTRY(Pkgimpact) next;
+	int		action; /*!< TOINSTALL or TOUPGRADE */
+	char	*old; /*!< package to upgrade: perl-5.8 */
 } Pkgimpact;
 
-typedef SLIST_HEAD(, Pkgdeptree) Deptreehead;
-typedef SLIST_HEAD(, Pkglist) Plisthead;
-typedef SLIST_HEAD(, Pkgimpact) Impacthead;
+/**
+ * \struct Pkgname
+ * \brief Various forms of package name
+ */
+typedef struct Pkg {
+	char *full; /*!< full package name with version , foo-1.0 */
+	char *name; /*!< package name */
+	char *version; /*<! package version */
+	char *depend; /*!< dewey or glob form for forward (direct) dependencies
+					foo>=1.0, or full package name for reverse dependencies */
+	union {
+		char		*comment; /*!< package list comment */
+		Pkgdeptree	deptree; /*<! dependency tree informations */
+		Pkgimpact	impact; /*<! impact list informations */
+	} p_un;
+
+	int64_t	size_pkg; /*!< installed package size (list and impact) */
+	int64_t	file_size; /*!< binary package size */
+	int		level; /*<! recursion level (deptree and impact) */
+
+	SLIST_ENTRY(Pkg) next;
+} Pkg;
+
+#define comment  	p_un.comment
+#define computed	p_un.deptree.computed
+#define keep		p_un.deptree.keep
+#define old		   	p_un.impact.old
+#define action   	p_un.impact.action
+
+typedef SLIST_HEAD(, Pkg) Deptreehead;
+typedef SLIST_HEAD(, Pkg) Plisthead;
+typedef SLIST_HEAD(, Pkg) Impacthead;
 
 extern uint8_t 		yesflag;
 extern uint8_t 		noflag;
@@ -178,7 +189,7 @@ void		free_pkglist(Plisthead *);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 int			count_samepkg(Plisthead *, const char *);
-Pkglist		*map_pkg_to_dep(Plisthead *, char *);
+Pkg			*map_pkg_to_dep(Plisthead *, char *);
 char		*end_expr(Plisthead *, const char *);
 /* actions.c */
 int			check_yesno(void);

@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3.2.4 2011/08/16 21:56:14 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.5 2011/08/17 22:31:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -28,6 +28,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ */
+
+/**
+ * Import pkg_summary to SQLite database
  */
 
 #include "tools.h"
@@ -91,7 +95,9 @@ int			force_fetch = 0;
 
 static const char *const sumexts[] = { "bz2", "gz", NULL };
 
-/* remote summary fetch */
+/**
+ * remote summary fetch
+ */
 static char **
 fetch_summary(char *cur_repo)
 {
@@ -144,7 +150,9 @@ fetch_summary(char *cur_repo)
 	return NULL;
 }
 
-/* progress percentage */
+/**
+ * progress percentage
+ */
 static void
 progress(char c)
 {
@@ -160,7 +168,9 @@ progress(char c)
 	fflush(stdout);
 }
 
-/* check if the field is PKGNAME */
+/**
+ * check if the field is PKGNAME
+ */
 static int
 chk_pkgname(char *field)
 {
@@ -171,7 +181,9 @@ chk_pkgname(char *field)
 	return 0;
 }
 
-/* returns value for given field */
+/**
+ * returns value for given field
+ */
 static char *
 field_record(const char *field, char *line)
 {
@@ -212,7 +224,9 @@ free_insertlist()
 	}
 }
 
-/* sqlite callback, fill cols.name[] with available columns names */
+/**
+ * sqlite callback, fill cols.name[] with available columns names
+ */
 int
 colnames(void *unused, int argc, char **argv, char **colname)
 {
@@ -230,7 +244,9 @@ colnames(void *unused, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
-/* for now, values are located on a SLIST, build INSERT line with them */
+/**
+ * for now, values are located on a SLIST, build INSERT line with them
+ */
 static void
 prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
 {
@@ -278,7 +294,9 @@ prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
 	commit_list[commit_idx] = commit_query;
 }
 
-/* add item to the main SLIST */
+/**
+ * add item to the main SLIST
+ */
 static void
 add_to_slist(char *field, char*value)
 {
@@ -291,7 +309,9 @@ add_to_slist(char *field, char*value)
 	SLIST_INSERT_HEAD(&inserthead, insert, next);
 }
 
-/* fill-in secondary tables */
+/**
+ * fill-in secondary tables
+ */
 static void
 child_table(const char *fmt, ...)
 {
@@ -538,7 +558,7 @@ update_db(int which, char **pkgkeep)
 {
 	int			i;
 	Plisthead	*keeplisthead, *nokeeplisthead, *plisthead;
-	Pkglist		*pkglist;
+	Pkg			*pkglist;
 	char		**summary = NULL, **prepos, buf[BUFSIZ];
 
 	for (i = 0; i < 2; i++) {
@@ -568,7 +588,7 @@ update_db(int which, char **pkgkeep)
 			/* restore keep-list */
 			if (keeplisthead != NULL) {
 				SLIST_FOREACH(pkglist, keeplisthead, next) {
-					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->fullpkgname);
+					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->full);
 					pkgindb_doquery(buf, NULL, NULL);
 				}
 				free_pkglist(keeplisthead);
@@ -581,7 +601,7 @@ update_db(int which, char **pkgkeep)
 				if ((nokeeplisthead =
 						rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
 					SLIST_FOREACH(pkglist, nokeeplisthead, next)
-						mark_as_automatic_installed(pkglist->fullpkgname, 1);
+						mark_as_automatic_installed(pkglist->full, 1);
 
 					free_pkglist(nokeeplisthead);
 				}
@@ -593,9 +613,9 @@ update_db(int which, char **pkgkeep)
 				 */
 				if ((plisthead = rec_pkglist(LOCAL_PKGS_QUERY)) != NULL) {
 					SLIST_FOREACH(pkglist, plisthead, next)
-						if (!is_automatic_installed(pkglist->fullpkgname)) {
+						if (!is_automatic_installed(pkglist->full)) {
 							snprintf(buf, BUFSIZ, KEEP_PKG,
-								pkglist->fullpkgname);
+								pkglist->full);
 							pkgindb_doquery(buf, NULL, NULL);
 						}
 
