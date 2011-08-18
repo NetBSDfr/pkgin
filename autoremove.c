@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2 2011/03/05 22:33:16 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.1 2011/08/18 21:46:43 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -39,11 +39,9 @@ static int 			removenb = 0;
 void
 pkgin_autoremove()
 {
-	Plisthead	*plisthead;
-	Pkglist		*pkglist;
-	Deptreehead	keephead, removehead, *orderedhead;
-	Pkgdeptree	*premove, *pdp;
-	char		*pkgname, *toremove = NULL;
+	Plisthead	*plisthead, keephead, removehead, *orderedhead;
+	Pkglist		*pkglist, *premove, *pdp;
+	char		*toremove = NULL;
 	int			exists;
 
 	/* test if there's any keep package and record them */
@@ -53,19 +51,14 @@ pkgin_autoremove()
 	SLIST_INIT(&keephead);
 
 	/* record keep packages deps  */
-	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(pkgname, pkglist->pkgname);
-		trunc_str(pkgname, '-', STR_BACKWARD);
+	SLIST_FOREACH(pkglist, plisthead, next)
+		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, &keephead);
 
-		full_dep_tree(pkgname, LOCAL_DIRECT_DEPS, &keephead);
-
-		XFREE(pkgname);
-	}
-	free_pkglist(plisthead);
+	free_pkglist(plisthead, LIST);
 
 	/* record unkeep packages */
 	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
-		free_deptree(&keephead);
+		free_pkglist(&keephead, DEPTREE);
 
 		printf(MSG_ALL_KEEP_PKGS);
 		return;
@@ -75,35 +68,31 @@ pkgin_autoremove()
 
 	/* parse non-keepables packages */
 	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(pkgname, pkglist->pkgname);
-		trunc_str(pkgname, '-', STR_BACKWARD);
-
 		exists = 0;
 		/* is it a dependence for keepable packages ? */
 		SLIST_FOREACH(pdp, &keephead, next) {
-			if (strncmp(pdp->depname, pkgname, strlen(pkgname)) == 0) {
+			if (strncmp(pdp->depend, pkglist->name,
+					strlen(pkglist->name)) == 0) {
 				exists = 1;
 				break;
 			}
 		}
-		XFREE(pkgname);
 
 		if (exists)
 			continue;
 
 		/* package was not found, insert it on removelist */
-		XMALLOC(premove, sizeof(Pkgdeptree));
-		XSTRDUP(premove->depname, pkglist->pkgname);
-		premove->matchname = NULL; /* safety */
-		premove->level = 0;
+		premove = malloc_pkglist(DEPTREE);
+
+		XSTRDUP(premove->depend, pkglist->name);
 
 		SLIST_INSERT_HEAD(&removehead, premove, next);
 
 		removenb++;
 	} /* SLIST_FOREACH plisthead */
 
-	free_deptree(&keephead);
-	free_pkglist(plisthead);
+	free_pkglist(&keephead, DEPTREE);
+	free_pkglist(plisthead, LIST);
 
 #ifdef WITHOUT_ORDER
 	orderedhead = &removehead;
@@ -112,7 +101,7 @@ pkgin_autoremove()
 #endif
 	if (!SLIST_EMPTY(orderedhead)) {
 		SLIST_FOREACH(premove, orderedhead, next)
-			toremove = action_list(toremove, premove->depname);
+			toremove = action_list(toremove, premove->depend);
 
 		/* we want this action to be confirmed */
 		yesflag = 0;
@@ -121,11 +110,11 @@ pkgin_autoremove()
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
 		if (check_yesno()) {
 			SLIST_FOREACH(premove, orderedhead, next) {
-				printf(MSG_REMOVING, premove->depname);
+				printf(MSG_REMOVING, premove->depend);
 #ifdef DEBUG
-				printf("%s -f %s\n", PKG_DELETE, premove->depname);
+				printf("%s -f %s\n", PKG_DELETE, premove->depend);
 #else
-				fexec(PKG_DELETE, "-f", premove->depname, NULL);
+				fexec(PKG_DELETE, "-f", premove->depend, NULL);
 #endif
 			}
 			update_db(LOCAL_SUMMARY, NULL);
@@ -133,7 +122,7 @@ pkgin_autoremove()
 	}
 
 	XFREE(toremove);
-	free_deptree(orderedhead);
+	free_pkglist(orderedhead, DEPTREE);
 #ifndef WITHOUT_ORDER
 	XFREE(orderedhead);
 #endif
@@ -153,9 +142,9 @@ show_pkg_keep(void)
 	}
 
 	SLIST_FOREACH(pkglist, plisthead, next)
-		printf(MSG_MARK_PKG_KEEP, pkglist->pkgname);
+		printf(MSG_MARK_PKG_KEEP, pkglist->name);
 
-	free_pkglist(plisthead);
+	free_pkglist(plisthead, LIST);
 }
 
 /* flag packages in pkgargs as non or autoremovable */
@@ -180,7 +169,7 @@ pkg_keep(int type, char **pkgargs)
 			if (exact_pkgfmt(*pkeep)) /* argument was a full package name */
 				trunc_str(*pkeep, '-', STR_BACKWARD);
 
-			XSTRDUP(pkgname, pkglist->pkgname);
+			XSTRDUP(pkgname, pkglist->full);
 			if ((p = strrchr(pkgname, '-')) != NULL)
 			    	*p = '\0';
 
@@ -216,5 +205,5 @@ pkg_keep(int type, char **pkgargs)
 			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
 	} /* for (pkeep) */
 
-	free_pkglist(plisthead);
+	free_pkglist(plisthead, LIST);
 }

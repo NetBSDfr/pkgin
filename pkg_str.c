@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.1.2.4 2011/08/15 16:44:01 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.1.2.5 2011/08/18 21:46:43 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -64,7 +64,7 @@ find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
 
 	/* check for package existence */
 	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(tmppkg, pkglist->fullpkgname);
+		XSTRDUP(tmppkg, pkglist->full);
 
 		if (!exact) {
 			/*
@@ -82,7 +82,7 @@ find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
 			strncmp(tmppkg, pkgarg, tmplen) == 0) {
 			XFREE(tmppkg);
 
-			XSTRDUP(pkgname, pkglist->fullpkgname);
+			XSTRDUP(pkgname, pkglist->full);
 			return pkgname;
 		}
 		XFREE(tmppkg);

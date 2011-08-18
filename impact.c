@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.8 2011/08/18 20:34:09 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.9 2011/08/18 21:46:43 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -114,7 +114,7 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 		 * our newly upgraded packages.
 		 */
 		if (SLIST_EMPTY(&fdphead)) {
-			free_deptree(&fdphead);
+			free_pkglist(&fdphead, DEPTREE);
 			full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, &fdphead);
 		}
 		XFREE(rpkg);
@@ -129,7 +129,7 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 				break;
 			}
 
-		free_deptree(&fdphead);
+		free_pkglist(&fdphead, DEPTREE);
 
 		if (!dep_break)
 			continue;
