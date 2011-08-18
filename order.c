@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.1.1.1.2.2 2011/08/16 21:17:55 imilh Exp $ */
+/* $Id: order.c,v 1.1.1.1.2.3 2011/08/18 20:44:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -32,18 +32,22 @@
 
 #include "pkgin.h"
 
-/*
+/**
+ * /file order.c
+ *
  * order.c has only one purpose: arrange lists order in order to satisfy
  * pkg_add / pkg_delete.
  */
 
-/* find dependency deepness for package removal and record it to pdp->level */
+/**
+ * find dependency deepness for package removal and record it to pdp->level
+ */
 static void
-remove_dep_deepness(Deptreehead *deptreehead)
+remove_dep_deepness(Plisthead *deptreehead)
 {
-	char *depname;
-	Pkgdeptree *pdp;
-	Deptreehead lvldeptree;
+	char		*depname;
+	Pkglist		*pdp;
+	Plisthead	lvldeptree;
 
 	SLIST_INIT(&lvldeptree);
 
@@ -56,14 +60,14 @@ remove_dep_deepness(Deptreehead *deptreehead)
 
 		pdp->level = 1;
 		
-		if (pdp->depname == NULL)
+		if (pdp->depend == NULL)
 			/* there's something wrong with database's record, probably
 			 * a mistaken dependency
 			 */
 			continue;
 
 		/* depname received from deptreehead is in package format */
-		XSTRDUP(depname, pdp->depname);
+		XSTRDUP(depname, pdp->depend);
 
 		trunc_str(depname, '-', STR_BACKWARD);
 
@@ -76,18 +80,18 @@ remove_dep_deepness(Deptreehead *deptreehead)
 		free_deptree(&lvldeptree);
 
 #if 0
-		printf("%s -> %d\n", pdp->depname, pdp->level);
+		printf("%s -> %d\n", pdp->depend, pdp->level);
 #endif
 	}
 }
 
 /* order the remove list according to dependency level */
-Deptreehead *
-order_remove(Deptreehead *deptreehead)
+Plisthead *
+order_remove(Plisthead *deptreehead)
 {
-	int i, maxlevel = 0;
-	Pkgdeptree *pdp, *next;
-	Deptreehead *ordtreehead;
+	int			i, maxlevel = 0;
+	Pkglist		*pdp, *next;
+	Plisthead	*ordtreehead;
 
 	/* package removal cannot trust recorded dependencies, reorder */
 	remove_dep_deepness(deptreehead);
@@ -96,7 +100,7 @@ order_remove(Deptreehead *deptreehead)
 		if (pdp->level > maxlevel)
 			maxlevel = pdp->level;
 
-	XMALLOC(ordtreehead, sizeof(Deptreehead));
+	XMALLOC(ordtreehead, sizeof(Plisthead));
 	SLIST_INIT(ordtreehead);
 
 	for (i = maxlevel; i >= 0; i--) {
@@ -104,7 +108,7 @@ order_remove(Deptreehead *deptreehead)
 		while (pdp != NULL) {
 			next = SLIST_NEXT(pdp, next);
 			if (pdp->level == i) {
-				SLIST_REMOVE(deptreehead, pdp, Pkgdeptree, next);
+				SLIST_REMOVE(deptreehead, pdp, Pkglist, next);
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
 			}
 			pdp = next;
@@ -116,12 +120,11 @@ order_remove(Deptreehead *deptreehead)
 
 /* find dependency deepness for upgrade and record it to pimpact->level */
 static void
-upgrade_dep_deepness(Impacthead *impacthead)
+upgrade_dep_deepness(Plisthead *impacthead)
 {
 	char		*pkgname, *p;
-	Pkgimpact	*pimpact;
-	Deptreehead	lvldeptree;
-	Plisthead	*plisthead;
+	Pkglist		*pimpact;
+    Plisthead	lvldeptree, *plisthead;
 
 	plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
 
@@ -141,7 +144,7 @@ upgrade_dep_deepness(Impacthead *impacthead)
 		pimpact->level = 1;
 
 		/* depname received from impact is in full package format */
-		XSTRDUP(pkgname, pimpact->fullpkgname);
+		XSTRDUP(pkgname, pimpact->full);
 
 		if ((p = strrchr(pkgname, '-')) != NULL)
 			*p = '\0';
@@ -153,25 +156,24 @@ upgrade_dep_deepness(Impacthead *impacthead)
 
 #if 0
 		printf("%s (%s) -> %d\n",
-			pimpact->fullpkgname, pkgname, pimpact->level);
+			pimpact->full, pkgname, pimpact->level);
 #endif
 
 		XFREE(pkgname);
-		free_deptree(&lvldeptree);
+		free_pkglist(&lvldeptree, DEPTREE);
 	}
 
 endupdep:
-	free_pkglist(plisthead);
+	free_pkglist(plisthead, LIST);
 }
 
 /* order the remove-for-upgrade list according to dependency level */
-Deptreehead *
-order_upgrade_remove(Impacthead *impacthead)
+Plisthead *
+order_upgrade_remove(Plisthead *impacthead)
 {
-	Deptreehead *ordtreehead;
-	Pkgimpact *pimpact;
-	Pkgdeptree *pdp;
-	int i, maxlevel = 0;
+	Plisthead	*ordtreehead;
+	Pkglist		*pimpact, *pdp;
+	int			i, maxlevel = 0;
 
 	upgrade_dep_deepness(impacthead);
 
@@ -181,7 +183,7 @@ order_upgrade_remove(Impacthead *impacthead)
 				&& pimpact->level > maxlevel)
 			maxlevel = pimpact->level;
 
-	XMALLOC(ordtreehead, sizeof(Deptreehead));
+	XMALLOC(ordtreehead, sizeof(Plisthead));
 	SLIST_INIT(ordtreehead);
 
 	for (i = maxlevel; i >= 0; i--)
@@ -189,9 +191,10 @@ order_upgrade_remove(Impacthead *impacthead)
 			if ((pimpact->action == TOUPGRADE ||  pimpact->action == TOREMOVE)
 				&& pimpact->level == i) {
 
-				XMALLOC(pdp, sizeof(Pkgdeptree));
-				XSTRDUP(pdp->depname, pimpact->oldpkg);
-				pdp->matchname = NULL; /* safety */
+				pdp = malloc_pkglist(DEPTREE);
+
+				XSTRDUP(pdp->depend, pimpact->old);
+				pdp->name = NULL; /* safety */
 				pdp->computed = pimpact->action; /* XXX: ugly */
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
 			}
@@ -206,13 +209,12 @@ order_upgrade_remove(Impacthead *impacthead)
  * is that pkg_add will install direct dependencies, giving a "failed,
  * package already installed"
  */
-Deptreehead *
-order_install(Impacthead *impacthead)
+Plisthead *
+order_install(Plisthead *impacthead)
 {
-	Deptreehead *ordtreehead;
-	Pkgimpact *pimpact;
-	Pkgdeptree *pdp;
-	int i, maxlevel = 0;
+	Plisthead	*ordtreehead;
+	Pkglist		*pimpact, *pdp;
+	int			i, maxlevel = 0;
 
 	/* record higher dependency level on impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -221,16 +223,18 @@ order_install(Impacthead *impacthead)
 			maxlevel = pimpact->level;
 	}
 
-	XMALLOC(ordtreehead, sizeof(Deptreehead));
+	XMALLOC(ordtreehead, sizeof(Plisthead));
 	SLIST_INIT(ordtreehead);
 
 	for (i = 0; i <= maxlevel; i++) {
 		SLIST_FOREACH(pimpact, impacthead, next) {
 			if ((pimpact->action == TOUPGRADE ||
 					pimpact->action == TOINSTALL) && pimpact->level == i) {
-				XMALLOC(pdp, sizeof(Pkgdeptree));
-				XSTRDUP(pdp->depname, pimpact->fullpkgname);
-				pdp->matchname = NULL; /* safety */
+
+				pdp = malloc_pkglist(DEPTREE);
+
+				XSTRDUP(pdp->depend, pimpact->full);
+				pdp->name = NULL; /* safety */
 				pdp->level = pimpact->level;
 				/* record package size for download check */
 				pdp->file_size = pimpact->file_size;
