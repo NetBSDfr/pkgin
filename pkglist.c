@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.5 2011/08/17 22:31:49 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.6 2011/08/18 17:34:07 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -33,10 +33,47 @@
 #include "pkgin.h"
 #include <regex.h>
 
-void
-free_pkglist(Plisthead *plisthead)
+/**
+ * Pkglist allocation
+ */
+Pkglist *
+malloc_pkglist(uint8_t type)
 {
-	Pkg *plist;
+	Pkglist *pkglist;
+
+	XMALLOC(pkglist, sizeof(Pkglist));
+
+	/*!< Init all the things ! (http://knowyourmeme.com/memes/x-all-the-y) */
+	pkglist->type = type;
+	pkglist->full = NULL;
+	pkglist->name = NULL;
+	pkglist->version = NULL;
+	pkglist->depend = NULL;
+	pkglist->size_pkg = 0;
+	pkglist->file_size = 0;
+	pkglist->level = 0;
+
+	switch (type) {
+	case LIST:
+		pkglist->comment = NULL;
+		break;
+	case DEPTREE:
+		pkglist->computed = 0;
+		pkglist->keep = 0;
+		break;
+	case IMPACT:
+		pkglist->action = DONOTHING;
+		pkglist->old = NULL;
+		break;
+	}
+
+	return pkglist;
+}
+
+void
+free_pkglist(Plisthead *plisthead, uint8_t type)
+{
+	Pkglist *plist;
 
 	if (plisthead == NULL)
 		return;
@@ -47,7 +84,14 @@ free_pkglist(Plisthead *plisthead)
 		XFREE(plist->full);
 		XFREE(plist->name);
 		XFREE(plist->version);
-		XFREE(plist->comment);
+		XFREE(plist->depend);
+		switch (type) {
+		case LIST:
+			XFREE(plist->comment);
+			break;
+		case IMPACT:
+			XFREE(plist->old);
+		}
 		XFREE(plist);
 	}
 	XFREE(plisthead);
@@ -66,7 +110,7 @@ free_pkglist(Plisthead *plisthead)
 static int
 pdb_rec_pkglist(void *param, int argc, char **argv, char **colname)
 {
-	Pkg			*plist;
+	Pkglist			*plist;
 	Plisthead 	*plisthead = (Plisthead *)param;
 
 	if (argv == NULL)
@@ -79,7 +123,7 @@ pdb_rec_pkglist(void *param, int argc, char **argv, char **colname)
 	if (FULLPKGNAME == NULL)
 		return PDB_OK;
 
-	XMALLOC(plist, sizeof(Pkg));
+	plist = malloc_pkglist(LIST);
 	XSTRDUP(plist->full, FULLPKGNAME);
 
 	plist->size_pkg = 0;
@@ -131,9 +175,9 @@ rec_pkglist(const char *pkgquery)
 
 /* compare pkg version */
 static int
-pkg_is_installed(Plisthead *plisthead, Pkg *pkg)
+pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
 {
-	Pkg *pkglist;
+	Pkglist *pkglist;
 
 	SLIST_FOREACH(pkglist, plisthead, next) {
 		/* make sure packages match */
@@ -153,7 +197,7 @@ pkg_is_installed(Plisthead *plisthead, Pkg *pkg)
 void
 list_pkgs(const char *pkgquery, int lstype)
 {
-	Pkg		 	*plist;
+	Pkglist		 	*plist;
 	Plisthead 	*plisthead, *localplisthead = NULL;
 	int			rc;
 	char		pkgstatus, outpkg[BUFSIZ];
@@ -186,9 +230,9 @@ list_pkgs(const char *pkgquery, int lstype)
 				}
 
 			}
-			free_pkglist(plisthead);
+			free_pkglist(plisthead, LIST);
 		}
-		free_pkglist(localplisthead);
+		free_pkglist(localplisthead, LIST);
 		return;
 	} /* lstype == LLIST && status */
 
@@ -196,7 +240,7 @@ list_pkgs(const char *pkgquery, int lstype)
 		SLIST_FOREACH(plist, plisthead, next)
 			printf("%-20s %s\n", plist->full, plist->comment);
 
-		free_pkglist(plisthead);
+		free_pkglist(plisthead, LIST);
 	}
 
 
@@ -205,7 +249,7 @@ list_pkgs(const char *pkgquery, int lstype)
 void
 search_pkg(const char *pattern)
 {
-	Pkg		 	*plist;
+	Pkglist		 	*plist;
 	Plisthead 	*plisthead, *localplisthead;
 	regex_t		re;
 	int			rc;
@@ -248,10 +292,10 @@ search_pkg(const char *pattern)
 			}
 		}
 
-		free_pkglist(plisthead);
+		free_pkglist(plisthead,LIST);
 
 		if (localplisthead != NULL)
-			free_pkglist(localplisthead);
+			free_pkglist(localplisthead, LIST);
 
 		regfree(&re);
 
@@ -266,7 +310,7 @@ search_pkg(const char *pattern)
 int
 count_samepkg(Plisthead *plisthead, const char *pkgname)
 {
-	Pkg		*pkglist;
+	Pkglist		*pkglist;
 	char	*plistpkg = NULL, **samepkg = NULL;
 	int		count = 0, num = 0, pkglen, pkgfmt = 0;
 
@@ -328,10 +372,10 @@ count_samepkg(Plisthead *plisthead, const char *pkgname)
 }
 
 /* return a pkgname corresponding to a dependency */
-Pkg *
+Pkglist *
 map_pkg_to_dep(Plisthead *plisthead, char *depname)
 {
-	Pkg	*plist;
+	Pkglist	*plist;
 
 	SLIST_FOREACH(plist, plisthead, next)
 		if (pkg_match(depname, plist->full))

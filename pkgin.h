@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.8 2011/08/17 22:31:49 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.9 2011/08/18 17:34:07 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -111,45 +111,47 @@ typedef struct Dlfile {
 } Dlfile;
 
 /**
- * \struct Pkgdeptree
+ * \struct Deptree
  * \brief Package dependency tree
  */
-typedef struct Pkgdeptree {
+typedef struct Deptree {
 	int		computed; /*!< recursion memory */
 	int		keep; /*!< autoremovable package ? */
-} Pkgdeptree;
+} Deptree;
 
 /**
- * \struct Pkgimpact
+ * \struct Impact
  * \brief Impact list
  */
 typedef struct Pkgimpact {
 	int		action; /*!< TOINSTALL or TOUPGRADE */
 	char	*old; /*!< package to upgrade: perl-5.8 */
-} Pkgimpact;
+} Impact;
 
 /**
  * \struct Pkgname
  * \brief Various forms of package name
  */
-typedef struct Pkg {
-	char *full; /*!< full package name with version , foo-1.0 */
-	char *name; /*!< package name */
-	char *version; /*<! package version */
-	char *depend; /*!< dewey or glob form for forward (direct) dependencies
-					foo>=1.0, or full package name for reverse dependencies */
-	union {
-		char		*comment; /*!< package list comment */
-		Pkgdeptree	deptree; /*<! dependency tree informations */
-		Pkgimpact	impact; /*<! impact list informations */
-	} p_un;
+typedef struct Pkglist {
+	uint8_t	type; /*!< list type */
 
 	int64_t	size_pkg; /*!< installed package size (list and impact) */
 	int64_t	file_size; /*!< binary package size */
 	int		level; /*<! recursion level (deptree and impact) */
 
-	SLIST_ENTRY(Pkg) next;
-} Pkg;
+	char *full; /*!< full package name with version, foo-1.0 */
+	char *name; /*!< package name, foo */
+	char *version; /*<! package version, 1.0 */
+	char *depend; /*!< dewey or glob form for forward (direct) dependencies
+					foo>=1.0, or full package name for reverse dependencies */
+	union {
+		char		*comment; /*!< package list comment */
+		Deptree		deptree; /*<! dependency tree informations */
+		Impact		impact; /*<! impact list informations */
+	} p_un;
+
+	SLIST_ENTRY(Pkglist) next;
+} Pkglist;
 
 #define comment  	p_un.comment
 #define computed	p_un.deptree.computed
@@ -157,9 +159,11 @@ typedef struct Pkg {
 #define old		   	p_un.impact.old
 #define action   	p_un.impact.action
 
-typedef SLIST_HEAD(, Pkg) Deptreehead;
-typedef SLIST_HEAD(, Pkg) Plisthead;
-typedef SLIST_HEAD(, Pkg) Impacthead;
+#define LIST		0
+#define DEPTREE		1
+#define IMPACT		2
+
+typedef SLIST_HEAD(, Pkglist) Plisthead;
 
 extern uint8_t 		yesflag;
 extern uint8_t 		noflag;
@@ -181,15 +185,16 @@ char 		*match_dep_ext(char *, const char *);
 void		show_direct_depends(const char *);
 void		show_full_dep_tree(const char *, const char *, const char *);
 void 		full_dep_tree(const char *pkgname, const char *depquery,
-	Deptreehead	*pdphead);
-void		free_deptree(Deptreehead *);
+	Plisthead	*pdphead);
+void		free_deptree(Plisthead *);
 /* pkglist.c */
+Pkglist		*malloc_pkglist(uint8_t);
 Plisthead	*rec_pkglist(const char *);
-void		free_pkglist(Plisthead *);
+void		free_pkglist(Plisthead *, uint8_t);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 int			count_samepkg(Plisthead *, const char *);
-Pkg			*map_pkg_to_dep(Plisthead *, char *);
+Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 char		*end_expr(Plisthead *, const char *);
 /* actions.c */
 int			check_yesno(void);
@@ -198,12 +203,11 @@ int			pkgin_install(char **, uint8_t);
 char		*action_list(char *, char *);
 void		pkgin_upgrade(int);
 /* order.c */
-Deptreehead	*order_remove(Deptreehead *);
-Deptreehead	*order_upgrade_remove(Impacthead *);
-Deptreehead	*order_install(Impacthead *);
+Plisthead	*order_remove(Plisthead *);
+Plisthead	*order_upgrade_remove(Plisthead *);
+Plisthead	*order_install(Plisthead *);
 /* impact.c */
-Impacthead	*pkg_impact(char **);
-void		free_impact(Impacthead *impacthead);
+Plisthead	*pkg_impact(char **);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);
