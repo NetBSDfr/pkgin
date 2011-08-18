@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.6 2011/08/18 17:34:07 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.7 2011/08/18 20:34:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -95,6 +95,8 @@ free_pkglist(Plisthead *plisthead, uint8_t type)
 		XFREE(plist);
 	}
 	XFREE(plisthead);
+
+	plisthead = NULL;
 }
 
 /* SQLite results columns */

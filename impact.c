@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.7 2011/08/17 22:31:49 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.8 2011/08/18 20:34:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -55,33 +55,12 @@
 #include "pkgin.h"
 
 /**
- * free impact list
- */
-void
-free_impact(Impacthead *impacthead)
-{
-	Pkg *pimpact;
-
-	if (impacthead == NULL)
-		return;
-
-	while (!SLIST_EMPTY(impacthead)) {
-		pimpact = SLIST_FIRST(impacthead);
-		SLIST_REMOVE_HEAD(impacthead, next);
-		XFREE(pimpact->depend);
-		XFREE(pimpact->old);
-		XFREE(pimpact->full);
-		XFREE(pimpact);
-	}
-}
-
-/**
  * check wether or not a dependency is already recorded in the impact list
  */
 static int
-dep_present(Impacthead *impacthead, char *depname)
+dep_present(Plisthead *impacthead, char *depname)
 {
-	Pkg *pimpact;
+	Pkglist *pimpact;
 
 	SLIST_FOREACH(pimpact, impacthead, next)
 		if (pimpact->full != NULL &&
@@ -92,11 +71,11 @@ dep_present(Impacthead *impacthead, char *depname)
 }
 
 static void
-break_depends(Impacthead *impacthead, Pkg *pimpact)
+break_depends(Plisthead *impacthead, Pkglist *pimpact)
 {
-	Pkg			*rmimpact;
-	Deptreehead	rdphead, fdphead;
-	Pkg			*rdp, *fdp;
+	Pkglist	   	*rmimpact;
+	Plisthead	rdphead, fdphead;
+	Pkglist	   	*rdp, *fdp;
 	char		*pkgname, *rpkg;
 	int			dep_break, exists;
 
@@ -167,7 +146,7 @@ break_depends(Impacthead *impacthead, Pkg *pimpact)
 			continue;
 
 		/* dependency break, insert rdp in remove-list */
-		XMALLOC(rmimpact, sizeof(Pkg));
+		rmimpact = malloc_pkglist(IMPACT);
 		XSTRDUP(rmimpact->depend, rdp->depend);
 		XSTRDUP(rmimpact->full, rdp->depend);
 		XSTRDUP(rmimpact->old, rdp->depend);
@@ -176,19 +155,19 @@ break_depends(Impacthead *impacthead, Pkg *pimpact)
 
 		SLIST_INSERT_HEAD(impacthead, rmimpact, next);
 	}
-	free_deptree(&rdphead);
+	free_pkglist(&rdphead, DEPTREE);
 }
 
 /**
  * loop through local packages and match for upgrades
  */
 static int
-deps_impact(Impacthead *impacthead,
-	Plisthead *localplisthead, Plisthead *remoteplisthead, Pkg *pdp)
+deps_impact(Plisthead *impacthead,
+	Plisthead *localplisthead, Plisthead *remoteplisthead, Pkglist *pdp)
 {
 	int			toupgrade;
-	Pkg			*pimpact;
-	Pkg			*plist, *mapplist;
+	Pkglist		*pimpact;
+	Pkglist		*plist, *mapplist;
 	char		*remotepkg;
 
 	/* local package list is empty */
@@ -203,7 +182,8 @@ deps_impact(Impacthead *impacthead,
 	/* create initial impact entry with a DONOTHING status, permitting
 	 * to check if this dependency has already been recorded
 	 */
-	XMALLOC(pimpact, sizeof(Pkgimpact));
+	pimpact = malloc_pkglist(IMPACT);
+
 	XSTRDUP(pimpact->depend, pdp->depend);
 
 	pimpact->action = DONOTHING;
@@ -289,9 +269,9 @@ deps_impact(Impacthead *impacthead,
  * is pkgname already in impact list ?
  */
 static uint8_t
-pkg_in_impact(Impacthead *impacthead, char *depname)
+pkg_in_impact(Plisthead *impacthead, char *depname)
 {
-	Pkg *pimpact;
+	Pkglist *pimpact;
 
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		if (strcmp(pimpact->depend, depname) == 0)
@@ -301,18 +281,14 @@ pkg_in_impact(Impacthead *impacthead, char *depname)
 	return 0;
 }
 
-Impacthead *
+Plisthead *
 pkg_impact(char **pkgargs)
 {
 #ifndef DEBUG
 	static char	*icon = ICON_WAIT;
 #endif
-	Plisthead	*localplisthead;
-	Plisthead	*remoteplisthead;
-	Deptreehead	pdphead;
-	Impacthead	*impacthead;
-	Pkg			*pimpact, *tmpimpact;
-	Pkg			*pdp;
+	Plisthead	*localplisthead, *remoteplisthead, *impacthead, pdphead;
+	Pkglist		*pimpact, *tmpimpact, *pdp;
 	char		**ppkgargs, *pkgname = NULL;
 #ifndef DEBUG
 	char		tmpicon;
@@ -335,7 +311,7 @@ pkg_impact(char **pkgargs)
 
 	SLIST_INIT(&pdphead);
 
-	XMALLOC(impacthead, sizeof(Impacthead));
+	XMALLOC(impacthead, sizeof(Plisthead));
 	SLIST_INIT(impacthead);
 
 	/* retreive impact list for all packages listed in the command line */
@@ -381,9 +357,7 @@ pkg_impact(char **pkgargs)
 					remoteplisthead, pdp)) {
 				/* there was a versionning mismatch, proceed ? */
 				if (!check_yesno()) {
-					free_impact(impacthead);
-					XFREE(impacthead);
-					impacthead = NULL;
+					free_pkglist(impacthead, IMPACT);
 
 					goto impactend; /* avoid free's repetition */
 				}
@@ -394,7 +368,8 @@ pkg_impact(char **pkgargs)
 		if ((pkgname = find_exact_pkg(remoteplisthead, *ppkgargs)) == NULL)
 			continue; /* should not happen, package name is verified */
 
-		XMALLOC(pdp, sizeof(Pkg));
+		pdp = malloc_pkglist(DEPTREE);
+
 		XSTRDUP(pdp->name, pkgname);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
 
@@ -431,15 +406,15 @@ pkg_impact(char **pkgargs)
 
 impactend:
 
-	free_deptree(&pdphead);
-	free_pkglist(localplisthead);
-	free_pkglist(remoteplisthead);
+	free_pkglist(&pdphead, DEPTREE);
+	free_pkglist(localplisthead, LIST);
+	free_pkglist(remoteplisthead, LIST);
 
 	/* remove DONOTHING entries */
 	SLIST_FOREACH_MUTABLE(pimpact, impacthead, next, tmpimpact) {
 		if (pimpact->action == DONOTHING) {
 
-			SLIST_REMOVE(impacthead, pimpact, Pkg, next);
+			SLIST_REMOVE(impacthead, pimpact, Pkglist, next);
 
 			XFREE(pimpact->depend);
 			XFREE(pimpact->full);
