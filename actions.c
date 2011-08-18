@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.5 2011/08/16 21:56:14 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.6 2011/08/18 21:10:10 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -64,10 +64,10 @@ check_yesno(void)
 }
 
 static void
-pkg_download(Deptreehead *installhead)
+pkg_download(Plisthead *installhead)
 {
 	FILE		*fp;
-	Pkgdeptree	*pinstall;
+	Pkglist  	*pinstall;
 	struct stat	st;
 	Dlfile		*dlpkg;
 	char		pkg[BUFSIZ], query[BUFSIZ];
@@ -76,14 +76,14 @@ pkg_download(Deptreehead *installhead)
 
 	SLIST_FOREACH(pinstall, installhead, next) {
 		snprintf(pkg, BUFSIZ,
-		    "%s/%s%s", pkgin_cache, pinstall->depname, PKG_EXT);
+		    "%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
 		/* pkg_info -X -a produces pkg_summary with empty FILE_SIZE,
 		 * people could spend some time blaming on pkgin before finding
 		 * what's really going on.
 		 */
 		if (pinstall->file_size == 0)
-			printf(MSG_EMPTY_FILE_SIZE, pinstall->depname);
+			printf(MSG_EMPTY_FILE_SIZE, pinstall->depend);
 
 		/* already fully downloaded */
 		if (stat(pkg, &st) == 0 && 
@@ -95,20 +95,20 @@ pkg_download(Deptreehead *installhead)
 		if ((fp = fopen(pkg, "w")) == NULL)
 			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg);
 
-		snprintf(query, BUFSIZ, PKG_URL, pinstall->depname);
+		snprintf(query, BUFSIZ, PKG_URL, pinstall->depend);
 		/* retrieve repository for package  */
 		if (pkgindb_doquery(query, pdb_get_value, pkg) != 0)
-			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pinstall->depname);
+			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pinstall->depend);
 
 		strlcat(pkg, "/", sizeof(pkg));
-		strlcat(pkg, pinstall->depname, sizeof(pkg));
+		strlcat(pkg, pinstall->depend, sizeof(pkg));
 		strlcat(pkg, PKG_EXT, sizeof(pkg));
 
 		if ((dlpkg = download_file(pkg, NULL)) == NULL) {
-			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depname);
+			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
 			if (!check_yesno())
 				errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL,
-				    pinstall->depname);
+				    pinstall->depend);
 			pinstall->file_size = -1;
 			fclose(fp);
 			continue;
@@ -126,9 +126,9 @@ pkg_download(Deptreehead *installhead)
 
 /* package removal */
 static void
-do_pkg_remove(Deptreehead *removehead)
+do_pkg_remove(Plisthead *removehead)
 {
-	Pkgdeptree *premove;
+	Pkglist *premove;
 
 /* send pkg_delete stderr to logfile */
 #ifdef HAVE_FREOPEN
@@ -144,34 +144,37 @@ do_pkg_remove(Deptreehead *removehead)
 		if (premove->file_size == -1)
 			continue;
 
-		if (premove->depname == NULL)
+		if (premove->depend == NULL)
 			/* SLIST corruption, badly installed package */
 			continue;
 
 		/* pkg_install cannot be deleted */
-		if (strcmp(premove->depname, PKG_INSTALL) == 0) {
+		if (strcmp(premove->depend, PKG_INSTALL) == 0) {
 			printf(MSG_NOT_REMOVING, PKG_INSTALL);
 			continue;
 		}
 
-		printf(MSG_REMOVING, premove->depname);
+		printf(MSG_REMOVING, premove->depend);
 		fprintf(stderr, "%s %s %s\n",
-			PKG_DELETE, pkgtools_flags, premove->depname);
+			PKG_DELETE, pkgtools_flags, premove->depend);
 #ifndef DEBUG
-		fexec(PKG_DELETE, pkgtools_flags, premove->depname, NULL);
+		fexec(PKG_DELETE, pkgtools_flags, premove->depend, NULL);
 #endif
 	}
 }
 
-/* package installation. Don't rely on pkg_add's ability to fetch and
+/**
+ * \fn do_pkg_install
+ *
+ * package installation. Don't rely on pkg_add's ability to fetch and
  * install as we want to keep control on packages installation order.
  * Besides, pkg_add cannot be used to install an "older" package remotely
  * i.e. apache 1.3
  */
 static void
-do_pkg_install(Deptreehead *installhead)
+do_pkg_install(Plisthead *installhead)
 {
-	Pkgdeptree	*pinstall;
+	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ];
 	char		pi_tmp_flags[5]; /* tmp force flags for pkg_install */
 
@@ -192,12 +195,12 @@ do_pkg_install(Deptreehead *installhead)
 		if (pinstall->file_size == -1)
 			continue;
 
-		printf(MSG_INSTALLING, pinstall->depname);
+		printf(MSG_INSTALLING, pinstall->depend);
 		snprintf(pkgpath, BUFSIZ,
-			"%s/%s%s", pkgin_cache, pinstall->depname, PKG_EXT);
+			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
 		/* are we upgrading pkg_install ? */
-		if (strncmp(pinstall->depname, PKG_INSTALL,
+		if (strncmp(pinstall->depend, PKG_INSTALL,
 				strlen(PKG_INSTALL)) == 0) {
 			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
 			/* set temporary force flags */
@@ -246,16 +249,14 @@ action_list(char *flatlist, char *str)
 
 /* find required files (REQUIRES) from PROVIDES or filename */
 static int
-pkg_met_reqs(Impacthead *impacthead)
+pkg_met_reqs(Plisthead *impacthead)
 {
 	int			met_reqs = 1, foundreq;
-	Pkgimpact	*pimpact;
+	Pkglist		*pimpact, *requires;
 	Plisthead	*requireshead;
-	Pkglist		*requires;
 #ifdef CHECK_PROVIDES
-	Pkgimpact	*impactprov;
+	Pkglist		*impactprov, *provides;
 	Plisthead	*provideshead;
-	Pkglist		*provides;
 #endif
 	struct stat	sb;
 	char		query[BUFSIZ];
@@ -263,7 +264,7 @@ pkg_met_reqs(Impacthead *impacthead)
 	/* first, parse impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		/* retreive requires list for package */
-		snprintf(query, BUFSIZ, GET_REQUIRES_QUERY, pimpact->fullpkgname);
+		snprintf(query, BUFSIZ, GET_REQUIRES_QUERY, pimpact->full);
 		requireshead = rec_pkglist(query);
 
 		if (requireshead == NULL) /* empty requires list (very unlikely) */
@@ -275,11 +276,11 @@ pkg_met_reqs(Impacthead *impacthead)
 			foundreq = 0;
 
 			/* for performance sake, first check basesys */
-			if ((strncmp(requires->fullpkgname, LOCALBASE,
+			if ((strncmp(requires->full, LOCALBASE,
 				    sizeof(LOCALBASE) - 1)) != 0) {
-				if (stat(requires->fullpkgname, &sb) < 0) {
+				if (stat(requires->full, &sb) < 0) {
 					printf(MSG_REQT_NOT_PRESENT,
-						requires->fullpkgname, pimpact->fullpkgname);
+						requires->full, pimpact->full);
 
 					met_reqs = 0;
 				}
@@ -297,9 +298,9 @@ pkg_met_reqs(Impacthead *impacthead)
 			/* search what local packages provide */
 			provideshead = rec_pkglist(LOCAL_PROVIDES);
 			SLIST_FOREACH(provides, provideshead, next) {
-				if (strncmp(provides->fullpkgname,
-						requires->fullpkgname,
-						strlen(requires->fullpkgname)) == 0) {
+				if (strncmp(provides->full,
+						requires->full,
+						strlen(requires->full)) == 0) {
 
 					foundreq = 1;
 
@@ -307,14 +308,14 @@ pkg_met_reqs(Impacthead *impacthead)
 					break;
 				} /* match */
 			} /* SLIST_FOREACH LOCAL_PROVIDES */
-			free_pkglist(provideshead);
+			free_pkglist(provideshead, LIST);
 
 			/* REQUIRES was not found on local packages, try impact list */
 			if (!foundreq) {
 				/* re-parse impact list to retreive PROVIDES */
 				SLIST_FOREACH(impactprov, impacthead, next) {
 					snprintf(query, BUFSIZ, GET_PROVIDES_QUERY,
-						impactprov->fullpkgname);
+						impactprov->full);
 					provideshead = rec_pkglist(query);
 
 					if (provideshead == NULL)
@@ -322,9 +323,9 @@ pkg_met_reqs(Impacthead *impacthead)
 
 					/* then parse provides list for every package */
 					SLIST_FOREACH(provides, provideshead, next) {
-						if (strncmp(provides->fullpkgname,
-								requires->fullpkgname,
-								strlen(requires->fullpkgname)) == 0) {
+						if (strncmp(provides->full,
+								requires->full,
+								strlen(requires->full)) == 0) {
 
 							foundreq = 1;
 
@@ -333,7 +334,7 @@ pkg_met_reqs(Impacthead *impacthead)
 							break;
 						} /* match */
 					}
-					free_pkglist(provideshead);
+					free_pkglist(provideshead, LIST);
 
 					if (foundreq) /* exit impactprov list loop */
 						break;
@@ -350,13 +351,13 @@ pkg_met_reqs(Impacthead *impacthead)
 			 * matching LOCALBASE, which is hardcoded to "/usr/pkg"
 			 */
 			if (!foundreq) {
-				printf(MSG_REQT_NOT_PRESENT_BUT, requires->fullpkgname);
+				printf(MSG_REQT_NOT_PRESENT_BUT, requires->full);
 
 				foundreq = 1;
 			}
 #endif
 		} /* SLIST_FOREACH requires */
-		free_pkglist(requireshead);
+		free_pkglist(requireshead, LIST);
 	} /* 1st impact SLIST_FOREACH */
 
 	return met_reqs;
@@ -364,7 +365,7 @@ pkg_met_reqs(Impacthead *impacthead)
 
 /* check for conflicts and if needed files are present */
 static int
-pkg_has_conflicts(Plisthead *conflictshead, Pkgimpact *pimpact)
+pkg_has_conflicts(Plisthead *conflictshead, Pkglist *pimpact)
 {
 	int			has_conflicts = 0;
 	Pkglist		*conflicts; /* SLIST conflicts pointer */
@@ -375,18 +376,18 @@ pkg_has_conflicts(Plisthead *conflictshead, Pkgimpact *pimpact)
 
 	/* check conflicts */
 	SLIST_FOREACH(conflicts, conflictshead, next) {
-		if (pkg_match(conflicts->fullpkgname, pimpact->fullpkgname)) {
+		if (pkg_match(conflicts->full, pimpact->full)) {
 
 			/* got a conflict, retrieve conflicting local package */
 			snprintf(query, BUFSIZ,
-				GET_CONFLICT_QUERY, conflicts->fullpkgname);
+				GET_CONFLICT_QUERY, conflicts->full);
 
 			XMALLOC(conflict_pkg, BUFSIZ * sizeof(char));
 			if (pkgindb_doquery(query,
 					pdb_get_value, conflict_pkg) == 0)
 
 				printf(MSG_CONFLICT_PKG,
-					pimpact->fullpkgname, conflict_pkg);
+					pimpact->full, conflict_pkg);
 
 			XFREE(conflict_pkg);
 
@@ -405,10 +406,10 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	int			installnum = 0, upgradenum = 0, removenum = 0;
 	int			rc = EXIT_FAILURE;
 	uint64_t   	file_size = 0, size_pkg = 0;
-	Impacthead	*impacthead; /* impact head */
-	Pkgimpact	*pimpact;
-	Deptreehead	*removehead = NULL, *installhead = NULL;
-	Pkgdeptree	*premove, *pinstall; /* not a Pkgdeptree, just for ease */
+	Pkglist		*premove, *pinstall; /* not a Pkgdeptree, just for ease */
+	Pkglist		*pimpact;
+	Plisthead	*impacthead; /* impact head */
+	Plisthead	*removehead = NULL, *installhead = NULL;
 	Plisthead	*conflictshead; /* conflicts head */
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF];
@@ -435,15 +436,14 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		/* check for conflicts */
 		if (pkg_has_conflicts(conflictshead, pimpact)) {
 			if (!check_yesno()) {
-				free_impact(impacthead);
-				XFREE(impacthead);
+				free_pkglist(impacthead, IMPACT);
 
 				return rc;
 			}
 		}
 
 		snprintf(pkgpath, BUFSIZ, "%s/%s%s",
-			pkgin_cache, pimpact->fullpkgname, PKG_EXT);
+			pkgin_cache, pimpact->full, PKG_EXT);
 
 		/* if package is not already downloaded or size mismatch, d/l it */
 		if (stat(pkgpath, &st) < 0 || st.st_size != pimpact->file_size)
@@ -467,7 +467,7 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		}
 	}
 	/* free conflicts list */
-	free_pkglist(conflictshead);
+	free_pkglist(conflictshead, LIST);
 
 	(void)humanize_number(h_fsize, H_BUF, (int64_t)file_size, "",
 		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
@@ -488,10 +488,10 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 
 		SLIST_FOREACH(premove, removehead, next) {
 			if (premove->computed == TOUPGRADE) {
-				toupgrade = action_list(toupgrade, premove->depname);
+				toupgrade = action_list(toupgrade, premove->depend);
 #ifdef DEBUG
 				printf("package: %s - level: %d\n",
-					premove->depname, premove->level);
+					premove->depend, premove->level);
 #endif
 			}
 		}
@@ -501,10 +501,10 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		if (removenum > 0) {
 			SLIST_FOREACH(premove, removehead, next) {
 				if (premove->computed == TOREMOVE) {
-					toremove = action_list(toremove, premove->depname);
+					toremove = action_list(toremove, premove->depend);
 #ifdef DEBUG
 					printf("package: %s - level: %d\n",
-						premove->depname, premove->level);
+						premove->depend, premove->level);
 #endif
 				}
 			}
@@ -520,10 +520,10 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		installhead = order_install(impacthead);
 
 		SLIST_FOREACH(pinstall, installhead, next) {
-			toinstall = action_list(toinstall, pinstall->depname);
+			toinstall = action_list(toinstall, pinstall->depend);
 #ifdef DEBUG
 			printf("package: %s - level: %d\n",
-				pinstall->depname, pinstall->level);
+				pinstall->depend, pinstall->level);
 #endif
 		}
 
@@ -556,11 +556,11 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 
 	XFREE(toinstall);
 	XFREE(toupgrade);
-	free_impact(impacthead);
+	free_pkglist(impacthead, IMPACT);
 	XFREE(impacthead);
-	free_deptree(removehead);
+	free_pkglist(removehead, DEPTREE);
 	XFREE(removehead);
-	free_deptree(installhead);
+	free_pkglist(installhead, DEPTREE);
 	XFREE(installhead);
 
 	return rc;
@@ -570,9 +570,8 @@ int
 pkgin_remove(char **pkgargs)
 {
 	int			deletenum = 0, exists, rc;
-	Deptreehead	pdphead, *removehead;
-	Pkgdeptree	*pdp;
-	Plisthead	*plisthead;
+	Plisthead	pdphead, *removehead, *plisthead;
+	Pkglist		*pdp;
 	char   		*todelete = NULL, **ppkgargs, *pkgname, *ppkg;
 
 	SLIST_INIT(&pdphead);
@@ -600,8 +599,8 @@ pkgin_remove(char **pkgargs)
 		exists = 0;
 		/* check if package have already been recorded */
 		SLIST_FOREACH(pdp, &pdphead, next) {
-			if (strncmp(pdp->depname, pkgname,
-					strlen(pdp->depname)) == 0) {
+			if (strncmp(pdp->depend, pkgname,
+					strlen(pdp->depend)) == 0) {
 				exists = 1;
 				break;
 			}
@@ -613,8 +612,9 @@ pkgin_remove(char **pkgargs)
 		}
 
 		/* add package itself */
-		XMALLOC(pdp, sizeof(Pkgdeptree));
-		pdp->depname = pkgname;
+		pdp = malloc_pkglist(DEPTREE);
+
+		pdp->depend = pkgname;
 
 		if (SLIST_EMPTY(&pdphead))
 			/* identify unique package, don't cut it when ordering */
@@ -622,20 +622,20 @@ pkgin_remove(char **pkgargs)
 		else
 			pdp->level = 0;
 
-		XSTRDUP(pdp->matchname, pdp->depname);
-		trunc_str(pdp->matchname, '-', STR_BACKWARD);
+		XSTRDUP(pdp->name, pdp->depend);
+		trunc_str(pdp->name, '-', STR_BACKWARD);
 
 		SLIST_INSERT_HEAD(&pdphead, pdp, next);
 	} /* for pkgargs */
 
-	free_pkglist(plisthead);
+	free_pkglist(plisthead, LIST);
 
 	/* order remove list */
 	removehead = order_remove(&pdphead);
 
 	SLIST_FOREACH(pdp, removehead, next) {
 		deletenum++;
-		todelete = action_list(todelete, pdp->depname);
+		todelete = action_list(todelete, pdp->depend);
 	}
 
 	if (todelete != NULL) {
@@ -654,8 +654,8 @@ pkgin_remove(char **pkgargs)
 		rc = EXIT_SUCCESS;
 	}
 
-	free_deptree(removehead);
-	XFREE(removehead);
+	free_pkglist(removehead, DEPTREE);
+
 	XFREE(todelete);
 
 	return rc;
@@ -674,16 +674,16 @@ narrow_match(Plisthead *remoteplisthead,
 	fullpkglen = strlen(fullpkgname);
 
 	SLIST_FOREACH(pkglist, remoteplisthead, next) {
-		if (strlen(pkglist->pkgname) == pkglen &&
-			strncmp(pkgname, pkglist->pkgname, pkglen) == 0) {
+		if (strlen(pkglist->name) == pkglen &&
+			strncmp(pkgname, pkglist->name, pkglen) == 0) {
 
 			for (i = 0;
-				 i < fullpkglen && fullpkgname[i] == pkglist->fullpkgname[i];
+				 i < fullpkglen && fullpkgname[i] == pkglist->full[i];
 				i++);
 
 			if (i > matchlen) {
 				matchlen = i;
-				XSTRDUP(best_match, pkglist->fullpkgname);
+				XSTRDUP(best_match, pkglist->full);
 			}
 
 		}
@@ -707,10 +707,10 @@ record_upgrades(Plisthead *plisthead, Plisthead *remoteplisthead)
 
 	count = 0;
 	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(pkgargs[count], pkglist->pkgname);
+		XSTRDUP(pkgargs[count], pkglist->name);
 
 		pkgargs[count] = narrow_match(remoteplisthead,
-			pkgargs[count], pkglist->fullpkgname);
+			pkgargs[count], pkglist->full);
 
 		if (pkgargs[count] == NULL)
 			continue;
@@ -755,7 +755,7 @@ pkgin_upgrade(int uptype)
 		 */
 		if (uptype == UPGRADE_ALL) {
 
-			free_pkglist(localplisthead);
+			free_pkglist(localplisthead, LIST);
 			free_list(pkgargs);
 			/* record keep list */
 			pkgargs = record_upgrades(keeplisthead, remoteplisthead);
@@ -766,6 +766,6 @@ pkgin_upgrade(int uptype)
 
 	free_list(pkgargs);
 
-	free_pkglist(remoteplisthead);
-	free_pkglist(keeplisthead);
+	free_pkglist(remoteplisthead, LIST);
+	free_pkglist(keeplisthead, LIST);
 }
