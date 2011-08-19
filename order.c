@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.1.1.1.2.4 2011/08/18 21:46:43 imilh Exp $ */
+/* $Id: order.c,v 1.1.1.1.2.5 2011/08/19 11:44:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -47,9 +47,9 @@ remove_dep_deepness(Plisthead *deptreehead)
 {
 	char		*depname;
 	Pkglist		*pdp;
-	Plisthead	lvldeptree;
+	Plisthead	*lvldeptree;
 
-	SLIST_INIT(&lvldeptree);
+	lvldeptree = init_head();
 
 	/* get higher recursion level */
 	SLIST_FOREACH(pdp, deptreehead, next) {
@@ -71,13 +71,13 @@ remove_dep_deepness(Plisthead *deptreehead)
 
 		trunc_str(depname, '-', STR_BACKWARD);
 
-		full_dep_tree(depname, LOCAL_REVERSE_DEPS, &lvldeptree);
+		full_dep_tree(depname, LOCAL_REVERSE_DEPS, lvldeptree);
 
-		if (!SLIST_EMPTY(&lvldeptree))
-		    	pdp->level = SLIST_FIRST(&lvldeptree)->level + 1;
+		if (!SLIST_EMPTY(lvldeptree))
+		    	pdp->level = SLIST_FIRST(lvldeptree)->level + 1;
 
 		XFREE(depname);
-		free_pkglist(&lvldeptree, DEPTREE);
+		free_pkglist(lvldeptree, DEPTREE);
 
 #if 0
 		printf("%s -> %d\n", pdp->depend, pdp->level);
@@ -85,7 +85,11 @@ remove_dep_deepness(Plisthead *deptreehead)
 	}
 }
 
-/* order the remove list according to dependency level */
+/**
+ * \fn order_remove
+ *
+ * \brief order the remove list according to dependency level
+ */
 Plisthead *
 order_remove(Plisthead *deptreehead)
 {
@@ -100,8 +104,7 @@ order_remove(Plisthead *deptreehead)
 		if (pdp->level > maxlevel)
 			maxlevel = pdp->level;
 
-	XMALLOC(ordtreehead, sizeof(Plisthead));
-	SLIST_INIT(ordtreehead);
+	ordtreehead = init_head();
 
 	for (i = maxlevel; i >= 0; i--) {
 		pdp = SLIST_FIRST(deptreehead);
@@ -124,11 +127,11 @@ upgrade_dep_deepness(Plisthead *impacthead)
 {
 	char		*pkgname, *p;
 	Pkglist		*pimpact;
-    Plisthead	lvldeptree, *plisthead;
+    Plisthead	*lvldeptree, *plisthead;
 
 	plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
 
-	SLIST_INIT(&lvldeptree);
+	lvldeptree = init_head();
 
 	/* get higher recursion level */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -149,10 +152,10 @@ upgrade_dep_deepness(Plisthead *impacthead)
 		if ((p = strrchr(pkgname, '-')) != NULL)
 			*p = '\0';
 
-		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, &lvldeptree);
+		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, lvldeptree);
 
-		if (!SLIST_EMPTY(&lvldeptree))
-		    	pimpact->level = SLIST_FIRST(&lvldeptree)->level + 1;
+		if (!SLIST_EMPTY(lvldeptree))
+		    	pimpact->level = SLIST_FIRST(lvldeptree)->level + 1;
 
 #if 0
 		printf("%s (%s) -> %d\n",
@@ -160,14 +163,18 @@ upgrade_dep_deepness(Plisthead *impacthead)
 #endif
 
 		XFREE(pkgname);
-		free_pkglist(&lvldeptree, DEPTREE);
+		free_pkglist(lvldeptree, DEPTREE);
 	}
 
 endupdep:
 	free_pkglist(plisthead, LIST);
 }
 
-/* order the remove-for-upgrade list according to dependency level */
+/**
+ * \fn order_upgrade_remove
+ *
+ * \brief order the remove-for-upgrade list according to dependency level
+ */
 Plisthead *
 order_upgrade_remove(Plisthead *impacthead)
 {
@@ -183,8 +190,7 @@ order_upgrade_remove(Plisthead *impacthead)
 				&& pimpact->level > maxlevel)
 			maxlevel = pimpact->level;
 
-	XMALLOC(ordtreehead, sizeof(Plisthead));
-	SLIST_INIT(ordtreehead);
+	ordtreehead = init_head();
 
 	for (i = maxlevel; i >= 0; i--)
 		SLIST_FOREACH(pimpact, impacthead, next) {
@@ -203,7 +209,9 @@ order_upgrade_remove(Plisthead *impacthead)
 	return ordtreehead;
 }
 
-/*
+/**
+ * \fn order_install
+ *
  * order the install list according to dependency level
  * here we only rely on basic level given by pkg_summary, the only drawback
  * is that pkg_add will install direct dependencies, giving a "failed,
@@ -223,8 +231,7 @@ order_install(Plisthead *impacthead)
 			maxlevel = pimpact->level;
 	}
 
-	XMALLOC(ordtreehead, sizeof(Plisthead));
-	SLIST_INIT(ordtreehead);
+	ordtreehead = init_head();
 
 	for (i = 0; i <= maxlevel; i++) {
 		SLIST_FOREACH(pimpact, impacthead, next) {

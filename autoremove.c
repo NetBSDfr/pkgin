@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.2 2011/08/19 11:44:48 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.3 2011/08/19 11:45:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -86,7 +86,7 @@ pkgin_autoremove()
 
 		XSTRDUP(premove->depend, pkglist->name);
 
-		SLIST_INSERT_HEAD(&removehead, premove, next);
+		SLIST_INSERT_HEAD(removehead, premove, next);
 
 		removenb++;
 	} /* SLIST_FOREACH plisthead */

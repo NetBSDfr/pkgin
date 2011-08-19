@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.6 2011/08/18 21:10:10 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.7 2011/08/19 11:44:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -570,11 +570,11 @@ int
 pkgin_remove(char **pkgargs)
 {
 	int			deletenum = 0, exists, rc;
-	Plisthead	pdphead, *removehead, *plisthead;
+	Plisthead	*pdphead, *removehead, *plisthead;
 	Pkglist		*pdp;
 	char   		*todelete = NULL, **ppkgargs, *pkgname, *ppkg;
 
-	SLIST_INIT(&pdphead);
+	pdphead = init_head();
 
 	plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
 
@@ -592,13 +592,13 @@ pkgin_remove(char **pkgargs)
 		trunc_str(ppkg, '-', STR_BACKWARD);
 
 		/* record full reverse dependency list for package */
-		full_dep_tree(ppkg, LOCAL_REVERSE_DEPS, &pdphead);
+		full_dep_tree(ppkg, LOCAL_REVERSE_DEPS, pdphead);
 
 		XFREE(ppkg);
 
 		exists = 0;
 		/* check if package have already been recorded */
-		SLIST_FOREACH(pdp, &pdphead, next) {
+		SLIST_FOREACH(pdp, pdphead, next) {
 			if (strncmp(pdp->depend, pkgname,
 					strlen(pdp->depend)) == 0) {
 				exists = 1;
@@ -616,7 +616,7 @@ pkgin_remove(char **pkgargs)
 
 		pdp->depend = pkgname;
 
-		if (SLIST_EMPTY(&pdphead))
+		if (SLIST_EMPTY(pdphead))
 			/* identify unique package, don't cut it when ordering */
 			pdp->level = -1;
 		else
@@ -625,13 +625,13 @@ pkgin_remove(char **pkgargs)
 		XSTRDUP(pdp->name, pdp->depend);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
 
-		SLIST_INSERT_HEAD(&pdphead, pdp, next);
+		SLIST_INSERT_HEAD(pdphead, pdp, next);
 	} /* for pkgargs */
 
 	free_pkglist(plisthead, LIST);
 
 	/* order remove list */
-	removehead = order_remove(&pdphead);
+	removehead = order_remove(pdphead);
 
 	SLIST_FOREACH(pdp, removehead, next) {
 		deletenum++;
@@ -655,6 +655,7 @@ pkgin_remove(char **pkgargs)
 	}
 
 	free_pkglist(removehead, DEPTREE);
+	free_pkglist(pdphead, DEPTREE);
 
 	XFREE(todelete);
 
