@@ -1,7 +1,7 @@
-/* $Id: pkglist.c,v 1.2.2.7 2011/08/18 20:34:09 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.8 2011/08/19 08:25:35 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -99,66 +99,6 @@ free_pkglist(Plisthead *plisthead, uint8_t type)
 	plisthead = NULL;
 }
 
-/* SQLite results columns */
-#define FULLPKGNAME	argv[0]
-#define PKGNAME		argv[1]
-#define PKGVERS		argv[2]
-#define COMMENT		argv[3]
-#define FILE_SIZE	argv[4]
-#define SIZE_PKG	argv[5]
-/* 
- * SQLite callback, record package list
- */
-static int
-pdb_rec_pkglist(void *param, int argc, char **argv, char **colname)
-{
-	Pkglist			*plist;
-	Plisthead 	*plisthead = (Plisthead *)param;
-
-	if (argv == NULL)
-		return PDB_ERR;
-
-	/* FULLPKGNAME was empty, probably a package installed
-	 * from pkgsrc or wip that does not exist in
-	 * pkg_summary(5), return
-	 */
-	if (FULLPKGNAME == NULL)
-		return PDB_OK;
-
-	plist = malloc_pkglist(LIST);
-	XSTRDUP(plist->full, FULLPKGNAME);
-
-	plist->size_pkg = 0;
-	plist->file_size = 0;
-
-	/* classic pkglist, has COMMENT and SIZEs */
-	if (argc > 1) {
-		if (COMMENT == NULL) {
-			/* COMMENT or SIZEs were empty
-			 * not a valid pkg_summary(5) entry, return
-			 */
-			XFREE(plist->full);
-			XFREE(plist);
-			return PDB_OK;
-		}
-
-		XSTRDUP(plist->name, PKGNAME);
-		XSTRDUP(plist->version, PKGVERS);
-		XSTRDUP(plist->comment, COMMENT);
-		if (FILE_SIZE != NULL)
-			plist->file_size = strtol(FILE_SIZE, (char **)NULL, 10);
-		if (SIZE_PKG != NULL)
-			plist->size_pkg = strtol(SIZE_PKG, (char **)NULL, 10);
-
-	} else
-		/* conflicts or requires list, only pkgname needed */
-		plist->comment = NULL;
-
-	SLIST_INSERT_HEAD(plisthead, plist, next);
-
-	return PDB_OK;
-}
-
 Plisthead *
 rec_pkglist(const char *pkgquery)
 {
@@ -168,7 +108,7 @@ rec_pkglist(const char *pkgquery)
 
 	SLIST_INIT(plisthead);
 
-	if (pkgindb_doquery(pkgquery, pdb_rec_pkglist, plisthead) == 0)
+	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == 0)
 		return plisthead;
 
 	XFREE(plisthead);

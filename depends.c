@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.4 2011/08/18 17:34:07 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.5 2011/08/19 08:25:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -49,47 +49,6 @@ match_dep_ext(char *depname, const char *ext)
 	return pdep;
 }
 
-/* dewey for direct deps, full pkgname for reverse deps*/
-#define DEPS_FULLPKG		argv[0]
-/* pkgname for direct deps and reverse deps */
-#define DEPS_PKGNAME		argv[1]
-#define PKG_KEEP			argv[2]
-/**
- * sqlite callback
- * DIRECT_DEPS or REVERSE_DEPS result, feeds a Pkglist SLIST
- * Plisthead is the head of Pkglist
- */
-static int
-pdb_rec_direct_deps(void *param, int argc, char **argv, char **colname)
-{
-	Pkglist		*deptree, *pdp;
-	Plisthead	*pdphead = (Plisthead *)param;
-
-	if (argv == NULL)
-		return PDB_ERR;
-
-	/* dependency already recorded, do not insert on list  */
-	SLIST_FOREACH(pdp, pdphead, next)
-		if (strcmp(DEPS_PKGNAME, pdp->name) == 0)
-			/* proceed to next result */
-			return PDB_OK;
-
-	deptree = malloc_pkglist(DEPTREE);
-	XSTRDUP(deptree->depend, DEPS_FULLPKG);
-	XSTRDUP(deptree->name, DEPS_PKGNAME);
-	deptree->computed = 0;
-	deptree->level = 0;
-	/* used in LOCAL_REVERSE_DEPS / autoremove.c */
-	if (argc > 2 && PKG_KEEP != NULL)
-		deptree->keep = 1;
-	else
-		deptree->keep = 0;
-
-	SLIST_INSERT_HEAD(pdphead, deptree, next);
-
-	return PDB_OK;
-}
-
 /**
  * recursively parse dependencies: this is our central function
  */
@@ -124,7 +83,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	/* getting direct dependencies */
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
-	if (pkgindb_doquery(query, pdb_rec_direct_deps, pdphead) != 0)
+	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) != 0)
 		return;
 
 	while (SLIST_FIRST(pdphead)->level == 0) {
@@ -133,7 +92,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			    	break;
 			pdp->level = level;
 			snprintf(query, BUFSIZ, depquery, pdp->name);
-			pkgindb_doquery(query, pdb_rec_direct_deps, pdphead);
+			pkgindb_doquery(query, pdb_rec_depends, pdphead);
 
 #if 0
 			printf("%i: p: %s, l: %d\n", level, pdp->depname,
@@ -165,7 +124,7 @@ show_direct_depends(const char *pkgname)
 
 		snprintf(query, BUFSIZ, DIRECT_DEPS, pkgname);
 
-		if (pkgindb_doquery(query, pdb_rec_direct_deps, &deptreehead) == 0) {
+		if (pkgindb_doquery(query, pdb_rec_depends, &deptreehead) == 0) {
 			printf(MSG_DIRECT_DEPS_FOR, pkgname);
 			SLIST_FOREACH(pdp, &deptreehead, next) {
 				if (package_version && 

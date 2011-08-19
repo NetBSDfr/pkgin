@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.10 2011/08/18 21:46:43 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.11 2011/08/19 08:25:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -180,6 +180,9 @@ extern char			pkgtools_flags[];
 Dlfile		*download_file(char *, time_t *);
 /* summary.c */
 void		update_db(int, char **);
+/* sqlite_callbacks.c */
+int pdb_rec_list(void *, int, char **, char **);
+int pdb_rec_depends(void *, int, char **, char **);
 /* depends.c */
 char 		*match_dep_ext(char *, const char *);
 void		show_direct_depends(const char *);
@@ -188,13 +191,12 @@ void 		full_dep_tree(const char *pkgname, const char *depquery,
 	Plisthead	*pdphead);
 /* pkglist.c */
 Pkglist		*malloc_pkglist(uint8_t);
-Plisthead	*rec_pkglist(const char *);
 void		free_pkglist(Plisthead *, uint8_t);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 int			count_samepkg(Plisthead *, const char *);
 Pkglist		*map_pkg_to_dep(Plisthead *, char *);
-char		*end_expr(Plisthead *, const char *);
+Plisthead	*rec_pkglist(const char *);
 /* actions.c */
 int			check_yesno(void);
 int			pkgin_remove(char **);
