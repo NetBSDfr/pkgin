@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.9 2011/08/19 11:06:28 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.10 2011/08/19 15:40:50 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -48,6 +48,7 @@ malloc_pkglist(uint8_t type)
 	/*!< Init all the things ! (http://knowyourmeme.com/memes/x-all-the-y) */
 	pkglist->type = type;
 	pkglist->full = NULL;
+	pkglist->simple = pkglist->full;
 	pkglist->name = NULL;
 	pkglist->version = NULL;
 	pkglist->depend = NULL;
