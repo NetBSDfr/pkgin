@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.3 2011/08/19 11:45:38 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.4 2011/08/19 15:40:50 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -30,11 +30,15 @@
  *
  */
 
-/* autoremove.c: cleanup orphan dependencies */
+/**
+ * \file autoremove.c
+ *
+ * Cleanup orphan dependencies, keep and unkeep packages
+ */
 
 #include "pkgin.h"
 
-static int 			removenb = 0;
+static int removenb = 0;
 
 void
 pkgin_autoremove()
@@ -44,7 +48,10 @@ pkgin_autoremove()
 	char		*toremove = NULL;
 	int			exists;
 
-	/* test if there's any keep package and record them */
+	/*
+	 * test if there's any keep package and record them
+	 * KEEP_LOCAL_PKGS returns full packages names
+	 */
 	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
 		errx(EXIT_FAILURE, MSG_NO_PKGIN_PKGS, getprogname());
 
@@ -142,7 +149,7 @@ show_pkg_keep(void)
 	}
 
 	SLIST_FOREACH(pkglist, plisthead, next)
-		printf(MSG_MARK_PKG_KEEP, pkglist->name);
+		printf(MSG_MARK_PKG_KEEP, pkglist->full);
 
 	free_pkglist(plisthead, LIST);
 }
@@ -153,7 +160,7 @@ pkg_keep(int type, char **pkgargs)
 {
 	Plisthead			*plisthead;
 	Pkglist				*pkglist;
-	char				*p, **pkeep, *pkgname, query[BUFSIZ];
+	char				**pkeep, query[BUFSIZ];
 
 	plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
 
@@ -162,45 +169,36 @@ pkg_keep(int type, char **pkgargs)
 
 	/* parse packages by their command line names */
 	for (pkeep = pkgargs; *pkeep != NULL; pkeep++) {
-		pkgname = NULL;
 		/* find real package name */
 		SLIST_FOREACH(pkglist, plisthead, next) {
 			/* PKGNAME match */
 			if (exact_pkgfmt(*pkeep)) /* argument was a full package name */
 				trunc_str(*pkeep, '-', STR_BACKWARD);
 
-			XSTRDUP(pkgname, pkglist->full);
-			if ((p = strrchr(pkgname, '-')) != NULL)
-			    	*p = '\0';
-
-			if (strcmp(*pkeep, pkgname) == 0) {
-			    	if (p != NULL)
-					*p = '-';
+			if (strcmp(*pkeep, pkglist->name) == 0)
 				break;
-			}
-			XFREE(pkgname);
+
 		} /* SLIST pkglist */
 
-		if (pkgname != NULL) {
+		if (pkglist->name != NULL) {
 			switch (type) {
 			case KEEP:
-				printf(MSG_MARKING_PKG_KEEP, pkgname);
-				snprintf(query, BUFSIZ, KEEP_PKG, pkgname);
+				printf(MSG_MARKING_PKG_KEEP, pkglist->full);
+				snprintf(query, BUFSIZ, KEEP_PKG, pkglist->name);
 				/* mark as non-automatic in pkgdb */
-				if (mark_as_automatic_installed(pkgname, 0) < 0)
+				if (mark_as_automatic_installed(pkglist->name, 0) < 0)
 					exit(EXIT_FAILURE);
 				break;
 			case UNKEEP:
-				printf(MSG_UNMARKING_PKG_KEEP, pkgname);
-				snprintf(query, BUFSIZ, UNKEEP_PKG, pkgname);
+				printf(MSG_UNMARKING_PKG_KEEP, pkglist->full);
+				snprintf(query, BUFSIZ, UNKEEP_PKG, pkglist->name);
 				/* mark as automatic in pkgdb */
-				if (mark_as_automatic_installed(pkgname, 1) < 0)
+				if (mark_as_automatic_installed(pkglist->name, 1) < 0)
 					exit(EXIT_FAILURE);
 				break;
 			}
 
 			pkgindb_doquery(query, NULL, NULL);
-			XFREE(pkgname);
 		} else
 			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
 	} /* for (pkeep) */

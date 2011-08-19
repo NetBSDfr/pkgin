@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.7 2011/08/19 11:44:48 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.8 2011/08/19 15:40:50 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -557,11 +557,8 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	XFREE(toinstall);
 	XFREE(toupgrade);
 	free_pkglist(impacthead, IMPACT);
-	XFREE(impacthead);
 	free_pkglist(removehead, DEPTREE);
-	XFREE(removehead);
 	free_pkglist(installhead, DEPTREE);
-	XFREE(installhead);
 
 	return rc;
 }
