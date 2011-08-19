@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.1.1.1.2.6 2011/08/19 15:40:50 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.1.1.1.2.7 2011/08/19 23:41:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -72,7 +72,7 @@ const char LOCAL_DIRECT_DEPS[] =
 const char EXACT_DIRECT_DEPS[] =
     "SELECT REMOTE_DEPS.REMOTE_DEPS_DEWEY, REMOTE_DEPS.REMOTE_DEPS_PKGNAME "
     "FROM REMOTE_DEPS,REMOTE_PKG "
-    "WHERE REMOTE_PKG.FULLPKGNAME = '%s*' "
+    "WHERE REMOTE_PKG.FULLPKGNAME = '%s' "
     "AND REMOTE_DEPS.PKG_ID = REMOTE_PKG.PKG_ID;";
 
 const char LOCAL_REVERSE_DEPS[] =
@@ -151,3 +151,11 @@ const char INSERT_SINGLE_VALUE[] =
 
 const char INSERT_DEPENDS_VALUES[] = 
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %s_DEWEY) VALUES (%d,\"%s\",\"%s\");";
+
+const char UNIQUE_PKG[] = 
+	"SELECT FULLPKGNAME FROM REMOTE_PKG WHERE PKGNAME = '%s' "
+	"ORDER BY PKGVERS DESC LIMIT 1;";
+
+const char UNIQUE_EXACT_PKG[] = 
+	"SELECT FULLPKGNAME FROM REMOTE_PKG WHERE FULLPKGNAME GLOB '%s*' "
+	"ORDER BY PKGVERS DESC LIMIT 1;";

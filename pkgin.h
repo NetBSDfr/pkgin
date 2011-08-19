@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.12 2011/08/19 11:06:28 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.13 2011/08/19 23:41:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -199,7 +199,7 @@ void		free_pkglist(Plisthead *, uint8_t);
 Plisthead	*init_head(void);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
-int			count_samepkg(Plisthead *, const char *);
+char	   	*unique_pkg(const char *);
 Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 /* actions.c */
 int			check_yesno(void);

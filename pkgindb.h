@@ -1,4 +1,4 @@
-/* $Id: pkgindb.h,v 1.1.1.1.2.1 2011/08/14 13:41:44 imilh Exp $ */
+/* $Id: pkgindb.h,v 1.1.1.1.2.2 2011/08/19 23:41:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -62,6 +62,8 @@ extern const char INSERT_REPO[];
 extern const char UPDATE_REPO_MTIME[];
 extern const char INSERT_SINGLE_VALUE[];
 extern const char INSERT_DEPENDS_VALUES[];
+extern const char UNIQUE_EXACT_PKG[];
+extern const char UNIQUE_PKG[];
 
 #define PDB PKGIN_DB"/pkgin.db"
 

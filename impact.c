@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.10 2011/08/19 11:06:28 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.11 2011/08/19 23:41:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -291,11 +291,10 @@ pkg_impact(char **pkgargs)
 #endif
 	Plisthead	*localplisthead, *remoteplisthead, *impacthead, *pdphead;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
-	char		**ppkgargs, *pkgname = NULL;
+	char		**ppkgargs, *pkgname;
 #ifndef DEBUG
 	char		tmpicon;
 #endif
-	int			pkgcount;
 
 	/* record local package list */
 	localplisthead = rec_pkglist(LOCAL_PKGS_QUERY);
@@ -323,64 +322,58 @@ pkg_impact(char **pkgargs)
 		/* check if this is a multiple-version package (apache, ...)
 		 * and that the wanted package actually exists
 		 */
-		if ((pkgcount = count_samepkg(remoteplisthead, *ppkgargs)) == 0) {
+		if ((pkgname = unique_pkg(*ppkgargs)) == NULL) {
 			/* package is not available on the repository */
 			printf(MSG_PKG_NOT_AVAIL, *ppkgargs);
 			continue;
 		}
 
-		if (pkgcount > 1)
-			goto impactend;
-		else {
 #ifndef DEBUG
-			tmpicon = *icon++;
-			printf(MSG_CALCULATING_DEPS" %c", tmpicon);
-			fflush(stdout);
-			if (*icon == '\0')
-				icon = icon - strlen(ICON_WAIT);
+		tmpicon = *icon++;
+		printf(MSG_CALCULATING_DEPS" %c", tmpicon);
+		fflush(stdout);
+		if (*icon == '\0')
+			icon = icon - strlen(ICON_WAIT);
 #else
-			printf(MSG_CALCULATING_DEPS, *ppkgargs);
-#endif
-			/* dependencies discovery */
-			full_dep_tree(*ppkgargs, DIRECT_DEPS, pdphead);
-		}
+		printf(MSG_CALCULATING_DEPS, pkgname);
+#endif	
+		/* dependencies discovery */
+		full_dep_tree(pkgname, DIRECT_DEPS, pdphead);
 
 		/* parse dependencies for pkgname */
 		SLIST_FOREACH(pdp, pdphead, next) {
-
+		
 			/* is dependency already recorded in impact list ? */
 			if (pkg_in_impact(impacthead, pdp->depend))
 				continue;
-
+		
 			/* compare needed deps with local packages */
 			if (!deps_impact(impacthead, localplisthead,
 					remoteplisthead, pdp)) {
 				/* there was a versionning mismatch, proceed ? */
 				if (!check_yesno()) {
 					free_pkglist(impacthead, IMPACT);
-
+				
 					goto impactend; /* avoid free's repetition */
 				}
 			}
 		} /* SLIST_FOREACH deps */
-
+	
 		/* finally, insert package itself */
-		if ((pkgname = find_exact_pkg(remoteplisthead, *ppkgargs)) == NULL)
-			continue; /* should not happen, package name is verified */
-
+	
 		pdp = malloc_pkglist(DEPTREE);
-
+	
 		XSTRDUP(pdp->name, pkgname);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
-
+	
 		/* pkgname is not already recorded */
 		if (!pkg_in_impact(impacthead, pkgname)) {
 			/* passing pkgname as depname */
 			XSTRDUP(pdp->depend, pkgname);
-
+		
 			/* reset pkgkeep */
 			pdp->keep = 0;
-
+		
 			if (force_reinstall)
 				/* use pkgkeep field to inform deps_impact the package
 				 * has to be reinstalled. It is NOT the normal use for

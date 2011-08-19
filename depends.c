@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.6 2011/08/19 11:06:28 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.7 2011/08/19 23:41:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -105,9 +105,9 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 }
 
 void
-show_direct_depends(const char *pkgname)
+show_direct_depends(const char *pkgarg)
 {
-	char		query[BUFSIZ];
+	char		*pkgname, query[BUFSIZ];
 	Pkglist		*pdp, *mapplist;
 	Plisthead	*deptreehead;
 
@@ -116,52 +116,57 @@ show_direct_depends(const char *pkgname)
 		return;
 	}
 
-	/* warn if more than one package with this name is available */
-	if (count_samepkg(plisthead, pkgname) < 2) {
-
-		deptreehead = init_head();
-
-		snprintf(query, BUFSIZ, DIRECT_DEPS, pkgname);
-
-		if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == 0) {
-			printf(MSG_DIRECT_DEPS_FOR, pkgname);
-			SLIST_FOREACH(pdp, deptreehead, next) {
-				if (package_version && 
-					(mapplist = map_pkg_to_dep(plisthead, pdp->depend))
-					!= NULL)
-					printf("\t%s\n", mapplist->full);
-				else
-					printf("\t%s\n", pdp->depend);
-			}
-			free_pkglist(deptreehead, DEPTREE);
-		}
+	if ((pkgname = unique_pkg(pkgarg)) == NULL) {
+		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgname);
+		return;
 	}
+
+	deptreehead = init_head();
+
+	snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
+
+	if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == 0) {
+		printf(MSG_DIRECT_DEPS_FOR, pkgname);
+		SLIST_FOREACH(pdp, deptreehead, next) {
+			if (package_version && 
+				(mapplist = map_pkg_to_dep(plisthead, pdp->depend))
+				!= NULL)
+				printf("\t%s\n", mapplist->full);
+			else
+				printf("\t%s\n", pdp->depend);
+		}
+		free_pkglist(deptreehead, DEPTREE);
+	}
+	XFREE(pkgname);
 	free_pkglist(plisthead, LIST);
 }
 
 void
-show_full_dep_tree(const char *pkgname, const char *depquery, const char *msg)
+show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 {
 	Pkglist		*pdp, *mapplist;
 	Plisthead	*deptreehead; /* replacement for SLIST_HEAD() */
-	int			count;
 	const char	*pkgquery;
+	char		*pkgname = NULL;
 
-	if (depquery == LOCAL_REVERSE_DEPS)
+	if (depquery == LOCAL_REVERSE_DEPS) {
 		pkgquery = LOCAL_PKGS_QUERY;
-	else
+		XSTRDUP(pkgname, pkgarg);
+	} else {
 		pkgquery = REMOTE_PKGS_QUERY;
+		pkgname = unique_pkg(pkgarg);
+	}
+
+	if (pkgname == NULL) {
+		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgarg);
+		return;
+	}
 
 	if ((plisthead = rec_pkglist(pkgquery)) == NULL)
 		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
 
-	count = count_samepkg(plisthead, pkgname);
-
 	/* free plisthead now so it is NULL for full_dep_tree() */
 	free_pkglist(plisthead, LIST);
-
-	if (count > 1)
-		return;
 
 	deptreehead = init_head();
 
@@ -179,6 +184,7 @@ show_full_dep_tree(const char *pkgname, const char *depquery, const char *msg)
 			printf("\t%s\n", pdp->depend);
 	}
 
+	XFREE(pkgname);
 	free_pkglist(plisthead, LIST);
 	free_pkglist(deptreehead, DEPTREE);
 }
