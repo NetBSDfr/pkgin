@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.11 2011/08/19 08:25:35 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.12 2011/08/19 11:06:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -129,11 +129,12 @@ typedef struct Pkgimpact {
 } Impact;
 
 /**
- * \struct Pkgname
- * \brief Various forms of package name
+ * \struct Pkglist
+ *
+ * \brief Master structure for all types of package lists (SLIST)
  */
 typedef struct Pkglist {
-	uint8_t	type; /*!< list type */
+	uint8_t	type; /*!< list type (LIST, DEPTREE or IMPACT) */
 
 	int64_t	size_pkg; /*!< installed package size (list and impact) */
 	int64_t	file_size; /*!< binary package size */
@@ -142,8 +143,10 @@ typedef struct Pkglist {
 	char *full; /*!< full package name with version, foo-1.0 */
 	char *name; /*!< package name, foo */
 	char *version; /*<! package version, 1.0 */
-	char *depend; /*!< dewey or glob form for forward (direct) dependencies
-					foo>=1.0, or full package name for reverse dependencies */
+	char *depend; /*!< dewey or glob form for forward (direct) dependencies:
+					foo>=1.0
+					or full package name for reverse dependencies:
+					foo-1.0 */
 	union {
 		char		*comment; /*!< package list comment */
 		Deptree		deptree; /*<! dependency tree informations */
@@ -181,8 +184,9 @@ Dlfile		*download_file(char *, time_t *);
 /* summary.c */
 void		update_db(int, char **);
 /* sqlite_callbacks.c */
-int pdb_rec_list(void *, int, char **, char **);
-int pdb_rec_depends(void *, int, char **, char **);
+Plisthead	*rec_pkglist(const char *);
+int			pdb_rec_list(void *, int, char **, char **);
+int			pdb_rec_depends(void *, int, char **, char **);
 /* depends.c */
 char 		*match_dep_ext(char *, const char *);
 void		show_direct_depends(const char *);
@@ -192,11 +196,11 @@ void 		full_dep_tree(const char *pkgname, const char *depquery,
 /* pkglist.c */
 Pkglist		*malloc_pkglist(uint8_t);
 void		free_pkglist(Plisthead *, uint8_t);
+Plisthead	*init_head(void);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 int			count_samepkg(Plisthead *, const char *);
 Pkglist		*map_pkg_to_dep(Plisthead *, char *);
-Plisthead	*rec_pkglist(const char *);
 /* actions.c */
 int			check_yesno(void);
 int			pkgin_remove(char **);

@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.9 2011/08/18 21:46:43 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.10 2011/08/19 11:06:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -55,7 +55,9 @@
 #include "pkgin.h"
 
 /**
- * check wether or not a dependency is already recorded in the impact list
+ * \fn dep_present
+ *
+ * \brief check if a dependency is already recorded in the impact list
  */
 static int
 dep_present(Plisthead *impacthead, char *depname)
@@ -74,32 +76,32 @@ static void
 break_depends(Plisthead *impacthead, Pkglist *pimpact)
 {
 	Pkglist	   	*rmimpact;
-	Plisthead	rdphead, fdphead;
+	Plisthead	*rdphead, *fdphead;
 	Pkglist	   	*rdp, *fdp;
 	char		*pkgname, *rpkg;
 	int			dep_break, exists;
 
-	SLIST_INIT(&rdphead);
+	rdphead = init_head();
 
 	XSTRDUP(pkgname, pimpact->old);
 	trunc_str(pkgname, '-', STR_BACKWARD);
 
 	/* fetch old package reverse dependencies */
-	full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, &rdphead);
+	full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, rdphead);
 
 	XFREE(pkgname);
 
 	/* browse reverse dependencies */
-	SLIST_FOREACH(rdp, &rdphead, next) {
+	SLIST_FOREACH(rdp, rdphead, next) {
 
-		SLIST_INIT(&fdphead);
+		fdphead = init_head();
 
 		/* reverse dependency is a full package name, use it and strip it */
 		XSTRDUP(rpkg, rdp->depend);
 		trunc_str(rpkg, '-', STR_BACKWARD);
 
 		/* fetch dependencies for rdp */
-		full_dep_tree(rpkg, DIRECT_DEPS, &fdphead);
+		full_dep_tree(rpkg, DIRECT_DEPS, fdphead);
 
 		/* initialize to broken dependency */
 		dep_break = 1;
@@ -113,9 +115,9 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 		 * So we will check if local package dependencies are satisfied by
 		 * our newly upgraded packages.
 		 */
-		if (SLIST_EMPTY(&fdphead)) {
-			free_pkglist(&fdphead, DEPTREE);
-			full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, &fdphead);
+		if (SLIST_EMPTY(fdphead)) {
+			free_pkglist(fdphead, DEPTREE);
+			full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, fdphead);
 		}
 		XFREE(rpkg);
 
@@ -123,13 +125,13 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 		 * browse dependencies for rdp and see if
 		 * new package to be installed matches
 		 */
-		SLIST_FOREACH(fdp, &fdphead, next)
+		SLIST_FOREACH(fdp, fdphead, next)
 			if (pkg_match(fdp->depend, pimpact->full)) {
 				dep_break = 0;
 				break;
 			}
 
-		free_pkglist(&fdphead, DEPTREE);
+		free_pkglist(fdphead, DEPTREE);
 
 		if (!dep_break)
 			continue;
@@ -155,7 +157,7 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 
 		SLIST_INSERT_HEAD(impacthead, rmimpact, next);
 	}
-	free_pkglist(&rdphead, DEPTREE);
+	free_pkglist(rdphead, DEPTREE);
 }
 
 /**
@@ -166,8 +168,7 @@ deps_impact(Plisthead *impacthead,
 	Plisthead *localplisthead, Plisthead *remoteplisthead, Pkglist *pdp)
 {
 	int			toupgrade;
-	Pkglist		*pimpact;
-	Pkglist		*plist, *mapplist;
+	Pkglist		*pimpact, *plist, *mapplist;
 	char		*remotepkg;
 
 	/* local package list is empty */
@@ -177,6 +178,7 @@ deps_impact(Plisthead *impacthead,
 	/* record corresponding package on remote list*/
 	if ((mapplist = map_pkg_to_dep(remoteplisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
+
 	XSTRDUP(remotepkg, mapplist->full);
 
 	/* create initial impact entry with a DONOTHING status, permitting
@@ -287,7 +289,7 @@ pkg_impact(char **pkgargs)
 #ifndef DEBUG
 	static char	*icon = ICON_WAIT;
 #endif
-	Plisthead	*localplisthead, *remoteplisthead, *impacthead, pdphead;
+	Plisthead	*localplisthead, *remoteplisthead, *impacthead, *pdphead;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
 	char		**ppkgargs, *pkgname = NULL;
 #ifndef DEBUG
@@ -309,10 +311,8 @@ pkg_impact(char **pkgargs)
 		return NULL;
 	}
 
-	SLIST_INIT(&pdphead);
-
-	XMALLOC(impacthead, sizeof(Plisthead));
-	SLIST_INIT(impacthead);
+	pdphead = init_head();
+	impacthead = init_head();
 
 	/* retreive impact list for all packages listed in the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
@@ -342,11 +342,11 @@ pkg_impact(char **pkgargs)
 			printf(MSG_CALCULATING_DEPS, *ppkgargs);
 #endif
 			/* dependencies discovery */
-			full_dep_tree(*ppkgargs, DIRECT_DEPS, &pdphead);
+			full_dep_tree(*ppkgargs, DIRECT_DEPS, pdphead);
 		}
 
 		/* parse dependencies for pkgname */
-		SLIST_FOREACH(pdp, &pdphead, next) {
+		SLIST_FOREACH(pdp, pdphead, next) {
 
 			/* is dependency already recorded in impact list ? */
 			if (pkg_in_impact(impacthead, pdp->depend))
@@ -406,7 +406,7 @@ pkg_impact(char **pkgargs)
 
 impactend:
 
-	free_pkglist(&pdphead, DEPTREE);
+	free_pkglist(pdphead, DEPTREE);
 	free_pkglist(localplisthead, LIST);
 	free_pkglist(remoteplisthead, LIST);
 

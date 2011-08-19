@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.1.2.1 2011/08/19 08:25:35 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.1.2.2 2011/08/19 11:06:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -31,6 +31,27 @@
  */
 
 #include "pkgin.h"
+
+/**
+ * \fn rec_pkglist
+ *
+ * Record package list to SLIST
+ */
+Plisthead *
+rec_pkglist(const char *pkgquery)
+{
+	Plisthead	*plisthead;
+
+	XMALLOC(plisthead, sizeof(Plisthead));
+
+	SLIST_INIT(plisthead);
+
+	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == 0)
+		return plisthead;
+
+	XFREE(plisthead);
+	return NULL;
+}
 
 /* SQLite results columns */
 #define FULLPKGNAME	argv[0]

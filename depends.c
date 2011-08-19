@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.5 2011/08/19 08:25:35 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.6 2011/08/19 11:06:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -93,7 +93,6 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			pdp->level = level;
 			snprintf(query, BUFSIZ, depquery, pdp->name);
 			pkgindb_doquery(query, pdb_rec_depends, pdphead);
-
 #if 0
 			printf("%i: p: %s, l: %d\n", level, pdp->depname,
 			    pdp->level);
@@ -109,9 +108,8 @@ void
 show_direct_depends(const char *pkgname)
 {
 	char		query[BUFSIZ];
-	Pkglist		*pdp;
-	Plisthead	deptreehead;
-	Pkglist		*mapplist;
+	Pkglist		*pdp, *mapplist;
+	Plisthead	*deptreehead;
 
 	if ((plisthead = rec_pkglist(REMOTE_PKGS_QUERY)) == NULL) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
@@ -120,13 +118,14 @@ show_direct_depends(const char *pkgname)
 
 	/* warn if more than one package with this name is available */
 	if (count_samepkg(plisthead, pkgname) < 2) {
-		SLIST_INIT(&deptreehead);
+
+		deptreehead = init_head();
 
 		snprintf(query, BUFSIZ, DIRECT_DEPS, pkgname);
 
-		if (pkgindb_doquery(query, pdb_rec_depends, &deptreehead) == 0) {
+		if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == 0) {
 			printf(MSG_DIRECT_DEPS_FOR, pkgname);
-			SLIST_FOREACH(pdp, &deptreehead, next) {
+			SLIST_FOREACH(pdp, deptreehead, next) {
 				if (package_version && 
 					(mapplist = map_pkg_to_dep(plisthead, pdp->depend))
 					!= NULL)
@@ -134,7 +133,7 @@ show_direct_depends(const char *pkgname)
 				else
 					printf("\t%s\n", pdp->depend);
 			}
-			free_pkglist(&deptreehead, DEPTREE);
+			free_pkglist(deptreehead, DEPTREE);
 		}
 	}
 	free_pkglist(plisthead, LIST);
@@ -143,9 +142,8 @@ show_direct_depends(const char *pkgname)
 void
 show_full_dep_tree(const char *pkgname, const char *depquery, const char *msg)
 {
-	Pkglist		*pdp;
-	Plisthead	deptreehead; /* replacement for SLIST_HEAD() */
-	Pkglist		*mapplist;
+	Pkglist		*pdp, *mapplist;
+	Plisthead	*deptreehead; /* replacement for SLIST_HEAD() */
 	int			count;
 	const char	*pkgquery;
 
@@ -165,15 +163,15 @@ show_full_dep_tree(const char *pkgname, const char *depquery, const char *msg)
 	if (count > 1)
 		return;
 
-	SLIST_INIT(&deptreehead);
+	deptreehead = init_head();
 
 	printf(msg, pkgname);
-	full_dep_tree(pkgname, depquery, &deptreehead);
+	full_dep_tree(pkgname, depquery, deptreehead);
 
 	/* record plisthead once again for map_pkg_to_dep() */
 	plisthead = rec_pkglist(pkgquery);
 
-	SLIST_FOREACH(pdp, &deptreehead, next) {
+	SLIST_FOREACH(pdp, deptreehead, next) {
 		if (package_version && 
 			(mapplist = map_pkg_to_dep(plisthead, pdp->depend)) != NULL)
 			printf("\t%s\n", mapplist->full);
@@ -182,5 +180,5 @@ show_full_dep_tree(const char *pkgname, const char *depquery, const char *msg)
 	}
 
 	free_pkglist(plisthead, LIST);
-	free_pkglist(&deptreehead, DEPTREE);
+	free_pkglist(deptreehead, DEPTREE);
 }

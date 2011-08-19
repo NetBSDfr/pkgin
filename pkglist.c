@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.8 2011/08/19 08:25:35 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.9 2011/08/19 11:06:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -34,7 +34,9 @@
 #include <regex.h>
 
 /**
- * Pkglist allocation
+ * \fn malloc_pkglist
+ *
+ * \brief Pkglist allocation for all types of lists
  */
 Pkglist *
 malloc_pkglist(uint8_t type)
@@ -70,6 +72,11 @@ malloc_pkglist(uint8_t type)
 	return pkglist;
 }
 
+/**
+ * \fn free_pkglist
+ *
+ * \brief Free all types of package list
+ */
 void
 free_pkglist(Plisthead *plisthead, uint8_t type)
 {
@@ -99,20 +106,20 @@ free_pkglist(Plisthead *plisthead, uint8_t type)
 	plisthead = NULL;
 }
 
+/**
+ * \fn init_head
+ *
+ * \brief Init a Plisthead
+ */
 Plisthead *
-rec_pkglist(const char *pkgquery)
+init_head(void)
 {
 	Plisthead *plisthead;
 
 	XMALLOC(plisthead, sizeof(Plisthead));
-
 	SLIST_INIT(plisthead);
 
-	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == 0)
-		return plisthead;
-
-	XFREE(plisthead);
-	return NULL;
+	return plisthead;
 }
 
 /* compare pkg version */
@@ -139,7 +146,7 @@ pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
 void
 list_pkgs(const char *pkgquery, int lstype)
 {
-	Pkglist		 	*plist;
+	Pkglist	   	*plist;
 	Plisthead 	*plisthead, *localplisthead = NULL;
 	int			rc;
 	char		pkgstatus, outpkg[BUFSIZ];
