@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.1 2011/08/18 21:46:43 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.2 2011/08/19 11:44:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -39,7 +39,7 @@ static int 			removenb = 0;
 void
 pkgin_autoremove()
 {
-	Plisthead	*plisthead, keephead, removehead, *orderedhead;
+	Plisthead	*plisthead, *keephead, *removehead, *orderedhead;
 	Pkglist		*pkglist, *premove, *pdp;
 	char		*toremove = NULL;
 	int			exists;
@@ -48,29 +48,29 @@ pkgin_autoremove()
 	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
 		errx(EXIT_FAILURE, MSG_NO_PKGIN_PKGS, getprogname());
 
-	SLIST_INIT(&keephead);
+	keephead = init_head();
 
 	/* record keep packages deps  */
 	SLIST_FOREACH(pkglist, plisthead, next)
-		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, &keephead);
+		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, keephead);
 
 	free_pkglist(plisthead, LIST);
 
 	/* record unkeep packages */
 	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
-		free_pkglist(&keephead, DEPTREE);
+		free_pkglist(keephead, DEPTREE);
 
 		printf(MSG_ALL_KEEP_PKGS);
 		return;
 	}
 
-	SLIST_INIT(&removehead);
+	removehead = init_head();
 
 	/* parse non-keepables packages */
 	SLIST_FOREACH(pkglist, plisthead, next) {
 		exists = 0;
 		/* is it a dependence for keepable packages ? */
-		SLIST_FOREACH(pdp, &keephead, next) {
+		SLIST_FOREACH(pdp, keephead, next) {
 			if (strncmp(pdp->depend, pkglist->name,
 					strlen(pkglist->name)) == 0) {
 				exists = 1;
@@ -91,13 +91,13 @@ pkgin_autoremove()
 		removenb++;
 	} /* SLIST_FOREACH plisthead */
 
-	free_pkglist(&keephead, DEPTREE);
+	free_pkglist(keephead, DEPTREE);
 	free_pkglist(plisthead, LIST);
 
 #ifdef WITHOUT_ORDER
-	orderedhead = &removehead;
+	orderedhead = removehead;
 #else
-	orderedhead = order_remove(&removehead);
+	orderedhead = order_remove(removehead);
 #endif
 	if (!SLIST_EMPTY(orderedhead)) {
 		SLIST_FOREACH(premove, orderedhead, next)
