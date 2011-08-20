@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3.2.7 2011/08/19 11:06:28 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.8 2011/08/20 09:44:01 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -614,7 +614,7 @@ update_db(int which, char **pkgkeep)
 				if ((plisthead =
 						rec_pkglist(LOCAL_PKGS_QUERY)) != NULL) {
 					SLIST_FOREACH(pkglist, plisthead, next)
-						if (!is_automatic_installed(pkglist->full)) {
+						if (!is_automatic_installed(pkglist->name)) {
 							snprintf(buf, BUFSIZ, KEEP_PKG,
 								pkglist->full);
 							pkgindb_doquery(buf, NULL, NULL);
