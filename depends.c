@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.7 2011/08/19 23:41:55 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.8 2011/08/20 17:39:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -35,21 +35,6 @@
 static Plisthead *plisthead = NULL;
 
 /**
- * match dependency extension
- */
-char *
-match_dep_ext(char *depname, const char *ext)
-{
-	char *pdep = NULL;
-
-	for (; *ext != 0; ext++)
-		if ((pdep = strrchr(depname, *ext)) != NULL)
-			break;
-
-	return pdep;
-}
-
-/**
  * recursively parse dependencies: this is our central function
  */
 void
@@ -83,8 +68,10 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	/* getting direct dependencies */
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
-	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) != 0)
+	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) != 0) {
+		free_pkglist(plisthead, LIST);
 		return;
+	}
 
 	while (SLIST_FIRST(pdphead)->level == 0) {
 		SLIST_FOREACH(pdp, pdphead, next) {

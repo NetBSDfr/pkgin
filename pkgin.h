@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.13 2011/08/19 23:41:55 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.14 2011/08/20 17:39:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -188,7 +188,6 @@ Plisthead	*rec_pkglist(const char *);
 int			pdb_rec_list(void *, int, char **, char **);
 int			pdb_rec_depends(void *, int, char **, char **);
 /* depends.c */
-char 		*match_dep_ext(char *, const char *);
 void		show_direct_depends(const char *);
 void		show_full_dep_tree(const char *, const char *, const char *);
 void 		full_dep_tree(const char *pkgname, const char *depquery,
