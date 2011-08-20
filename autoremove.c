@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.5 2011/08/20 09:44:01 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.6 2011/08/20 09:56:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -187,7 +187,7 @@ pkg_keep(int type, char **pkgargs)
 				/* KEEP_PKG query needs full pkgname */
 				snprintf(query, BUFSIZ, KEEP_PKG, pkglist->full);
 				/* mark as non-automatic in pkgdb */
-				if (mark_as_automatic_installed(pkglist->name, 0) < 0)
+				if (mark_as_automatic_installed(pkglist->full, 0) < 0)
 					exit(EXIT_FAILURE);
 				break;
 			case UNKEEP:
@@ -195,7 +195,7 @@ pkg_keep(int type, char **pkgargs)
 				/* UNKEEP_PKG query needs full pkgname */
 				snprintf(query, BUFSIZ, UNKEEP_PKG, pkglist->full);
 				/* mark as automatic in pkgdb */
-				if (mark_as_automatic_installed(pkglist->name, 1) < 0)
+				if (mark_as_automatic_installed(pkglist->full, 1) < 0)
 					exit(EXIT_FAILURE);
 				break;
 			}
