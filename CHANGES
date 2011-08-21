@@ -1,3 +1,10 @@
+20110821
+	pkgin 0.5.0 in progress
+	One struct to rule them all (Pkglist)
+	Got rid of many useless lists (speed x10, literally)
+	Introduced FULLPKGNAME as db member, speed ups searches
+	unique_pkg(): no more "many versions of foo", pickup newer
+
 20110810
 	Progress now shown with progressmeter from OpenSSH
 
