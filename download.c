@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.10 2011/08/11 01:31:45 imilh Exp $ */
+/* $Id: download.c,v 1.11 2011/08/21 09:26:19 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -33,7 +33,8 @@
 #include "pkgin.h"
 #include "progressmeter.h"
 
-int fetchTimeout = 15; /* wait 15 seconds before timeout */
+int		fetchTimeout = 15; /* wait 15 seconds before timeout */
+size_t	fetch_buffer = 1024;
 
 /* if db_mtime == NULL, we're downloading a package, pkg_summary otherwise */
 Dlfile *
@@ -101,8 +102,7 @@ download_file(char *str_url, time_t *db_mtime)
 	start_progress_meter(p, buf_len, &statsize);
 
 	while (buf_fetched < buf_len) {
-		cur_fetched = fetchIO_read(f, file->buf + buf_fetched,
-			buf_len - buf_fetched);
+		cur_fetched = fetchIO_read(f, file->buf + buf_fetched, fetch_buffer);
 		if (cur_fetched == 0)
 			errx(EXIT_FAILURE, "truncated file");
 		else if (cur_fetched == -1)
