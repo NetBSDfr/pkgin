@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.14 2011/08/21 11:28:35 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.15 2011/08/21 12:59:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -34,7 +34,7 @@
 #include <regex.h>
 
 void
-free_static_pkglists()
+free_global_pkglists()
 {
 	free_pkglist(r_plisthead, LIST);
 	free_pkglist(l_plisthead, LIST);

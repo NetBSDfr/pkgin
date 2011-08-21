@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.10 2011/08/21 11:28:35 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.11 2011/08/21 12:59:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -40,37 +40,26 @@
 void
 full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 {
-	Plisthead	*plisthead;
 	Pkglist		*pdp;
 	int			level;
-	char		query[BUFSIZ];
+	char		query[BUFSIZ] = "";
 
 	query[0] = '\0';
 	if (depquery == DIRECT_DEPS) {
-		/* querying remote packages, load remote packages list */
-		plisthead = r_plisthead;
-
 		/* first package to recurse on and exact pkg name, this is an
 		 * exact match due to many versions of the package
 		 */
 		if (exact_pkgfmt(pkgname))
 			snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
-
-	} else if (depquery == LOCAL_REVERSE_DEPS ||
-		   depquery == LOCAL_DIRECT_DEPS) {
-		/* querying local packages, load local packages list */
-		plisthead = l_plisthead;
-	} else {
-	    	printf("oops\n");
-	    	return;
 	}
+
 	level = 1;
 
 	/* getting direct dependencies */
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
 
-	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) != 0)
+	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_ERR)
 		return;
 
 	while (SLIST_FIRST(pdphead)->level == 0) {
@@ -80,8 +69,8 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			pdp->level = level;
 			snprintf(query, BUFSIZ, depquery, pdp->name);
 			pkgindb_doquery(query, pdb_rec_depends, pdphead);
-#if 0
-			printf("%i: p: %s, l: %d\n", level, pdp->depname,
+#ifdef DEBUG
+			printf("%i: p: %s, l: %d\n", level, pdp->depend,
 			    pdp->level);
 #endif
 		} /* SLIST_FOREACH */

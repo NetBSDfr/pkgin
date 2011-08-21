@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.1.2.3 2011/08/19 15:40:50 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.1.2.4 2011/08/21 12:59:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -135,7 +135,7 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 	if (argv == NULL)
 		return PDB_ERR;
 
-	/* dependency already recorded, do not insert on list  */
+	/* check if dependency is already recorded, do not insert on list  */
 	SLIST_FOREACH(pdp, pdphead, next)
 		if (strcmp(DEPS_PKGNAME, pdp->name) == 0)
 			/* proceed to next result */

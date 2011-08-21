@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.1.1.1.2.6 2011/08/21 11:51:23 imilh Exp $ */
+/* $Id: order.c,v 1.1.1.1.2.7 2011/08/21 12:59:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -49,8 +49,6 @@ remove_dep_deepness(Plisthead *deptreehead)
 	Pkglist		*pdp;
 	Plisthead	*lvldeptree;
 
-	lvldeptree = init_head();
-
 	/* get higher recursion level */
 	SLIST_FOREACH(pdp, deptreehead, next) {
 		if (pdp->level == -1) { /* unique package, just return */
@@ -71,6 +69,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 
 		trunc_str(depname, '-', STR_BACKWARD);
 
+		lvldeptree = init_head();
 		full_dep_tree(depname, LOCAL_REVERSE_DEPS, lvldeptree);
 
 		if (!SLIST_EMPTY(lvldeptree))
@@ -129,8 +128,6 @@ upgrade_dep_deepness(Plisthead *impacthead)
 	Pkglist		*pimpact;
     Plisthead	*lvldeptree;
 
-	lvldeptree = init_head();
-
 	/* get higher recursion level */
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		if (pimpact->level == -1) { /* unique package, just return */
@@ -150,6 +147,7 @@ upgrade_dep_deepness(Plisthead *impacthead)
 		if ((p = strrchr(pkgname, '-')) != NULL)
 			*p = '\0';
 
+		lvldeptree = init_head();
 		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, lvldeptree);
 
 		if (!SLIST_EMPTY(lvldeptree))

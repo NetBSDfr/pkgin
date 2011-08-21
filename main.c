@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1.1.1.2.1 2011/08/21 11:28:35 imilh Exp $ */
+/* $Id: main.c,v 1.1.1.1.2.2 2011/08/21 12:59:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -142,8 +142,8 @@ main(int argc, char *argv[])
 	ch = find_cmd(argv[0]);
 
 	/* we need packages lists for almost everything */
-	REC_STATIC_PKGLIST(r_plisthead, REMOTE_PKGS_QUERY);
-	REC_STATIC_PKGLIST(l_plisthead, LOCAL_PKGS_QUERY);
+	REC_GLOBAL_PKGLIST(r_plisthead, REMOTE_PKGS_QUERY);
+	REC_GLOBAL_PKGLIST(l_plisthead, LOCAL_PKGS_QUERY);
 
 	/* fill pkgtools flags */
 	if (verbosity)
@@ -216,7 +216,7 @@ main(int argc, char *argv[])
 			/* NOTREACHED */
 	}
 
-	free_static_pkglists();
+	free_global_pkglists();
 
 	pkgindb_close();
 
