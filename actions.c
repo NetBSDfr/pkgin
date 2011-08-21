@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.8 2011/08/19 15:40:50 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.9 2011/08/21 11:42:44 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -567,21 +567,19 @@ int
 pkgin_remove(char **pkgargs)
 {
 	int			deletenum = 0, exists, rc;
-	Plisthead	*pdphead, *removehead, *plisthead;
+	Plisthead	*pdphead, *removehead;
 	Pkglist		*pdp;
 	char   		*todelete = NULL, **ppkgargs, *pkgname, *ppkg;
 
 	pdphead = init_head();
 
-	plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
-
-	if (plisthead == NULL)
+	if (l_plisthead == NULL)
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
 	/* act on every package passed to the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
 
-		if ((pkgname = find_exact_pkg(plisthead, *ppkgargs)) == NULL) {
+		if ((pkgname = find_exact_pkg(l_plisthead, *ppkgargs)) == NULL) {
 			printf(MSG_PKG_NOT_INSTALLED, *ppkgargs);
 			continue;
 		}
@@ -625,8 +623,6 @@ pkgin_remove(char **pkgargs)
 		SLIST_INSERT_HEAD(pdphead, pdp, next);
 	} /* for pkgargs */
 
-	free_pkglist(plisthead, LIST);
-
 	/* order remove list */
 	removehead = order_remove(pdphead);
 
@@ -661,8 +657,7 @@ pkgin_remove(char **pkgargs)
 
 /* find closest match for packages to be upgraded */
 static char *
-narrow_match(Plisthead *remoteplisthead,
-	char *pkgname, const char *fullpkgname)
+narrow_match(char *pkgname, const char *fullpkgname)
 {
 	Pkglist	*pkglist;
 	char	*best_match = NULL;
@@ -671,7 +666,7 @@ narrow_match(Plisthead *remoteplisthead,
 	pkglen = strlen(pkgname);
 	fullpkglen = strlen(fullpkgname);
 
-	SLIST_FOREACH(pkglist, remoteplisthead, next) {
+	SLIST_FOREACH(pkglist, r_plisthead, next) {
 		if (strlen(pkglist->name) == pkglen &&
 			strncmp(pkgname, pkglist->name, pkglen) == 0) {
 
@@ -692,7 +687,7 @@ narrow_match(Plisthead *remoteplisthead,
 }
 
 static char **
-record_upgrades(Plisthead *plisthead, Plisthead *remoteplisthead)
+record_upgrades(Plisthead *plisthead)
 {
 	Pkglist	*pkglist;
 	int		count = 0;
@@ -707,8 +702,7 @@ record_upgrades(Plisthead *plisthead, Plisthead *remoteplisthead)
 	SLIST_FOREACH(pkglist, plisthead, next) {
 		XSTRDUP(pkgargs[count], pkglist->name);
 
-		pkgargs[count] = narrow_match(remoteplisthead,
-			pkgargs[count], pkglist->full);
+		pkgargs[count] = narrow_match(pkgargs[count], pkglist->full);
 
 		if (pkgargs[count] == NULL)
 			continue;
@@ -723,7 +717,7 @@ record_upgrades(Plisthead *plisthead, Plisthead *remoteplisthead)
 void
 pkgin_upgrade(int uptype)
 {
-	Plisthead	*keeplisthead, *localplisthead, *remoteplisthead;
+	Plisthead	*keeplisthead, *localplisthead;
 	char		**pkgargs;
 
 	/* used for pkgin_install not to update database, this is done below */
@@ -735,16 +729,14 @@ pkgin_upgrade(int uptype)
 
 	/* upgrade all packages, not only keepables */
 	if (uptype == UPGRADE_ALL) {
-		if ((localplisthead = rec_pkglist(LOCAL_PKGS_QUERY)) == NULL)
+		if (l_plisthead == NULL)
 			errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
+		localplisthead = l_plisthead;
 	} else
 		/* upgrade only keepables packages */
 		localplisthead = keeplisthead;
 
-	if ((remoteplisthead = rec_pkglist(REMOTE_PKGS_QUERY)) == NULL)
-		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
-
-	pkgargs = record_upgrades(localplisthead, remoteplisthead);
+	pkgargs = record_upgrades(localplisthead);
 
 	if (pkgin_install(pkgargs, DO_INST) == EXIT_SUCCESS) {
 		/*
@@ -756,7 +748,7 @@ pkgin_upgrade(int uptype)
 			free_pkglist(localplisthead, LIST);
 			free_list(pkgargs);
 			/* record keep list */
-			pkgargs = record_upgrades(keeplisthead, remoteplisthead);
+			pkgargs = record_upgrades(keeplisthead);
 		}
 
 		update_db(LOCAL_SUMMARY, pkgargs);
@@ -764,6 +756,5 @@ pkgin_upgrade(int uptype)
 
 	free_list(pkgargs);
 
-	free_pkglist(remoteplisthead, LIST);
 	free_pkglist(keeplisthead, LIST);
 }

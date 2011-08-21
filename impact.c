@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.16 2011/08/21 11:28:35 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.17 2011/08/21 11:42:44 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -163,19 +163,18 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
  * loop through local packages and match for upgrades
  */
 static int
-deps_impact(Plisthead *impacthead,
-	Plisthead *localplisthead, Plisthead *remoteplisthead, Pkglist *pdp)
+deps_impact(Plisthead *impacthead, Pkglist *pdp)
 {
 	int			toupgrade;
 	Pkglist		*pimpact, *plist, *mapplist;
 	char		*remotepkg;
 
 	/* local package list is empty */
-	if (localplisthead == NULL)
+	if (l_plisthead == NULL)
 		return 1;
 
 	/* record corresponding package on remote list*/
-	if ((mapplist = map_pkg_to_dep(remoteplisthead, pdp->depend)) == NULL)
+	if ((mapplist = map_pkg_to_dep(r_plisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
 
 	XSTRDUP(remotepkg, mapplist->full);
@@ -194,7 +193,7 @@ deps_impact(Plisthead *impacthead,
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
 	/* parse local packages to see if depedency is installed*/
-	SLIST_FOREACH(plist, localplisthead, next) {
+	SLIST_FOREACH(plist, l_plisthead, next) {
 
 		/* match, package is installed */
 		if (strcmp(plist->name, pdp->name) == 0) {
@@ -288,7 +287,6 @@ pkg_impact(char **pkgargs)
 #ifndef DEBUG
 	static char	*icon = ICON_WAIT;
 #endif
-	Plisthead	*localplisthead, *remoteplisthead;
 	Plisthead	*impacthead, *pdphead = NULL;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
 	char		**ppkgargs, *pkgname;
@@ -296,16 +294,7 @@ pkg_impact(char **pkgargs)
 	char		tmpicon;
 #endif
 
-	/* record local package list */
-	localplisthead = rec_pkglist(LOCAL_PKGS_QUERY);
-
-	/*
-	 * ordered record remote package list so option-less packages
-	 * appear first
-	 */
-	remoteplisthead = rec_pkglist(REMOTE_PKGS_QUERY);
-
-	if (remoteplisthead == NULL) {
+	if (r_plisthead == NULL) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
 		return NULL;
 	}
@@ -349,8 +338,7 @@ pkg_impact(char **pkgargs)
 				continue;
 		
 			/* compare needed deps with local packages */
-			if (!deps_impact(impacthead, localplisthead,
-					remoteplisthead, pdp)) {
+			if (!deps_impact(impacthead, pdp)) {
 				/* there was a versionning mismatch, proceed ? */
 				if (!check_yesno()) {
 					free_pkglist(impacthead, IMPACT);
@@ -382,7 +370,7 @@ pkg_impact(char **pkgargs)
 				 */
 				pdp->keep = -1;
 
-			deps_impact(impacthead, localplisthead, remoteplisthead, pdp);
+			deps_impact(impacthead, pdp);
 
 			XFREE(pdp->depend);
 		}
@@ -401,8 +389,6 @@ pkg_impact(char **pkgargs)
 impactend:
 
 	free_pkglist(pdphead, DEPTREE);
-	free_pkglist(localplisthead, LIST);
-	free_pkglist(remoteplisthead, LIST);
 
 	/* remove DONOTHING entries */
 	SLIST_FOREACH_MUTABLE(pimpact, impacthead, next, tmpimpact) {
@@ -415,9 +401,8 @@ impactend:
 	} /* SLIST_FOREACH_MUTABLE impacthead */
 
 	/* no more impact, empty list */
-	if (SLIST_EMPTY(impacthead)) {
+	if (SLIST_EMPTY(impacthead))
 		free_pkglist(impacthead, IMPACT);
-	}
 
 	return impacthead;
 }
