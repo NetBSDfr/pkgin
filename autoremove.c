@@ -1,7 +1,7 @@
-/* $Id: autoremove.c,v 1.2.2.7 2011/08/21 11:51:23 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.8 2011/08/21 17:12:30 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -156,8 +156,8 @@ show_pkg_keep(void)
 void
 pkg_keep(int type, char **pkgargs)
 {
-	Pkglist				*pkglist;
-	char				**pkeep, query[BUFSIZ];
+	Pkglist	*pkglist;
+	char   	**pkeep, query[BUFSIZ];
 
 	if (l_plisthead == NULL) /* no packages recorded */
 		return;
@@ -175,7 +175,7 @@ pkg_keep(int type, char **pkgargs)
 
 		} /* SLIST pkglist */
 
-		if (pkglist->name != NULL) {
+		if (pkglist != NULL && pkglist->name != NULL) {
 			switch (type) {
 			case KEEP:
 				printf(MSG_MARKING_PKG_KEEP, pkglist->full);
