@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.12 2011/08/20 17:39:11 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.13 2011/08/21 08:10:46 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -319,7 +319,8 @@ pkg_impact(char **pkgargs)
 			continue;
 
 		/* check if this is a multiple-version package (apache, ...)
-		 * and that the wanted package actually exists
+		 * and that the wanted package actually exists. Get pkgname
+		 * from unique_pkg, full package format.
 		 */
 		if ((pkgname = unique_pkg(*ppkgargs)) == NULL) {
 			/* package is not available on the repository */
@@ -338,7 +339,7 @@ pkg_impact(char **pkgargs)
 #endif
 		pdphead = init_head();
 		/* dependencies discovery */
-		full_dep_tree(pkgname, DIRECT_DEPS, pdphead);
+		full_dep_tree(pkgname, EXACT_DIRECT_DEPS, pdphead);
 
 		/* parse dependencies for pkgname */
 		SLIST_FOREACH(pdp, pdphead, next) {

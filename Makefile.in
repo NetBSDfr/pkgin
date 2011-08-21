@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.7.2.5 2011/08/19 08:25:35 imilh Exp $
+# $Id: Makefile.in,v 1.7.2.6 2011/08/21 08:10:46 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -23,7 +23,7 @@ OS_ARCH!=	uname -p
 
 # satisfy mk.conf
 BSD_PKG_MK=	1
-.for MK_CONF in "/etc/mk.conf @prefix@/etc/mk.conf /etc/pkgsrc.conf"
+.for MK_CONF in /etc/mk.conf @prefix@/etc/mk.conf /etc/pkgsrc.conf
 .	if exists(${MK_CONF})
 .		include "${MK_CONF}"
 .	endif
