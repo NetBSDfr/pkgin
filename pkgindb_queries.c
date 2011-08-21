@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.1.1.1.2.8 2011/08/20 09:44:01 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.1.1.1.2.9 2011/08/21 13:36:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -129,7 +129,7 @@ const char KEEP_LOCAL_PKGS[] =
     "SELECT FULLPKGNAME,PKGNAME FROM LOCAL_PKG WHERE PKG_KEEP IS NOT NULL;";
 
 const char PKG_URL[] =
-    "SELECT REPOSITORY FROM REMOTE_PKG WHERE PKGNAME = \'%s\';";
+    "SELECT REPOSITORY FROM REMOTE_PKG WHERE FULLPKGNAME = \'%s\';";
 
 const char DELETE_EMPTY_ROWS[] =
     "DELETE FROM REMOTE_PKG WHERE PKGNAME IS NULL;";

@@ -1,5 +1,6 @@
 20110821
 	pkgin 0.5.0 in progress
+	/!\ YOU WILL HAVE TO rm -rf /var/db/pkgin/* and pkgin up /!\
 	One struct to rule them all (Pkglist)
 	Got rid of many useless lists (speed x10, literally)
 	Introduced FULLPKGNAME as db member, speed ups searches
