@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3.2.10 2011/08/21 11:51:23 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.11 2011/08/21 13:23:07 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -611,14 +611,14 @@ update_db(int which, char **pkgkeep)
 				 * probably a fresh install or a rebuild
 				 * restore keep flags with pkgdb informations
 				 */
-				if (l_plisthead != NULL) {
-					SLIST_FOREACH(pkglist, l_plisthead, next)
-						if (!is_automatic_installed(pkglist->full)) {
-							snprintf(buf, BUFSIZ, KEEP_PKG,
-								pkglist->full);
-							pkgindb_doquery(buf, NULL, NULL);
-						}
-				}
+				free_pkglist(l_plisthead, LIST);
+				REC_GLOBAL_PKGLIST(l_plisthead, LOCAL_PKGS_QUERY);
+				SLIST_FOREACH(pkglist, l_plisthead, next)
+					if (!is_automatic_installed(pkglist->full)) {
+						snprintf(buf, BUFSIZ, KEEP_PKG,
+							pkglist->full);
+						pkgindb_doquery(buf, NULL, NULL);
+					}
 			}
 
 			/* insert new keep list if there's any */
