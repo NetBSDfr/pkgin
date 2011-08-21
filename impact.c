@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.15 2011/08/21 09:02:50 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.16 2011/08/21 11:28:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -288,7 +288,8 @@ pkg_impact(char **pkgargs)
 #ifndef DEBUG
 	static char	*icon = ICON_WAIT;
 #endif
-	Plisthead	*localplisthead, *remoteplisthead, *impacthead, *pdphead = NULL;
+	Plisthead	*localplisthead, *remoteplisthead;
+	Plisthead	*impacthead, *pdphead = NULL;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
 	char		**ppkgargs, *pkgname;
 #ifndef DEBUG

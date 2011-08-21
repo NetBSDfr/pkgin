@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.9 2011/08/21 08:10:46 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.10 2011/08/21 11:28:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -32,8 +32,6 @@
 
 #include "pkgin.h"
 
-static Plisthead *plisthead = NULL;
-
 /**
  * \fn full_dep_tree
  *
@@ -42,6 +40,7 @@ static Plisthead *plisthead = NULL;
 void
 full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 {
+	Plisthead	*plisthead;
 	Pkglist		*pdp;
 	int			level;
 	char		query[BUFSIZ];
@@ -49,7 +48,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	query[0] = '\0';
 	if (depquery == DIRECT_DEPS) {
 		/* querying remote packages, load remote packages list */
-		plisthead = rec_pkglist(REMOTE_PKGS_QUERY);
+		plisthead = r_plisthead;
 
 		/* first package to recurse on and exact pkg name, this is an
 		 * exact match due to many versions of the package
@@ -60,7 +59,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	} else if (depquery == LOCAL_REVERSE_DEPS ||
 		   depquery == LOCAL_DIRECT_DEPS) {
 		/* querying local packages, load local packages list */
-		plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
+		plisthead = l_plisthead;
 	} else {
 	    	printf("oops\n");
 	    	return;
@@ -71,10 +70,8 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
 
-	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) != 0) {
-		free_pkglist(plisthead, LIST);
+	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) != 0)
 		return;
-	}
 
 	while (SLIST_FIRST(pdphead)->level == 0) {
 		SLIST_FOREACH(pdp, pdphead, next) {
@@ -90,8 +87,6 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 		} /* SLIST_FOREACH */
 		++level;
 	}
-
-	free_pkglist(plisthead, LIST);
 }
 
 void
@@ -101,7 +96,7 @@ show_direct_depends(const char *pkgarg)
 	Pkglist		*pdp, *mapplist;
 	Plisthead	*deptreehead;
 
-	if ((plisthead = rec_pkglist(REMOTE_PKGS_QUERY)) == NULL) {
+	if (r_plisthead == NULL) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
 		return;
 	}
@@ -119,7 +114,7 @@ show_direct_depends(const char *pkgarg)
 		printf(MSG_DIRECT_DEPS_FOR, pkgname);
 		SLIST_FOREACH(pdp, deptreehead, next) {
 			if (package_version && 
-				(mapplist = map_pkg_to_dep(plisthead, pdp->depend))
+				(mapplist = map_pkg_to_dep(r_plisthead, pdp->depend))
 				!= NULL)
 				printf("\t%s\n", mapplist->full);
 			else
@@ -128,22 +123,20 @@ show_direct_depends(const char *pkgarg)
 		free_pkglist(deptreehead, DEPTREE);
 	}
 	XFREE(pkgname);
-	free_pkglist(plisthead, LIST);
 }
 
 void
 show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 {
 	Pkglist		*pdp, *mapplist;
-	Plisthead	*deptreehead; /* replacement for SLIST_HEAD() */
-	const char	*pkgquery;
+	Plisthead	*deptreehead, *plisthead;
 	char		*pkgname = NULL;
 
 	if (depquery == LOCAL_REVERSE_DEPS) {
-		pkgquery = LOCAL_PKGS_QUERY;
+		plisthead = l_plisthead;
 		XSTRDUP(pkgname, pkgarg);
 	} else {
-		pkgquery = REMOTE_PKGS_QUERY;
+		plisthead = r_plisthead;
 		pkgname = unique_pkg(pkgarg);
 	}
 
@@ -152,19 +145,13 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 		return;
 	}
 
-	if ((plisthead = rec_pkglist(pkgquery)) == NULL)
+	if (plisthead == NULL)
 		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
-
-	/* free plisthead now so it is NULL for full_dep_tree() */
-	free_pkglist(plisthead, LIST);
 
 	deptreehead = init_head();
 
 	printf(msg, pkgname);
 	full_dep_tree(pkgname, depquery, deptreehead);
-
-	/* record plisthead once again for map_pkg_to_dep() */
-	plisthead = rec_pkglist(pkgquery);
 
 	SLIST_FOREACH(pdp, deptreehead, next) {
 		if (package_version && 
@@ -175,6 +162,5 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 	}
 
 	XFREE(pkgname);
-	free_pkglist(plisthead, LIST);
 	free_pkglist(deptreehead, DEPTREE);
 }
