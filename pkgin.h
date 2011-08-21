@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.14 2011/08/20 17:39:11 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.15 2011/08/21 09:02:50 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -194,6 +194,7 @@ void 		full_dep_tree(const char *pkgname, const char *depquery,
 	Plisthead	*pdphead);
 /* pkglist.c */
 Pkglist		*malloc_pkglist(uint8_t);
+void		free_pkglist_entry(Pkglist *, uint8_t);
 void		free_pkglist(Plisthead *, uint8_t);
 Plisthead	*init_head(void);
 void		list_pkgs(const char *, int);

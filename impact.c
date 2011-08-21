@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.14 2011/08/21 08:16:47 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.15 2011/08/21 09:02:50 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -94,6 +94,16 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 	/* browse reverse dependencies */
 	SLIST_FOREACH(rdp, rdphead, next) {
 
+		exists = 0;
+		/* check if rdp was already on impact list */
+		SLIST_FOREACH(rmimpact, impacthead, next)
+			if (strcmp(rmimpact->depend, rdp->depend) == 0) {
+				exists = 1;
+				break;
+			}
+		if (exists)
+			continue;
+
 		fdphead = init_head();
 
 		/* reverse dependency is a full package name, use it and strip it */
@@ -134,17 +144,6 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 		free_pkglist(fdphead, DEPTREE);
 
 		if (!dep_break)
-			continue;
-
-		exists = 0;
-		/* check if rdp was already on impact list */
-		SLIST_FOREACH(rmimpact, impacthead, next)
-			if (strcmp(rmimpact->depend, rdp->depend) == 0) {
-				exists = 1;
-				break;
-			}
-
-		if (exists)
 			continue;
 
 		/* dependency break, insert rdp in remove-list */
@@ -410,16 +409,13 @@ impactend:
 
 			SLIST_REMOVE(impacthead, pimpact, Pkglist, next);
 
-			XFREE(pimpact->depend);
-			XFREE(pimpact->full);
-			XFREE(pimpact->old);
-			XFREE(pimpact);
+			free_pkglist_entry(pimpact, IMPACT);
 		}
 	} /* SLIST_FOREACH_MUTABLE impacthead */
 
 	/* no more impact, empty list */
 	if (SLIST_EMPTY(impacthead)) {
-		XFREE(impacthead);
+		free_pkglist(impacthead, IMPACT);
 	}
 
 	return impacthead;

@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.12 2011/08/19 23:41:55 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.13 2011/08/21 09:02:50 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -73,6 +73,28 @@ malloc_pkglist(uint8_t type)
 }
 
 /**
+ * \fn free_pkglist_entry
+ *
+ * \brief free a Pkglist single entry
+ */
+void
+free_pkglist_entry(Pkglist *plist, uint8_t type)
+{
+	XFREE(plist->full);
+	XFREE(plist->name);
+	XFREE(plist->version);
+	XFREE(plist->depend);
+	switch (type) {
+	case LIST:
+		XFREE(plist->comment);
+		break;
+	case IMPACT:
+		XFREE(plist->old);
+	}
+	XFREE(plist);
+}
+
+/**
  * \fn free_pkglist
  *
  * \brief Free all types of package list
@@ -88,18 +110,8 @@ free_pkglist(Plisthead *plisthead, uint8_t type)
 	while (!SLIST_EMPTY(plisthead)) {
 		plist = SLIST_FIRST(plisthead);
 		SLIST_REMOVE_HEAD(plisthead, next);
-		XFREE(plist->full);
-		XFREE(plist->name);
-		XFREE(plist->version);
-		XFREE(plist->depend);
-		switch (type) {
-		case LIST:
-			XFREE(plist->comment);
-			break;
-		case IMPACT:
-			XFREE(plist->old);
-		}
-		XFREE(plist);
+
+		free_pkglist_entry(plist, type);
 	}
 	XFREE(plisthead);
 
