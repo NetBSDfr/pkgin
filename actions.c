@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.9 2011/08/21 11:42:44 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.10 2011/08/21 15:11:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -384,7 +384,7 @@ pkg_has_conflicts(Plisthead *conflictshead, Pkglist *pimpact)
 
 			XMALLOC(conflict_pkg, BUFSIZ * sizeof(char));
 			if (pkgindb_doquery(query,
-					pdb_get_value, conflict_pkg) == 0)
+					pdb_get_value, conflict_pkg) == PDB_OK)
 
 				printf(MSG_CONFLICT_PKG,
 					pimpact->full, conflict_pkg);
