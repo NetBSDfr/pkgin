@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.6 2011/08/20 09:56:00 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.7 2011/08/21 11:51:23 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -52,16 +52,14 @@ pkgin_autoremove()
 	 * test if there's any keep package and record them
 	 * KEEP_LOCAL_PKGS returns full packages names
 	 */
-	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
+	if (l_plisthead == NULL)
 		errx(EXIT_FAILURE, MSG_NO_PKGIN_PKGS, getprogname());
 
 	keephead = init_head();
 
 	/* record keep packages deps  */
-	SLIST_FOREACH(pkglist, plisthead, next)
+	SLIST_FOREACH(pkglist, l_plisthead, next)
 		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, keephead);
-
-	free_pkglist(plisthead, LIST);
 
 	/* record unkeep packages */
 	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
@@ -158,19 +156,16 @@ show_pkg_keep(void)
 void
 pkg_keep(int type, char **pkgargs)
 {
-	Plisthead			*plisthead;
 	Pkglist				*pkglist;
 	char				**pkeep, query[BUFSIZ];
 
-	plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
-
-	if (plisthead == NULL) /* no packages recorded */
+	if (l_plisthead == NULL) /* no packages recorded */
 		return;
 
 	/* parse packages by their command line names */
 	for (pkeep = pkgargs; *pkeep != NULL; pkeep++) {
 		/* find real package name */
-		SLIST_FOREACH(pkglist, plisthead, next) {
+		SLIST_FOREACH(pkglist, l_plisthead, next) {
 			/* PKGNAME match */
 			if (exact_pkgfmt(*pkeep)) /* argument was a full package name */
 				trunc_str(*pkeep, '-', STR_BACKWARD);
@@ -204,6 +199,4 @@ pkg_keep(int type, char **pkgargs)
 		} else
 			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
 	} /* for (pkeep) */
-
-	free_pkglist(plisthead, LIST);
 }
