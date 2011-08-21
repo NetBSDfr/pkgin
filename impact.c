@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.13 2011/08/21 08:10:46 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.14 2011/08/21 08:16:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -339,7 +339,7 @@ pkg_impact(char **pkgargs)
 #endif
 		pdphead = init_head();
 		/* dependencies discovery */
-		full_dep_tree(pkgname, EXACT_DIRECT_DEPS, pdphead);
+		full_dep_tree(pkgname, DIRECT_DEPS, pdphead);
 
 		/* parse dependencies for pkgname */
 		SLIST_FOREACH(pdp, pdphead, next) {
