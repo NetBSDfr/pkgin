@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.1.1.1.2.7 2011/08/21 12:59:12 imilh Exp $ */
+/* $Id: order.c,v 1.1.1.1.2.8 2011/08/21 13:12:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -195,6 +195,7 @@ order_upgrade_remove(Plisthead *impacthead)
 				XSTRDUP(pdp->depend, pimpact->old);
 				pdp->name = NULL; /* safety */
 				pdp->computed = pimpact->action; /* XXX: ugly */
+				pdp->level = pimpact->level; /* informative only */
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
 			}
 		}
