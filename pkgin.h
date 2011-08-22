@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.18 2011/08/21 21:49:25 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.19 2011/08/22 10:36:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -202,8 +202,6 @@ void		free_pkglist(Plisthead *, uint8_t);
 Plisthead	*init_head(void);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
-char	   	*unique_pkg(const char *);
-Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 /* actions.c */
 int			check_yesno(void);
 int			pkgin_remove(char **);
@@ -226,6 +224,8 @@ void		clean_cache(void);
 void		create_dirs(void);
 char		*read_repos(void);
 /* pkg_str.c */
+char	   	*unique_pkg(const char *);
+Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 char		*get_pkgname_from_depend(char *);
 int			exact_pkgfmt(const char *);
 char		*find_exact_pkg(Plisthead *, const char *);

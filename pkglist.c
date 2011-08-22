@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.15 2011/08/21 12:59:13 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.16 2011/08/22 10:36:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -260,43 +260,4 @@ search_pkg(const char *pattern)
 		else
 			printf(MSG_NO_SEARCH_RESULTS, pattern);
 	}
-}
-
-/**
- * \fn unique_pkg
- *
- * Returns greatest version package matching in full package name form
- */
-char *
-unique_pkg(const char *pkgname)
-{
-	char	*u_pkg = NULL, query[BUFSIZ];
-
-	XMALLOC(u_pkg, sizeof(char) * BUFSIZ);
-
-	/* record if it's a versionned pkgname */
-	if (exact_pkgfmt(pkgname))
-		snprintf(query, BUFSIZ, UNIQUE_EXACT_PKG, pkgname);
-	else
-		snprintf(query, BUFSIZ, UNIQUE_PKG, pkgname);
-
-	if (pkgindb_doquery(query, pdb_get_value, u_pkg) != PDB_OK) {
-		XFREE(u_pkg);
-		return NULL;
-	}
-
-	return u_pkg;
-}
-
-/* return a pkgname corresponding to a dependency */
-Pkglist *
-map_pkg_to_dep(Plisthead *plisthead, char *depname)
-{
-	Pkglist	*plist;
-
-	SLIST_FOREACH(plist, plisthead, next)
-		if (pkg_match(depname, plist->full))
-			return plist;
-
-	return NULL;
 }

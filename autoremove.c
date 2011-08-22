@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.9 2011/08/21 22:11:23 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.10 2011/08/22 10:36:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -157,8 +157,8 @@ show_pkg_keep(void)
 void
 pkg_keep(int type, char **pkgargs)
 {
-	Pkglist	*pkglist;
-	char   	**pkeep, query[BUFSIZ];
+	Pkglist	*pkglist = NULL;
+	char   	**pkeep, *pkgname, query[BUFSIZ];
 
 	if (l_plisthead == NULL) /* no packages recorded */
 		return;
@@ -166,17 +166,16 @@ pkg_keep(int type, char **pkgargs)
 	/* parse packages by their command line names */
 	for (pkeep = pkgargs; *pkeep != NULL; pkeep++) {
 		/* find real package name */
-		SLIST_FOREACH(pkglist, l_plisthead, next) {
-			/* PKGNAME match */
-			if (exact_pkgfmt(*pkeep)) /* argument was a full package name */
-				trunc_str(*pkeep, '-', STR_BACKWARD);
+		if ((pkgname = unique_pkg(*pkeep)) != NULL) {
+			SLIST_FOREACH(pkglist, l_plisthead, next)
+				/* PKGNAME match */
+				if (strcmp(pkgname, pkglist->full) == 0)
+					break;
 
-			if (strcmp(*pkeep, pkglist->name) == 0)
-				break;
+			XFREE(pkgname);
+		} /* pkgname != NULL */
 
-		} /* SLIST pkglist */
-
-		if (pkglist != NULL && pkglist->name != NULL) {
+		if (pkglist != NULL && pkglist->full != NULL) {
 			switch (type) {
 			case KEEP:
 				printf(MSG_MARKING_PKG_KEEP, pkglist->full);
