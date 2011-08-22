@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.16 2011/08/22 10:36:09 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.17 2011/08/22 10:50:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -139,6 +139,27 @@ init_head(void)
 	SLIST_INIT(plisthead);
 
 	return plisthead;
+}
+
+/**
+ * \fn rec_pkglist
+ *
+ * Record package list to SLIST
+ */
+Plisthead *
+rec_pkglist(const char *pkgquery)
+{
+	Plisthead	*plisthead;
+
+	XMALLOC(plisthead, sizeof(Plisthead));
+
+	SLIST_INIT(plisthead);
+
+	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == 0)
+		return plisthead;
+
+	XFREE(plisthead);
+	return NULL;
 }
 
 /* compare pkg version */

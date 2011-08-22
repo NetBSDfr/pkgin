@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.19 2011/08/22 10:36:09 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.20 2011/08/22 10:50:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -186,7 +186,6 @@ Dlfile		*download_file(char *, time_t *);
 /* summary.c */
 void		update_db(int, char **);
 /* sqlite_callbacks.c */
-Plisthead	*rec_pkglist(const char *);
 int			pdb_rec_list(void *, int, char **, char **);
 int			pdb_rec_depends(void *, int, char **, char **);
 /* depends.c */
@@ -200,6 +199,7 @@ Pkglist		*malloc_pkglist(uint8_t);
 void		free_pkglist_entry(Pkglist *, uint8_t);
 void		free_pkglist(Plisthead *, uint8_t);
 Plisthead	*init_head(void);
+Plisthead	*rec_pkglist(const char *);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 /* actions.c */
