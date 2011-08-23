@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.11 2011/08/21 12:59:12 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.12 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -85,7 +85,7 @@ show_direct_depends(const char *pkgarg)
 	Pkglist		*pdp, *mapplist;
 	Plisthead	*deptreehead;
 
-	if (r_plisthead == NULL) {
+	if (SLIST_EMPTY(&r_plisthead)) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
 		return;
 	}
@@ -103,7 +103,7 @@ show_direct_depends(const char *pkgarg)
 		printf(MSG_DIRECT_DEPS_FOR, pkgname);
 		SLIST_FOREACH(pdp, deptreehead, next) {
 			if (package_version && 
-				(mapplist = map_pkg_to_dep(r_plisthead, pdp->depend))
+				(mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend))
 				!= NULL)
 				printf("\t%s\n", mapplist->full);
 			else
@@ -122,10 +122,10 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 	char		*pkgname = NULL;
 
 	if (depquery == LOCAL_REVERSE_DEPS) {
-		plisthead = l_plisthead;
+		plisthead = &l_plisthead;
 		XSTRDUP(pkgname, pkgarg);
 	} else {
-		plisthead = r_plisthead;
+		plisthead = &r_plisthead;
 		pkgname = unique_pkg(pkgarg);
 	}
 

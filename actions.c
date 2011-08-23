@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.10 2011/08/21 15:11:45 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.11 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -277,7 +277,7 @@ pkg_met_reqs(Plisthead *impacthead)
 
 			/* for performance sake, first check basesys */
 			if ((strncmp(requires->full, LOCALBASE,
-				    sizeof(LOCALBASE) - 1)) != 0) {
+				    strlen(LOCALBASE) - 1)) != 0) {
 				if (stat(requires->full, &sb) < 0) {
 					printf(MSG_REQT_NOT_PRESENT,
 						requires->full, pimpact->full);
@@ -406,11 +406,11 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	int			installnum = 0, upgradenum = 0, removenum = 0;
 	int			rc = EXIT_FAILURE;
 	uint64_t   	file_size = 0, size_pkg = 0;
-	Pkglist		*premove, *pinstall; /* not a Pkgdeptree, just for ease */
+	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
-	Plisthead	*impacthead; /* impact head */
+	Plisthead	*impacthead = NULL; /* impact head */
 	Plisthead	*removehead = NULL, *installhead = NULL;
-	Plisthead	*conflictshead; /* conflicts head */
+	Plisthead	*conflictshead = NULL; /* conflicts head */
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF];
 	struct stat	st;
@@ -418,13 +418,13 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	/* full impact list */
 	if ((impacthead = pkg_impact(pkgargs)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
-		return rc;
+		goto installend;
 	}
 
 	/* check for required files */
 	if (!pkg_met_reqs(impacthead)) {
 		printf(MSG_REQT_MISSING);
-		return rc;
+		goto installend;
 	}
 
 	/* conflicts list */
@@ -434,13 +434,9 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	SLIST_FOREACH(pimpact, impacthead, next) {
 
 		/* check for conflicts */
-		if (pkg_has_conflicts(conflictshead, pimpact)) {
-			if (!check_yesno()) {
-				free_pkglist(impacthead, IMPACT);
-
-				return rc;
-			}
-		}
+		if (pkg_has_conflicts(conflictshead, pimpact))
+			if (!check_yesno())
+				goto installend;
 
 		snprintf(pkgpath, BUFSIZ, "%s/%s%s",
 			pkgin_cache, pimpact->full, PKG_EXT);
@@ -466,8 +462,6 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 			break;
 		}
 	}
-	/* free conflicts list */
-	free_pkglist(conflictshead, LIST);
 
 	(void)humanize_number(h_fsize, H_BUF, (int64_t)file_size, "",
 		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
@@ -553,9 +547,11 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	} else
 		printf(MSG_NOTHING_TO_INSTALL);
 
+installend:
 
 	XFREE(toinstall);
 	XFREE(toupgrade);
+	free_pkglist(conflictshead, LIST);
 	free_pkglist(impacthead, IMPACT);
 	free_pkglist(removehead, DEPTREE);
 	free_pkglist(installhead, DEPTREE);
@@ -573,13 +569,13 @@ pkgin_remove(char **pkgargs)
 
 	pdphead = init_head();
 
-	if (l_plisthead == NULL)
+	if (SLIST_EMPTY(&l_plisthead))
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
 	/* act on every package passed to the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
 
-		if ((pkgname = find_exact_pkg(l_plisthead, *ppkgargs)) == NULL) {
+		if ((pkgname = find_exact_pkg(&l_plisthead, *ppkgargs)) == NULL) {
 			printf(MSG_PKG_NOT_INSTALLED, *ppkgargs);
 			continue;
 		}
@@ -666,7 +662,7 @@ narrow_match(char *pkgname, const char *fullpkgname)
 	pkglen = strlen(pkgname);
 	fullpkglen = strlen(fullpkgname);
 
-	SLIST_FOREACH(pkglist, r_plisthead, next) {
+	SLIST_FOREACH(pkglist, &r_plisthead, next) {
 		if (strlen(pkglist->name) == pkglen &&
 			strncmp(pkgname, pkglist->name, pkglen) == 0) {
 
@@ -729,9 +725,9 @@ pkgin_upgrade(int uptype)
 
 	/* upgrade all packages, not only keepables */
 	if (uptype == UPGRADE_ALL) {
-		if (l_plisthead == NULL)
+		if (SLIST_EMPTY(&l_plisthead))
 			errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
-		localplisthead = l_plisthead;
+		localplisthead = &l_plisthead;
 	} else
 		/* upgrade only keepables packages */
 		localplisthead = keeplisthead;

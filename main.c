@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1.1.1.2.4 2011/08/22 20:34:20 imilh Exp $ */
+/* $Id: main.c,v 1.1.1.1.2.5 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -38,8 +38,6 @@ static void	usage(void);
 static void	split_repos(void);
 static int	find_cmd(const char *);
 static void	missing_param(int, int, const char *);
-
-Plisthead	*r_plisthead = NULL, *l_plisthead = NULL;
 
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0;
@@ -142,8 +140,7 @@ main(int argc, char *argv[])
 	ch = find_cmd(argv[0]);
 
 	/* we need packages lists for almost everything */
-	r_plisthead = rec_pkglist(REMOTE_PKGS_QUERY);
-	l_plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
+	init_global_pkglists();
 
 	/* fill pkgtools flags */
 	if (verbosity)

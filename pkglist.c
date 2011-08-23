@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.17 2011/08/22 10:50:12 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.18 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -33,12 +33,7 @@
 #include "pkgin.h"
 #include <regex.h>
 
-void
-free_global_pkglists()
-{
-	free_pkglist(r_plisthead, LIST);
-	free_pkglist(l_plisthead, LIST);
-}
+Plisthead	r_plisthead, l_plisthead;
 
 /**
  * \fn malloc_pkglist
@@ -125,6 +120,37 @@ free_pkglist(Plisthead *plisthead, uint8_t type)
 	plisthead = NULL;
 }
 
+void
+init_global_pkglists()
+{
+	if (pkgindb_doquery(REMOTE_PKGS_QUERY,
+			pdb_rec_list, &l_plisthead) == PDB_ERR)
+		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
+	if (pkgindb_doquery(LOCAL_PKGS_QUERY,
+			pdb_rec_list, &r_plisthead) == PDB_ERR)
+		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
+}
+
+static void
+free_global_pkglist(Plisthead *plisthead)
+{
+	Pkglist *plist;
+
+	while (!SLIST_EMPTY(plisthead)) {
+		plist = SLIST_FIRST(plisthead);
+		SLIST_REMOVE_HEAD(plisthead, next);
+
+		free_pkglist_entry(plist, LIST);
+	}
+}
+
+void
+free_global_pkglists()
+{
+	free_global_pkglist(&l_plisthead);
+	free_global_pkglist(&r_plisthead);
+}
+
 /**
  * \fn init_head
  *
@@ -149,16 +175,15 @@ init_head(void)
 Plisthead *
 rec_pkglist(const char *pkgquery)
 {
-	Plisthead	*plisthead;
+	Plisthead	*plisthead = NULL;
 
-	XMALLOC(plisthead, sizeof(Plisthead));
-
-	SLIST_INIT(plisthead);
+	plisthead = init_head();
 
 	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == 0)
 		return plisthead;
 
 	XFREE(plisthead);
+
 	return NULL;
 }
 
@@ -194,13 +219,13 @@ list_pkgs(const char *pkgquery, int lstype)
 	/* list installed packages + status */
 	if (lstype == PKG_LLIST_CMD && lslimit != '\0') {
 
-		if (l_plisthead == NULL)
+		if (SLIST_EMPTY(&l_plisthead))
 			return;
 
-		if (r_plisthead != NULL) {
+		if (!SLIST_EMPTY(&r_plisthead)) {
 
-			SLIST_FOREACH(plist, r_plisthead, next) {
-				rc = pkg_is_installed(l_plisthead, plist);
+			SLIST_FOREACH(plist, &r_plisthead, next) {
+				rc = pkg_is_installed(&l_plisthead, plist);
 
 				pkgstatus = '\0';
 
@@ -241,14 +266,14 @@ search_pkg(const char *pattern)
 
 	matched_pkgs = 0;
 
-	if (r_plisthead != NULL) {
+	if (!SLIST_EMPTY(&r_plisthead)) {
 		if ((rc = regcomp(&re, pattern, REG_EXTENDED|REG_NOSUB|REG_ICASE))
 			!= 0) {
 			regerror(rc, &re, eb, sizeof(eb));
 			errx(1, "regcomp: %s: %s", pattern, eb);
 		}
 
-		SLIST_FOREACH(plist, r_plisthead, next) {
+		SLIST_FOREACH(plist, &r_plisthead, next) {
 			is_inst = '\0';
 
 			if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
@@ -256,8 +281,8 @@ search_pkg(const char *pattern)
 
 				matched_pkgs = 1;
 
-				if (l_plisthead != NULL) {
-					rc = pkg_is_installed(l_plisthead, plist);
+				if (!SLIST_EMPTY(&l_plisthead)) {
+					rc = pkg_is_installed(&l_plisthead, plist);
 
 					if (rc == 0)
 						is_inst = PKG_EQUAL;

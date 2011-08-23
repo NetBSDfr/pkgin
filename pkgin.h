@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.3.2.20 2011/08/22 10:50:12 imilh Exp $ */
+/* $Id: pkgin.h,v 1.3.2.21 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -178,8 +178,8 @@ extern char			**pkg_repos;
 extern const char	*pkgin_cache;
 extern char  		lslimit;
 extern char			pkgtools_flags[];
-extern Plisthead	*r_plisthead;
-extern Plisthead	*l_plisthead;
+extern Plisthead	r_plisthead;
+extern Plisthead	l_plisthead;
 
 /* download.c*/
 Dlfile		*download_file(char *, time_t *);
@@ -194,6 +194,7 @@ void		show_full_dep_tree(const char *, const char *, const char *);
 void 		full_dep_tree(const char *pkgname, const char *depquery,
 	Plisthead	*pdphead);
 /* pkglist.c */
+void		init_global_pkglists(void);
 void		free_global_pkglists(void);
 Pkglist		*malloc_pkglist(uint8_t);
 void		free_pkglist_entry(Pkglist *, uint8_t);

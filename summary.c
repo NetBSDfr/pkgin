@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3.2.14 2011/08/21 21:49:25 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.15 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -586,8 +586,8 @@ update_db(int which, char **pkgkeep)
 			free_list(summary);
 
 			/* re-read local packages list as it may have changed */
-			free_pkglist(l_plisthead, LIST);
-			l_plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
+			free_global_pkglists();
+			init_global_pkglists();
 
 			/* restore keep-list */
 			if (keeplisthead != NULL) {
@@ -615,7 +615,7 @@ update_db(int which, char **pkgkeep)
 				 * probably a fresh install or a rebuild
 				 * restore keep flags with pkgdb informations
 				 */
-				SLIST_FOREACH(pkglist, l_plisthead, next)
+				SLIST_FOREACH(pkglist, &l_plisthead, next)
 					if (!is_automatic_installed(pkglist->full)) {
 						snprintf(buf, BUFSIZ, KEEP_PKG,
 							pkglist->full);

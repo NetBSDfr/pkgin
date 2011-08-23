@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.10 2011/08/22 10:36:09 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.11 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -160,14 +160,14 @@ pkg_keep(int type, char **pkgargs)
 	Pkglist	*pkglist = NULL;
 	char   	**pkeep, *pkgname, query[BUFSIZ];
 
-	if (l_plisthead == NULL) /* no packages recorded */
+	if (SLIST_EMPTY(&l_plisthead)) /* no packages recorded */
 		return;
 
 	/* parse packages by their command line names */
 	for (pkeep = pkgargs; *pkeep != NULL; pkeep++) {
 		/* find real package name */
 		if ((pkgname = unique_pkg(*pkeep)) != NULL) {
-			SLIST_FOREACH(pkglist, l_plisthead, next)
+			SLIST_FOREACH(pkglist, &l_plisthead, next)
 				/* PKGNAME match */
 				if (strcmp(pkgname, pkglist->full) == 0)
 					break;

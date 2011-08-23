@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.1.1.1.2.18 2011/08/21 12:59:12 imilh Exp $ */
+/* $Id: impact.c,v 1.1.1.1.2.19 2011/08/23 11:46:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -171,11 +171,11 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	char		*remotepkg;
 
 	/* local package list is empty */
-	if (l_plisthead == NULL)
+	if (SLIST_EMPTY(&l_plisthead))
 		return 1;
 
 	/* record corresponding package on remote list*/
-	if ((mapplist = map_pkg_to_dep(r_plisthead, pdp->depend)) == NULL)
+	if ((mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
 
 	XSTRDUP(remotepkg, mapplist->full);
@@ -194,7 +194,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
 	/* parse local packages to see if depedency is installed*/
-	SLIST_FOREACH(plist, l_plisthead, next) {
+	SLIST_FOREACH(plist, &l_plisthead, next) {
 
 		/* match, package is installed */
 		if (strcmp(plist->name, pdp->name) == 0) {
@@ -295,7 +295,7 @@ pkg_impact(char **pkgargs)
 	char		tmpicon;
 #endif
 
-	if (r_plisthead == NULL) {
+	if (SLIST_EMPTY(&r_plisthead)) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
 		return NULL;
 	}
