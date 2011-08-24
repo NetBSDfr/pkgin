@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.12 2011/08/24 11:35:11 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.13 2011/08/24 11:50:20 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -409,7 +409,7 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
-	Plisthead	*removehead, *installhead;
+	Plisthead	*removehead = NULL, *installhead = NULL;
 	Plisthead	*conflictshead; /* conflicts head */
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF];
