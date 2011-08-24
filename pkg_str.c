@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.1.2.6 2011/08/22 10:36:09 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.1.2.7 2011/08/24 21:23:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -65,8 +65,12 @@ map_pkg_to_dep(Plisthead *plisthead, char *depname)
 	Pkglist	*plist;
 
 	SLIST_FOREACH(plist, plisthead, next)
-		if (pkg_match(depname, plist->full))
+		if (pkg_match(depname, plist->full)) {
+#ifdef DEBUG
+			printf("match ! %s -> %s\n", depname, plist->full);
+#endif
 			return plist;
+		}
 
 	return NULL;
 }
