@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1.1.1.2.12 2011/08/23 11:46:47 imilh Exp $ */
+/* $Id: depends.c,v 1.1.1.1.2.13 2011/08/24 11:35:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -109,7 +109,7 @@ show_direct_depends(const char *pkgarg)
 			else
 				printf("\t%s\n", pdp->depend);
 		}
-		free_pkglist(deptreehead, DEPTREE);
+		free_pkglist(&deptreehead, DEPTREE);
 	}
 	XFREE(pkgname);
 }
@@ -151,5 +151,5 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 	}
 
 	XFREE(pkgname);
-	free_pkglist(deptreehead, DEPTREE);
+	free_pkglist(&deptreehead, DEPTREE);
 }

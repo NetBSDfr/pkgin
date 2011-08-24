@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3.2.15 2011/08/23 11:46:47 imilh Exp $ */
+/* $Id: summary.c,v 1.3.2.16 2011/08/24 11:35:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -595,7 +595,7 @@ update_db(int which, char **pkgkeep)
 					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->full);
 					pkgindb_doquery(buf, NULL, NULL);
 				}
-				free_pkglist(keeplisthead, LIST);
+				free_pkglist(&keeplisthead, LIST);
 
 				/*
 				 * packages are installed "manually" by pkgin_install()
@@ -607,7 +607,7 @@ update_db(int which, char **pkgkeep)
 					SLIST_FOREACH(pkglist, nokeeplisthead, next)
 						mark_as_automatic_installed(pkglist->full, 1);
 
-					free_pkglist(nokeeplisthead, LIST);
+					free_pkglist(&nokeeplisthead, LIST);
 				}
 			} else { /* empty keep list */
 				/*

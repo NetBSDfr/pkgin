@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.11 2011/08/23 11:46:47 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.12 2011/08/24 11:35:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -253,10 +253,10 @@ pkg_met_reqs(Plisthead *impacthead)
 {
 	int			met_reqs = 1, foundreq;
 	Pkglist		*pimpact, *requires;
-	Plisthead	*requireshead;
+	Plisthead	*requireshead = NULL;
 #ifdef CHECK_PROVIDES
-	Pkglist		*impactprov, *provides;
-	Plisthead	*provideshead;
+	Pkglist		*impactprov = NULL, *provides = NULL;
+	Plisthead	*provideshead = NULL;
 #endif
 	struct stat	sb;
 	char		query[BUFSIZ];
@@ -308,7 +308,7 @@ pkg_met_reqs(Plisthead *impacthead)
 					break;
 				} /* match */
 			} /* SLIST_FOREACH LOCAL_PROVIDES */
-			free_pkglist(provideshead, LIST);
+			free_pkglist(&provideshead, LIST);
 
 			/* REQUIRES was not found on local packages, try impact list */
 			if (!foundreq) {
@@ -334,7 +334,7 @@ pkg_met_reqs(Plisthead *impacthead)
 							break;
 						} /* match */
 					}
-					free_pkglist(provideshead, LIST);
+					free_pkglist(&provideshead, LIST);
 
 					if (foundreq) /* exit impactprov list loop */
 						break;
@@ -357,7 +357,7 @@ pkg_met_reqs(Plisthead *impacthead)
 			}
 #endif
 		} /* SLIST_FOREACH requires */
-		free_pkglist(requireshead, LIST);
+		free_pkglist(&requireshead, LIST);
 	} /* 1st impact SLIST_FOREACH */
 
 	return met_reqs;
@@ -408,9 +408,9 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	uint64_t   	file_size = 0, size_pkg = 0;
 	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
-	Plisthead	*impacthead = NULL; /* impact head */
-	Plisthead	*removehead = NULL, *installhead = NULL;
-	Plisthead	*conflictshead = NULL; /* conflicts head */
+	Plisthead	*impacthead; /* impact head */
+	Plisthead	*removehead, *installhead;
+	Plisthead	*conflictshead; /* conflicts head */
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF];
 	struct stat	st;
@@ -551,10 +551,10 @@ installend:
 
 	XFREE(toinstall);
 	XFREE(toupgrade);
-	free_pkglist(conflictshead, LIST);
-	free_pkglist(impacthead, IMPACT);
-	free_pkglist(removehead, DEPTREE);
-	free_pkglist(installhead, DEPTREE);
+	free_pkglist(&conflictshead, LIST);
+	free_pkglist(&impacthead, IMPACT);
+	free_pkglist(&removehead, DEPTREE);
+	free_pkglist(&installhead, DEPTREE);
 
 	return rc;
 }
@@ -643,8 +643,8 @@ pkgin_remove(char **pkgargs)
 		rc = EXIT_SUCCESS;
 	}
 
-	free_pkglist(removehead, DEPTREE);
-	free_pkglist(pdphead, DEPTREE);
+	free_pkglist(&removehead, DEPTREE);
+	free_pkglist(&pdphead, DEPTREE);
 
 	XFREE(todelete);
 
@@ -741,7 +741,7 @@ pkgin_upgrade(int uptype)
 		 */
 		if (uptype == UPGRADE_ALL) {
 
-			free_pkglist(localplisthead, LIST);
+			free_pkglist(&localplisthead, LIST);
 			free_list(pkgargs);
 			/* record keep list */
 			pkgargs = record_upgrades(keeplisthead);
@@ -752,5 +752,5 @@ pkgin_upgrade(int uptype)
 
 	free_list(pkgargs);
 
-	free_pkglist(keeplisthead, LIST);
+	free_pkglist(&keeplisthead, LIST);
 }

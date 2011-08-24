@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.18 2011/08/23 11:46:47 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.19 2011/08/24 11:35:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -80,20 +80,22 @@ malloc_pkglist(uint8_t type)
  * \brief free a Pkglist single entry
  */
 void
-free_pkglist_entry(Pkglist *plist, uint8_t type)
+free_pkglist_entry(Pkglist **plist, uint8_t type)
 {
-	XFREE(plist->full);
-	XFREE(plist->name);
-	XFREE(plist->version);
-	XFREE(plist->depend);
+	XFREE((*plist)->full);
+	XFREE((*plist)->name);
+	XFREE((*plist)->version);
+	XFREE((*plist)->depend);
 	switch (type) {
 	case LIST:
-		XFREE(plist->comment);
+		XFREE((*plist)->comment);
 		break;
 	case IMPACT:
-		XFREE(plist->old);
+		XFREE((*plist)->old);
 	}
-	XFREE(plist);
+	XFREE(*plist);
+
+	plist = NULL;
 }
 
 /**
@@ -102,20 +104,20 @@ free_pkglist_entry(Pkglist *plist, uint8_t type)
  * \brief Free all types of package list
  */
 void
-free_pkglist(Plisthead *plisthead, uint8_t type)
+free_pkglist(Plisthead **plisthead, uint8_t type)
 {
 	Pkglist *plist;
 
-	if (plisthead == NULL)
+	if (*plisthead == NULL)
 		return;
 
-	while (!SLIST_EMPTY(plisthead)) {
-		plist = SLIST_FIRST(plisthead);
-		SLIST_REMOVE_HEAD(plisthead, next);
+	while (!SLIST_EMPTY(*plisthead)) {
+		plist = SLIST_FIRST(*plisthead);
+		SLIST_REMOVE_HEAD(*plisthead, next);
 
-		free_pkglist_entry(plist, type);
+		free_pkglist_entry(&plist, type);
 	}
-	XFREE(plisthead);
+	XFREE(*plisthead);
 
 	plisthead = NULL;
 }
@@ -140,7 +142,7 @@ free_global_pkglist(Plisthead *plisthead)
 		plist = SLIST_FIRST(plisthead);
 		SLIST_REMOVE_HEAD(plisthead, next);
 
-		free_pkglist_entry(plist, LIST);
+		free_pkglist_entry(&plist, LIST);
 	}
 }
 
@@ -251,7 +253,7 @@ list_pkgs(const char *pkgquery, int lstype)
 		SLIST_FOREACH(plist, plisthead, next)
 			printf("%-20s %s\n", plist->full, plist->comment);
 
-		free_pkglist(plisthead, LIST);
+		free_pkglist(&plisthead, LIST);
 	}
 }
 

@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.1.2.5 2011/08/22 10:50:12 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.1.2.6 2011/08/24 11:35:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -56,7 +56,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 	 * pkg_summary(5), return
 	 */
 	if (FULLPKGNAME == NULL)
-		return PDB_OK;
+		return PDB_ERR;
 
 	plist = malloc_pkglist(LIST);
 	XSTRDUP(plist->full, FULLPKGNAME);

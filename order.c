@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.1.1.1.2.8 2011/08/21 13:12:24 imilh Exp $ */
+/* $Id: order.c,v 1.1.1.1.2.9 2011/08/24 11:35:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -76,7 +76,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 		    	pdp->level = SLIST_FIRST(lvldeptree)->level + 1;
 
 		XFREE(depname);
-		free_pkglist(lvldeptree, DEPTREE);
+		free_pkglist(&lvldeptree, DEPTREE);
 
 #if 0
 		printf("%s -> %d\n", pdp->depend, pdp->level);
@@ -159,7 +159,7 @@ upgrade_dep_deepness(Plisthead *impacthead)
 #endif
 
 		XFREE(pkgname);
-		free_pkglist(lvldeptree, DEPTREE);
+		free_pkglist(&lvldeptree, DEPTREE);
 	}
 }
 
