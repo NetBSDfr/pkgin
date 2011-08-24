@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.4.2.13 2011/08/24 11:50:20 imilh Exp $ */
+/* $Id: actions.c,v 1.4.2.14 2011/08/24 21:47:05 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -740,8 +740,6 @@ pkgin_upgrade(int uptype)
 		 * in order to restore them
 		 */
 		if (uptype == UPGRADE_ALL) {
-
-			free_pkglist(&localplisthead, LIST);
 			free_list(pkgargs);
 			/* record keep list */
 			pkgargs = record_upgrades(keeplisthead);
