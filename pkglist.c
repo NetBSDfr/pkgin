@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.2.2.20 2011/08/24 21:23:48 imilh Exp $ */
+/* $Id: pkglist.c,v 1.2.2.21 2011/08/25 05:57:57 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -125,6 +125,9 @@ free_pkglist(Plisthead **plisthead, uint8_t type)
 void
 init_global_pkglists()
 {
+	SLIST_INIT(&r_plisthead);
+	SLIST_INIT(&l_plisthead);
+
 	if (pkgindb_doquery(REMOTE_PKGS_QUERY,
 			pdb_rec_list, &r_plisthead) == PDB_ERR)
 		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
@@ -181,7 +184,7 @@ rec_pkglist(const char *pkgquery)
 
 	plisthead = init_head();
 
-	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == 0)
+	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == PDB_OK)
 		return plisthead;
 
 	XFREE(plisthead);
