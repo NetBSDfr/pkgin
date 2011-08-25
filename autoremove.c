@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.2.2.12 2011/08/24 11:35:11 imilh Exp $ */
+/* $Id: autoremove.c,v 1.2.2.13 2011/08/25 13:41:54 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -90,7 +90,7 @@ pkgin_autoremove()
 		/* package was not found, insert it on removelist */
 		premove = malloc_pkglist(DEPTREE);
 
-		XSTRDUP(premove->depend, pkglist->name);
+		XSTRDUP(premove->depend, pkglist->full);
 
 		SLIST_INSERT_HEAD(removehead, premove, next);
 
