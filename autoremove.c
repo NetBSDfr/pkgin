@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.4 2011/08/26 07:20:58 imilh Exp $ */
+/* $Id: autoremove.c,v 1.5 2011/08/26 16:22:20 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -153,7 +153,9 @@ show_pkg_keep(void)
 	free_pkglist(&plisthead, LIST);
 }
 
-/* flag packages in pkgargs as non or autoremovable */
+/**
+ * \brief flag packages in pkgargs as non or autoremovable
+ */
 void
 pkg_keep(int type, char **pkgargs)
 {

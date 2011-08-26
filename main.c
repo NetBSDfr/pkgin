@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: main.c,v 1.3 2011/08/26 16:22:20 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -140,7 +140,7 @@ main(int argc, char *argv[])
 	ch = find_cmd(argv[0]);
 
 	/* we need packages lists for almost everything */
-	if (ch != PKG_UPDT_CMD)
+	if (ch != PKG_UPDT_CMD) /* already loaded by update_db() */
 		init_global_pkglists();
 
 	/* fill pkgtools flags */
