@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.3 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: pkglist.c,v 1.4 2011/08/26 06:56:52 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -128,12 +128,8 @@ init_global_pkglists()
 	SLIST_INIT(&r_plisthead);
 	SLIST_INIT(&l_plisthead);
 
-	if (pkgindb_doquery(REMOTE_PKGS_QUERY,
-			pdb_rec_list, &r_plisthead) == PDB_ERR)
-		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
-	if (pkgindb_doquery(LOCAL_PKGS_QUERY,
-			pdb_rec_list, &l_plisthead) == PDB_ERR)
-		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
+	pkgindb_doquery(REMOTE_PKGS_QUERY, pdb_rec_list, &r_plisthead);
+	pkgindb_doquery(LOCAL_PKGS_QUERY, pdb_rec_list, &l_plisthead);
 }
 
 static void
