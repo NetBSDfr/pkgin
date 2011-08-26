@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.1 2011/03/03 14:43:12 imilh Exp $ */
+/* $Id: depends.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -32,134 +32,34 @@
 
 #include "pkgin.h"
 
-static Plisthead *plisthead = NULL;
-
-void
-free_deptree(Deptreehead *deptreehead)
-{
-	Pkgdeptree *pdp;
-
-	if (deptreehead == NULL)
-		return;
-
-	while (!SLIST_EMPTY(deptreehead)) {
-		pdp = SLIST_FIRST(deptreehead);
-		SLIST_REMOVE_HEAD(deptreehead, next);
-		XFREE(pdp->depname);
-		XFREE(pdp);
-	}
-}
-
-/* match dependency extension */
-char *
-match_dep_ext(char *depname, const char *ext)
-{
-	char *pdep = NULL;
-
-	for (; *ext != 0; ext++)
-		if ((pdep = strrchr(depname, *ext)) != NULL)
-			break;
-
-	return pdep;
-}
-
-/* basic full package format detection */
-int
-exact_pkgfmt(const char *pkgname)
-{
-	char	*p;
-
-	if ((p = strrchr(pkgname, '-')) == NULL)
-		return 0;
-
-	p++;
-
-	/* naive assumption, will fail with foo-100bar, hopefully, there's
-	 * only a few packages needing to be fully specified
-	 */
-	return isdigit((int)*p);
-}
-
-/* sqlite callback
- * DIRECT_DEPS or REVERSE_DEPS result, feeds a Pkgdeptree SLIST
- * Deptreehead is the head of Pkgdeptree
+/**
+ * \fn full_dep_tree
+ *
+ * \brief recursively parse dependencies: this is our central function
  */
-static int
-pdb_rec_direct_deps(void *param, int argc, char **argv, char **colname)
-{
-	int			argvlen;
-	char		*depname;
-	Pkgdeptree	*deptree, *pdp;
-	Deptreehead	*pdphead = (Deptreehead *)param;
-
-	if (argv == NULL)
-		return PDB_ERR;
-
-	depname = end_expr(plisthead, argv[0]); /* foo| */
-	argvlen = strlen(depname);
-
-	/* dependency already recorded, do not insert on list  */
-	SLIST_FOREACH(pdp, pdphead, next) {
-		if (strlen(pdp->matchname) + 1 == argvlen &&
-		    strncmp(depname, pdp->matchname, argvlen - 1) == 0) {
-			XFREE(depname);
-			/* proceed to next result */
-			return PDB_OK;
-		}
-	}
-
-	/* remove delimiter */
-	depname[argvlen - 1] = '\0';
-
-	XMALLOC(deptree, sizeof(Pkgdeptree));
-	XSTRDUP(deptree->depname, argv[0]);
-	deptree->matchname = depname;
-	deptree->computed = 0;
-	deptree->level = 0;
-	/* used in LOCAL_REVERSE_DEPS / autoremove.c */
-	if (argc > 1 && argv[1] != NULL)
-		deptree->pkgkeep = 1;
-	else
-		deptree->pkgkeep = 0;
-
-	SLIST_INSERT_HEAD(pdphead, deptree, next);
-
-	return PDB_OK;
-}
-
-/* recursively parse dependencies: this is our central function  */
 void
-full_dep_tree(const char *pkgname, const char * depquery, Deptreehead *pdphead)
+full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 {
-	Pkgdeptree	*pdp;
-	int		level;
-	char		query[BUFSIZ];
+	Pkglist		*pdp;
+	int			level;
+	char		query[BUFSIZ] = "";
 
 	query[0] = '\0';
 	if (depquery == DIRECT_DEPS) {
-		/* querying remote packages, load remote packages list */
-		plisthead = rec_pkglist(REMOTE_PKGS_QUERY);
-
 		/* first package to recurse on and exact pkg name, this is an
 		 * exact match due to many versions of the package
 		 */
 		if (exact_pkgfmt(pkgname))
 			snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
-
-	} else if (depquery == LOCAL_REVERSE_DEPS ||
-		   depquery == LOCAL_DIRECT_DEPS) {
-		/* querying local packages, load local packages list */
-		plisthead = rec_pkglist(LOCAL_PKGS_QUERY);
-	} else {
-	    	printf("oops\n");
-	    	return;
 	}
+
 	level = 1;
 
 	/* getting direct dependencies */
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
-	if (pkgindb_doquery(query, pdb_rec_direct_deps, pdphead) != 0)
+
+	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_ERR)
 		return;
 
 	while (SLIST_FIRST(pdphead)->level == 0) {
@@ -167,99 +67,89 @@ full_dep_tree(const char *pkgname, const char * depquery, Deptreehead *pdphead)
 			if (pdp->level != 0)
 			    	break;
 			pdp->level = level;
-			snprintf(query, BUFSIZ, depquery, pdp->matchname);
-			pkgindb_doquery(query, pdb_rec_direct_deps, pdphead);
-
-#if 0
-			printf("%i: p: %s, l: %d\n", level, pdp->depname,
+			snprintf(query, BUFSIZ, depquery, pdp->name);
+			pkgindb_doquery(query, pdb_rec_depends, pdphead);
+#ifdef DEBUG
+			printf("%i: p: %s, l: %d\n", level, pdp->depend,
 			    pdp->level);
 #endif
 		} /* SLIST_FOREACH */
 		++level;
 	}
-
-	free_pkglist(plisthead);
 }
 
 void
-show_direct_depends(const char *pkgname)
+show_direct_depends(const char *pkgarg)
 {
-	char		query[BUFSIZ];
-	Pkgdeptree	*pdp;
-	Deptreehead	deptreehead;
-	Pkglist		*mapplist;
+	char		*pkgname, query[BUFSIZ];
+	Pkglist		*pdp, *mapplist;
+	Plisthead	*deptreehead;
 
-	if ((plisthead = rec_pkglist(REMOTE_PKGS_QUERY)) == NULL) {
+	if (SLIST_EMPTY(&r_plisthead)) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
 		return;
 	}
 
-	/* warn if more than one package with this name is available */
-	if (count_samepkg(plisthead, pkgname) < 2) {
-		SLIST_INIT(&deptreehead);
-
-		if (exact_pkgfmt(pkgname))
-			snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
-		else
-			snprintf(query, BUFSIZ, DIRECT_DEPS, pkgname);
-
-		if (pkgindb_doquery(query, pdb_rec_direct_deps, &deptreehead) == 0) {
-			printf(MSG_DIRECT_DEPS_FOR, pkgname);
-			SLIST_FOREACH(pdp, &deptreehead, next) {
-				if (package_version && 
-					(mapplist = map_pkg_to_dep(plisthead, pdp->depname))
-					!= NULL)
-					printf("\t%s\n", mapplist->pkgname);
-				else
-					printf("\t%s\n", pdp->depname);
-			}
-			free_deptree(&deptreehead);
-		}
+	if ((pkgname = unique_pkg(pkgarg)) == NULL) {
+		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgname);
+		return;
 	}
-	free_pkglist(plisthead);
+
+	deptreehead = init_head();
+
+	snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
+
+	if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == 0) {
+		printf(MSG_DIRECT_DEPS_FOR, pkgname);
+		SLIST_FOREACH(pdp, deptreehead, next) {
+			if (package_version && 
+				(mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend))
+				!= NULL)
+				printf("\t%s\n", mapplist->full);
+			else
+				printf("\t%s\n", pdp->depend);
+		}
+		free_pkglist(&deptreehead, DEPTREE);
+	}
+	XFREE(pkgname);
 }
 
 void
-show_full_dep_tree(const char *pkgname, const char *depquery, const char *msg)
+show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 {
-	Pkgdeptree	*pdp;
-	Deptreehead	deptreehead; /* replacement for SLIST_HEAD() */
-	Pkglist		*mapplist;
-	int			count;
-	const char	*pkgquery;
+	Pkglist		*pdp, *mapplist;
+	Plisthead	*deptreehead, *plisthead;
+	char		*pkgname = NULL;
 
-	if (depquery == LOCAL_REVERSE_DEPS)
-		pkgquery = LOCAL_PKGS_QUERY;
-	else
-		pkgquery = REMOTE_PKGS_QUERY;
-
-	if ((plisthead = rec_pkglist(pkgquery)) == NULL)
-		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
-
-	count = count_samepkg(plisthead, pkgname);
-
-	/* free plisthead now so it is NULL for full_dep_tree() */
-	free_pkglist(plisthead);
-
-	if (count > 1)
-		return;
-
-	SLIST_INIT(&deptreehead);
-
-	printf(msg, pkgname);
-	full_dep_tree(pkgname, depquery, &deptreehead);
-
-	/* record plisthead once again for map_pkg_to_dep() */
-	plisthead = rec_pkglist(pkgquery);
-
-	SLIST_FOREACH(pdp, &deptreehead, next) {
-		if (package_version && 
-			(mapplist = map_pkg_to_dep(plisthead, pdp->depname)) != NULL)
-			printf("\t%s\n", mapplist->pkgname);
-		else
-			printf("\t%s\n", pdp->depname);
+	if (depquery == LOCAL_REVERSE_DEPS) {
+		plisthead = &l_plisthead;
+		XSTRDUP(pkgname, pkgarg);
+	} else {
+		plisthead = &r_plisthead;
+		pkgname = unique_pkg(pkgarg);
 	}
 
-	free_pkglist(plisthead);
-	free_deptree(&deptreehead);
+	if (pkgname == NULL) {
+		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgarg);
+		return;
+	}
+
+	if (plisthead == NULL)
+		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
+
+	deptreehead = init_head();
+
+	printf(msg, pkgname);
+	full_dep_tree(pkgname, depquery, deptreehead);
+
+	SLIST_FOREACH(pdp, deptreehead, next) {
+		if (package_version && 
+			(mapplist = map_pkg_to_dep(plisthead, pdp->depend)) != NULL)
+			printf("\t%s\n", mapplist->full);
+		else
+			printf("\t%s\n", pdp->depend);
+	}
+
+	XFREE(pkgname);
+	free_pkglist(&deptreehead, DEPTREE);
 }

@@ -1,7 +1,7 @@
-# $Id: configure.ac,v 1.6 2011/08/10 22:44:55 imilh Exp $
+# $Id: configure.ac,v 1.7 2011/08/26 06:21:30 imilh Exp $
 
 AC_PREREQ([2.61])
-AC_INIT([pkgin], [0.4.3], [imil@NetBSD.org])
+AC_INIT([pkgin], [0.5.0], [imil@NetBSD.org])
 AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
 

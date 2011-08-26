@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.3 2011/08/09 11:38:34 imilh Exp $ */
+/* $Id: summary.c,v 1.4 2011/08/26 06:21:30 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -28,6 +28,10 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
+ */
+
+/**
+ * Import pkg_summary to SQLite database
  */
 
 #include "tools.h"
@@ -91,7 +95,9 @@ int			force_fetch = 0;
 
 static const char *const sumexts[] = { "bz2", "gz", NULL };
 
-/* remote summary fetch */
+/**
+ * remote summary fetch
+ */
 static char **
 fetch_summary(char *cur_repo)
 {
@@ -144,7 +150,9 @@ fetch_summary(char *cur_repo)
 	return NULL;
 }
 
-/* progress percentage */
+/**
+ * progress percentage
+ */
 static void
 progress(char c)
 {
@@ -160,7 +168,9 @@ progress(char c)
 	fflush(stdout);
 }
 
-/* check if the field is PKGNAME */
+/**
+ * check if the field is PKGNAME
+ */
 static int
 chk_pkgname(char *field)
 {
@@ -171,7 +181,9 @@ chk_pkgname(char *field)
 	return 0;
 }
 
-/* returns value for given field */
+/**
+ * returns value for given field
+ */
 static char *
 field_record(const char *field, char *line)
 {
@@ -212,7 +224,9 @@ free_insertlist()
 	}
 }
 
-/* sqlite callback, fill cols.name[] with available columns names */
+/**
+ * sqlite callback, fill cols.name[] with available columns names
+ */
 int
 colnames(void *unused, int argc, char **argv, char **colname)
 {
@@ -230,7 +244,9 @@ colnames(void *unused, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
-/* for now, values are located on a SLIST, build INSERT line with them */
+/**
+ * for now, values are located on a SLIST, build INSERT line with them
+ */
 static void
 prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
 {
@@ -278,14 +294,33 @@ prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
 	commit_list[commit_idx] = commit_query;
 }
 
+/**
+ * add item to the main SLIST
+ */
 static void
-child_table(int pkgid, const char *table, char *val)
+add_to_slist(char *field, char*value)
 {
-	char buf[BUFSIZ];
+	Insertlist		*insert;
 
-	snprintf(buf, BUFSIZ,
-		"INSERT INTO %s (PKG_ID,%s_PKGNAME) VALUES (%d,\"%s\");",
-		table, table, pkgid, val);
+	XMALLOC(insert, sizeof(Insertlist));
+	XSTRDUP(insert->field, field);
+	XSTRDUP(insert->value, value);
+
+	SLIST_INSERT_HEAD(&inserthead, insert, next);
+}
+
+/**
+ * fill-in secondary tables
+ */
+static void
+child_table(const char *fmt, ...)
+{
+	char	buf[BUFSIZ];
+	va_list	ap;
+
+	va_start(ap, fmt);
+	vsnprintf(buf, BUFSIZ, fmt, ap);
+	va_end(ap);
 
 	/* append query to commit_list */
 	commit_idx++;
@@ -299,7 +334,6 @@ update_col(struct Summary sum, int pkgid, char *line)
 	static uint8_t	said = 0;
 	int				i;
 	char			*val, *p, buf[BUFSIZ];
-	Insertlist		*insert;
 
 	/* check MACHINE_ARCH */
 	if (!said && (val = field_record("MACHINE_ARCH", line)) != NULL) {
@@ -313,14 +347,23 @@ update_col(struct Summary sum, int pkgid, char *line)
 	}
 
 	/* DEPENDS */
-	if ((val = field_record("DEPENDS", line)) != NULL)
-		child_table(pkgid, sum.deps, val);
+	if ((val = field_record("DEPENDS", line)) != NULL) {
+		if ((p = get_pkgname_from_depend(val)) != NULL) {
+			child_table(INSERT_DEPENDS_VALUES,	\
+				sum.deps, sum.deps, sum.deps,	\
+				pkgid, p, val);
+			XFREE(p);
+		} else
+			printf(MSG_COULD_NOT_GET_PKGNAME, val);
+	}
 	/* REQUIRES */
 	if ((val = field_record("REQUIRES", line)) != NULL)
-		child_table(pkgid, sum.requires, val);
+		child_table(INSERT_SINGLE_VALUE,		\
+			sum.requires, sum.requires, pkgid, val);
 	/* PROVIDES */
 	if ((val = field_record("PROVIDES", line)) != NULL)
-		child_table(pkgid, sum.provides, val);
+		child_table(INSERT_SINGLE_VALUE,		\
+			sum.provides, sum.provides, pkgid, val);
 
 	for (i = 0; i < cols.num; i++) {
 		snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
@@ -338,15 +381,10 @@ update_col(struct Summary sum, int pkgid, char *line)
 					if (*p == '"')
 						*p = '`';
 
-
-			XMALLOC(insert, sizeof(Insertlist));
-			XSTRDUP(insert->field, cols.name[i]);
-			XSTRDUP(insert->value, val);
-
-			SLIST_INSERT_HEAD(&inserthead, insert, next);
+			add_to_slist(cols.name[i], val);
 
 			/* update query size */
-			query_size += strlen(insert->field) + strlen(insert->value) + 5;
+			query_size += strlen(cols.name[i]) + strlen(val) + 5;
 			/* 5 = strlen(\"\",) */
 		}
 	}
@@ -357,9 +395,8 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 {
 	int			i;
 	static int	pkgid = 1;
-	char		*pkgname, **psum, query[BUFSIZ];
+	char		*pkgname, *pkgvers, **psum, query[BUFSIZ];
 	const char	*alnum = ALNUM;
-	Insertlist	*insert;
 
 	if (summary == NULL) {
 		pkgindb_close();
@@ -401,11 +438,14 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 		/* PKGNAME record, should always be true  */
 		if ((pkgname = field_record("PKGNAME", *psum)) != NULL) {
 
-			XMALLOC(insert, sizeof(Insertlist));
-			XSTRDUP(insert->field, "PKGNAME");
-			XSTRDUP(insert->value, pkgname);
+			add_to_slist("FULLPKGNAME", pkgname);
 
-			SLIST_INSERT_HEAD(&inserthead, insert, next);
+			/* split PKGNAME and VERSION */
+			pkgvers = strrchr(pkgname, '-');
+			*pkgvers++ = '\0';
+
+			add_to_slist("PKGNAME", pkgname);
+			add_to_slist("PKGVERS", pkgvers);
 
 			/* nice little counter */
 			progress(pkgname[0]);
@@ -517,7 +557,7 @@ void
 update_db(int which, char **pkgkeep)
 {
 	int			i;
-	Plisthead	*keeplisthead, *nokeeplisthead, *plisthead;
+	Plisthead	*keeplisthead, *nokeeplisthead;
 	Pkglist		*pkglist;
 	char		**summary = NULL, **prepos, buf[BUFSIZ];
 
@@ -525,7 +565,7 @@ update_db(int which, char **pkgkeep)
 
 		switch (sumsw[i].type) {
 		case LOCAL_SUMMARY:
-			/* has the pkgdb changed ? if not, continue */
+			/* has the pkgdb (pkgsrc) changed ? if not, continue */
 			if (!pkg_db_mtime() || !pkgdb_open(ReadWrite))
 				continue;
 
@@ -545,13 +585,17 @@ update_db(int which, char **pkgkeep)
 			insert_summary(sumsw[i], summary, NULL);
 			free_list(summary);
 
+			/* re-read local packages list as it may have changed */
+			free_global_pkglists();
+			init_global_pkglists();
+
 			/* restore keep-list */
 			if (keeplisthead != NULL) {
 				SLIST_FOREACH(pkglist, keeplisthead, next) {
-					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->pkgname);
+					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->full);
 					pkgindb_doquery(buf, NULL, NULL);
 				}
-				free_pkglist(keeplisthead);
+				free_pkglist(&keeplisthead, LIST);
 
 				/*
 				 * packages are installed "manually" by pkgin_install()
@@ -561,9 +605,9 @@ update_db(int which, char **pkgkeep)
 				if ((nokeeplisthead =
 						rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
 					SLIST_FOREACH(pkglist, nokeeplisthead, next)
-						mark_as_automatic_installed(pkglist->pkgname, 1);
+						mark_as_automatic_installed(pkglist->full, 1);
 
-					free_pkglist(nokeeplisthead);
+					free_pkglist(&nokeeplisthead, LIST);
 				}
 			} else { /* empty keep list */
 				/*
@@ -571,15 +615,12 @@ update_db(int which, char **pkgkeep)
 				 * probably a fresh install or a rebuild
 				 * restore keep flags with pkgdb informations
 				 */
-				if ((plisthead = rec_pkglist(LOCAL_PKGS_QUERY)) != NULL) {
-					SLIST_FOREACH(pkglist, plisthead, next)
-						if (!is_automatic_installed(pkglist->pkgname)) {
-							snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->pkgname);
-							pkgindb_doquery(buf, NULL, NULL);
-						}
-
-					free_pkglist(plisthead);
-				}
+				SLIST_FOREACH(pkglist, &l_plisthead, next)
+					if (!is_automatic_installed(pkglist->full)) {
+						snprintf(buf, BUFSIZ, KEEP_PKG,
+							pkglist->full);
+						pkgindb_doquery(buf, NULL, NULL);
+					}
 			}
 
 			/* insert new keep list if there's any */

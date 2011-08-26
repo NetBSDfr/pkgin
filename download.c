@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.11 2011/08/21 09:26:19 imilh Exp $ */
+/* $Id: download.c,v 1.12 2011/08/26 06:21:30 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.

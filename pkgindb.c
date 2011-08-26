@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.1 2011/03/03 14:43:13 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -89,6 +89,7 @@ pdb_get_value(void *param, int argc, char **argv, char **colname)
 
 	if (argv != NULL) {
 		XSTRCPY(value, argv[0]);
+
 		return PDB_OK;
 	}
 

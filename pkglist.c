@@ -1,7 +1,7 @@
-/* $Id: pkglist.c,v 1.2 2011/04/03 16:17:08 imilh Exp $ */
+/* $Id: pkglist.c,v 1.3 2011/08/26 06:21:30 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -33,117 +33,181 @@
 #include "pkgin.h"
 #include <regex.h>
 
+Plisthead	r_plisthead, l_plisthead;
+
+/**
+ * \fn malloc_pkglist
+ *
+ * \brief Pkglist allocation for all types of lists
+ */
+Pkglist *
+malloc_pkglist(uint8_t type)
+{
+	Pkglist *pkglist;
+
+	XMALLOC(pkglist, sizeof(Pkglist));
+
+	/*!< Init all the things ! (http://knowyourmeme.com/memes/x-all-the-y) */
+	pkglist->type = type;
+	pkglist->full = NULL;
+	pkglist->name = NULL;
+	pkglist->version = NULL;
+	pkglist->depend = NULL;
+	pkglist->size_pkg = 0;
+	pkglist->file_size = 0;
+	pkglist->level = 0;
+
+	switch (type) {
+	case LIST:
+		pkglist->comment = NULL;
+		break;
+	case DEPTREE:
+		pkglist->computed = 0;
+		pkglist->keep = 0;
+		break;
+	case IMPACT:
+		pkglist->action = DONOTHING;
+		pkglist->old = NULL;
+		break;
+	}
+
+	return pkglist;
+}
+
+/**
+ * \fn free_pkglist_entry
+ *
+ * \brief free a Pkglist single entry
+ */
 void
-free_pkglist(Plisthead *plisthead)
+free_pkglist_entry(Pkglist **plist, uint8_t type)
+{
+	XFREE((*plist)->full);
+	XFREE((*plist)->name);
+	XFREE((*plist)->version);
+	XFREE((*plist)->depend);
+	switch (type) {
+	case LIST:
+		XFREE((*plist)->comment);
+		break;
+	case IMPACT:
+		XFREE((*plist)->old);
+	}
+	XFREE(*plist);
+
+	plist = NULL;
+}
+
+/**
+ * \fn free_pkglist
+ *
+ * \brief Free all types of package list
+ */
+void
+free_pkglist(Plisthead **plisthead, uint8_t type)
 {
 	Pkglist *plist;
 
-	if (plisthead == NULL)
+	if (*plisthead == NULL)
 		return;
+
+	while (!SLIST_EMPTY(*plisthead)) {
+		plist = SLIST_FIRST(*plisthead);
+		SLIST_REMOVE_HEAD(*plisthead, next);
+
+		free_pkglist_entry(&plist, type);
+	}
+	XFREE(*plisthead);
+
+	plisthead = NULL;
+}
+
+void
+init_global_pkglists()
+{
+	SLIST_INIT(&r_plisthead);
+	SLIST_INIT(&l_plisthead);
+
+	if (pkgindb_doquery(REMOTE_PKGS_QUERY,
+			pdb_rec_list, &r_plisthead) == PDB_ERR)
+		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
+	if (pkgindb_doquery(LOCAL_PKGS_QUERY,
+			pdb_rec_list, &l_plisthead) == PDB_ERR)
+		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
+}
+
+static void
+free_global_pkglist(Plisthead *plisthead)
+{
+	Pkglist *plist;
 
 	while (!SLIST_EMPTY(plisthead)) {
 		plist = SLIST_FIRST(plisthead);
 		SLIST_REMOVE_HEAD(plisthead, next);
-		XFREE(plist->pkgname);
-		XFREE(plist->comment);
-		XFREE(plist);
+
+		free_pkglist_entry(&plist, LIST);
 	}
-	XFREE(plisthead);
 }
 
-/* sqlite callback, record package list */
-static int
-pdb_rec_pkglist(void *param, int argc, char **argv, char **colname)
+void
+free_global_pkglists()
 {
-	Pkglist		*plist;
-	Plisthead 	*plisthead = (Plisthead *)param;
-
-	if (argv == NULL)
-		return PDB_ERR;
-
-	/* PKGNAME was empty, probably a package installed
-	 * from pkgsrc or wip that does not exist in
-	 * pkg_summary(5), return
-	 */
-	if (argv[0] == NULL)
-		return PDB_OK;
-
-	XMALLOC(plist, sizeof(Pkglist));
-	XSTRDUP(plist->pkgname, argv[0]);
-
-	plist->size_pkg = 0;
-	plist->file_size = 0;
-
-	/* classic pkglist, has COMMENT and SIZEs */
-	if (argc > 1) {
-		if (argv[1] == NULL) {
-			/* COMMENT or SIZEs were empty
-			 * not a valid pkg_summary(5) entry, return
-			 */
-			XFREE(plist->pkgname);
-			XFREE(plist);
-			return PDB_OK;
-		}
-
-		XSTRDUP(plist->comment, argv[1]);
-		if (argv[2] != NULL)
-			plist->file_size = strtol(argv[2], (char **)NULL, 10);
-		if (argv[3] != NULL)
-			plist->size_pkg = strtol(argv[3], (char **)NULL, 10);
-
-	} else
-		/* conflicts or requires list, only pkgname needed */
-		plist->comment = NULL;
-
-	SLIST_INSERT_HEAD(plisthead, plist, next);
-
-	return PDB_OK;
+	free_global_pkglist(&l_plisthead);
+	free_global_pkglist(&r_plisthead);
 }
 
+/**
+ * \fn init_head
+ *
+ * \brief Init a Plisthead
+ */
 Plisthead *
-rec_pkglist(const char *pkgquery)
+init_head(void)
 {
 	Plisthead *plisthead;
 
 	XMALLOC(plisthead, sizeof(Plisthead));
-
 	SLIST_INIT(plisthead);
 
-	if (pkgindb_doquery(pkgquery, pdb_rec_pkglist, plisthead) == 0)
+	return plisthead;
+}
+
+/**
+ * \fn rec_pkglist
+ *
+ * Record package list to SLIST
+ */
+Plisthead *
+rec_pkglist(const char *pkgquery)
+{
+	Plisthead	*plisthead = NULL;
+
+	plisthead = init_head();
+
+	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == PDB_OK)
 		return plisthead;
 
 	XFREE(plisthead);
+
 	return NULL;
 }
 
+/* compare pkg version */
 static int
-pkg_is_installed(Plisthead *plisthead, char *pkgname)
+pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
 {
-	Pkglist		*pkglist;
-	int			cmplen;
-	char		*dashp;
-
-	if ((dashp = strrchr(pkgname, '-')) == NULL)
-		return -1;
-
-	cmplen = dashp - pkgname;
+	Pkglist *pkglist;
 
 	SLIST_FOREACH(pkglist, plisthead, next) {
-	    	dashp = strrchr(pkglist->pkgname, '-');
-		if (dashp == NULL)
-		    	err(EXIT_FAILURE, "oops");
+		/* make sure packages match */
+		if (strcmp(pkglist->name, pkg->name) != 0)
+			continue;
 
-	    	/* make sure foo-1 does not match foo-bin-1 */
-	    	if ((dashp - pkglist->pkgname) != cmplen)
-		    	continue;
-
-		if (strncmp(pkgname, pkglist->pkgname, cmplen) != 0)
-		    	continue;
-
-		if (strcmp(dashp, pkgname + cmplen) == 0)
+		/* exact same version */
+		if (strcmp(pkglist->version, pkg->version) == 0)
 			return 0;
 
-		return version_check(pkglist->pkgname, pkgname);
+		return version_check(pkglist->full, pkg->full);
 	}
 
 	return -1;
@@ -152,22 +216,21 @@ pkg_is_installed(Plisthead *plisthead, char *pkgname)
 void
 list_pkgs(const char *pkgquery, int lstype)
 {
-	Pkglist 	*plist;
-	Plisthead 	*plisthead, *localplisthead = NULL;
+	Pkglist	   	*plist;
+	Plisthead 	*plisthead;
 	int			rc;
 	char		pkgstatus, outpkg[BUFSIZ];
 
 	/* list installed packages + status */
 	if (lstype == PKG_LLIST_CMD && lslimit != '\0') {
-		localplisthead = rec_pkglist(LOCAL_PKGS_QUERY);
 
-		if (localplisthead == NULL)
+		if (SLIST_EMPTY(&l_plisthead))
 			return;
 
-		if ((plisthead = rec_pkglist(REMOTE_PKGS_QUERY)) != NULL) {
+		if (!SLIST_EMPTY(&r_plisthead)) {
 
-			SLIST_FOREACH(plist, plisthead, next) {
-				rc = pkg_is_installed(localplisthead, plist->pkgname);
+			SLIST_FOREACH(plist, &r_plisthead, next) {
+				rc = pkg_is_installed(&l_plisthead, plist);
 
 				pkgstatus = '\0';
 
@@ -180,57 +243,51 @@ list_pkgs(const char *pkgquery, int lstype)
 
 				if (pkgstatus != '\0') {
 					snprintf(outpkg, BUFSIZ, "%s %c",
-						plist->pkgname, pkgstatus);
+						plist->full, pkgstatus);
 					printf("%-20s %s\n", outpkg, plist->comment);
 				}
 
 			}
-			free_pkglist(plisthead);
 		}
-		free_pkglist(localplisthead);
 		return;
 	} /* lstype == LLIST && status */
 
 	if ((plisthead = rec_pkglist(pkgquery)) != NULL) {
 		SLIST_FOREACH(plist, plisthead, next)
-			printf("%-20s %s\n", plist->pkgname, plist->comment);
+			printf("%-20s %s\n", plist->full, plist->comment);
 
-		free_pkglist(plisthead);
+		free_pkglist(&plisthead, LIST);
 	}
-
-
 }
 
 void
 search_pkg(const char *pattern)
 {
-	Pkglist 	*plist;
-	Plisthead 	*plisthead, *localplisthead;
+	Pkglist		 	*plist;
 	regex_t		re;
 	int			rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
 	int		matched_pkgs;
 
-	localplisthead = rec_pkglist(LOCAL_PKGS_QUERY);
 	matched_pkgs = 0;
 
-	if ((plisthead = rec_pkglist(REMOTE_PKGS_QUERY)) != NULL) {
+	if (!SLIST_EMPTY(&r_plisthead)) {
 		if ((rc = regcomp(&re, pattern, REG_EXTENDED|REG_NOSUB|REG_ICASE))
 			!= 0) {
 			regerror(rc, &re, eb, sizeof(eb));
 			errx(1, "regcomp: %s: %s", pattern, eb);
 		}
 
-		SLIST_FOREACH(plist, plisthead, next) {
+		SLIST_FOREACH(plist, &r_plisthead, next) {
 			is_inst = '\0';
 
-			if (regexec(&re, plist->pkgname, 0, NULL, 0) == 0 ||
+			if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
 				regexec(&re, plist->comment, 0, NULL, 0) == 0) {
 
 				matched_pkgs = 1;
 
-				if (localplisthead != NULL) {
-					rc = pkg_is_installed(localplisthead, plist->pkgname);
+				if (!SLIST_EMPTY(&l_plisthead)) {
+					rc = pkg_is_installed(&l_plisthead, plist);
 
 					if (rc == 0)
 						is_inst = PKG_EQUAL;
@@ -241,16 +298,11 @@ search_pkg(const char *pattern)
 
 				}
 
-				snprintf(outpkg, BUFSIZ, "%s %c", plist->pkgname, is_inst);
+				snprintf(outpkg, BUFSIZ, "%s %c", plist->full, is_inst);
 
 				printf("%-20s %s\n", outpkg, plist->comment);
 			}
 		}
-
-		free_pkglist(plisthead);
-
-		if (localplisthead != NULL)
-			free_pkglist(localplisthead);
 
 		regfree(&re);
 
@@ -259,87 +311,4 @@ search_pkg(const char *pattern)
 		else
 			printf(MSG_NO_SEARCH_RESULTS, pattern);
 	}
-}
-
-char *
-find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
-{
-	Pkglist	*pkglist;
-	char	*pkgname, *tmppkg;
-	int		tmplen, exact;
-
-	/* truncate argument if it contains a version */
-	exact = exact_pkgfmt(pkgarg);
-
-	/* check for package existence */
-	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(tmppkg, pkglist->pkgname);
-
-		if (!exact) {
-			/*
-			 * pkgname was not in exact format, i.e. foo-bar
-			 * instead of foo-bar-1, truncate tmppkg :
-			 * foo-bar-1.0 -> foo-bar
-			 * and set len to tmppkg
-			 */
-			trunc_str(tmppkg, '-', STR_BACKWARD);
-		}
-		/* tmplen = strlen("foo-1{.vers}") */
-		tmplen = strlen(tmppkg);
-
-		if (strlen(pkgarg) == tmplen &&
-			strncmp(tmppkg, pkgarg, tmplen) == 0) {
-			XFREE(tmppkg);
-
-			XSTRDUP(pkgname, pkglist->pkgname);
-			return pkgname;
-		}
-		XFREE(tmppkg);
-	}
-
-	return NULL;
-}
-
-/* end an expression with a delimiter */
-char *
-end_expr(Plisthead *plisthead, const char *str)
-{
-	Pkglist	*pkglist;
-	char	*expr, *p;
-	uint8_t	was_dep = 0;
-
-	/* enough space to add a delimiter */
-	XMALLOC(expr, (strlen(str) + 2) * sizeof(char));
-	XSTRCPY(expr, str);
-
-	/* really don't want to fight with {foo,bar>=2.0}, rely on pkg_match()
-	 * XXX: this makes us load pkg_summary db in full_dep_tree()
-	 */
-	if (strpbrk(expr, "*?[{") != NULL) {
-		SLIST_FOREACH(pkglist, plisthead, next) {
-			if (pkg_match(expr, pkglist->pkgname)) {
-				XFREE(expr);
-				XSTRDUP(expr, pkglist->pkgname);
-				break;
-			}
-		}
-	}
-
-	/* simple package/dependency case, parse string backwards
-	 * until we find a delimiter: foo>=1.0, bar>=1.2<2.0
-	 */
-	while ((p = match_dep_ext(expr, "<>=")) != NULL) {
-		*p++ = DELIMITER; /* terminate expr */
-		*p = '\0';
-		was_dep = 1;
-	}
-	/* expr was not a dewey pattern, it's a full package name,
-	 * strip the final dash if found
-	 */
-	if (!was_dep && (p = strrchr(expr, '-')) != NULL) {
-		*p++ = DELIMITER; /* terminate expr */
-		*p = '\0';
-	}
-
-	return expr;
 }

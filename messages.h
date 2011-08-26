@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.2 2011/04/03 16:17:08 imilh Exp $ */
+/* $Id: messages.h,v 1.3 2011/08/26 06:21:30 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -96,7 +96,7 @@
 
 /* autoremove.c */
 #define MSG_AUTOREMOVE_WARNING "\
-in order to remove packages from the autoremove list, flag those with the -k modifier.\n"
+in order to remove packages from the autoremove list, flag those with the `keep' action.\n"
 #define MSG_NO_PKGIN_PKGS "no packages have been installed with %s"
 #define MSG_ALL_KEEP_PKGS "all packages are marked as \"keepable\"."
 #define MSG_AUTOREMOVE_PKGS "%d packages to be autoremoved: %s\n"
@@ -113,6 +113,7 @@ in order to remove packages from the autoremove list, flag those with the -k mod
 #define MSG_PROCESSING_REMOTE_SUMMARY "processing remote summary (%s)...\n"
 #define MSG_COULDNT_FETCH "Could not fetch %s\n"
 #define MSG_ARCH_DONT_MATCH "\r\n/!\\ Warning /!\\ %s doesn't match your current architecture (%s)\nYou probably want to modify "PKGIN_CONF"/"REPOS_FILE".\nStill want to "
+#define MSG_COULD_NOT_GET_PKGNAME "Could not get package name from dependency: %s\n"
 
 /* impact.c */
 #define MSG_GREATER_VERSION \
@@ -121,11 +122,11 @@ in order to remove packages from the autoremove list, flag those with the -k mod
 	"there's more than one version available for this package.\n\
 please re-run %s with a package name matching one of the following:\n"
 #ifndef DEBUG
-#define MSG_PKG_NOT_AVAIL "%s is not available on the repository\n"
+#define MSG_CALCULATING_DEPS "\rcalculating dependencies..."
 #else
 #define MSG_CALCULATING_DEPS "calculating dependencies for %s...\n"
 #endif
-#define MSG_CALCULATING_DEPS "\rcalculating dependencies..."
+#define MSG_PKG_NOT_AVAIL "%s is not available on the repository\n"
 #define MSG_BROKEN_DEP "%s has no dependency in pkg_summary(5), while it's a reverse dependency for %s (missing package in repository ?). Default behaviour is to remove %s. "
 
 /* pkglist.c */

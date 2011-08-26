@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1 2011/03/03 14:43:12 imilh Exp $ */
+/* $Id: main.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -139,6 +139,10 @@ main(int argc, char *argv[])
 	/* find command index */
 	ch = find_cmd(argv[0]);
 
+	/* we need packages lists for almost everything */
+	if (ch != PKG_UPDT_CMD)
+		init_global_pkglists();
+
 	/* fill pkgtools flags */
 	if (verbosity)
 		strncpy(pkgtools_flags, "-fv", 3);
@@ -146,69 +150,71 @@ main(int argc, char *argv[])
 		strncpy(pkgtools_flags, "-f", 2);
 
 	switch (ch) {
-		case PKG_UPDT_CMD:
-			update_db(REMOTE_SUMMARY, NULL);
-			break;
-		case PKG_SHDDP_CMD:
-			missing_param(argc, 2, MSG_MISSING_PKGNAME);
-			show_direct_depends(argv[1]);
-			break;
-		case PKG_SHFDP_CMD:
-			missing_param(argc, 2, MSG_MISSING_PKGNAME);
-			show_full_dep_tree(argv[1],
-				DIRECT_DEPS, MSG_FULLDEPTREE);
-			break;
-		case PKG_SHRDP_CMD:
-			missing_param(argc, 2, MSG_MISSING_PKGNAME);
-			show_full_dep_tree(argv[1],
-				LOCAL_REVERSE_DEPS,
-				MSG_REVDEPTREE);
-			break;
-		case PKG_LLIST_CMD:
-			list_pkgs(LOCAL_PKGS_QUERY, PKG_LLIST_CMD);
-			break;
-		case PKG_RLIST_CMD:
-			list_pkgs(REMOTE_PKGS_QUERY, PKG_RLIST_CMD);
-			break;
-		case PKG_INST_CMD:
-			missing_param(argc, 2, MSG_PKG_ARGS_INST);
-			pkgin_install(&argv[1], do_inst);
-			break;
-		case PKG_UPGRD_CMD:
-			pkgin_upgrade(UPGRADE_KEEP);
-			break;
-		case PKG_FUPGRD_CMD:
-			pkgin_upgrade(UPGRADE_ALL);
-			break;
-		case PKG_REMV_CMD:
-			missing_param(argc, 2, MSG_PKG_ARGS_RM);
-			pkgin_remove(&argv[1]);
-			break;
-		case PKG_AUTORM_CMD:
-			pkgin_autoremove();
-			break;
-		case PKG_KEEP_CMD:
-			missing_param(argc, 2, MSG_PKG_ARGS_KEEP);
-			pkg_keep(KEEP, &argv[1]);
-			break;
-		case PKG_UNKEEP_CMD:
-			missing_param(argc, 2, MSG_PKG_ARGS_UNKEEP);
-			pkg_keep(UNKEEP, &argv[1]);
-			break;
-		case PKG_SHKP_CMD:
-			show_pkg_keep();
-			break;
-		case PKG_SRCH_CMD:
-			missing_param(argc, 2, MSG_MISSING_SRCH);
-			search_pkg(argv[1]);
-			break;
-		case PKG_CLEAN_CMD:
-			clean_cache();
-			break;
-		default:
-			usage();
-			/* NOTREACHED */
+	case PKG_UPDT_CMD: /* update packages db */
+		update_db(REMOTE_SUMMARY, NULL);
+		break;
+	case PKG_SHDDP_CMD: /* show direct depends */
+		missing_param(argc, 2, MSG_MISSING_PKGNAME);
+		show_direct_depends(argv[1]);
+		break;
+	case PKG_SHFDP_CMD: /* show full dependency tree */
+		missing_param(argc, 2, MSG_MISSING_PKGNAME);
+		show_full_dep_tree(argv[1],
+			DIRECT_DEPS, MSG_FULLDEPTREE);
+		break;
+	case PKG_SHRDP_CMD: /* show full reverse dependency tree */
+		missing_param(argc, 2, MSG_MISSING_PKGNAME);
+		show_full_dep_tree(argv[1],
+			LOCAL_REVERSE_DEPS,
+			MSG_REVDEPTREE);
+		break;
+	case PKG_LLIST_CMD:
+		list_pkgs(LOCAL_PKGS_QUERY, PKG_LLIST_CMD); /* list local packages */
+		break;
+	case PKG_RLIST_CMD: /* list available packages */
+		list_pkgs(REMOTE_PKGS_QUERY, PKG_RLIST_CMD);
+		break;
+	case PKG_INST_CMD: /* install a package and its dependencies */
+		missing_param(argc, 2, MSG_PKG_ARGS_INST);
+		pkgin_install(&argv[1], do_inst);
+		break;
+	case PKG_UPGRD_CMD: /* upgrade keep-packages */
+		pkgin_upgrade(UPGRADE_KEEP);
+		break;
+	case PKG_FUPGRD_CMD: /* upgrade everything installed */
+		pkgin_upgrade(UPGRADE_ALL);
+		break;
+	case PKG_REMV_CMD: /* remove packages and reverse dependencies */
+		missing_param(argc, 2, MSG_PKG_ARGS_RM);
+		pkgin_remove(&argv[1]);
+		break;
+	case PKG_AUTORM_CMD: /* autoremove orphan packages */
+		pkgin_autoremove();
+		break;
+	case PKG_KEEP_CMD: /* mark a package as "keep" (not automatic) */
+		missing_param(argc, 2, MSG_PKG_ARGS_KEEP);
+		pkg_keep(KEEP, &argv[1]);
+		break;
+	case PKG_UNKEEP_CMD: /* mark a package as "unkeep" (automatic) */
+		missing_param(argc, 2, MSG_PKG_ARGS_UNKEEP);
+		pkg_keep(UNKEEP, &argv[1]);
+		break;
+	case PKG_SHKP_CMD: /* show keep packages */
+		show_pkg_keep();
+		break;
+	case PKG_SRCH_CMD: /* search for package */
+		missing_param(argc, 2, MSG_MISSING_SRCH);
+		search_pkg(argv[1]);
+		break;
+	case PKG_CLEAN_CMD: /* clean pkgin's packages cache */
+		clean_cache();
+		break;
+	default:
+		usage();
+		/* NOTREACHED */
 	}
+
+	free_global_pkglists();
 
 	pkgindb_close();
 
