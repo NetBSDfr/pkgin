@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.3 2011/08/26 07:20:58 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -108,9 +108,9 @@ const char LOCAL_PROVIDES[] =
     "SELECT LOCAL_PROVIDES_PKGNAME FROM LOCAL_PROVIDES;";
 
 const char KEEP_PKG[] =
-    "UPDATE LOCAL_PKG SET PKG_KEEP = 1 WHERE FULLPKGNAME = \'%s\';";
+    "UPDATE LOCAL_PKG SET PKG_KEEP = 1 WHERE PKGNAME = \'%s\';";
 const char UNKEEP_PKG[] =
-    "UPDATE LOCAL_PKG SET PKG_KEEP = NULL WHERE FULLPKGNAME = \'%s\';";
+    "UPDATE LOCAL_PKG SET PKG_KEEP = NULL WHERE PKGNAME = \'%s\';";
 
 const char LOCAL_PKGS_QUERY[] =
     "SELECT FULLPKGNAME,PKGNAME,PKGVERS,COMMENT,FILE_SIZE,SIZE_PKG "

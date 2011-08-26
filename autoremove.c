@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.3 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: autoremove.c,v 1.4 2011/08/26 07:20:58 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -167,9 +167,12 @@ pkg_keep(int type, char **pkgargs)
 	for (pkeep = pkgargs; *pkeep != NULL; pkeep++) {
 		/* find real package name */
 		if ((pkgname = unique_pkg(*pkeep)) != NULL) {
+
+			trunc_str(pkgname, '-', STR_BACKWARD);
+
 			SLIST_FOREACH(pkglist, &l_plisthead, next)
 				/* PKGNAME match */
-				if (strcmp(pkgname, pkglist->full) == 0)
+				if (strcmp(pkgname, pkglist->name) == 0)
 					break;
 
 			XFREE(pkgname);
@@ -180,7 +183,7 @@ pkg_keep(int type, char **pkgargs)
 			case KEEP:
 				printf(MSG_MARKING_PKG_KEEP, pkglist->full);
 				/* KEEP_PKG query needs full pkgname */
-				snprintf(query, BUFSIZ, KEEP_PKG, pkglist->full);
+				snprintf(query, BUFSIZ, KEEP_PKG, pkglist->name);
 				/* mark as non-automatic in pkgdb */
 				if (mark_as_automatic_installed(pkglist->full, 0) < 0)
 					exit(EXIT_FAILURE);
@@ -188,7 +191,7 @@ pkg_keep(int type, char **pkgargs)
 			case UNKEEP:
 				printf(MSG_UNMARKING_PKG_KEEP, pkglist->full);
 				/* UNKEEP_PKG query needs full pkgname */
-				snprintf(query, BUFSIZ, UNKEEP_PKG, pkglist->full);
+				snprintf(query, BUFSIZ, UNKEEP_PKG, pkglist->name);
 				/* mark as automatic in pkgdb */
 				if (mark_as_automatic_installed(pkglist->full, 1) < 0)
 					exit(EXIT_FAILURE);
