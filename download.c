@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.12 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: download.c,v 1.13 2011/08/27 14:23:31 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -53,7 +53,7 @@ download_file(char *str_url, time_t *db_mtime)
 
 	url = fetchParseURL(str_url);
 
-	if ((f = fetchXGet(url, &st, "")) == NULL)
+	if (url == NULL || (f = fetchXGet(url, &st, "")) == NULL)
 		return NULL;
 
 	if (st.size == -1) { /* could not obtain file size */
