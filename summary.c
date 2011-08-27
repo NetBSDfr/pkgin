@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.5 2011/08/27 12:51:09 imilh Exp $ */
+/* $Id: summary.c,v 1.6 2011/08/27 15:15:46 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -390,12 +390,14 @@ update_col(struct Summary sum, int pkgid, char *line)
 	}
 }
 
+#define NOVERSION "-0"
+
 static void
 insert_summary(struct Summary sum, char **summary, char *cur_repo)
 {
 	int			i;
 	static int	pkgid = 1;
-	char		*pkgname, *pkgvers, **psum, query[BUFSIZ];
+	char		*pkgname, *pkgvers, **psum, query[BUFSIZ], tmpname[BUFSIZ];
 	const char	*alnum = ALNUM;
 
 	if (summary == NULL) {
@@ -437,6 +439,13 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 
 		/* PKGNAME record, should always be true  */
 		if ((pkgname = field_record("PKGNAME", *psum)) != NULL) {
+
+			/* some rare WIP packages have no version */
+			if (!exact_pkgfmt(pkgname)) {
+				snprintf(tmpname, BUFSIZ, "%s%s", pkgname, NOVERSION);
+				XFREE(pkgname);
+				XSTRDUP(pkgname, tmpname);
+			}
 
 			add_to_slist("FULLPKGNAME", pkgname);
 
