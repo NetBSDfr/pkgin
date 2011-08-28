@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.6 2011/08/27 15:15:46 imilh Exp $ */
+/* $Id: summary.c,v 1.7 2011/08/28 08:14:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -601,7 +601,7 @@ update_db(int which, char **pkgkeep)
 			/* restore keep-list */
 			if (keeplisthead != NULL) {
 				SLIST_FOREACH(pkglist, keeplisthead, next) {
-					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->full);
+					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
 					pkgindb_doquery(buf, NULL, NULL);
 				}
 				free_pkglist(&keeplisthead, LIST);
