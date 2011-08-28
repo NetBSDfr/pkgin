@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.3 2011/08/28 09:40:15 imilh Exp $ */
+/* $Id: impact.c,v 1.4 2011/08/28 12:34:26 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -269,7 +269,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 /**
  * is pkgname already in impact list ?
  */
-static uint8_t
+uint8_t
 pkg_in_impact(Plisthead *impacthead, char *depname)
 {
 	Pkglist *pimpact;

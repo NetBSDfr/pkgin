@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.5 2011/08/28 09:40:15 imilh Exp $ */
+/* $Id: pkgin.h,v 1.6 2011/08/28 12:34:26 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -214,6 +214,7 @@ Plisthead	*order_remove(Plisthead *);
 Plisthead	*order_upgrade_remove(Plisthead *);
 Plisthead	*order_install(Plisthead *);
 /* impact.c */
+uint8_t		pkg_in_impact(Plisthead *, char *);
 Plisthead	*pkg_impact(char **);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);

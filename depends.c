@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.3 2011/08/28 09:40:15 imilh Exp $ */
+/* $Id: depends.c,v 1.4 2011/08/28 12:34:26 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -51,7 +51,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 		 */
 		if (exact_pkgfmt(pkgname))
 			snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
-	}
+	} /* else, LOCAL_REVERSE_DEPS */
 
 	level = 1;
 

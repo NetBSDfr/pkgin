@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: order.c,v 1.3 2011/08/28 12:34:26 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -190,6 +190,9 @@ order_upgrade_remove(Plisthead *impacthead)
 			if ((pimpact->action == TOUPGRADE ||  pimpact->action == TOREMOVE)
 				&& pimpact->level == i) {
 
+				if (pkg_in_impact(ordtreehead, pimpact->old))
+					continue;
+
 				pdp = malloc_pkglist(DEPTREE);
 
 				XSTRDUP(pdp->depend, pimpact->old);
@@ -231,6 +234,9 @@ order_install(Plisthead *impacthead)
 		SLIST_FOREACH(pimpact, impacthead, next) {
 			if ((pimpact->action == TOUPGRADE ||
 					pimpact->action == TOINSTALL) && pimpact->level == i) {
+
+				if (pkg_in_impact(ordtreehead, pimpact->full))
+					continue;
 
 				pdp = malloc_pkglist(DEPTREE);
 
