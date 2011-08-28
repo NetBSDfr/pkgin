@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.6 2011/08/28 09:40:15 imilh Exp $ */
+/* $Id: autoremove.c,v 1.7 2011/08/28 21:38:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -114,7 +114,7 @@ pkgin_autoremove()
 
 		printf(MSG_AUTOREMOVE_WARNING);
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
-		if (check_yesno()) {
+		if (check_yesno(DEFAULT_YES)) {
 			SLIST_FOREACH(premove, orderedhead, next) {
 				printf(MSG_REMOVING, premove->depend);
 #ifdef DEBUG

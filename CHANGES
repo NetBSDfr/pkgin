@@ -1,3 +1,8 @@
+20110828
+	Database silent migration
+	More flexible check_yesno()
+	Made pkgin in / rm yes by default
+
 20110821
 	pkgin 0.5.0 in progress
 	/!\ YOU WILL HAVE TO rm -rf /var/db/pkgin/* and pkgin up /!\

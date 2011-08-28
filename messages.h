@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.4 2011/08/28 16:50:28 imilh Exp $ */
+/* $Id: messages.h,v 1.5 2011/08/28 21:38:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -51,7 +51,8 @@
 	PKGIN_CONF"/"REPOS_FILE" has no repositories or does not exist.\nNo PKG_REPOS variable to fallback to."
 
 /* actions.c */
-#define MSG_PROCEED "proceed ? [y/N] "
+#define MSG_PROCEED_YES "proceed ? [Y/n] "
+#define MSG_PROCEED_NO "proceed ? [y/N] "
 #define MSG_REMOVING "removing %s...\n"
 #define MSG_DOWNLOAD_PKGS "downloading packages...\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"

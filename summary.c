@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.10 2011/08/28 16:50:28 imilh Exp $ */
+/* $Id: summary.c,v 1.11 2011/08/28 21:38:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -340,7 +340,7 @@ update_col(struct Summary sum, int pkgid, char *line)
 	if (!said && (val = field_record("MACHINE_ARCH", line)) != NULL) {
 		if (strncmp(CHECK_MACHINE_ARCH, val, strlen(CHECK_MACHINE_ARCH))) {
 			printf(MSG_ARCH_DONT_MATCH, val, CHECK_MACHINE_ARCH);
-			if (!check_yesno())
+			if (!check_yesno(DEFAULT_NO))
 				exit(EXIT_FAILURE);
 			said = 1;
 			printf("\r"MSG_UPDATING_DB);
@@ -571,7 +571,7 @@ update_db(int which, char **pkgkeep)
 	Pkglist		*pkglist;
 	char		**summary = NULL, **prepos, buf[BUFSIZ];
 
-	upgrade_database();
+	upgrade_database(); /* check if current database fits our needs */
 
 	for (i = 0; i < 2; i++) {
 
@@ -686,8 +686,9 @@ static void
 upgrade_database()
 {
 	if (pkgindb_doquery(COMPAT_CHECK, NULL, NULL) == PDB_ERR) {
+		/* COMPAT_CHECK query led to an error incompatible database */
 		printf(MSG_DATABASE_NOT_COMPAT);
-		if (!check_yesno())
+		if (!check_yesno(DEFAULT_YES))
 			errx(EXIT_FAILURE, MSG_DATABASE_OUTDATED);
 
 		pkgindb_reset();

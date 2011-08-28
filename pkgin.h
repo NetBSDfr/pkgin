@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.7 2011/08/28 16:14:02 imilh Exp $ */
+/* $Id: pkgin.h,v 1.8 2011/08/28 21:38:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -106,6 +106,11 @@
 #define PKG_GREATER '>'
 #define PKG_LESSER '<'
 
+#define DEFAULT_NO 0
+#define DEFAULT_YES 1
+#define ANSW_NO 0
+#define ANSW_YES 1
+
 typedef struct Dlfile {
 	char *buf;
 	size_t size;
@@ -205,7 +210,7 @@ Plisthead	*rec_pkglist(const char *);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 /* actions.c */
-int			check_yesno(void);
+int			check_yesno(uint8_t);
 int			pkgin_remove(char **);
 int			pkgin_install(char **, uint8_t);
 char		*action_list(char *, char *);

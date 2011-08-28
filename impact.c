@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.4 2011/08/28 12:34:26 imilh Exp $ */
+/* $Id: impact.c,v 1.5 2011/08/28 21:38:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -341,7 +341,7 @@ pkg_impact(char **pkgargs)
 			/* compare needed deps with local packages */
 			if (!deps_impact(impacthead, pdp)) {
 				/* there was a versionning mismatch, proceed ? */
-				if (!check_yesno()) {
+				if (!check_yesno(DEFAULT_NO)) {
 					free_pkglist(&impacthead, IMPACT);
 				
 					goto impactend; /* avoid free's repetition */

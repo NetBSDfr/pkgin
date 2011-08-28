@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.5 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: actions.c,v 1.6 2011/08/28 21:38:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -41,25 +41,37 @@ static int			upgrade_type = UPGRADE_NONE;
 static uint8_t		said = 0;	
 
 int
-check_yesno(void)
+check_yesno(uint8_t default_answer)
 {
-	int c, r = 0;
+	const struct Answer	{
+		const uint8_t	numval;
+		const char		charval;
+	} answer[] = { { ANSW_NO, 'n' }, { ANSW_YES, 'y' } };
+
+	uint8_t			r, reverse_answer;
+	int				c;
 
 	if (yesflag)
-		return 1;
+		return ANSW_YES;
 	else if (noflag)
-		return 0;
+		return ANSW_NO;
 
-	printf(MSG_PROCEED);
+	reverse_answer = (default_answer == ANSW_YES) ? ANSW_NO : ANSW_YES;
 
-	if ((c = getchar()) == 'y')
-	    	r = 1;
-	else if (c == '\n' || c == EOF)
-	    	return 0;
+	if (default_answer == answer[ANSW_YES].numval)
+		printf(MSG_PROCEED_YES);
+	else
+		printf(MSG_PROCEED_NO);
+
+	if ((c = getchar()) == answer[reverse_answer].charval)
+		r = answer[reverse_answer].numval;
+	else
+		return answer[default_answer].numval;
 
 	/* avoid residual char */
 	while((c = getchar()) != '\n' && c != EOF)
 		continue;
+
 	return r;
 }
 
@@ -106,7 +118,7 @@ pkg_download(Plisthead *installhead)
 
 		if ((dlpkg = download_file(pkg, NULL)) == NULL) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
-			if (!check_yesno())
+			if (!check_yesno(DEFAULT_NO))
 				errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL,
 				    pinstall->depend);
 			pinstall->file_size = -1;
@@ -208,7 +220,7 @@ do_pkg_install(Plisthead *installhead)
 			if (verbosity)
 				/* append verbosity if requested */
 				strncat(pi_tmp_flags, "v", 2);
-			if (check_yesno()) {
+			if (check_yesno(DEFAULT_YES)) {
 				fprintf(stderr, "%s %s %s\n", PKG_ADD, pi_tmp_flags, pkgpath);
 #ifndef DEBUG
 				fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL);
@@ -435,7 +447,7 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 
 		/* check for conflicts */
 		if (pkg_has_conflicts(conflictshead, pimpact))
-			if (!check_yesno())
+			if (!check_yesno(DEFAULT_NO))
 				goto installend;
 
 		snprintf(pkgpath, BUFSIZ, "%s/%s%s",
@@ -524,7 +536,7 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 		printf(MSG_PKGS_TO_INSTALL, installnum, toinstall, h_fsize, h_psize);
 		printf("\n");
 
-		if (check_yesno()) {
+		if (check_yesno(DEFAULT_YES)) {
 			/* before erasing anything, download packages */
 			pkg_download(installhead);
 
@@ -543,7 +555,7 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 				
 				rc = EXIT_SUCCESS;
 			}
-		}
+		} /* check_yesno */
 	} else
 		printf(MSG_NOTHING_TO_INSTALL);
 
@@ -629,7 +641,7 @@ pkgin_remove(char **pkgargs)
 
 	if (todelete != NULL) {
 		printf(MSG_PKGS_TO_DELETE, deletenum, todelete);
-		if (check_yesno()) {
+		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(removehead);
 
 			update_db(LOCAL_SUMMARY, NULL);
