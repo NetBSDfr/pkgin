@@ -1,4 +1,4 @@
-/* $Id: pkgindb.h,v 1.3 2011/08/28 09:40:15 imilh Exp $ */
+/* $Id: pkgindb.h,v 1.4 2011/08/28 16:50:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -64,6 +64,7 @@ extern const char INSERT_SINGLE_VALUE[];
 extern const char INSERT_DEPENDS_VALUES[];
 extern const char UNIQUE_EXACT_PKG[];
 extern const char UNIQUE_PKG[];
+extern const char COMPAT_CHECK[];
 
 #define LOCAL_PKG "LOCAL_PKG"
 #define REMOTE_PKG "REMOTE_PKG"
@@ -79,6 +80,7 @@ int			pdb_get_value(void *, int, char **, char **);
 int			pkg_db_mtime(void);
 void		repo_record(char **);
 time_t		pkg_sum_mtime(char *);
+void		pkgindb_reset(void);
 
 #define PDB_OK 0
 #define PDB_ERR -1

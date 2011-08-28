@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.3 2011/08/28 16:50:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -151,6 +151,20 @@ pkgindb_init()
 	}
 
 	pkgindb_doquery(CREATE_DRYDB, NULL, NULL);
+}
+
+/**
+ * \brief destroy the database and re-create it (upgrade)
+ */
+void
+pkgindb_reset()
+{
+	pkgindb_close();
+
+	if (unlink(PDB) < 0)
+		err(EXIT_FAILURE, "could not delete database file %s\n", PDB);
+
+	pkgindb_init();
 }
 
 #define PKGDB_PATH PKG_DBDIR"/pkgdb.byfile.db"

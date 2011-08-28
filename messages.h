@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.3 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: messages.h,v 1.4 2011/08/28 16:50:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -114,6 +114,8 @@ in order to remove packages from the autoremove list, flag those with the `keep'
 #define MSG_COULDNT_FETCH "Could not fetch %s\n"
 #define MSG_ARCH_DONT_MATCH "\r\n/!\\ Warning /!\\ %s doesn't match your current architecture (%s)\nYou probably want to modify "PKGIN_CONF"/"REPOS_FILE".\nStill want to "
 #define MSG_COULD_NOT_GET_PKGNAME "Could not get package name from dependency: %s\n"
+#define MSG_DATABASE_NOT_COMPAT "Current database is not compatible with pkgin "PACKAGE_VERSION", we're about to upgrade, "
+#define MSG_DATABASE_OUTDATED "Your database is outdated for pkgin "PACKAGE_VERSION"."
 
 /* impact.c */
 #define MSG_GREATER_VERSION \
