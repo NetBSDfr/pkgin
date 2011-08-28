@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.4 2011/08/28 16:14:02 imilh Exp $ */
+/* $Id: main.c,v 1.5 2011/08/28 16:16:23 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -260,7 +260,9 @@ usage()
 	printf(MSG_CMDS_SHORTCUTS);
 
 	for (i = 0; cmd[i].name != NULL; i++)
-		printf("%s (%s) -  %s\n", cmd[i].name, cmd[i].shortcut, cmd[i].descr);
+		if (cmd[i].cmdtype != PKG_GINTO_CMD)
+			printf("%s (%s) -  %s\n",
+				cmd[i].name, cmd[i].shortcut, cmd[i].descr);
 
 	exit(EXIT_FAILURE);
 }
