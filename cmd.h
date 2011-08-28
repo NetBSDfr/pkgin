@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.1 2011/03/03 14:43:09 imilh Exp $ */
+/* $Id: cmd.h,v 1.2 2011/08/28 16:14:02 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -68,5 +68,7 @@ static struct command {
 	  PKG_CLEAN_CMD },
 	{ "autoremove", "ar", "Autoremove orphan dependencies.",
 	  PKG_AUTORM_CMD },
+	{ "tonic", "to", "Gin Tonic recipe.",
+	  PKG_GINTO_CMD },
 	{ NULL, NULL, NULL, 0 }
 };
