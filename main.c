@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.5 2011/08/28 16:16:23 imilh Exp $ */
+/* $Id: main.c,v 1.6 2011/08/28 22:17:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -35,14 +35,12 @@
 #include "lib.h"
 
 static void	usage(void);
-static void	split_repos(void);
 static int	find_cmd(const char *);
 static void	missing_param(int, int, const char *);
 static void ginto(void);
 
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0;
-char		*env_repos, **pkg_repos;
 char		lslimit = '\0';
 char		pkgtools_flags[5];
 
@@ -265,39 +263,6 @@ usage()
 				cmd[i].name, cmd[i].shortcut, cmd[i].descr);
 
 	exit(EXIT_FAILURE);
-}
-
-static void
-split_repos()
-{
-	int		repocount;
-	char	*p;
-
-	XSTRDUP(env_repos, getenv("PKG_REPOS"));
-
-	if (env_repos == NULL)
-		if ((env_repos = read_repos()) == NULL)
-			errx(EXIT_FAILURE, MSG_MISSING_PKG_REPOS);
-
-	repocount = 2; /* 1st elm + NULL */
-
-	XMALLOC(pkg_repos, repocount * sizeof(char *));
-	*pkg_repos = env_repos;
-
-	p = env_repos;
-
-	while((p = strchr(p, ' ')) != NULL) {
-		*p = '\0';
-		p++;
-
-		XREALLOC(pkg_repos, ++repocount * sizeof(char *));
-		pkg_repos[repocount - 2] = p;
-	}
-
-	/* NULL last element */
-	pkg_repos[repocount - 1] = NULL;
-
-	repo_record(pkg_repos);
 }
 
 void

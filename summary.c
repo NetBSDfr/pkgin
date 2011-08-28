@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.11 2011/08/28 21:38:45 imilh Exp $ */
+/* $Id: summary.c,v 1.12 2011/08/28 22:17:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -79,13 +79,14 @@ typedef struct Insertlist {
 
 SLIST_HEAD(, Insertlist) inserthead;
 
-static void upgrade_database(void);
-static char	**fetch_summary(char *url);
-static void	freecols(void);
-static void	free_insertlist(void);
-static void	prepare_insert(int, struct Summary, char *);
-int			colnames(void *, int, char **, char **);
+static uint8_t	upgrade_database(void);
+static char		**fetch_summary(char *url);
+static void		freecols(void);
+static void		free_insertlist(void);
+static void		prepare_insert(int, struct Summary, char *);
+int				colnames(void *, int, char **, char **);
 
+char		*env_repos, **pkg_repos;
 char		**commit_list = NULL;
 int			commit_idx = 0;
 int			query_size = BUFSIZ;
@@ -566,12 +567,14 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 void
 update_db(int which, char **pkgkeep)
 {
-	int			i;
+	int			i, updb;
 	Plisthead	*keeplisthead, *nokeeplisthead;
 	Pkglist		*pkglist;
 	char		**summary = NULL, **prepos, buf[BUFSIZ];
 
-	upgrade_database(); /* check if current database fits our needs */
+	/* check if current database fits our needs */
+	if ((updb = upgrade_database()))
+		which = REMOTE_SUMMARY;
 
 	for (i = 0; i < 2; i++) {
 
@@ -645,6 +648,9 @@ update_db(int which, char **pkgkeep)
 			if (which == LOCAL_SUMMARY)
 				continue;
 
+			if (updb) /* database has been reset, reload repositories */
+				split_repos();
+
 			/* delete unused repositories */
 			pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
 				pdb_clean_remote, NULL);
@@ -682,15 +688,55 @@ update_db(int which, char **pkgkeep)
 
 }
 
-static void
+static uint8_t
 upgrade_database()
 {
 	if (pkgindb_doquery(COMPAT_CHECK, NULL, NULL) == PDB_ERR) {
-		/* COMPAT_CHECK query led to an error incompatible database */
+		/* COMPAT_CHECK query leads to an error for an incompatible database */
 		printf(MSG_DATABASE_NOT_COMPAT);
 		if (!check_yesno(DEFAULT_YES))
 			errx(EXIT_FAILURE, MSG_DATABASE_OUTDATED);
 
 		pkgindb_reset();
+
+		XFREE(env_repos);
+		XFREE(pkg_repos);
+
+		return 1;
 	}
+
+	return 0;
+}
+
+void
+split_repos()
+{
+	int		repocount;
+	char	*p;
+
+	XSTRDUP(env_repos, getenv("PKG_REPOS"));
+
+	if (env_repos == NULL)
+		if ((env_repos = read_repos()) == NULL)
+			errx(EXIT_FAILURE, MSG_MISSING_PKG_REPOS);
+
+	repocount = 2; /* 1st elm + NULL */
+
+	XMALLOC(pkg_repos, repocount * sizeof(char *));
+	*pkg_repos = env_repos;
+
+	p = env_repos;
+
+	while((p = strchr(p, ' ')) != NULL) {
+		*p = '\0';
+		p++;
+
+		XREALLOC(pkg_repos, ++repocount * sizeof(char *));
+		pkg_repos[repocount - 2] = p;
+	}
+
+	/* NULL last element */
+	pkg_repos[repocount - 1] = NULL;
+
+	repo_record(pkg_repos);
 }

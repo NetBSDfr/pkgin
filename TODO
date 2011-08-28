@@ -1,3 +1,2 @@
-. SQLite database migration
 . Use more SQLite callbacks instead of SLIST browsing (autoremove)
 . Fix multi-repository (add REPOSITORY to Pkglist)

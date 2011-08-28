@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.8 2011/08/28 21:38:45 imilh Exp $ */
+/* $Id: pkgin.h,v 1.9 2011/08/28 22:17:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -180,6 +180,7 @@ extern uint8_t 		force_update;
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
+extern char			*env_repos;
 extern char			**pkg_repos;
 extern const char	*pkgin_cache;
 extern char  		lslimit;
@@ -191,6 +192,7 @@ extern Plisthead	l_plisthead;
 Dlfile		*download_file(char *, time_t *);
 /* summary.c */
 void		update_db(int, char **);
+void		split_repos(void);
 /* sqlite_callbacks.c */
 int			pdb_rec_list(void *, int, char **, char **);
 int			pdb_rec_depends(void *, int, char **, char **);
