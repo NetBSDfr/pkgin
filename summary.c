@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.8 2011/08/28 09:40:15 imilh Exp $ */
+/* $Id: summary.c,v 1.9 2011/08/28 11:15:28 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -591,8 +591,8 @@ update_db(int which, char **pkgkeep)
 
 			printf(MSG_PROCESSING_LOCAL_SUMMARY);
 
+			/* insert the summary to the database */
 			insert_summary(sumsw[i], summary, NULL);
-			free_list(summary);
 
 			/* re-read local packages list as it may have changed */
 			free_global_pkglists();
@@ -661,7 +661,6 @@ update_db(int which, char **pkgkeep)
 				delete_remote_tbl(sumsw[i], *prepos);
 				/* update remote* table for this repository */
 				insert_summary(sumsw[i], summary, *prepos);
-				free_list(summary);
 			}
 
 			/* remove empty rows (duplicates) */
