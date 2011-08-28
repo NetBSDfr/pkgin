@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: depends.c,v 1.3 2011/08/28 09:40:15 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -90,7 +90,7 @@ show_direct_depends(const char *pkgarg)
 		return;
 	}
 
-	if ((pkgname = unique_pkg(pkgarg)) == NULL) {
+	if ((pkgname = unique_pkg(pkgarg, REMOTE_PKG)) == NULL) {
 		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgname);
 		return;
 	}
@@ -126,7 +126,7 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 		XSTRDUP(pkgname, pkgarg);
 	} else {
 		plisthead = &r_plisthead;
-		pkgname = unique_pkg(pkgarg);
+		pkgname = unique_pkg(pkgarg, REMOTE_PKG);
 	}
 
 	if (pkgname == NULL) {

@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: impact.c,v 1.3 2011/08/28 09:40:15 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -312,7 +312,7 @@ pkg_impact(char **pkgargs)
 		 * and that the wanted package actually exists. Get pkgname
 		 * from unique_pkg, full package format.
 		 */
-		if ((pkgname = unique_pkg(*ppkgargs)) == NULL) {
+		if ((pkgname = unique_pkg(*ppkgargs, REMOTE_PKG)) == NULL) {
 			/* package is not available on the repository */
 			printf(MSG_PKG_NOT_AVAIL, *ppkgargs);
 			continue;

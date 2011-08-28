@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.7 2011/08/28 08:14:13 imilh Exp $ */
+/* $Id: summary.c,v 1.8 2011/08/28 09:40:15 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -390,7 +390,7 @@ update_col(struct Summary sum, int pkgid, char *line)
 	}
 }
 
-#define NOVERSION "-0"
+#define NOVERSION "-0.0"
 
 static void
 insert_summary(struct Summary sum, char **summary, char *cur_repo)
@@ -440,7 +440,7 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 		/* PKGNAME record, should always be true  */
 		if ((pkgname = field_record("PKGNAME", *psum)) != NULL) {
 
-			/* some rare WIP packages have no version */
+			/* some rare packages have no version */
 			if (!exact_pkgfmt(pkgname)) {
 				snprintf(tmpname, BUFSIZ, "%s%s", pkgname, NOVERSION);
 				XFREE(pkgname);

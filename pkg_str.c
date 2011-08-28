@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.3 2011/08/28 09:40:15 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -38,7 +38,7 @@
  * Returns greatest version package matching in full package name form
  */
 char *
-unique_pkg(const char *pkgname)
+unique_pkg(const char *pkgname, const char *dest)
 {
 	char	*u_pkg = NULL, query[BUFSIZ];
 
@@ -46,9 +46,9 @@ unique_pkg(const char *pkgname)
 
 	/* record if it's a versionned pkgname */
 	if (exact_pkgfmt(pkgname))
-		snprintf(query, BUFSIZ, UNIQUE_EXACT_PKG, pkgname);
+		snprintf(query, BUFSIZ, UNIQUE_EXACT_PKG, dest, pkgname);
 	else
-		snprintf(query, BUFSIZ, UNIQUE_PKG, pkgname);
+		snprintf(query, BUFSIZ, UNIQUE_PKG, dest, pkgname);
 
 	if (pkgindb_doquery(query, pdb_get_value, u_pkg) != PDB_OK) {
 		XFREE(u_pkg);
