@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.9 2011/08/28 22:17:38 imilh Exp $ */
+/* $Id: pkgin.h,v 1.10 2011/08/29 13:21:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -111,6 +111,8 @@
 #define ANSW_NO 0
 #define ANSW_YES 1
 
+#define TRACE(fmt...) if (tracefp != NULL) fprintf(tracefp, fmt)
+
 typedef struct Dlfile {
 	char *buf;
 	size_t size;
@@ -187,6 +189,7 @@ extern char  		lslimit;
 extern char			pkgtools_flags[];
 extern Plisthead	r_plisthead;
 extern Plisthead	l_plisthead;
+extern FILE			*tracefp;
 
 /* download.c*/
 Dlfile		*download_file(char *, time_t *);

@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.5 2011/08/28 21:38:45 imilh Exp $ */
+/* $Id: impact.c,v 1.6 2011/08/29 13:21:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -180,6 +180,8 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 
 	XSTRDUP(remotepkg, mapplist->full);
 
+	TRACE("|-matching %s over installed packages\n", remotepkg);
+
 	/* create initial impact entry with a DONOTHING status, permitting
 	 * to check if this dependency has already been recorded
 	 */
@@ -199,6 +201,8 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		/* match, package is installed */
 		if (strcmp(plist->name, pdp->name) == 0) {
 
+			TRACE(" > found %s\n", pdp->name);
+
 			/* default action when local package match */
 			toupgrade = TOUPGRADE;
 
@@ -207,6 +211,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 			 */
 			if (!pkg_match(pdp->depend, plist->full) || pdp->keep < 0) {
 
+				TRACE("  ! didn't match (or force reinstall)\n");
 				/* local pkgname didn't match deps, remote pkg has a
 				 * lesser version than local package.
 				*/
@@ -220,6 +225,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 						return 1;
 				}
 
+				TRACE("  * upgrade with %s\n", plist->full);
 				/* insert as an upgrade */
 				/* oldpkg is used when building removal order list */
 				XSTRDUP(pimpact->old, plist->full);
@@ -236,7 +242,9 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 
 				/* does this upgrade break depedencies ? (php-4 -> php-5) */
 				break_depends(impacthead, pimpact);
-			}
+			} /* !pkg_match */
+
+			TRACE(" > %s matched %s\n", plist->full, pdp->depend);
 
 			return 1;
 		} /* if installed package match */
@@ -246,12 +254,17 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		 * dependency, i.e. libflashsupport-pulse, ghostscript-esp...
 		 * would probably lead to conflict if recorded, pass.
 		 */
-		if (pkg_match(pdp->depend, plist->full))
+		if (pkg_match(pdp->depend, plist->full)) {
+			TRACE(" > local package %s matched with %s\n",
+				plist->full, pdp->depend);
 			return 1;
+		}
 
 	} /* SLIST_FOREACH plist */
 
 	if (!dep_present(impacthead, pdp->name)) {
+		TRACE(" > recording %s as to install\n", remotepkg);
+
 		pimpact->old = NULL;
 		pimpact->action = TOINSTALL;
 
@@ -300,6 +313,8 @@ pkg_impact(char **pkgargs)
 		return NULL;
 	}
 
+	TRACE("[>]-entering impact\n");
+
 	impacthead = init_head();
 
 	/* retreive impact list for all packages listed in the command line */
@@ -317,6 +332,8 @@ pkg_impact(char **pkgargs)
 			printf(MSG_PKG_NOT_AVAIL, *ppkgargs);
 			continue;
 		}
+
+		TRACE("[+]-impact for %s\n", pkgname);
 
 #ifndef DEBUG
 		tmpicon = *icon++;
@@ -388,6 +405,8 @@ pkg_impact(char **pkgargs)
 #endif
 
 impactend:
+
+	TRACE("[<]-leaving impact\n");
 
 	free_pkglist(&pdphead, DEPTREE);
 

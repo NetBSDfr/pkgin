@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.4 2011/08/28 12:34:26 imilh Exp $ */
+/* $Id: depends.c,v 1.5 2011/08/29 13:21:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -55,6 +55,9 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 
 	level = 1;
 
+	TRACE("[>]-entering depends\n");
+	TRACE("[+]-dependencies for %s (query: %s)\n", pkgname, query);
+
 	/* getting direct dependencies */
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
@@ -73,9 +76,12 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			printf("%i: p: %s, l: %d\n", level, pdp->depend,
 			    pdp->level);
 #endif
+			TRACE("|-%s-(deepness %d)\n", pdp->depend, pdp->level);
+
 		} /* SLIST_FOREACH */
 		++level;
 	}
+	TRACE("[<]-leaving depends\n");
 }
 
 void

@@ -13,6 +13,7 @@
 .Op Fl dfFhPvVyn
 .Op Fl l Ar limit_chars
 .Op Fl c Ar chroot_path
+.Op Fl t Ar log_file
 .Ar command
 .Op Ar package Ar ...
 .Sh DESCRIPTION
@@ -51,6 +52,8 @@ Assumes "no" as default answer.
 Only include the packages with the specified status flags.
 .It Fl c Ar chroot_path
 Enable chrooting pkgin in the given repository
+.It Fl t Ar log_file
+Logs package browsing (dependencies and impact) to a given log file
 .El
 .Pp
 The

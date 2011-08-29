@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.6 2011/08/28 22:17:38 imilh Exp $ */
+/* $Id: main.c,v 1.7 2011/08/29 13:21:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -43,6 +43,7 @@ uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0;
 char		lslimit = '\0';
 char		pkgtools_flags[5];
+FILE  		*tracefp = NULL;
 
 int
 main(int argc, char *argv[])
@@ -57,7 +58,7 @@ main(int argc, char *argv[])
 	if (argc < 2)
 		usage();
 
-	while ((ch = getopt(argc, argv, "dhyfFPvVl:nc:")) != -1) {
+	while ((ch = getopt(argc, argv, "dhyfFPvVl:nc:t:")) != -1) {
 		switch (ch) {
 		case 'f':
 			force_update = 1;
@@ -95,6 +96,10 @@ main(int argc, char *argv[])
 			break;
 		case 'P':
 			package_version = 1;
+			break;
+		case 't':
+			if ((tracefp = fopen(optarg, "w")) == NULL)
+				err(EXIT_FAILURE, MSG_CANT_OPEN_TRACEFILE, optarg);
 			break;
 		default:
 			usage();
@@ -219,6 +224,9 @@ main(int argc, char *argv[])
 	free_global_pkglists();
 
 	pkgindb_close();
+
+	if (tracefp != NULL)
+		fclose(tracefp);
 
 	XFREE(env_repos);
 	XFREE(pkg_repos);
