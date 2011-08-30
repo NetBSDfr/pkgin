@@ -1,10 +1,10 @@
-# $Id: Makefile.in,v 1.8 2011/08/26 06:21:30 imilh Exp $
+# $Id: Makefile.in,v 1.9 2011/08/30 11:52:17 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
 SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
 		pkglist.c download.c order.c impact.c autoremove.c fsops.c \
-		pkgindb_queries.c pkg_str.c sqlite_callbacks.c
+		pkgindb_queries.c pkg_str.c sqlite_callbacks.c selection.c
 # included from libinstall
 SRCS+=		automatic.c decompress.c dewey.c fexec.c global.c \
 		opattern.c pkgdb.c var.c

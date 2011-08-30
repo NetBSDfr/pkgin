@@ -1,7 +1,7 @@
-/* $Id: cmd.h,v 1.2 2011/08/28 16:14:02 imilh Exp $ */
+/* $Id: cmd.h,v 1.3 2011/08/30 11:52:17 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -68,6 +68,10 @@ static struct command {
 	  PKG_CLEAN_CMD },
 	{ "autoremove", "ar", "Autoremove orphan dependencies.",
 	  PKG_AUTORM_CMD },
+	{ "export", "ex", "Export \"non auto-removable\" packages to stdout.",
+	  PKG_EXPORT_CMD },
+	{ "import", "im", "Import \"non auto-removable\" package list from stdin.",
+	  PKG_IMPORT_CMD },
 	{ "tonic", "to", "Gin Tonic recipe.",
 	  PKG_GINTO_CMD },
 	{ NULL, NULL, NULL, 0 }

@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.7 2011/08/29 13:21:17 imilh Exp $ */
+/* $Id: messages.h,v 1.8 2011/08/30 11:52:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -140,3 +140,6 @@ please re-run %s with a package name matching one of the following:\n"
 /* fsops.c */
 #define MSG_TRANS_FAILED "Failed to translate %s in repository config file"
 #define MSG_INVALID_REPOS "Invalid repository: %s"
+
+/* selection.c */
+#define MSG_EMPTY_IMPORT_LIST "Empty import list."

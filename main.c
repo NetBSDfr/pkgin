@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.8 2011/08/30 11:52:17 imilh Exp $ */
+/* $Id: main.c,v 1.9 2011/08/30 11:54:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -217,7 +217,7 @@ main(int argc, char *argv[])
 		export_keep();
 		break;
 	case PKG_IMPORT_CMD: /* import for keep packages and install them */
-		import_keep();
+		import_keep(do_inst);
 		break;
 	case PKG_GINTO_CMD: /* Miod's request */
 		ginto();

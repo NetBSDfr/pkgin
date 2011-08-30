@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.6 2011/08/28 16:50:28 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.7 2011/08/30 11:52:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -159,6 +159,13 @@ const char UNIQUE_PKG[] =
 const char UNIQUE_EXACT_PKG[] = 
 	"SELECT FULLPKGNAME FROM %s WHERE FULLPKGNAME GLOB '%s*' "
 	"ORDER BY PKGVERS DESC LIMIT 1;";
+
+const char EXPORT_KEEP_LIST[] =
+	"SELECT PKGPATH FROM LOCAL_PKG WHERE PKG_KEEP IS NOT NULL "
+	"ORDER BY PKG_ID DESC;";
+
+const char GET_PKGNAME_BY_PKGPATH[] = 
+	"SELECT PKGNAME FROM REMOTE_PKG WHERE PKGPATH = '%s';";
 
 const char COMPAT_CHECK[] =
 	"SELECT FULLPKGNAME FROM LOCAL_PKG LIMIT 1;";

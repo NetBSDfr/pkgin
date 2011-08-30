@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.2 2011/08/26 06:21:30 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.3 2011/08/30 11:52:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -116,9 +116,11 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 
 	/* check if dependency is already recorded, do not insert on list  */
 	SLIST_FOREACH(pdp, pdphead, next)
-		if (strcmp(DEPS_PKGNAME, pdp->name) == 0)
+		if (strcmp(DEPS_PKGNAME, pdp->name) == 0) {
+			TRACE(" < dependency %s already recorded\n", pdp->name);
 			/* proceed to next result */
 			return PDB_OK;
+		}
 
 	deptree = malloc_pkglist(DEPTREE);
 	XSTRDUP(deptree->depend, DEPS_FULLPKG);

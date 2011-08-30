@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.6 2011/08/29 13:21:17 imilh Exp $ */
+/* $Id: impact.c,v 1.7 2011/08/30 11:52:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -180,7 +180,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 
 	XSTRDUP(remotepkg, mapplist->full);
 
-	TRACE("|-matching %s over installed packages\n", remotepkg);
+	TRACE(" |-matching %s over installed packages\n", remotepkg);
 
 	/* create initial impact entry with a DONOTHING status, permitting
 	 * to check if this dependency has already been recorded
@@ -201,7 +201,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		/* match, package is installed */
 		if (strcmp(plist->name, pdp->name) == 0) {
 
-			TRACE(" > found %s\n", pdp->name);
+			TRACE("  > found %s\n", pdp->name);
 
 			/* default action when local package match */
 			toupgrade = TOUPGRADE;
@@ -211,7 +211,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 			 */
 			if (!pkg_match(pdp->depend, plist->full) || pdp->keep < 0) {
 
-				TRACE("  ! didn't match (or force reinstall)\n");
+				TRACE("   ! didn't match (or force reinstall)\n");
 				/* local pkgname didn't match deps, remote pkg has a
 				 * lesser version than local package.
 				*/
@@ -225,7 +225,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 						return 1;
 				}
 
-				TRACE("  * upgrade with %s\n", plist->full);
+				TRACE("   * upgrade with %s\n", plist->full);
 				/* insert as an upgrade */
 				/* oldpkg is used when building removal order list */
 				XSTRDUP(pimpact->old, plist->full);
@@ -244,7 +244,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				break_depends(impacthead, pimpact);
 			} /* !pkg_match */
 
-			TRACE(" > %s matched %s\n", plist->full, pdp->depend);
+			TRACE("  > %s matched %s\n", plist->full, pdp->depend);
 
 			return 1;
 		} /* if installed package match */

@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.5 2011/08/29 13:21:17 imilh Exp $ */
+/* $Id: depends.c,v 1.6 2011/08/30 11:52:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -53,8 +53,6 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
 	} /* else, LOCAL_REVERSE_DEPS */
 
-	level = 1;
-
 	TRACE("[>]-entering depends\n");
 	TRACE("[+]-dependencies for %s (query: %s)\n", pkgname, query);
 
@@ -62,23 +60,49 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
 
+	/* first level of dependency for pkgname */
 	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_ERR)
 		return;
 
+	level = 1;
+	/*
+	 * loop until head first member's level is == 0
+	 * the first loop parses the first range of dependencies and set them to
+	 * 1. If anything with a level == 0 appears in head, it is provided by
+	 * pkgindb_doquery() from the following loop, its level  will then be
+	 * set to level + 1 on the next pass.
+	 * Example:
+	 * sfd eterm
+	 * . First pass:
+	 * perl, pdp->level = 1   |
+	 * libast, pdp->level = 1 |- insert their deps in head with level = 0
+	 * imlib2, pdp->level = 1 |
+	 * . Second pass: libast and imlib inserted new deps in head, with
+     *                pdp->level = 0, level is now 2 (++level)
+	 * pcre, pdp->level = 2
+	 * imlib2, pdp->level = 2
+	 *
+	 */
 	while (SLIST_FIRST(pdphead)->level == 0) {
+		TRACE(" > looping through dependency level %d\n", level);
+		/* loop through deptree */
 		SLIST_FOREACH(pdp, pdphead, next) {
 			if (pdp->level != 0)
-			    	break;
+				/* 
+				 * dependency already processed, no need to proceed
+				 * as the next pdp's already have a level too, remember
+				 * head has the deps to process.
+				 */
+				break;
+			/* set all this range to the current level */
 			pdp->level = level;
 			snprintf(query, BUFSIZ, depquery, pdp->name);
+			/* record pdp->name's direct dependencies in head with level = 0*/
 			pkgindb_doquery(query, pdb_rec_depends, pdphead);
-#ifdef DEBUG
-			printf("%i: p: %s, l: %d\n", level, pdp->depend,
-			    pdp->level);
-#endif
-			TRACE("|-%s-(deepness %d)\n", pdp->depend, pdp->level);
 
+			TRACE(" |-%s-(deepness %d)\n", pdp->depend, pdp->level);
 		} /* SLIST_FOREACH */
+		/* increase level for next loop */
 		++level;
 	}
 	TRACE("[<]-leaving depends\n");
