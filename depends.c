@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.6 2011/08/30 11:52:17 imilh Exp $ */
+/* $Id: depends.c,v 1.7 2011/08/30 17:02:01 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -98,8 +98,9 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			pdp->level = level;
 			snprintf(query, BUFSIZ, depquery, pdp->name);
 			/* record pdp->name's direct dependencies in head with level = 0*/
-			pkgindb_doquery(query, pdb_rec_depends, pdphead);
-
+			if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_OK)
+				TRACE(" > recording %s dependencies (will be level %d)\n",
+					pdp->name, level + 1);
 			TRACE(" |-%s-(deepness %d)\n", pdp->depend, pdp->level);
 		} /* SLIST_FOREACH */
 		/* increase level for next loop */
@@ -129,7 +130,7 @@ show_direct_depends(const char *pkgarg)
 
 	snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
 
-	if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == 0) {
+	if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == PDB_OK) {
 		printf(MSG_DIRECT_DEPS_FOR, pkgname);
 		SLIST_FOREACH(pdp, deptreehead, next) {
 			if (package_version && 

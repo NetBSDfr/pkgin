@@ -1,5 +1,6 @@
 20110830
 	Export / import a list of packages as requested by wiz@
+	Operations tracing flag (-t)
 20110828
 	Database silent migration
 	More flexible check_yesno()
