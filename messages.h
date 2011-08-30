@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.8 2011/08/30 11:52:17 imilh Exp $ */
+/* $Id: messages.h,v 1.9 2011/08/30 16:23:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -33,6 +33,7 @@
 /* main.c */
 #define MSG_MISSING_CMD "missing command"
 #define MSG_MISSING_PKGNAME "missing package name"
+#define MSG_MISSING_FILENAME "missing file name"
 #define MSG_FULLDEPTREE "full dependency tree for %s\n"
 #define MSG_REVDEPTREE "local reverse dependency tree for %s\n"
 #define MSG_PKG_ARGS_INST "specify at least one package to install"

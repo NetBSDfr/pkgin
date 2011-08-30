@@ -102,6 +102,12 @@ Performs a regular expression search for a pattern in the repository.
 Displays all direct dependencies for
 .It Cm show-full-deps Ar package
 Displays all direct dependencies recursively for
+.It Cm export
+Export the list of non-autoremovable packages to stdout
+(one category/package by line)
+.It Cm import Ar file
+Import a list of packages to be installed from file
+(one category/package by line)
 .Ar package .
 .It Cm show-keep
 Display "non auto-removable" packages.

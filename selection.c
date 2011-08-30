@@ -1,4 +1,4 @@
-/* $Id: selection.c,v 1.1 2011/08/30 11:54:24 imilh Exp $ */
+/* $Id: selection.c,v 1.2 2011/08/30 16:23:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -50,13 +50,17 @@ export_keep()
 }
 
 void
-import_keep(uint8_t do_inst)
+import_keep(uint8_t do_inst, const char *import_file)
 {
 	int		list_size = 0;
 	char	**pkglist = NULL;
 	char	input[BUFSIZ], fullpkgname[BUFSIZ], query[BUFSIZ];
+	FILE	*fp;
 
-	while (fgets(input, BUFSIZ, stdin) != NULL) {
+	if ((fp = fopen(import_file, "r")) == NULL)
+		err(EXIT_FAILURE, MSG_ERR_OPEN, import_file);
+
+	while (fgets(input, BUFSIZ, fp) != NULL) {
 		 /* 1st element + NULL */
 		XREALLOC(pkglist, (list_size + 2) * sizeof(char *));
 
@@ -76,6 +80,7 @@ import_keep(uint8_t do_inst)
 
 		pkglist[list_size] = NULL;
 	}
+	fclose(fp);
 
 	if (pkglist == NULL)
 		errx(EXIT_FAILURE, MSG_EMPTY_IMPORT_LIST);

@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.3 2011/08/30 11:52:17 imilh Exp $ */
+/* $Id: cmd.h,v 1.4 2011/08/30 16:23:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -70,7 +70,7 @@ static struct command {
 	  PKG_AUTORM_CMD },
 	{ "export", "ex", "Export \"non auto-removable\" packages to stdout.",
 	  PKG_EXPORT_CMD },
-	{ "import", "im", "Import \"non auto-removable\" package list from stdin.",
+	{ "import", "im", "Import \"non auto-removable\" package list from file.",
 	  PKG_IMPORT_CMD },
 	{ "tonic", "to", "Gin Tonic recipe.",
 	  PKG_GINTO_CMD },
