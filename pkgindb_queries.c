@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.9 2011/08/31 12:39:49 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.10 2011/08/31 16:58:26 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -166,6 +166,10 @@ const char EXPORT_KEEP_LIST[] =
 
 const char GET_PKGNAME_BY_PKGPATH[] = 
 	"SELECT PKGNAME FROM REMOTE_PKG WHERE PKGPATH = '%s';";
+
+const char GET_ORPHAN_PACKAGES[] = 
+	"SELECT FULLPKGNAME FROM LOCAL_PKG WHERE PKG_KEEP IS NULL AND "
+	"PKGNAME NOT IN (SELECT LOCAL_DEPS_PKGNAME FROM LOCAL_DEPS);";
 
 const char COMPAT_CHECK[] =
 	"SELECT FULLPKGNAME FROM LOCAL_PKG LIMIT 1;";
