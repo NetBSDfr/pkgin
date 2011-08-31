@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.7 2011/08/30 11:52:17 imilh Exp $ */
+/* $Id: impact.c,v 1.8 2011/08/31 12:01:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -319,9 +319,6 @@ pkg_impact(char **pkgargs)
 
 	/* retreive impact list for all packages listed in the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
-
-		if (strpbrk(*ppkgargs, "*%") != NULL) /* avoid SQL jokers */
-			continue;
 
 		/* check if this is a multiple-version package (apache, ...)
 		 * and that the wanted package actually exists. Get pkgname

@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.6 2011/08/28 21:38:45 imilh Exp $ */
+/* $Id: actions.c,v 1.7 2011/08/31 12:01:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -413,7 +413,7 @@ pkg_has_conflicts(Plisthead *conflictshead, Pkglist *pimpact)
 #define H_BUF 6
 
 int
-pkgin_install(char **pkgargs, uint8_t do_inst)
+pkgin_install(char **opkgargs, uint8_t do_inst)
 {
 	int			installnum = 0, upgradenum = 0, removenum = 0;
 	int			rc = EXIT_FAILURE;
@@ -423,14 +423,21 @@ pkgin_install(char **pkgargs, uint8_t do_inst)
 	Plisthead	*impacthead; /* impact head */
 	Plisthead	*removehead = NULL, *installhead = NULL;
 	Plisthead	*conflictshead = NULL; /* conflicts head */
+	char		**pkgargs;
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF];
 	struct stat	st;
 
+	/* transform command line globs into pkgnames */
+	if ((pkgargs = glob_to_pkgarg(opkgargs)) == NULL) {
+		printf(MSG_NOTHING_TO_DO);
+		return rc;
+	}
+
 	/* full impact list */
 	if ((impacthead = pkg_impact(pkgargs)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
-		goto installend;
+		return rc;
 	}
 
 	/* check for required files */
@@ -567,6 +574,7 @@ installend:
 	free_pkglist(&impacthead, IMPACT);
 	free_pkglist(&removehead, DEPTREE);
 	free_pkglist(&installhead, DEPTREE);
+	free_list(pkgargs);
 
 	return rc;
 }

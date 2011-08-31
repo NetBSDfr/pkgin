@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.3 2011/08/28 09:40:15 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.4 2011/08/31 12:01:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -31,6 +31,8 @@
  */
 
 #include "pkgin.h"
+
+#define GLOBCHARS "{<>[]?*"
 
 /**
  * \fn unique_pkg
@@ -159,7 +161,7 @@ clear_pattern(char *depend)
 {
 	char *p;
 
-	if ((p = strpbrk(depend, "{<>[]?*")) != NULL)
+	if ((p = strpbrk(depend, GLOBCHARS)) != NULL)
 		*p = '\0';
 	else
 		return;
@@ -226,4 +228,34 @@ get_pkgname_from_depend(char *depend)
 	cleanup_version(pkgname);
 
 	return pkgname;
+}
+
+char **
+glob_to_pkgarg(char **glob)
+{
+	int		i = 0, count = 0;
+	char	**pkgargs = NULL;
+	Pkglist	*plist;
+
+	for (i = 0, count = 0; glob[i] != NULL; i++, count++) {
+		XREALLOC(pkgargs, (count + 2) * sizeof(char *));
+
+		if (strpbrk(glob[i], GLOBCHARS) == NULL)
+			XSTRDUP(pkgargs[count], glob[i]);
+		else {
+			if ((plist = map_pkg_to_dep(&r_plisthead, glob[i])) == NULL) {
+				fprintf(stderr, MSG_PKG_NOT_AVAIL, glob[i]);
+				count--;
+			} else
+				XSTRDUP(pkgargs[count], plist->full);
+		}
+	}
+
+	if (count == 0)
+		XFREE(pkgargs);
+
+	if (pkgargs != NULL)
+		pkgargs[count] = NULL;
+
+	return pkgargs;
 }

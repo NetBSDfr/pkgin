@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.13 2011/08/30 16:23:00 imilh Exp $ */
+/* $Id: pkgin.h,v 1.14 2011/08/31 12:01:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -245,6 +245,7 @@ char		*get_pkgname_from_depend(char *);
 int			exact_pkgfmt(const char *);
 char		*find_exact_pkg(Plisthead *, const char *);
 int			version_check(char *, char *);
+char		**glob_to_pkgarg(char **);
 /* selection.c */
 void		export_keep(void);
 void		import_keep(uint8_t, const char *);
