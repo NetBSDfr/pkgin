@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.4 2011/09/01 19:23:20 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.5 2011/09/01 19:58:22 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -172,7 +172,7 @@ pkgindb_reset()
 int
 pkg_db_mtime()
 {
-	uint8_t		pkgindb_present = 1;
+	uint8_t		pkgdb_present = 1;
 	struct stat	st;
 	time_t	   	db_mtime = 0;
 	char		*str_mtime, query[BUFSIZ];
