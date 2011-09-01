@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.7 2011/08/31 12:01:27 imilh Exp $ */
+/* $Id: actions.c,v 1.8 2011/09/01 18:40:47 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -66,7 +66,7 @@ check_yesno(uint8_t default_answer)
 	if ((c = getchar()) == answer[reverse_answer].charval)
 		r = answer[reverse_answer].numval;
 	else
-		return answer[default_answer].numval;
+		r = answer[default_answer].numval;
 
 	/* avoid residual char */
 	while((c = getchar()) != '\n' && c != EOF)
