@@ -1,3 +1,6 @@
+20110901
+	pkg_install's pkgdb not needed anymore for a fresh start (bsdx's idea)
+
 20110831
 	Globs can now be passed as an argument for package installation, i.e.
 	# pkgin in 'mysql-server<5.1'
