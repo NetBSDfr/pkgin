@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.3 2011/08/28 16:50:28 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.4 2011/09/01 19:23:20 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -172,15 +172,14 @@ pkgindb_reset()
 int
 pkg_db_mtime()
 {
+	uint8_t		pkgindb_present = 1;
 	struct stat	st;
 	time_t	   	db_mtime = 0;
 	char		*str_mtime, query[BUFSIZ];
 
 	/* no pkgdb file */
-	if (stat(PKGDB_PATH, &st) < 0) {
-		warnx("%s does not exist.", PKGDB_PATH);
-		return 1;
-	}
+	if (stat(PKGDB_PATH, &st) < 0)
+		pkgdb_present = 0;
 
 	XMALLOC(str_mtime, 20 * sizeof(char));
 	str_mtime[0] = '\0';
@@ -194,7 +193,7 @@ pkg_db_mtime()
 	XFREE(str_mtime);
 
 	/* mtime is up to date */
-	if (db_mtime == st.st_mtime)
+	if (!pkgdb_present || db_mtime == st.st_mtime)
 		return 0;
 
 	snprintf(query, BUFSIZ, UPDATE_PKGDB_MTIME, (long long)st.st_mtime);
