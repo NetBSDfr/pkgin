@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.7 2011/08/30 17:02:01 imilh Exp $ */
+/* $Id: depends.c,v 1.8 2011/09/01 22:12:51 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -54,11 +54,12 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	} /* else, LOCAL_REVERSE_DEPS */
 
 	TRACE("[>]-entering depends\n");
-	TRACE("[+]-dependencies for %s (query: %s)\n", pkgname, query);
 
 	/* getting direct dependencies */
 	if (query[0] == '\0')
 	    	snprintf(query, BUFSIZ, depquery, pkgname);
+
+	TRACE("[+]-dependencies for %s (query: %s)\n", pkgname, query);
 
 	/* first level of dependency for pkgname */
 	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_ERR)
