@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.5 2011/09/06 17:49:09 imilh Exp $ */
+/* $Id: cmd.h,v 1.6 2011/09/06 19:42:16 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -72,9 +72,9 @@ static struct command {
 	  PKG_EXPORT_CMD },
 	{ "import", "im", "Import \"non auto-removable\" package list from file.",
 	  PKG_IMPORT_CMD },
-	{ "provides", "prov", "Show what a package provides.",
+	{ "provides", "prov", "Show what files a package provides.",
 	  PKG_SHPROV_CMD },
-	{ "requires", "req", "Show what a package requires.",
+	{ "requires", "req", "Show what files a package requires.",
 	  PKG_SHREQ_CMD },
 	{ "tonic", "to", "Gin Tonic recipe.",
 	  PKG_GINTO_CMD },
