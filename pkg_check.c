@@ -1,4 +1,4 @@
-/* $Id: pkg_check.c,v 1.2 2011/09/06 19:32:12 imilh Exp $ */
+/* $Id: pkg_check.c,v 1.3 2011/09/06 19:33:45 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -221,7 +221,7 @@ show_prov_req(const char *query, const char *pkgname)
 		exit(EXIT_SUCCESS);
 	}
 
-	printf(MSG_PKG_PROV_REQ, say, fullpkgname);
+	printf(MSG_FILES_PROV_REQ, say, fullpkgname);
 	SLIST_FOREACH(plist, plisthead, next)
 		printf("\t%s\n", plist->full);
 }
