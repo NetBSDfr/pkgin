@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.14 2011/08/31 12:01:27 imilh Exp $ */
+/* $Id: pkgin.h,v 1.15 2011/09/06 17:49:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -102,6 +102,8 @@
 #define PKG_AUTORM_CMD 15
 #define PKG_EXPORT_CMD 16
 #define PKG_IMPORT_CMD 17
+#define PKG_SHPROV_CMD 18
+#define PKG_SHREQ_CMD 19
 #define PKG_GINTO_CMD 255
 
 #define PKG_EQUAL '='
@@ -249,5 +251,9 @@ char		**glob_to_pkgarg(char **);
 /* selection.c */
 void		export_keep(void);
 void		import_keep(uint8_t, const char *);
+/* pkg_check.c */
+int			pkg_met_reqs(Plisthead *);
+int			pkg_has_conflicts(Pkglist *);
+void		show_prov_req(const char *, const char *);
 
 #endif

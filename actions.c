@@ -1,7 +1,7 @@
-/* $Id: actions.c,v 1.9 2011/09/01 18:45:43 imilh Exp $ */
+/* $Id: actions.c,v 1.10 2011/09/06 17:49:09 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -260,157 +260,6 @@ action_list(char *flatlist, char *str)
 	return newlist;
 }
 
-/* find required files (REQUIRES) from PROVIDES or filename */
-static int
-pkg_met_reqs(Plisthead *impacthead)
-{
-	int			met_reqs = 1, foundreq;
-	Pkglist		*pimpact, *requires;
-	Plisthead	*requireshead = NULL;
-#ifdef CHECK_PROVIDES
-	Pkglist		*impactprov = NULL, *provides = NULL;
-	Plisthead	*provideshead = NULL;
-#endif
-	struct stat	sb;
-	char		query[BUFSIZ];
-
-	/* first, parse impact list */
-	SLIST_FOREACH(pimpact, impacthead, next) {
-		/* retreive requires list for package */
-		snprintf(query, BUFSIZ, GET_REQUIRES_QUERY, pimpact->full);
-		requireshead = rec_pkglist(query);
-
-		if (requireshead == NULL) /* empty requires list (very unlikely) */
-			continue;
-
-		/* parse requires list */
-		SLIST_FOREACH(requires, requireshead, next) {
-
-			foundreq = 0;
-
-			/* for performance sake, first check basesys */
-			if ((strncmp(requires->full, LOCALBASE,
-				    strlen(LOCALBASE) - 1)) != 0) {
-				if (stat(requires->full, &sb) < 0) {
-					printf(MSG_REQT_NOT_PRESENT,
-						requires->full, pimpact->full);
-
-					met_reqs = 0;
-				}
-				/* was a basysfile, no need to check PROVIDES */
-				continue;
-			}
-			/* FIXME: the code below actually works, but there's no
-			 * point losing performances when some REQUIRES do not match
-			 * PROVIDES in pkg_summary(5). This is a known issue and will
-			 * hopefuly be fixed.
-			 */
-#ifndef CHECK_PROVIDES
-			continue;
-#else
-			/* search what local packages provide */
-			provideshead = rec_pkglist(LOCAL_PROVIDES);
-			SLIST_FOREACH(provides, provideshead, next) {
-				if (strncmp(provides->full,
-						requires->full,
-						strlen(requires->full)) == 0) {
-
-					foundreq = 1;
-
-					/* found, no need to go further*/
-					break;
-				} /* match */
-			} /* SLIST_FOREACH LOCAL_PROVIDES */
-			free_pkglist(&provideshead, LIST);
-
-			/* REQUIRES was not found on local packages, try impact list */
-			if (!foundreq) {
-				/* re-parse impact list to retreive PROVIDES */
-				SLIST_FOREACH(impactprov, impacthead, next) {
-					snprintf(query, BUFSIZ, GET_PROVIDES_QUERY,
-						impactprov->full);
-					provideshead = rec_pkglist(query);
-
-					if (provideshead == NULL)
-						continue;
-
-					/* then parse provides list for every package */
-					SLIST_FOREACH(provides, provideshead, next) {
-						if (strncmp(provides->full,
-								requires->full,
-								strlen(requires->full)) == 0) {
-
-							foundreq = 1;
-
-							/* found, no need to go further
-							   return to impactprov list */
-							break;
-						} /* match */
-					}
-					free_pkglist(&provideshead, LIST);
-
-					if (foundreq) /* exit impactprov list loop */
-						break;
-
-				} /* SLIST_NEXT impactprov */
-
-			} /* if (!foundreq) LOCAL_PROVIDES -> impact list */
-
-			/* FIXME: BIG FAT DISCLAIMER
-			 * as of 04/2009, some packages described in pkg_summary
-			 * have unmet REQUIRES. This is a known bug that makes the
-			 * PROVIDES untrustable and some packages uninstallable.
-			 * foundreq is forced to 1 for now for every REQUIRES
-			 * matching LOCALBASE, which is hardcoded to "/usr/pkg"
-			 */
-			if (!foundreq) {
-				printf(MSG_REQT_NOT_PRESENT_BUT, requires->full);
-
-				foundreq = 1;
-			}
-#endif
-		} /* SLIST_FOREACH requires */
-		free_pkglist(&requireshead, LIST);
-	} /* 1st impact SLIST_FOREACH */
-
-	return met_reqs;
-}
-
-/* check for conflicts and if needed files are present */
-static int
-pkg_has_conflicts(Plisthead *conflictshead, Pkglist *pimpact)
-{
-	int			has_conflicts = 0;
-	Pkglist		*conflicts; /* SLIST conflicts pointer */
-	char		*conflict_pkg, query[BUFSIZ];
-
-	if (conflictshead == NULL)
-		return 0;
-
-	/* check conflicts */
-	SLIST_FOREACH(conflicts, conflictshead, next) {
-		if (pkg_match(conflicts->full, pimpact->full)) {
-
-			/* got a conflict, retrieve conflicting local package */
-			snprintf(query, BUFSIZ,
-				GET_CONFLICT_QUERY, conflicts->full);
-
-			XMALLOC(conflict_pkg, BUFSIZ * sizeof(char));
-			if (pkgindb_doquery(query,
-					pdb_get_value, conflict_pkg) == PDB_OK)
-
-				printf(MSG_CONFLICT_PKG,
-					pimpact->full, conflict_pkg);
-
-			XFREE(conflict_pkg);
-
-			has_conflicts = 1;
-		} /* match conflict */
-	} /* SLIST_FOREACH conflicts */
-
-	return has_conflicts;
-}
-
 #define H_BUF 6
 
 int
@@ -423,7 +272,6 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
 	Plisthead	*removehead = NULL, *installhead = NULL;
-	Plisthead	*conflictshead = NULL; /* conflicts head */
 	char		**pkgargs;
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF];
@@ -447,14 +295,11 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		goto installend;
 	}
 
-	/* conflicts list */
-	conflictshead = rec_pkglist(LOCAL_CONFLICTS);
-
 	/* browse impact tree */
 	SLIST_FOREACH(pimpact, impacthead, next) {
 
 		/* check for conflicts */
-		if (pkg_has_conflicts(conflictshead, pimpact))
+		if (pkg_has_conflicts(pimpact))
 			if (!check_yesno(DEFAULT_NO))
 				goto installend;
 
@@ -571,7 +416,6 @@ installend:
 
 	XFREE(toinstall);
 	XFREE(toupgrade);
-	free_pkglist(&conflictshead, LIST);
 	free_pkglist(&impacthead, IMPACT);
 	free_pkglist(&removehead, DEPTREE);
 	free_pkglist(&installhead, DEPTREE);

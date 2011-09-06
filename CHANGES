@@ -1,3 +1,6 @@
+20110906
+	Added "requires" and "provides" to have a closer look on packages	
+	requirements
 20110901
 	pkg_install's pkgdb not needed anymore for a fresh start (bsdx's idea)
 
