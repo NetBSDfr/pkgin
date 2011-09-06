@@ -1,4 +1,4 @@
-/* $Id: pkg_check.c,v 1.1 2011/09/06 17:49:09 imilh Exp $ */
+/* $Id: pkg_check.c,v 1.2 2011/09/06 19:32:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -221,6 +221,7 @@ show_prov_req(const char *query, const char *pkgname)
 		exit(EXIT_SUCCESS);
 	}
 
+	printf(MSG_PKG_PROV_REQ, say, fullpkgname);
 	SLIST_FOREACH(plist, plisthead, next)
-		printf("%s is %s by %s\n", plist->full, say, fullpkgname);
+		printf("\t%s\n", plist->full);
 }
