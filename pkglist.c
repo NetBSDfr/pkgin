@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.4 2011/08/26 06:56:52 imilh Exp $ */
+/* $Id: pkglist.c,v 1.5 2011/09/07 17:56:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -174,13 +174,19 @@ init_head(void)
  * Record package list to SLIST
  */
 Plisthead *
-rec_pkglist(const char *pkgquery)
+rec_pkglist(const char *fmt, ...)
 {
+	char		query[BUFSIZ];
+	va_list		ap;
 	Plisthead	*plisthead = NULL;
 
 	plisthead = init_head();
 
-	if (pkgindb_doquery(pkgquery, pdb_rec_list, plisthead) == PDB_OK)
+	va_start(ap, fmt);
+	vsnprintf(query, BUFSIZ, fmt, ap);
+	va_end(ap);
+
+	if (pkgindb_doquery(query, pdb_rec_list, plisthead) == PDB_OK)
 		return plisthead;
 
 	XFREE(plisthead);

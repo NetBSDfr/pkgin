@@ -1,4 +1,4 @@
-/* $Id: pkg_check.c,v 1.3 2011/09/06 19:33:45 imilh Exp $ */
+/* $Id: pkg_check.c,v 1.4 2011/09/07 17:56:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -65,7 +65,7 @@ pkg_met_reqs(Plisthead *impacthead)
 	/* first, parse impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		/* retreive requires list for package */
-		if ((requireshead = get_prov_req(GET_REQUIRES_QUERY,
+		if ((requireshead = rec_pkglist(GET_REQUIRES_QUERY,
 					pimpact->full)) == NULL)
 			/* empty requires list (very unlikely) */
 			continue;

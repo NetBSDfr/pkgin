@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.8 2011/08/31 16:58:26 imilh Exp $ */
+/* $Id: autoremove.c,v 1.9 2011/09/07 17:56:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -41,38 +41,95 @@
 void
 pkgin_autoremove()
 {
-	int			removenb = 0;
-	Plisthead	*plisthead;
-	Pkglist		*premove;
+	Plisthead	*plisthead, *keephead, *removehead, *orderedhead;
+	Pkglist		*pkglist, *premove, *pdp;
 	char		*toremove = NULL;
+	int			exists, removenb = 0;
 
-	if ((plisthead = rec_pkglist(GET_ORPHAN_PACKAGES)) == NULL)	
+	/*
+	 * test if there's any keep package and record them
+	 * KEEP_LOCAL_PKGS returns full packages names
+	 */
+	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
+		errx(EXIT_FAILURE, MSG_NO_PKGIN_PKGS, getprogname());
+
+	keephead = init_head();
+
+	/* record keep packages deps  */
+	SLIST_FOREACH(pkglist, plisthead, next)
+		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, keephead);
+
+	free_pkglist(&plisthead, LIST);
+
+	/* record unkeep packages */
+	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
+		free_pkglist(&keephead, DEPTREE);
+
+		printf(MSG_ALL_KEEP_PKGS);
 		return;
-
-	SLIST_FOREACH(premove, plisthead, next) {
-			toremove = action_list(toremove, premove->full);
-			removenb++;
 	}
 
-	/* we want this action to be confirmed */
-	yesflag = 0;
+	removehead = init_head();
 
-	printf(MSG_AUTOREMOVE_WARNING);
-	printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
-	if (check_yesno(DEFAULT_YES)) {
-		SLIST_FOREACH(premove, plisthead, next) {
-			printf(MSG_REMOVING, premove->full);
-#ifdef DEBUG
-			printf("%s -f %s\n", PKG_DELETE, premove->full);
-#else
-			fexec(PKG_DELETE, "-f", premove->full, NULL);
-#endif
+	/* parse non-keepables packages */
+	SLIST_FOREACH(pkglist, plisthead, next) {
+		exists = 0;
+		/* is it a dependence for keepable packages ? */
+		SLIST_FOREACH(pdp, keephead, next) {
+			if (strcmp(pdp->name, pkglist->name) == 0) {
+				exists = 1;
+				break;
+			}
 		}
-		update_db(LOCAL_SUMMARY, NULL);
+
+		if (exists)
+			continue;
+
+		/* package was not found, insert it on removelist */
+		premove = malloc_pkglist(DEPTREE);
+
+		XSTRDUP(premove->depend, pkglist->full);
+
+		SLIST_INSERT_HEAD(removehead, premove, next);
+
+		removenb++;
+	} /* SLIST_FOREACH plisthead */
+
+	free_pkglist(&keephead, DEPTREE);
+	free_pkglist(&plisthead, LIST);
+
+#ifdef WITHOUT_ORDER
+	orderedhead = removehead;
+#else
+	orderedhead = order_remove(removehead);
+#endif
+	if (!SLIST_EMPTY(orderedhead)) {
+		SLIST_FOREACH(premove, orderedhead, next)
+			toremove = action_list(toremove, premove->depend);
+
+		/* we want this action to be confirmed */
+		yesflag = 0;
+
+		printf(MSG_AUTOREMOVE_WARNING);
+		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
+		if (check_yesno(DEFAULT_YES)) {
+			SLIST_FOREACH(premove, orderedhead, next) {
+				printf(MSG_REMOVING, premove->depend);
+#ifdef DEBUG
+				printf("%s -f %s\n", PKG_DELETE, premove->depend);
+#else
+				fexec(PKG_DELETE, "-f", premove->depend, NULL);
+#endif
+			}
+			update_db(LOCAL_SUMMARY, NULL);
+		}
 	}
 
 	XFREE(toremove);
-	free_pkglist(&plisthead, DEPTREE);
+	free_pkglist(&orderedhead, DEPTREE);
+#ifndef WITHOUT_ORDER
+	XFREE(orderedhead);
+#endif
 }
 
 void
