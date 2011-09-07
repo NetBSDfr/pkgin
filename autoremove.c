@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.9 2011/09/07 17:56:14 imilh Exp $ */
+/* $Id: autoremove.c,v 1.10 2011/09/07 19:06:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -98,11 +98,8 @@ pkgin_autoremove()
 	free_pkglist(&keephead, DEPTREE);
 	free_pkglist(&plisthead, LIST);
 
-#ifdef WITHOUT_ORDER
-	orderedhead = removehead;
-#else
 	orderedhead = order_remove(removehead);
-#endif
+
 	if (!SLIST_EMPTY(orderedhead)) {
 		SLIST_FOREACH(premove, orderedhead, next)
 			toremove = action_list(toremove, premove->depend);
@@ -127,9 +124,6 @@ pkgin_autoremove()
 
 	XFREE(toremove);
 	free_pkglist(&orderedhead, DEPTREE);
-#ifndef WITHOUT_ORDER
-	XFREE(orderedhead);
-#endif
 }
 
 void
