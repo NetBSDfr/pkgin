@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.11 2011/09/06 17:49:09 imilh Exp $ */
+/* $Id: main.c,v 1.12 2011/09/07 19:40:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -48,6 +48,7 @@ FILE  		*tracefp = NULL;
 int
 main(int argc, char *argv[])
 {
+	uint8_t		updb_all;
 	uint8_t		do_inst = DO_INST; /* by default, do install packages */
 	int 		ch;
 	struct stat	sb;
@@ -134,11 +135,18 @@ main(int argc, char *argv[])
 
 	pkgindb_init();
 
+	/* check if current database fits our needs */
+	updb_all = upgrade_database();
+
 	/* update local db if pkgdb mtime has changed */
 	update_db(LOCAL_SUMMARY, NULL);
 
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
+
+	/* upgrade remote database if pkgin version changed and not compatible */
+	if (updb_all)
+		update_db(REMOTE_SUMMARY, NULL);
 
 	/* find command index */
 	ch = find_cmd(argv[0]);

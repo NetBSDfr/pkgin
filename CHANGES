@@ -1,3 +1,6 @@
+20110907
+	rec_pkglist() now takes a va_list
+
 20110906
 	Added "requires" and "provides" to have a closer look on packages	
 	requirements
