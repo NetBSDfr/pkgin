@@ -1,4 +1,4 @@
-/* $Id: pkgindb.h,v 1.6 2011/08/31 16:58:26 imilh Exp $ */
+/* $Id: pkgindb.h,v 1.7 2011/09/08 12:08:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -75,6 +75,7 @@ extern const char COMPAT_CHECK[];
 #define PDB PKGIN_DB"/pkgin.db"
 
 const char	*pdb_version(void);
+uint8_t		upgrade_database(void);
 void		pkgindb_init(void);
 void		pkgindb_close(void);
 int			pkgindb_doquery(const char *,

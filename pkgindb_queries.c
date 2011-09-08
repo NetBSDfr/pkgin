@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.12 2011/09/06 18:17:09 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.13 2011/09/08 12:08:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -172,4 +172,4 @@ const char GET_ORPHAN_PACKAGES[] =
 	"PKGNAME NOT IN (SELECT LOCAL_DEPS_PKGNAME FROM LOCAL_DEPS);";
 
 const char COMPAT_CHECK[] =
-	"SELECT FULLPKGNAME FROM LOCAL_PKG LIMIT 1;";
+	"SELECT FULLPKGNAME FROM REMOTE_PKG LIMIT 1;";

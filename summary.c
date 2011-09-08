@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.13 2011/09/07 19:40:37 imilh Exp $ */
+/* $Id: summary.c,v 1.14 2011/09/08 12:08:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -678,26 +678,6 @@ update_db(int which, char **pkgkeep)
 		freecols();
 	}
 
-}
-
-uint8_t
-upgrade_database()
-{
-	if (pkgindb_doquery(COMPAT_CHECK, NULL, NULL) == PDB_ERR) {
-		/* COMPAT_CHECK query leads to an error for an incompatible database */
-		printf(MSG_DATABASE_NOT_COMPAT);
-		if (!check_yesno(DEFAULT_YES))
-			errx(EXIT_FAILURE, MSG_DATABASE_OUTDATED);
-
-		pkgindb_reset();
-
-		XFREE(env_repos);
-		XFREE(pkg_repos);
-
-		return 1;
-	}
-
-	return 0;
 }
 
 void

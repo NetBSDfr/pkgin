@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13 2011/09/07 19:44:37 imilh Exp $ */
+/* $Id: main.c,v 1.14 2011/09/08 12:08:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -144,7 +144,10 @@ main(int argc, char *argv[])
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
 
-	/* upgrade remote database if pkgin version changed and not compatible */
+	/* 
+	 * upgrade remote database if pkgin version changed and not compatible 
+	 * or if empty database
+	 */
 	if (updb_all)
 		update_db(REMOTE_SUMMARY, NULL);
 
