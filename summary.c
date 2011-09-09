@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.14 2011/09/08 12:08:49 imilh Exp $ */
+/* $Id: summary.c,v 1.15 2011/09/09 16:59:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -444,8 +444,7 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 			/* some rare packages have no version */
 			if (!exact_pkgfmt(pkgname)) {
 				snprintf(tmpname, BUFSIZ, "%s%s", pkgname, NOVERSION);
-				XFREE(pkgname);
-				XSTRDUP(pkgname, tmpname);
+				pkgname = &tmpname[0];
 			}
 
 			add_to_slist("FULLPKGNAME", pkgname);
