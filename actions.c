@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.12 2011/09/10 15:02:41 imilh Exp $ */
+/* $Id: actions.c,v 1.13 2011/09/10 15:46:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -285,7 +285,8 @@ do_pkg_install(Plisthead *installhead)
 			if (check_yesno(DEFAULT_YES)) {
 #ifndef DEBUG
 				if (fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL) != EXIT_SUCCESS) {
-					printf(MSG_ERR_INSTALLING_PKG, pkgpath, PKG_INSTALL_ERR_LOG);
+					printf(MSG_ERR_INSTALLING_PKG,
+						pinstall->depend, PKG_INSTALL_ERR_LOG);
 					err_count++;
 				}
 #endif
@@ -295,7 +296,8 @@ do_pkg_install(Plisthead *installhead)
 			/* every other package */
 #ifndef DEBUG
 			if (fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL) != EXIT_SUCCESS) {
-				printf(MSG_ERR_INSTALLING_PKG, pkgpath, PKG_INSTALL_ERR_LOG);
+				printf(MSG_ERR_INSTALLING_PKG, 
+					pinstall->depend, PKG_INSTALL_ERR_LOG);
 				err_count++;
 			}
 #endif
