@@ -1,3 +1,7 @@
+20110909
+	Log timestamp
+	Better handling of pkg_install's error logs
+
 20110907
 	rec_pkglist() now takes a va_list
 

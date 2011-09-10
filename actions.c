@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.11 2011/09/10 08:26:03 imilh Exp $ */
+/* $Id: actions.c,v 1.12 2011/09/10 15:02:41 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -31,14 +31,17 @@
  */
 
 #include "pkgin.h"
+#include <time.h>
 
 #ifndef LOCALBASE
 #define LOCALBASE "/usr/pkg" /* see DISCLAIMER below */
 #endif
 
 const char			*pkgin_cache = PKGIN_CACHE;
-static int			upgrade_type = UPGRADE_NONE;
-static uint8_t		said = 0;	
+static int			upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
+static uint8_t		said = 0;
+FILE				*err_fp = NULL;
+fpos_t				rm_filepos = -1, in_filepos = -1;
 
 int
 check_yesno(uint8_t default_answer)
@@ -137,6 +140,56 @@ pkg_download(Plisthead *installhead)
 
 }
 
+/**
+ * \brief Analyse PKG_INSTALL_ERR_LOG for errors
+ */
+static void
+analyse_pkglog(fpos_t *filepos)
+{
+	FILE		*err_ro;
+	char		err_line[BUFSIZ];
+
+	if (*filepos < 0)
+		return;
+
+	err_ro = fopen(PKG_INSTALL_ERR_LOG, "r");
+
+	(void)fsetpos(err_ro, filepos);
+
+	while (fgets(err_line, BUFSIZ, err_ro) != NULL)
+		if (strcasestr(err_line, "Warning") != NULL)
+			warn_count++;
+
+	fclose(err_ro);
+}
+
+/**
+ * \brief Tags PKG_INSTALL_ERR_LOG with date
+ */
+#define DATELEN 64
+
+static void
+log_tag(const char *fmt, ...)
+{
+	va_list		ap;
+	char		log_action[BUFSIZ], now_date[DATELEN];
+	struct tm	tim;
+	time_t		now;
+
+	now = time(NULL);
+	tim = *(localtime(&now));
+
+	va_start(ap, fmt);
+	vsnprintf(log_action, BUFSIZ, fmt, ap);
+	va_end(ap);
+
+	(void)strftime(now_date, DATELEN, "%b %d %H:%M:%S", &tim);
+
+	fprintf(err_fp, "---%s: %s", now_date, log_action);
+	fflush(err_fp);
+	
+}
+
 /* package removal */
 static void
 do_pkg_remove(Plisthead *removehead)
@@ -144,13 +197,11 @@ do_pkg_remove(Plisthead *removehead)
 	Pkglist *premove;
 
 /* send pkg_delete stderr to logfile */
-#ifdef HAVE_FREOPEN
 	if (!verbosity && !said) {
-		(void)freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
-		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+		err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
+		(void)fgetpos(err_fp, &rm_filepos);
 		said = 1;
 	}
-#endif
 
 	SLIST_FOREACH(premove, removehead, next) {
 		/* file not available in the repository */
@@ -169,11 +220,19 @@ do_pkg_remove(Plisthead *removehead)
 
 		printf(MSG_REMOVING, premove->depend);
 #ifndef DEBUG
+		log_tag(MSG_REMOVING, premove->depend);
 		if (fexec(PKG_DELETE, pkgtools_flags, premove->depend, NULL)
-			!= EXIT_SUCCESS)
+			!= EXIT_SUCCESS) {
 			printf(MSG_ERR_REMOVING_PKG, premove->depend, PKG_INSTALL_ERR_LOG);
+			err_count++;
+		}
 #endif
 	}
+
+	analyse_pkglog(&rm_filepos);
+	printf(MSG_WARNS_ERRS, warn_count, err_count);
+	if (warn_count > 0 || err_count > 0)
+		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
 }
 
 /**
@@ -192,13 +251,11 @@ do_pkg_install(Plisthead *installhead)
 	char		pi_tmp_flags[5]; /* tmp force flags for pkg_install */
 
 /* send pkg_add stderr to logfile */
-#ifdef HAVE_FREOPEN
 	if (!verbosity && !said) {
-		(void)freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
-		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+		err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
+		(void)fgetpos(err_fp, &in_filepos);
 		said = 1;
 	}
-#endif
 
 	printf(MSG_INSTALL_PKG);
 
@@ -212,6 +269,10 @@ do_pkg_install(Plisthead *installhead)
 		snprintf(pkgpath, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
+#ifndef DEBUG
+		log_tag(MSG_INSTALLING, pinstall->depend);
+#endif
+
 		/* are we upgrading pkg_install ? */
 		if (strncmp(pinstall->depend, PKG_INSTALL,
 				strlen(PKG_INSTALL)) == 0) {
@@ -223,19 +284,28 @@ do_pkg_install(Plisthead *installhead)
 				strncat(pi_tmp_flags, "v", 2);
 			if (check_yesno(DEFAULT_YES)) {
 #ifndef DEBUG
-				if (fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL) != EXIT_SUCCESS)
+				if (fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL) != EXIT_SUCCESS) {
 					printf(MSG_ERR_INSTALLING_PKG, pkgpath, PKG_INSTALL_ERR_LOG);
+					err_count++;
+				}
 #endif
 			} else
 				continue;
 		} else {
 			/* every other package */
 #ifndef DEBUG
-			if (fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL) != EXIT_SUCCESS)
+			if (fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL) != EXIT_SUCCESS) {
 				printf(MSG_ERR_INSTALLING_PKG, pkgpath, PKG_INSTALL_ERR_LOG);
+				err_count++;
+			}
 #endif
 		}
 	} /* installation loop */
+
+	analyse_pkglog(&in_filepos);
+	printf(MSG_WARNS_ERRS, warn_count, err_count);
+	if (warn_count > 0 || err_count > 0)
+		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
 }
 
 /* build the output line */
@@ -409,6 +479,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 				rc = EXIT_SUCCESS;
 			}
 		} /* check_yesno */
+
 	} else
 		printf(MSG_NOTHING_TO_INSTALL);
 
@@ -503,6 +574,7 @@ pkgin_remove(char **pkgargs)
 		} else
 			rc = EXIT_FAILURE;
 
+		analyse_pkglog(&rm_filepos);
 	} else {
 		printf(MSG_NO_PKGS_TO_DELETE);
 		rc = EXIT_SUCCESS;

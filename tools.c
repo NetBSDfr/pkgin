@@ -1,7 +1,7 @@
-/* $Id: tools.c,v 1.1 2011/03/03 14:43:13 imilh Exp $ */
+/* $Id: tools.c,v 1.2 2011/09/10 15:02:41 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
