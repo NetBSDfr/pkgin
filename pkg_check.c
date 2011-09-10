@@ -1,4 +1,4 @@
-/* $Id: pkg_check.c,v 1.4 2011/09/07 17:56:14 imilh Exp $ */
+/* $Id: pkg_check.c,v 1.5 2011/09/10 19:30:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -31,21 +31,6 @@
  */
 
 #include "pkgin.h"
-
-/**
- * \brief Return a PROVIDES/REQUIRES list
- */
-static Plisthead *
-get_prov_req(const char *get_query, char *pkgname)
-{
-	char		query[BUFSIZ];
-	Plisthead	*plisthead;
-
-	snprintf(query, BUFSIZ, get_query, pkgname);
-	plisthead = rec_pkglist(query);
-
-	return plisthead;
-}
 
 /* find required files (REQUIRES) from PROVIDES or filename */
 int
@@ -113,7 +98,7 @@ pkg_met_reqs(Plisthead *impacthead)
 				/* re-parse impact list to retreive PROVIDES */
 				SLIST_FOREACH(impactprov, impacthead, next) {
 					if ((r_provideshead =
-							get_prov_req(GET_PROVIDES_QUERY,
+							rec_pkglist(GET_PROVIDES_QUERY,
 								impactprov->full)) == NULL)
 						continue;
 
@@ -216,7 +201,7 @@ show_prov_req(const char *query, const char *pkgname)
 
 	say = ( query == GET_PROVIDES_QUERY ) ? out[0] : out[1];
 
-	if ((plisthead = get_prov_req(query, fullpkgname)) == NULL) {
+	if ((plisthead = rec_pkglist(query, fullpkgname)) == NULL) {
 		printf(MSG_NO_PROV_REQ, say, fullpkgname);
 		exit(EXIT_SUCCESS);
 	}

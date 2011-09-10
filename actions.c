@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.13 2011/09/10 15:46:34 imilh Exp $ */
+/* $Id: actions.c,v 1.14 2011/09/10 19:30:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -141,7 +141,7 @@ pkg_download(Plisthead *installhead)
 }
 
 /**
- * \brief Analyse PKG_INSTALL_ERR_LOG for errors
+ * \brief Analyse PKG_INSTALL_ERR_LOG for warnings
  */
 static void
 analyse_pkglog(fpos_t *filepos)
