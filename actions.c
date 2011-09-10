@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.10 2011/09/06 17:49:09 imilh Exp $ */
+/* $Id: actions.c,v 1.11 2011/09/10 08:26:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -146,8 +146,8 @@ do_pkg_remove(Plisthead *removehead)
 /* send pkg_delete stderr to logfile */
 #ifdef HAVE_FREOPEN
 	if (!verbosity && !said) {
-		(void)freopen(PKGIN_ERR_LOG, "a", stderr);
-		printf(MSG_LOGGING_TO, PKGIN_ERR_LOG);
+		(void)freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
+		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
 		said = 1;
 	}
 #endif
@@ -168,10 +168,10 @@ do_pkg_remove(Plisthead *removehead)
 		}
 
 		printf(MSG_REMOVING, premove->depend);
-		fprintf(stderr, "%s %s %s\n",
-			PKG_DELETE, pkgtools_flags, premove->depend);
 #ifndef DEBUG
-		fexec(PKG_DELETE, pkgtools_flags, premove->depend, NULL);
+		if (fexec(PKG_DELETE, pkgtools_flags, premove->depend, NULL)
+			!= EXIT_SUCCESS)
+			printf(MSG_ERR_REMOVING_PKG, premove->depend, PKG_INSTALL_ERR_LOG);
 #endif
 	}
 }
@@ -194,8 +194,8 @@ do_pkg_install(Plisthead *installhead)
 /* send pkg_add stderr to logfile */
 #ifdef HAVE_FREOPEN
 	if (!verbosity && !said) {
-		(void)freopen(PKGIN_ERR_LOG, "a", stderr);
-		printf(MSG_LOGGING_TO, PKGIN_ERR_LOG);
+		(void)freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
+		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
 		said = 1;
 	}
 #endif
@@ -222,17 +222,17 @@ do_pkg_install(Plisthead *installhead)
 				/* append verbosity if requested */
 				strncat(pi_tmp_flags, "v", 2);
 			if (check_yesno(DEFAULT_YES)) {
-				fprintf(stderr, "%s %s %s\n", PKG_ADD, pi_tmp_flags, pkgpath);
 #ifndef DEBUG
-				fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL);
+				if (fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL) != EXIT_SUCCESS)
+					printf(MSG_ERR_INSTALLING_PKG, pkgpath, PKG_INSTALL_ERR_LOG);
 #endif
 			} else
 				continue;
 		} else {
 			/* every other package */
-			fprintf(stderr, "%s %s %s\n", PKG_ADD, pkgtools_flags, pkgpath);
 #ifndef DEBUG
-			fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL);
+			if (fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL) != EXIT_SUCCESS)
+				printf(MSG_ERR_INSTALLING_PKG, pkgpath, PKG_INSTALL_ERR_LOG);
 #endif
 		}
 	} /* installation loop */

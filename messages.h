@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.13 2011/09/08 12:08:49 imilh Exp $ */
+/* $Id: messages.h,v 1.14 2011/09/10 08:26:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -85,10 +85,12 @@
 #define MSG_EMPTY_KEEP_LIST "empty non-autoremovable package list"
 #define MSG_EMPTY_AVAIL_PKGLIST "empty available packages list"
 #define MSG_UPGRADE_NEED_REMOVE "this upgrade needs package removal\n"
-#define MSG_LOGGING_TO "error log can be found in %s\n"
+#define MSG_PKG_INSTALL_LOGGING_TO "pkg_install error log can be found in %s\n"
 #define MSG_EMPTY_FILE_SIZE "warning: package %s has an empty FILE_SIZE on repository.\n"
 #define MSG_NOT_REMOVING "not removing %s...\n"
 #define MSG_UPGRADE_PKG_INSTALL "about to upgrade %s, "
+#define MSG_ERR_INSTALLING_PKG "/!\\ there was an error while installing %s, please check %s\n"
+#define MSG_ERR_REMOVING_PKG "/!\\ there was an error while removing %s, please check %s\n"
 
 /* depends.c */
 #define MSG_DIRECT_DEPS_FOR "direct dependencies for %s\n"
