@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.15 2011/09/10 22:35:45 imilh Exp $ */
+/* $Id: actions.c,v 1.16 2011/09/10 22:45:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -161,6 +161,8 @@ analyse_pkglog(fpos_t *filepos)
 			warn_count++;
 		if (strcasestr(err_line, "already installed") != NULL)
 			err_count--;
+		if (strcasestr(err_line, "addition failed") != NULL)
+			err_count++;
 	}
 
 	fclose(err_ro);
@@ -287,16 +289,14 @@ do_pkg_install(Plisthead *installhead)
 				strncat(pi_tmp_flags, "v", 2);
 			if (check_yesno(DEFAULT_YES)) {
 #ifndef DEBUG
-				if (fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL) != EXIT_SUCCESS)
-					err_count++;
+				fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL);
 #endif
 			} else
 				continue;
 		} else {
 			/* every other package */
 #ifndef DEBUG
-			if (fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL) != EXIT_SUCCESS)
-				err_count++;
+			fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL);
 #endif
 		}
 	} /* installation loop */
