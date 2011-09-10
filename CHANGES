@@ -1,6 +1,7 @@
-20110909
+20110910
+	Many changes occured, let's make it 0.5.1
 	Log timestamp
-	Better handling of pkg_install's error logs
+	Better handling of pkg_install error logs
 
 20110907
 	rec_pkglist() now takes a va_list
