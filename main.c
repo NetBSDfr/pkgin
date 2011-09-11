@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.14 2011/09/08 12:08:49 imilh Exp $ */
+/* $Id: main.c,v 1.15 2011/09/11 10:51:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -297,11 +297,6 @@ usage()
 				cmd[i].name, cmd[i].shortcut, cmd[i].descr);
 
 	exit(EXIT_FAILURE);
-}
-
-void
-cleanup(int i)
-{
 }
 
 static void

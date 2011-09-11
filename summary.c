@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.16 2011/09/09 18:20:37 imilh Exp $ */
+/* $Id: summary.c,v 1.17 2011/09/11 10:51:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -299,7 +299,7 @@ prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
  * add item to the main SLIST
  */
 static void
-add_to_slist(char *field, char*value)
+add_to_slist(const char *field, const char *value)
 {
 	Insertlist		*insert;
 
@@ -516,7 +516,7 @@ delete_remote_tbl(struct Summary sum, char *repo)
 	 * loop through sumsw structure to record table name
 	 * and call associated SQL query
 	 */
-	for (ptbl = (char *)sum.tbl_name, i = 0;
+	for (ptbl = __UNCONST(sum.tbl_name), i = 0;
 		 i < nelms;
 		 ptbl += ((strlen(ptbl) + 1) * sizeof(char)), i++) {
 
@@ -535,7 +535,8 @@ delete_remote_tbl(struct Summary sum, char *repo)
 static int
 pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 {
-	int		i, repolen;
+	int	i;
+	size_t	repolen;
 	char	**repos = pkg_repos, query[BUFSIZ];
 
 	if (argv == NULL)

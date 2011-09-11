@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.5 2011/08/31 22:18:35 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.6 2011/09/11 10:51:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -102,7 +102,8 @@ find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
 {
 	Pkglist	*pkglist;
 	char	*pkgname, *tmppkg;
-	int		tmplen, exact;
+	int		exact;
+	size_t	tmplen;
 
 	/* is it a versionned package ? */
 	exact = exact_pkgfmt(pkgarg);

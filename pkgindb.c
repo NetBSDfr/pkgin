@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.7 2011/09/09 16:59:48 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.8 2011/09/11 10:51:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -196,13 +196,12 @@ pkg_db_mtime()
 	uint8_t		pkgdb_present = 1;
 	struct stat	st;
 	time_t	   	db_mtime = 0;
-	char		*str_mtime, query[BUFSIZ];
+	char		str_mtime[20], query[BUFSIZ];
 
 	/* no pkgdb file */
 	if (stat(PKGDB_PATH, &st) < 0)
 		pkgdb_present = 0;
 
-	XMALLOC(str_mtime, 20 * sizeof(char));
 	str_mtime[0] = '\0';
 
 	pkgindb_doquery("SELECT PKGDB_MTIME FROM PKGDB;",
@@ -210,8 +209,6 @@ pkg_db_mtime()
 
 	if (str_mtime[0] != '\0')
 		db_mtime = (time_t)strtol(str_mtime, (char **)NULL, 10);
-
-	XFREE(str_mtime);
 
 	/* mtime is up to date */
 	if (!pkgdb_present || db_mtime == st.st_mtime)
@@ -246,9 +243,8 @@ time_t
 pkg_sum_mtime(char *repo)
 {
 	time_t	db_mtime = 0;
-	char	*str_mtime, query[BUFSIZ];
+	char	str_mtime[20], query[BUFSIZ];
 
-	XMALLOC(str_mtime, 20 * sizeof(char));
 	str_mtime[0] = '\0';
 
 	snprintf(query, BUFSIZ,
@@ -257,8 +253,6 @@ pkg_sum_mtime(char *repo)
 
 	if (str_mtime[0] != '\0')
 		db_mtime = (time_t)strtol(str_mtime, (char **)NULL, 10);
-
-	XFREE(str_mtime);
 
 	return db_mtime;
 }

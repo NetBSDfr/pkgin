@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.19 2011/09/11 09:06:44 imilh Exp $ */
+/* $Id: actions.c,v 1.20 2011/09/11 10:51:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -591,8 +591,10 @@ narrow_match(char *pkgname, const char *fullpkgname)
 {
 	Pkglist	*pkglist;
 	char	*best_match = NULL;
-	int		pkglen, fullpkglen, i, matchlen = 0;
+	unsigned int		i;
+	size_t  pkglen, fullpkglen, matchlen;
 
+	matchlen = 0;
 	pkglen = strlen(pkgname);
 	fullpkglen = strlen(fullpkgname);
 

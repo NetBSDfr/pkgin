@@ -74,7 +74,7 @@ decompress_bzip2(const char *in, size_t in_len, char **out, size_t *out_len)
 	if ((*out = malloc(*out_len + 1)) == NULL)
 		err(EXIT_FAILURE, "malloc failed");
 
-	stream.next_in = (char *)in;
+	stream.next_in = __UNCONST(in);
 	stream.avail_in = in_len;
 	stream.next_out = *out;
 	stream.avail_out = *out_len;
@@ -131,7 +131,7 @@ decompress_zlib(const char *in, size_t in_len, char **out, size_t *out_len)
 	if ((*out = malloc(*out_len + 1)) == NULL)
 		err(EXIT_FAILURE, "malloc failed");
 
-	stream.next_in = (unsigned char *)in;
+	stream.next_in = __UNCONST(in);
 	stream.avail_in = in_len;
 	stream.next_out = (unsigned char *)*out;
 	stream.avail_out = *out_len;
