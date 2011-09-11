@@ -1,4 +1,4 @@
-/* $Id: pkgindb.h,v 1.7 2011/09/08 12:08:49 imilh Exp $ */
+/* $Id: pkgindb.h,v 1.8 2011/09/11 08:39:16 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -33,6 +33,7 @@
 #ifndef _DRYDB_H
 #define _DRYDB_H
 
+#include <stdint.h>
 #include "pkgindb_create.h"
 
 extern const char DROP_LOCAL_TABLES[];
