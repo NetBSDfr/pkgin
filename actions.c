@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.16 2011/09/10 22:45:35 imilh Exp $ */
+/* $Id: actions.c,v 1.17 2011/09/11 07:32:56 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -227,10 +227,8 @@ do_pkg_remove(Plisthead *removehead)
 #ifndef DEBUG
 		log_tag(MSG_REMOVING, premove->depend);
 		if (fexec(PKG_DELETE, pkgtools_flags, premove->depend, NULL)
-			!= EXIT_SUCCESS) {
-			printf(MSG_ERR_REMOVING_PKG, premove->depend, PKG_INSTALL_ERR_LOG);
+			!= EXIT_SUCCESS)
 			err_count++;
-		}
 #endif
 	}
 
