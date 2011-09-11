@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.19 2011/09/10 08:26:03 imilh Exp $ */
+/* $Id: pkgin.h,v 1.20 2011/09/11 10:57:05 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -46,6 +46,10 @@
 #include "tools.h"
 #include "lib.h"
 #include "dewey.h"
+
+#ifndef __UNCONST
+#define __UNCONST(a)	((void *)(unsigned long)(const void *)(a))
+#endif
 
 #ifndef PKGTOOLS
 #define PKGTOOLS "/usr/sbin"

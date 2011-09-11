@@ -69,6 +69,10 @@
 
 #include "path.h"
 
+#ifndef __UNCONST
+#define __UNCONST(a)	((void *)(unsigned long)(const void *)(a))
+#endif
+
 /* Macros */
 #define SUCCESS	(0)
 #define	FAIL	(-1)
