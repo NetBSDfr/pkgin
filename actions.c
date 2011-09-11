@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.17 2011/09/11 07:32:56 imilh Exp $ */
+/* $Id: actions.c,v 1.18 2011/09/11 08:54:19 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -41,7 +41,7 @@ const char			*pkgin_cache = PKGIN_CACHE;
 static int			upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
 static uint8_t		said = 0;
 FILE				*err_fp = NULL;
-fpos_t				rm_filepos = -1, in_filepos = -1;
+long int			rm_filepos = -1, in_filepos = -1;
 
 int
 check_yesno(uint8_t default_answer)
@@ -144,17 +144,17 @@ pkg_download(Plisthead *installhead)
  * \brief Analyse PKG_INSTALL_ERR_LOG for warnings
  */
 static void
-analyse_pkglog(fpos_t *filepos)
+analyse_pkglog(long int filepos)
 {
 	FILE		*err_ro;
 	char		err_line[BUFSIZ];
 
-	if (*filepos < 0)
+	if (filepos < 0)
 		return;
 
 	err_ro = fopen(PKG_INSTALL_ERR_LOG, "r");
 
-	(void)fsetpos(err_ro, filepos);
+	(void)fseek(err_ro, filepos, SEEK_SET);
 
 	while (fgets(err_line, BUFSIZ, err_ro) != NULL) {
 		if (strcasestr(err_line, "Warning") != NULL)
@@ -204,7 +204,7 @@ do_pkg_remove(Plisthead *removehead)
 /* send pkg_delete stderr to logfile */
 	if (!verbosity && !said) {
 		err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
-		(void)fgetpos(err_fp, &rm_filepos);
+		rm_filepos = ftell(err_fp);
 		said = 1;
 	}
 
@@ -232,7 +232,7 @@ do_pkg_remove(Plisthead *removehead)
 #endif
 	}
 
-	analyse_pkglog(&rm_filepos);
+	analyse_pkglog(rm_filepos);
 	printf(MSG_WARNS_ERRS, warn_count, err_count);
 	if (warn_count > 0 || err_count > 0)
 		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
@@ -256,7 +256,7 @@ do_pkg_install(Plisthead *installhead)
 /* send pkg_add stderr to logfile */
 	if (!verbosity && !said) {
 		err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
-		(void)fgetpos(err_fp, &in_filepos);
+		in_filepos = ftell(err_fp);
 		said = 1;
 	}
 
@@ -299,7 +299,7 @@ do_pkg_install(Plisthead *installhead)
 		}
 	} /* installation loop */
 
-	analyse_pkglog(&in_filepos);
+	analyse_pkglog(in_filepos);
 	printf(MSG_WARNS_ERRS, warn_count, err_count);
 	if (warn_count > 0 || err_count > 0)
 		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
@@ -571,7 +571,7 @@ pkgin_remove(char **pkgargs)
 		} else
 			rc = EXIT_FAILURE;
 
-		analyse_pkglog(&rm_filepos);
+		analyse_pkglog(rm_filepos);
 	} else {
 		printf(MSG_NO_PKGS_TO_DELETE);
 		rc = EXIT_SUCCESS;
