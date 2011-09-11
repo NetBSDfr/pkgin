@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.18 2011/09/11 08:54:19 imilh Exp $ */
+/* $Id: actions.c,v 1.19 2011/09/11 09:06:44 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -157,11 +157,11 @@ analyse_pkglog(long int filepos)
 	(void)fseek(err_ro, filepos, SEEK_SET);
 
 	while (fgets(err_line, BUFSIZ, err_ro) != NULL) {
-		if (strcasestr(err_line, "Warning") != NULL)
+		if (strstr(err_line, "Warning") != NULL)
 			warn_count++;
-		if (strcasestr(err_line, "already installed") != NULL)
+		if (strstr(err_line, "already installed") != NULL)
 			err_count--;
-		if (strcasestr(err_line, "addition failed") != NULL)
+		if (strstr(err_line, "addition failed") != NULL)
 			err_count++;
 	}
 
