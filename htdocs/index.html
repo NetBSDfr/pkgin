@@ -15,6 +15,22 @@
 			<i>pkgin</i> is aimed at being an <i>apt / yum</i> like tool for managing pkgsrc binary packages. It relies on <a href="http://netbsd.gw.com/cgi-bin/man-cgi?pkg_summary++NetBSD-current">pkg_summary(5)</a> for installation, removal and upgrade of packages and associated dependencies, using a remote repository.
 			</p>
 
+			<h3>Quickstart</h3>
+			<ul>
+				<li>
+				<a href="#req">Prerequisites</a>
+				</li>
+				<li>
+				<a href="#usage">Usage</a>
+				</li>
+				<li>
+				<a href="#examples">Usage examples</a>
+				</li>
+				<li>
+				<a href="#platforms">Platforms</a>
+				</li>
+			</ul>
+
 			<h3>Rationale</h3>
 
 			<p>
@@ -30,7 +46,7 @@
 			As <i>pkgin</i> CVS code may change quite deeply, please <strong>do not forget to look at the <a href="http://cvs.pkgin.net/viewvc/pkgin/pkgin/CHANGES">CHANGES</a> file</strong> if you chose to track development version.
 			</p>
 
-			<h3>Prerequisites</h3>
+			<a name="req"><h3>Prerequisites</h3></a>
 
 			<p>
 			<i>pkgin</i> is developed using the C language. It uses <code>sqlite3</code> as a package database backend, in order to provide good speed on older architectures. <i>SQLite</i> is included in <i>pkgin's</i> source tree so you don't have to install it by yourself, it will simply be built along with <i>pkgin</i>.
@@ -54,7 +70,7 @@ $ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
 
 			<p><i>pkgin</i> is ready to run !</p>
 
-			<h3>Usage</h3>
+			<a name="usage"><h3>Usage</h3></a>
 
 			<p>
 			First thing to do before using <i>pkgin</i> is to setup a repository in the <code>${PREFIX}/etc/pkgin/repositories.conf</code> file :
@@ -72,7 +88,7 @@ $ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
 
 			<p class="note">The <code>pkgin update</code> command must be run regularly in order to keep the database synchronized with the repository.</p>
 
-			<h4>Usage examples</h4>
+			<a name="examples"><h4>Usage examples</h4></a>
 
 			<p>List available packages:</p>
 			<pre class="programlisting"># pkgin avail</pre>
@@ -142,7 +158,7 @@ $ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
 
 			<p class="note">Every command has a shortcut, <code>pkgin -h</code> will show them.</p>
 
-			<h3>Platforms</h3>
+			<a name="platforms"><h3>Platforms</h3></a>
 
 			<p>
 			<i>pkgin</i> is known to work and have been tested under the following platforms :
