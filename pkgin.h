@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.20 2011/09/11 10:57:05 imilh Exp $ */
+/* $Id: pkgin.h,v 1.21 2011/09/14 13:09:25 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -224,6 +224,7 @@ void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 /* actions.c */
 int			check_yesno(uint8_t);
+void		do_pkg_remove(Plisthead *);
 int			pkgin_remove(char **);
 int			pkgin_install(char **, uint8_t);
 char		*action_list(char *, char *);

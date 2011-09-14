@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.10 2011/09/07 19:06:27 imilh Exp $ */
+/* $Id: autoremove.c,v 1.11 2011/09/14 13:09:25 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -109,15 +109,10 @@ pkgin_autoremove()
 
 		printf(MSG_AUTOREMOVE_WARNING);
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
+
 		if (check_yesno(DEFAULT_YES)) {
-			SLIST_FOREACH(premove, orderedhead, next) {
-				printf(MSG_REMOVING, premove->depend);
-#ifdef DEBUG
-				printf("%s -f %s\n", PKG_DELETE, premove->depend);
-#else
-				fexec(PKG_DELETE, "-f", premove->depend, NULL);
-#endif
-			}
+			do_pkg_remove(orderedhead);
+
 			update_db(LOCAL_SUMMARY, NULL);
 		}
 	}

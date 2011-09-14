@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.20 2011/09/11 10:51:37 imilh Exp $ */
+/* $Id: actions.c,v 1.21 2011/09/14 13:09:25 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -196,12 +196,12 @@ log_tag(const char *fmt, ...)
 }
 
 /* package removal */
-static void
+void
 do_pkg_remove(Plisthead *removehead)
 {
 	Pkglist *premove;
 
-/* send pkg_delete stderr to logfile */
+	/* send pkg_delete stderr to logfile */
 	if (!verbosity && !said) {
 		err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
 		rm_filepos = ftell(err_fp);
