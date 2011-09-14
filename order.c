@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.3 2011/08/28 12:34:26 imilh Exp $ */
+/* $Id: order.c,v 1.4 2011/09/14 16:45:20 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -124,7 +124,7 @@ order_remove(Plisthead *deptreehead)
 static void
 upgrade_dep_deepness(Plisthead *impacthead)
 {
-	char		*pkgname, *p;
+	char		*pkgname;
 	Pkglist		*pimpact;
     Plisthead	*lvldeptree;
 
@@ -144,8 +144,7 @@ upgrade_dep_deepness(Plisthead *impacthead)
 		/* depname received from impact is in full package format */
 		XSTRDUP(pkgname, pimpact->full);
 
-		if ((p = strrchr(pkgname, '-')) != NULL)
-			*p = '\0';
+		trunc_str(pkgname, '-', STR_BACKWARD);
 
 		lvldeptree = init_head();
 		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, lvldeptree);

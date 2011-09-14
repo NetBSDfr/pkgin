@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.12 2011/09/14 13:28:34 imilh Exp $ */
+/* $Id: autoremove.c,v 1.13 2011/09/14 16:45:20 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -61,7 +61,7 @@ pkgin_autoremove()
 
 	free_pkglist(&plisthead, LIST);
 
-	/* record unkeep packages */
+	/* record all unkeep / automatic packages */
 	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
 		free_pkglist(&keephead, DEPTREE);
 
