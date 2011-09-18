@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.21 2011/09/14 13:09:25 imilh Exp $ */
+/* $Id: actions.c,v 1.22 2011/09/18 14:26:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -173,6 +173,7 @@ analyse_pkglog(long int filepos)
  */
 #define DATELEN 64
 
+#ifndef DEBUG
 static void
 log_tag(const char *fmt, ...)
 {
@@ -194,6 +195,7 @@ log_tag(const char *fmt, ...)
 	fflush(err_fp);
 	
 }
+#endif
 
 /* package removal */
 void
