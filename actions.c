@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.22 2011/09/18 14:26:09 imilh Exp $ */
+/* $Id: actions.c,v 1.23 2011/09/18 18:36:16 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -355,6 +355,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	/* full impact list */
 	if ((impacthead = pkg_impact(pkgargs)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
+		free_list(pkgargs);
 		return rc;
 	}
 
