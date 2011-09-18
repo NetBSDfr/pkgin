@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.17 2011/09/11 10:51:37 imilh Exp $ */
+/* $Id: summary.c,v 1.18 2011/09/18 18:18:04 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -669,6 +669,8 @@ update_db(int which, char **pkgkeep)
 
 			break;
 		}
+
+		free_list(summary);
 
 	} /* for sumsw */
 	/* columns name not needed anymore */
