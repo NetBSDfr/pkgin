@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.10 2011/09/18 18:28:04 imilh Exp $ */
+/* $Id: impact.c,v 1.11 2011/09/20 12:42:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -222,7 +222,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 					 */
 						toupgrade = DONOTHING;
 
-						goto end_deps_impact;
+						return 1;
 				}
 
 				TRACE("   * upgrade with %s\n", plist->full);
@@ -246,7 +246,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 
 			TRACE("  > %s matched %s\n", plist->full, pdp->depend);
 
-			goto end_deps_impact;
+			return 1;
 		} /* if installed package match */
 
 		/*
@@ -257,7 +257,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		if (pkg_match(pdp->depend, plist->full)) {
 			TRACE(" > local package %s matched with %s\n",
 				plist->full, pdp->depend);
-			goto end_deps_impact;
+			return 1;
 		}
 
 	} /* SLIST_FOREACH plist */
@@ -275,9 +275,6 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		pimpact->file_size = mapplist->file_size;
 		pimpact->size_pkg = mapplist->size_pkg;
 	}
-
-end_deps_impact:
-	XFREE(remotepkg);
 
 	return 1;
 }
