@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.12 2011/09/20 12:42:17 imilh Exp $
+# $Id: Makefile.in,v 1.13 2011/09/27 21:05:57 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -50,9 +50,6 @@ PKGIN_VERSION=	"${VERSION} for ${OPSYS}-${OS_VER} ${OS_ARCH}"
 
 CPPFLAGS+=	-DPKGIN_VERSION=\"${PKGIN_VERSION}\"
 
-MKMAN=		no
-
-
 .include <bsd.own.mk>
 
 .PATH:	external sqlite
@@ -65,12 +62,11 @@ PKGIN_DB=	${VARBASE}/db/pkgin
 .endif
 
 .if ${OPSYS} == "NetBSD"
-WARNS=	2
-PKGTOOLS?=	/usr/sbin
+WARNS=		2
 CPPFLAGS+=	-DNETBSD
-.else
-PKGTOOLS?=	${LOCALBASE}/sbin
 .endif
+
+PKGTOOLS?=	${LOCALBASE}/sbin
 
 CPPFLAGS+=	@CPPFLAGS@
 CPPFLAGS+=	-g
