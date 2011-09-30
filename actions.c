@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.24 2011/09/30 14:53:48 imilh Exp $ */
+/* $Id: actions.c,v 1.25 2011/09/30 15:13:01 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -205,8 +205,11 @@ do_pkg_remove(Plisthead *removehead)
 
 	/* send pkg_delete stderr to logfile */
 	if (!verbosity && !said) {
-		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL)
-			err(EXIT_FAILURE, MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
+		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL) {
+ 			printf(MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
+			exit(EXIT_FAILURE);
+		}
+
 		rm_filepos = ftell(err_fp);
 		said = 1;
 	}
@@ -235,10 +238,12 @@ do_pkg_remove(Plisthead *removehead)
 #endif
 	}
 
-	analyse_pkglog(rm_filepos);
-	printf(MSG_WARNS_ERRS, warn_count, err_count);
-	if (warn_count > 0 || err_count > 0)
-		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+	if (!verbosity) {
+		analyse_pkglog(rm_filepos);
+		printf(MSG_WARNS_ERRS, warn_count, err_count);
+		if (warn_count > 0 || err_count > 0)
+			printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+	}
 }
 
 /**
@@ -256,10 +261,13 @@ do_pkg_install(Plisthead *installhead)
 	char		pkgpath[BUFSIZ];
 	char		pi_tmp_flags[5]; /* tmp force flags for pkg_install */
 
-/* send pkg_add stderr to logfile */
+	/* send pkg_add stderr to logfile */
 	if (!verbosity && !said) {
-		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL)
-			err(EXIT_FAILURE, MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
+		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL) {
+ 			printf(MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
+			exit(EXIT_FAILURE);
+		}
+
 		in_filepos = ftell(err_fp);
 		said = 1;
 	}
@@ -303,10 +311,12 @@ do_pkg_install(Plisthead *installhead)
 		}
 	} /* installation loop */
 
-	analyse_pkglog(in_filepos);
-	printf(MSG_WARNS_ERRS, warn_count, err_count);
-	if (warn_count > 0 || err_count > 0)
-		printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+	if (!verbosity) {
+		analyse_pkglog(in_filepos);
+		printf(MSG_WARNS_ERRS, warn_count, err_count);
+		if (warn_count > 0 || err_count > 0)
+			printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+	}
 }
 
 /* build the output line */
