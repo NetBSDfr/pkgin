@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.23 2011/09/18 18:36:16 imilh Exp $ */
+/* $Id: actions.c,v 1.24 2011/09/30 14:53:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -205,7 +205,8 @@ do_pkg_remove(Plisthead *removehead)
 
 	/* send pkg_delete stderr to logfile */
 	if (!verbosity && !said) {
-		err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
+		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL)
+			err(EXIT_FAILURE, MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
 		rm_filepos = ftell(err_fp);
 		said = 1;
 	}
@@ -257,7 +258,8 @@ do_pkg_install(Plisthead *installhead)
 
 /* send pkg_add stderr to logfile */
 	if (!verbosity && !said) {
-		err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr);
+		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL)
+			err(EXIT_FAILURE, MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
 		in_filepos = ftell(err_fp);
 		said = 1;
 	}

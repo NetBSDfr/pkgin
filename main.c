@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.15 2011/09/11 10:51:37 imilh Exp $ */
+/* $Id: main.c,v 1.16 2011/09/30 14:53:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -100,7 +100,7 @@ main(int argc, char *argv[])
 			break;
 		case 't':
 			if ((tracefp = fopen(optarg, "w")) == NULL)
-				err(EXIT_FAILURE, MSG_CANT_OPEN_TRACEFILE, optarg);
+				err(EXIT_FAILURE, MSG_CANT_OPEN_WRITE, optarg);
 			break;
 		default:
 			usage();

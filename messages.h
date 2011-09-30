@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.16 2011/09/10 15:49:58 imilh Exp $ */
+/* $Id: messages.h,v 1.17 2011/09/30 14:53:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -50,7 +50,7 @@
 
 #define MSG_MISSING_PKG_REPOS \
 	PKGIN_CONF"/"REPOS_FILE" has no repositories or does not exist.\nNo PKG_REPOS variable to fallback to."
-#define MSG_CANT_OPEN_TRACEFILE "Couldn't open %s for writing."
+#define MSG_CANT_OPEN_WRITE "Couldn't open %s for writing."
 
 /* actions.c */
 #define MSG_PROCEED_YES "proceed ? [Y/n] "
