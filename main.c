@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.16 2011/09/30 14:53:48 imilh Exp $ */
+/* $Id: main.c,v 1.17 2011/10/01 18:06:44 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -126,6 +126,10 @@ main(int argc, char *argv[])
 		if (chdir("/") == -1)
 			errx(-1, MSG_CHDIR_FAILED);
 	}
+
+	/* check for pkg_install */
+	if (stat(PKG_ADD, &sb) < 0)
+		errx(EXIT_FAILURE, MSG_PKG_INSTALL_NOT_PRESENT);
 
 	/* for pkg_install */
 	unsetenv("PKG_PATH");

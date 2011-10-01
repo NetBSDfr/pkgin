@@ -1,3 +1,6 @@
+20111001
+	pkgin now depends on pkgsrc's pkg_install
+
 20110910
 	Many changes occured, let's make it 0.5.1
 	Log timestamp
