@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.27 2011/10/02 14:54:12 imilh Exp $ */
+/* $Id: actions.c,v 1.28 2011/10/02 15:23:32 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -298,6 +298,7 @@ do_pkg_install(Plisthead *installhead)
 
 		/* are we upgrading pkg_install ? */
 		if (pi_upgrade) { /* set in order.c */
+			pi_upgrade = 0; /* 1st item on the list, reset the flag */
 			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
 			/* set temporary force flags */
 			strncpy(pi_tmp_flags, "-ffu", 5);
