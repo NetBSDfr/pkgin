@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.26 2011/09/30 15:17:34 imilh Exp $ */
+/* $Id: actions.c,v 1.27 2011/10/02 14:54:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -197,6 +197,33 @@ log_tag(const char *fmt, ...)
 }
 #endif
 
+static void
+open_pi_log(void)
+{
+	if (!verbosity && !said) {
+		if ((err_fp = fopen(PKG_INSTALL_ERR_LOG, "a")) == NULL) {
+ 			fprintf(stderr, MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
+			exit(EXIT_FAILURE);
+		}
+
+		dup2(fileno(err_fp), STDERR_FILENO);
+
+		rm_filepos = ftell(err_fp);
+		said = 1;
+	}
+}
+
+static void
+close_pi_log(void)
+{
+	if (!verbosity) {
+		analyse_pkglog(rm_filepos);
+		printf(MSG_WARNS_ERRS, warn_count, err_count);
+		if (warn_count > 0 || err_count > 0)
+			printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+	}
+}
+
 /* package removal */
 void
 do_pkg_remove(Plisthead *removehead)
@@ -204,15 +231,7 @@ do_pkg_remove(Plisthead *removehead)
 	Pkglist *premove;
 
 	/* send pkg_delete stderr to logfile */
-	if (!verbosity && !said) {
-		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL) {
- 			printf(MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
-			exit(EXIT_FAILURE);
-		}
-
-		rm_filepos = ftell(err_fp);
-		said = 1;
-	}
+	open_pi_log();
 
 	SLIST_FOREACH(premove, removehead, next) {
 		/* file not available in the repository */
@@ -239,12 +258,7 @@ do_pkg_remove(Plisthead *removehead)
 #endif
 	}
 
-	if (!verbosity) {
-		analyse_pkglog(rm_filepos);
-		printf(MSG_WARNS_ERRS, warn_count, err_count);
-		if (warn_count > 0 || err_count > 0)
-			printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
-	}
+	close_pi_log();
 }
 
 /**
@@ -263,15 +277,7 @@ do_pkg_install(Plisthead *installhead)
 	char		pi_tmp_flags[5]; /* tmp force flags for pkg_install */
 
 	/* send pkg_add stderr to logfile */
-	if (!verbosity && !said) {
-		if ((err_fp = freopen(PKG_INSTALL_ERR_LOG, "a", stderr)) == NULL) {
- 			printf(MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
-			exit(EXIT_FAILURE);
-		}
-
-		in_filepos = ftell(err_fp);
-		said = 1;
-	}
+	open_pi_log();
 
 	printf(MSG_INSTALL_PKG);
 
@@ -291,8 +297,7 @@ do_pkg_install(Plisthead *installhead)
 #endif
 
 		/* are we upgrading pkg_install ? */
-		if (strncmp(pinstall->depend, PKG_INSTALL,
-				strlen(PKG_INSTALL)) == 0) {
+		if (pi_upgrade) { /* set in order.c */
 			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
 			/* set temporary force flags */
 			strncpy(pi_tmp_flags, "-ffu", 5);
@@ -313,12 +318,7 @@ do_pkg_install(Plisthead *installhead)
 		}
 	} /* installation loop */
 
-	if (!verbosity) {
-		analyse_pkglog(in_filepos);
-		printf(MSG_WARNS_ERRS, warn_count, err_count);
-		if (warn_count > 0 || err_count > 0)
-			printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
-	}
+	close_pi_log();
 }
 
 /* build the output line */

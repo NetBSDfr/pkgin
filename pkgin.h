@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.21 2011/09/14 13:09:25 imilh Exp $ */
+/* $Id: pkgin.h,v 1.22 2011/10/02 14:54:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -190,6 +190,7 @@ extern uint8_t 		force_update;
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
+extern uint8_t		pi_upgrade; /* pkg_install upgrade */
 extern char			*env_repos;
 extern char			**pkg_repos;
 extern const char	*pkgin_cache;

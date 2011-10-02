@@ -1,4 +1,4 @@
-/* $Id: order.c,v 1.5 2011/10/02 08:09:25 imilh Exp $ */
+/* $Id: order.c,v 1.6 2011/10/02 14:54:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -162,6 +162,7 @@ upgrade_dep_deepness(Plisthead *impacthead)
 	}
 }
 
+uint8_t pi_upgrade = 0;
 /**
  * \fn order_upgrade_remove
  *
@@ -199,8 +200,9 @@ order_upgrade_remove(Plisthead *impacthead)
 				pdp->computed = pimpact->action; /* XXX: ugly */
 				pdp->level = pimpact->level; /* informative only */
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
-			}
-		}
+
+			} /* action == TOUPGRADE || TOREMOVE */
+		} /* for maxlevel */
 
 	return ordtreehead;
 }
@@ -217,8 +219,9 @@ Plisthead *
 order_install(Plisthead *impacthead)
 {
 	Plisthead	*ordtreehead;
-	Pkglist		*pimpact, *pdp;
+	Pkglist		*pimpact, *pdp, *pi_dp = NULL;
 	int			i, maxlevel = 0;
+	char		tmpcheck[BUFSIZ];
 
 	/* record higher dependency level on impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -245,10 +248,23 @@ order_install(Plisthead *impacthead)
 				/* record package size for download check */
 				pdp->file_size = pimpact->file_size;
 
-				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
-			}
-		}
-	}
+				/* check for pkg_install upgrade */
+				strcpy(tmpcheck, pimpact->full);
+				trunc_str(tmpcheck, '-', STR_BACKWARD);
+				/* match on pkg_install */
+				if (strcmp(tmpcheck, PKG_INSTALL) == 0) {
+					pi_upgrade = 1;
+					/* backup pdp for future insertion */
+					pi_dp = pdp;
+				} else					
+					SLIST_INSERT_HEAD(ordtreehead, pdp, next);
+			} /* action == TOINSTALL */
+		} /* SLIST_FOREACH pimpact */
+	} /* for i < maxlevel */
+
+	/* pkg_install is to be upgraded, make it first */
+	if (pi_upgrade && pi_dp != NULL)
+		SLIST_INSERT_HEAD(ordtreehead, pi_dp, next);
 
 	return ordtreehead;
 }
