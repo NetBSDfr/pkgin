@@ -1,7 +1,7 @@
-/* $Id: order.c,v 1.4 2011/09/14 16:45:20 imilh Exp $ */
+/* $Id: order.c,v 1.5 2011/10/02 08:09:25 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
