@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.20 2011/10/04 14:01:06 imilh Exp $ */
+/* $Id: messages.h,v 1.21 2011/10/04 15:20:48 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -105,7 +105,7 @@
 #define MSG_AUTOREMOVE_WARNING "\
 in order to remove packages from the autoremove list, flag those with the `keep' action.\n"
 #define MSG_NO_PKGIN_PKGS "no packages have been installed with %s"
-#define MSG_ALL_KEEP_PKGS "all packages are marked as \"keepable\"."
+#define MSG_ALL_KEEP_PKGS "all packages are marked as \"keepable\"\n."
 #define MSG_AUTOREMOVE_PKGS "%d packages to be autoremoved: %s\n"
 #define MSG_MARK_PKG_KEEP "%s is marked as non-autoremovable\n"
 #define MSG_MARKING_PKG_KEEP "marking %s as non auto-removable\n"
