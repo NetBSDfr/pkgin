@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.19 2011/10/01 18:06:44 imilh Exp $ */
+/* $Id: messages.h,v 1.20 2011/10/04 14:01:06 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -110,6 +110,7 @@ in order to remove packages from the autoremove list, flag those with the `keep'
 #define MSG_MARK_PKG_KEEP "%s is marked as non-autoremovable\n"
 #define MSG_MARKING_PKG_KEEP "marking %s as non auto-removable\n"
 #define MSG_UNMARKING_PKG_KEEP "marking %s as auto-removable\n"
+#define MSG_NO_ORPHAN_DEPS "no orphan dependencies found.\n"
 
 /* summary.c */
 #define MSG_UPDATING_DB "updating database:   0%%"

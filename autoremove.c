@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.15 2011/10/04 13:44:15 imilh Exp $ */
+/* $Id: autoremove.c,v 1.16 2011/10/04 14:01:06 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -96,6 +96,11 @@ pkgin_autoremove()
 
 	free_pkglist(&keephead, DEPTREE);
 	free_pkglist(&plisthead, LIST);
+
+	if (!removenb) {
+		printf(MSG_NO_ORPHAN_DEPS);
+		exit(EXIT_SUCCESS);
+	}
 
 	orderedhead = order_remove(removehead);
 
