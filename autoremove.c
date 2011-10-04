@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.14 2011/09/18 18:11:40 imilh Exp $ */
+/* $Id: autoremove.c,v 1.15 2011/10/04 13:44:15 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -76,7 +76,7 @@ pkgin_autoremove()
 		is_keep_dep = 0;
 		/* is it a dependence for keepable packages ? */
 		SLIST_FOREACH(pdp, keephead, next) {
-			if (strcmp(pdp->name, pkglist->name) == 0) {
+			if (pkg_match(pdp->depend, pkglist->full)) {
 				is_keep_dep = 1;
 				break;
 			}
