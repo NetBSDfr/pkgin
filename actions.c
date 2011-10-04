@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.28 2011/10/02 15:23:32 imilh Exp $ */
+/* $Id: actions.c,v 1.29 2011/10/04 15:28:21 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -157,11 +157,17 @@ analyse_pkglog(long int filepos)
 	(void)fseek(err_ro, filepos, SEEK_SET);
 
 	while (fgets(err_line, BUFSIZ, err_ro) != NULL) {
+		/* Warning: [...] was built for a platform */
 		if (strstr(err_line, "Warning") != NULL)
 			warn_count++;
+		/* A different version [...] is already installed */
 		if (strstr(err_line, "already installed") != NULL)
 			err_count--;
+		/* 1 package addition failed */
 		if (strstr(err_line, "addition failed") != NULL)
+			err_count++;
+		/* Can't install dependency */
+		if (strstr(err_line, "an\'t install") != NULL)
 			err_count++;
 	}
 
