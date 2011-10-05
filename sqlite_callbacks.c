@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.5 2011/09/02 09:04:39 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.6 2011/10/05 21:32:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -108,8 +108,8 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 int
 pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 {
-	Pkglist		*deptree, *pdp;
-	Plisthead	*pdphead = (Plisthead *)param;
+	Pkglist		*deptree, *pdp, *pkg_map;
+	Plisthead	*pdphead = (Plisthead *)param, *plisthead;
 
 	if (argv == NULL)
 		return PDB_ERR;
@@ -124,7 +124,20 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 
 	deptree = malloc_pkglist(DEPTREE);
 	XSTRDUP(deptree->depend, DEPS_FULLPKG);
-	XSTRDUP(deptree->name, DEPS_PKGNAME);
+
+	/* check wether we're getting local or remote dependencies */
+	if (strncmp(colname[0], "LOCAL_", 6) == 0)
+		plisthead = &l_plisthead;
+	else
+		plisthead = &r_plisthead;
+
+	/* map corresponding pkgname */
+	if ((pkg_map = map_pkg_to_dep(plisthead, deptree->depend)) != NULL)
+		XSTRDUP(deptree->name, pkg_map->name);
+	else
+		/* some dependencies just don't match anything */
+		XSTRDUP(deptree->name, DEPS_PKGNAME);
+
 	deptree->computed = 0;
 	deptree->level = 0;
 	/* used in LOCAL_REVERSE_DEPS / autoremove.c */
