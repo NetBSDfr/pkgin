@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.6 2011/09/11 10:51:37 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.7 2011/10/06 08:07:11 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -200,6 +200,7 @@ cleanup_version(char *pkgname)
  * foo-{bar,baz}
  * foo-1.0{,nb[0-9]*} - 260
  * foo-[0-9]* - 3214
+ * foo-[a-z]*-[0-9]* - NOT HANDLED (see pdb_rec_depends())
  * foo-1.0 - 20
  */
 char *
