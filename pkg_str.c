@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.7 2011/10/06 08:07:11 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.8 2011/10/06 15:13:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -186,6 +186,15 @@ cleanup_version(char *pkgname)
 		*exten = '\0';
 }
 
+uint8_t
+non_trivial_glob(char *depend)
+{
+	if (charcount(depend, '[') > 1)
+		return 1;
+
+	return 0;
+}
+
 /*
  * AFAIK, here are the dewey/glob we can find as dependencies
  *
@@ -210,6 +219,12 @@ get_pkgname_from_depend(char *depend)
 
 	if (depend == NULL || *depend == '\0')
 		return NULL;
+
+	/* non-trivial cases handled by pdb_rec_depends() with map_pkg_to_dep() */
+	if (non_trivial_glob(depend)) {
+		XSTRDUP(pkgname, UNRESOLVED_DEP);
+		return pkgname;
+	}
 
 	/* 1. worse case, {foo>=1.0,bar-[0-9]*} */
 	if (*depend == '{') {

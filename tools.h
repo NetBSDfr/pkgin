@@ -1,4 +1,4 @@
-/* $Id: tools.h,v 1.2 2011/09/10 15:03:27 imilh Exp $ */
+/* $Id: tools.h,v 1.3 2011/10/06 15:13:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -198,6 +198,7 @@ typedef uint8_t T_Bool;
 		 (var) = (tvar))
 #endif
 
+extern int charcount(char *, char);
 extern int trimcr(char *);
 extern char **splitstr(char *, const char *);
 extern void free_list(char **);

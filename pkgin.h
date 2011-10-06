@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.22 2011/10/02 14:54:12 imilh Exp $ */
+/* $Id: pkgin.h,v 1.23 2011/10/06 15:13:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -118,6 +118,8 @@
 #define DEFAULT_YES 1
 #define ANSW_NO 0
 #define ANSW_YES 1
+
+#define UNRESOLVED_DEP "unresolved"
 
 #define TRACE(fmt...) if (tracefp != NULL) fprintf(tracefp, fmt)
 
@@ -249,6 +251,7 @@ char		*read_repos(void);
 /* pkg_str.c */
 char	   	*unique_pkg(const char *, const char *);
 Pkglist		*map_pkg_to_dep(Plisthead *, char *);
+uint8_t		non_trivial_glob(char *);
 char		*get_pkgname_from_depend(char *);
 int			exact_pkgfmt(const char *);
 char		*find_exact_pkg(Plisthead *, const char *);

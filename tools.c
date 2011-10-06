@@ -1,4 +1,4 @@
-/* $Id: tools.c,v 1.2 2011/09/10 15:02:41 imilh Exp $ */
+/* $Id: tools.c,v 1.3 2011/10/06 15:13:49 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -31,6 +31,22 @@
  */
 
 #include "tools.h"
+
+int
+charcount(char *str, char c)
+{
+	char	*p;
+	int		count = 0;
+
+	if (str == NULL)
+		return 0;
+
+	for (p = str; *p != '\0'; p++)
+		if (*p == c)
+			count++;
+
+	return count;
+}
 
 __inline int
 trimcr(char *str)
