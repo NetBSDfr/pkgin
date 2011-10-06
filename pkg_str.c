@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.9 2011/10/06 15:28:06 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.10 2011/10/06 16:11:10 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -209,7 +209,7 @@ non_trivial_glob(char *depend)
  * foo-{bar,baz}
  * foo-1.0{,nb[0-9]*} - 260
  * foo-[0-9]* - 3214
- * foo-[a-z]*-[0-9]* - NOT HANDLED (see pdb_rec_depends())
+ * foo-[a-z]*-[0-9]* - NOT HANDLED here, see pdb_rec_depends()
  * foo-1.0 - 20
  */
 char *
