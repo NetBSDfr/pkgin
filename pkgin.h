@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.23 2011/10/06 15:13:49 imilh Exp $ */
+/* $Id: pkgin.h,v 1.24 2011/10/06 15:29:51 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -118,8 +118,6 @@
 #define DEFAULT_YES 1
 #define ANSW_NO 0
 #define ANSW_YES 1
-
-#define UNRESOLVED_DEP "unresolved"
 
 #define TRACE(fmt...) if (tracefp != NULL) fprintf(tracefp, fmt)
 
