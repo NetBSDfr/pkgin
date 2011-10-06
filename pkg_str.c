@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.8 2011/10/06 15:13:49 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.9 2011/10/06 15:28:06 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -219,12 +219,6 @@ get_pkgname_from_depend(char *depend)
 
 	if (depend == NULL || *depend == '\0')
 		return NULL;
-
-	/* non-trivial cases handled by pdb_rec_depends() with map_pkg_to_dep() */
-	if (non_trivial_glob(depend)) {
-		XSTRDUP(pkgname, UNRESOLVED_DEP);
-		return pkgname;
-	}
 
 	/* 1. worse case, {foo>=1.0,bar-[0-9]*} */
 	if (*depend == '{') {

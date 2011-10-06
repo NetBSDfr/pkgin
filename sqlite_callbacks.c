@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.7 2011/10/06 15:13:49 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.8 2011/10/06 15:28:06 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -126,7 +126,7 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 	XSTRDUP(deptree->depend, DEPS_FULLPKG);
 
 	/* unresolved pkgname because of complex dependency glob */
-	if (strcmp(DEPS_PKGNAME, UNRESOLVED_DEP) == 0) {
+	if (non_trivial_glob(DEPS_FULLPKG)) {
 		/* check wether we're getting local or remote dependencies */
 		if (strncmp(colname[0], "LOCAL_", 6) == 0)
 			plisthead = &l_plisthead;
