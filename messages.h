@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.21 2011/10/04 15:20:48 imilh Exp $ */
+/* $Id: messages.h,v 1.22 2011/10/10 13:06:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -69,7 +69,7 @@
 #define MSG_CONFLICT_PKG \
 	"%s (to be installed) conflicts with installed package %s.\n"
 #define MSG_NOTHING_TO_DO "nothing to do.\n"
-#define MSG_REQT_MISSING "required files are missing in this system.\n"
+#define MSG_REQT_MISSING "the following packages have unmet requirements: %s\n\n"
 #define MSG_NO_CACHE_SPACE "%s has not enough space for download\n"
 #define MSG_NO_INSTALL_SPACE "%s has not enough space for installation\n"
 #define MSG_PKGS_TO_UPGRADE "%d packages to be upgraded: %s\n"

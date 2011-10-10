@@ -1,4 +1,4 @@
-/* $Id: pkg_check.c,v 1.5 2011/09/10 19:30:34 imilh Exp $ */
+/* $Id: pkg_check.c,v 1.6 2011/10/10 13:06:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -66,6 +66,9 @@ pkg_met_reqs(Plisthead *impacthead)
 				if (stat(requires->full, &sb) < 0) {
 					printf(MSG_REQT_NOT_PRESENT,
 						requires->full, pimpact->full);
+
+					/* mark as DONOTHING, requirement missing */
+					pimpact->action = UNMET_REQ;
 
 					met_reqs = 0;
 				}

@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.24 2011/10/06 15:29:51 imilh Exp $ */
+/* $Id: pkgin.h,v 1.25 2011/10/10 13:06:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -73,6 +73,7 @@
 #define TOINSTALL 0
 #define TOUPGRADE 1
 #define TOREMOVE 2
+#define UNMET_REQ 3
 
 #define KEEP 1
 #define UNKEEP 0

@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.29 2011/10/04 15:28:21 imilh Exp $ */
+/* $Id: actions.c,v 1.30 2011/10/10 13:06:37 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -364,6 +364,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	Plisthead	*removehead = NULL, *installhead = NULL;
 	char		**pkgargs;
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
+	char		*unmet_reqs = NULL;
 	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF];
 	struct stat	st;
 
@@ -381,10 +382,10 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	}
 
 	/* check for required files */
-	if (!pkg_met_reqs(impacthead)) {
-		printf(MSG_REQT_MISSING);
-		goto installend;
-	}
+	if (!pkg_met_reqs(impacthead))
+		SLIST_FOREACH(pimpact, impacthead, next)
+			if (pimpact->action == UNMET_REQ)
+				unmet_reqs = action_list(unmet_reqs, pimpact->full);
 
 	/* browse impact tree */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -479,6 +480,9 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 
 		printf(MSG_PKGS_TO_INSTALL, installnum, toinstall, h_fsize, h_psize);
 		printf("\n");
+
+		if (unmet_reqs != NULL)/* there were unmet requirements */
+			printf(MSG_REQT_MISSING, unmet_reqs);
 
 		if (check_yesno(DEFAULT_YES)) {
 			/* before erasing anything, download packages */

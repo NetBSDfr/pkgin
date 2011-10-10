@@ -1,3 +1,7 @@
+20111010
+	Keep going if unmet requirements are encountered and warn about
+	it before proceeding
+
 20111002
 	Always move pkg_install on top of the "to-upgrade" list
 
