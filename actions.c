@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.30 2011/10/10 13:06:37 imilh Exp $ */
+/* $Id: actions.c,v 1.31 2011/10/13 21:48:23 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -459,8 +459,14 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 #endif
 				}
 			}
-			printf(MSG_PKGS_TO_REMOVE, removenum, toremove);
-			printf("\n");
+			/* 
+			 * some packages may have been marked as TOREMOVE, then 
+			 * discovered as TOUPGRADE
+			 */
+			if (toremove != NULL) {
+				printf(MSG_PKGS_TO_REMOVE, removenum, toremove);
+				printf("\n");
+			}
 		}
 
 	} else
