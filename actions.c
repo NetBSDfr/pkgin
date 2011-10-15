@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.32 2011/10/15 21:02:41 imilh Exp $ */
+/* $Id: actions.c,v 1.33 2011/10/15 21:05:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -120,6 +120,7 @@ pkg_download(Plisthead *installhead)
 		if (strncmp(pkg_url, SCHEME_FILE, strlen(SCHEME_FILE)) == 0) {
 			if (symlink(pkg_url, pkg_fs) < 0)
 				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
+			printf(MSG_SYMLINKING_PKG, pkg_url);
 			continue;
 		}
 
