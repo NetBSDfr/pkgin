@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.31 2011/10/13 21:48:23 imilh Exp $ */
+/* $Id: actions.c,v 1.32 2011/10/15 21:02:41 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -86,12 +86,12 @@ pkg_download(Plisthead *installhead)
 	Pkglist  	*pinstall;
 	struct stat	st;
 	Dlfile		*dlpkg;
-	char		pkg[BUFSIZ], query[BUFSIZ];
+	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
 
 	printf(MSG_DOWNLOAD_PKGS);
 
 	SLIST_FOREACH(pinstall, installhead, next) {
-		snprintf(pkg, BUFSIZ,
+		snprintf(pkg_fs, BUFSIZ,
 		    "%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
 		/* pkg_info -X -a produces pkg_summary with empty FILE_SIZE,
@@ -102,25 +102,32 @@ pkg_download(Plisthead *installhead)
 			printf(MSG_EMPTY_FILE_SIZE, pinstall->depend);
 
 		/* already fully downloaded */
-		if (stat(pkg, &st) == 0 && 
+		if (stat(pkg_fs, &st) == 0 && 
 			st.st_size == pinstall->file_size &&
 			pinstall->file_size != 0 )
 		    	continue;
 
-		umask(DEF_UMASK);
-		if ((fp = fopen(pkg, "w")) == NULL)
-			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg);
-
 		snprintf(query, BUFSIZ, PKG_URL, pinstall->depend);
 		/* retrieve repository for package  */
-		if (pkgindb_doquery(query, pdb_get_value, pkg) != 0)
+		if (pkgindb_doquery(query, pdb_get_value, pkg_url) != 0)
 			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pinstall->depend);
 
-		strlcat(pkg, "/", sizeof(pkg));
-		strlcat(pkg, pinstall->depend, sizeof(pkg));
-		strlcat(pkg, PKG_EXT, sizeof(pkg));
+		strlcat(pkg_url, "/", sizeof(pkg_url));
+		strlcat(pkg_url, pinstall->depend, sizeof(pkg_url));
+		strlcat(pkg_url, PKG_EXT, sizeof(pkg_url));
 
-		if ((dlpkg = download_file(pkg, NULL)) == NULL) {
+		/* if pkg's repo URL is file://, just symlink */
+		if (strncmp(pkg_url, SCHEME_FILE, strlen(SCHEME_FILE)) == 0) {
+			if (symlink(pkg_url, pkg_fs) < 0)
+				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
+			continue;
+		}
+
+		umask(DEF_UMASK);
+		if ((fp = fopen(pkg_fs, "w")) == NULL)
+			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
+
+		if ((dlpkg = download_file(pkg_url, NULL)) == NULL) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
 			if (!check_yesno(DEFAULT_NO))
 				errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL,

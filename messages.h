@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.22 2011/10/10 13:06:37 imilh Exp $ */
+/* $Id: messages.h,v 1.23 2011/10/15 21:02:41 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -59,6 +59,7 @@
 #define MSG_REMOVING "removing %s...\n"
 #define MSG_DOWNLOAD_PKGS "downloading packages...\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"
+#define MSG_SYMLINK_FAILED "failed to create symlink %s"
 #define MSG_ERR_OPEN "error opening %s"
 #define MSG_INSTALL_PKG "installing packages...\n"
 #define MSG_INSTALLING "installing %s...\n"
