@@ -1,3 +1,7 @@
+20111016
+	Don't download packages when repository is a file:// scheme
+	Reduce verbosity when marking non-autoremovable packages
+
 20111010
 	Keep going if unmet requirements are encountered and warn about
 	it before proceeding
