@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.12 2011/10/22 12:48:40 imilh Exp $ */
+/* $Id: impact.c,v 1.13 2011/10/22 13:26:51 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -87,7 +87,7 @@ break_depends(Plisthead *impacthead, Pkglist *pimpact)
 	trunc_str(pkgname, '-', STR_BACKWARD);
 
 	/* fetch old package reverse dependencies */
-	full_dep_tree(pkgname, REMOTE_REVERSE_DEPS, rdphead);
+	full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, rdphead);
 
 	XFREE(pkgname);
 
