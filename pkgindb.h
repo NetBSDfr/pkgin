@@ -1,4 +1,4 @@
-/* $Id: pkgindb.h,v 1.8 2011/09/11 08:39:16 imilh Exp $ */
+/* $Id: pkgindb.h,v 1.9 2011/10/22 12:48:40 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -44,6 +44,7 @@ extern const char DIRECT_DEPS[];
 extern const char LOCAL_DIRECT_DEPS[];
 extern const char EXACT_DIRECT_DEPS[];
 extern const char LOCAL_REVERSE_DEPS[];
+extern const char REMOTE_REVERSE_DEPS[];
 extern const char LOCAL_CONFLICTS[];
 extern const char GET_CONFLICT_QUERY[];
 extern const char GET_REQUIRES_QUERY[];

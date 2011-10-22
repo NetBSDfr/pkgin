@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.17 2011/10/01 18:06:44 imilh Exp $ */
+/* $Id: main.c,v 1.18 2011/10/22 12:48:40 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -50,7 +50,7 @@ main(int argc, char *argv[])
 {
 	uint8_t		updb_all;
 	uint8_t		do_inst = DO_INST; /* by default, do install packages */
-	int 		ch;
+	int 		ch, rc = EXIT_SUCCESS;
 	struct stat	sb;
 	const char	*chrootpath = NULL;
 
@@ -174,16 +174,16 @@ main(int argc, char *argv[])
 		break;
 	case PKG_SHDDP_CMD: /* show direct depends */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_direct_depends(argv[1]);
+		rc = show_direct_depends(argv[1]);
 		break;
 	case PKG_SHFDP_CMD: /* show full dependency tree */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_full_dep_tree(argv[1],
+		rc = show_full_dep_tree(argv[1],
 			DIRECT_DEPS, MSG_FULLDEPTREE);
 		break;
 	case PKG_SHRDP_CMD: /* show full reverse dependency tree */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_full_dep_tree(argv[1],
+		rc = show_full_dep_tree(argv[1],
 			LOCAL_REVERSE_DEPS,
 			MSG_REVDEPTREE);
 		break;
@@ -261,7 +261,7 @@ main(int argc, char *argv[])
 	XFREE(env_repos);
 	XFREE(pkg_repos);
 
-	return EXIT_SUCCESS;
+	return rc;
 }
 
 static void

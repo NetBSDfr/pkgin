@@ -1,4 +1,4 @@
-/* $Id: depends.c,v 1.9 2011/09/30 14:14:36 imilh Exp $ */
+/* $Id: depends.c,v 1.10 2011/10/22 12:48:40 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -110,7 +110,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 	TRACE("[<]-leaving depends\n");
 }
 
-void
+int
 show_direct_depends(const char *pkgarg)
 {
 	char		*pkgname, query[BUFSIZ];
@@ -119,12 +119,12 @@ show_direct_depends(const char *pkgarg)
 
 	if (SLIST_EMPTY(&r_plisthead)) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
-		return;
+		return EXIT_FAILURE;
 	}
 
 	if ((pkgname = unique_pkg(pkgarg, REMOTE_PKG)) == NULL) {
 		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgarg);
-		return;
+		return EXIT_FAILURE;
 	}
 
 	deptreehead = init_head();
@@ -144,9 +144,11 @@ show_direct_depends(const char *pkgarg)
 		free_pkglist(&deptreehead, DEPTREE);
 	}
 	XFREE(pkgname);
+
+	return EXIT_SUCCESS;
 }
 
-void
+int
 show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 {
 	Pkglist		*pdp, *mapplist;
@@ -163,7 +165,7 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 
 	if (pkgname == NULL) {
 		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgarg);
-		return;
+		return EXIT_FAILURE;
 	}
 
 	if (plisthead == NULL)
@@ -184,4 +186,6 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 
 	XFREE(pkgname);
 	free_pkglist(&deptreehead, DEPTREE);
+
+	return EXIT_SUCCESS;
 }
