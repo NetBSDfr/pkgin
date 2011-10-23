@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.37 2011/10/23 12:22:09 imilh Exp $ */
+/* $Id: actions.c,v 1.38 2011/10/23 13:47:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -518,7 +518,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 
 				/* pure install, not called by pkgin_upgrade */
 				if (upgrade_type == UPGRADE_NONE)
-					update_db(LOCAL_SUMMARY, pkgargs);
+					(void)update_db(LOCAL_SUMMARY, pkgargs);
 				
 				rc = EXIT_SUCCESS;
 			}
@@ -612,7 +612,7 @@ pkgin_remove(char **pkgargs)
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(removehead);
 
-			update_db(LOCAL_SUMMARY, NULL);
+			(void)update_db(LOCAL_SUMMARY, NULL);
 
 			rc = EXIT_SUCCESS;
 		} else
@@ -728,7 +728,7 @@ pkgin_upgrade(int uptype)
 			pkgargs = record_upgrades(keeplisthead);
 		}
 
-		update_db(LOCAL_SUMMARY, pkgargs);
+		(void)update_db(LOCAL_SUMMARY, pkgargs);
 	}
 
 	free_list(pkgargs);

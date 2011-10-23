@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.19 2011/10/23 13:11:32 imilh Exp $ */
+/* $Id: summary.c,v 1.20 2011/10/23 13:47:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -563,7 +563,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
-void
+int
 update_db(int which, char **pkgkeep)
 {
 	int			i;
@@ -572,7 +572,7 @@ update_db(int which, char **pkgkeep)
 	char		**summary = NULL, **prepos, buf[BUFSIZ];
 
 	if (access(PKGIN_DB, W_OK) < 0 || access(PKG_DBDIR, W_OK) < 0)
-		return;
+		return EXIT_FAILURE;
 
 	for (i = 0; i < 2; i++) {
 
@@ -683,6 +683,7 @@ update_db(int which, char **pkgkeep)
 		freecols();
 	}
 
+	return EXIT_SUCCESS;
 }
 
 void

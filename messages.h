@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.24 2011/10/15 21:05:27 imilh Exp $ */
+/* $Id: messages.h,v 1.25 2011/10/23 13:47:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -52,6 +52,7 @@
 	PKGIN_CONF"/"REPOS_FILE" has no repositories or does not exist.\nNo PKG_REPOS variable to fallback to."
 #define MSG_CANT_OPEN_WRITE "Couldn't open %s for writing.\n"
 #define MSG_PKG_INSTALL_NOT_PRESENT "pkg_install package is not installed."
+#define MSG_DONT_HAVE_RIGHTS "You don't have enough rights for this operation."
 
 /* actions.c */
 #define MSG_PROCEED_YES "proceed ? [Y/n] "

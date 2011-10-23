@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.17 2011/10/15 10:22:47 imilh Exp $ */
+/* $Id: autoremove.c,v 1.18 2011/10/23 13:47:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -119,7 +119,7 @@ pkgin_autoremove()
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(orderedhead);
 
-			update_db(LOCAL_SUMMARY, NULL);
+			(void)update_db(LOCAL_SUMMARY, NULL);
 		}
 	}
 

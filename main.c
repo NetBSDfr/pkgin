@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.19 2011/10/23 13:11:32 imilh Exp $ */
+/* $Id: main.c,v 1.20 2011/10/23 13:47:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -143,7 +143,7 @@ main(int argc, char *argv[])
 	updb_all = upgrade_database();
 
 	/* update local db if pkgdb mtime has changed */
-	update_db(LOCAL_SUMMARY, NULL);
+	(void)update_db(LOCAL_SUMMARY, NULL);
 
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
@@ -153,7 +153,7 @@ main(int argc, char *argv[])
 	 * or if empty database
 	 */
 	if (updb_all)
-		update_db(REMOTE_SUMMARY, NULL);
+		(void)update_db(REMOTE_SUMMARY, NULL);
 
 	/* find command index */
 	ch = find_cmd(argv[0]);
@@ -170,7 +170,8 @@ main(int argc, char *argv[])
 
 	switch (ch) {
 	case PKG_UPDT_CMD: /* update packages db */
-		update_db(REMOTE_SUMMARY, NULL);
+		if (update_db(REMOTE_SUMMARY, NULL) == EXIT_FAILURE)
+			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 		break;
 	case PKG_SHDDP_CMD: /* show direct depends */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);

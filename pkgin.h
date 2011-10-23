@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.27 2011/10/23 12:22:09 imilh Exp $ */
+/* $Id: pkgin.h,v 1.28 2011/10/23 13:47:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -205,7 +205,7 @@ extern FILE			*tracefp;
 /* download.c*/
 Dlfile		*download_file(char *, time_t *);
 /* summary.c */
-void		update_db(int, char **);
+int			update_db(int, char **);
 void		split_repos(void);
 /* sqlite_callbacks.c */
 int			pdb_rec_list(void *, int, char **, char **);
