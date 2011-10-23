@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.6 2011/09/06 19:42:16 imilh Exp $ */
+/* $Id: cmd.h,v 1.7 2011/10/23 13:22:41 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -36,13 +36,13 @@ static struct command {
 	const char	*descr;
 	const int	cmdtype;
 } cmd[] = {
-	{ "list", "ls", "Lists installed packages.",
+	{ "list", "ls", "List installed packages.",
 	  PKG_LLIST_CMD },
-	{ "avail", "av", "Lists available packages.",
+	{ "avail", "av", "List available packages.",
 	  PKG_RLIST_CMD },
-	{ "install", "in", "Performs packages installation or upgrade.",
+	{ "install", "in", "Perform packages installation or upgrade.",
 	  PKG_INST_CMD },
-	{ "update", "up" , "Creates and populates the initial database.",
+	{ "update", "up" , "Create and populate the initial database.",
 	  PKG_UPDT_CMD },
 	{ "remove", "rm", "Remove packages and depending packages.",
 	  PKG_REMV_CMD },
@@ -56,9 +56,9 @@ static struct command {
 	  PKG_SHFDP_CMD },
 	{ "show-rev-deps", "srd", "Display reverse dependencies recursively.",
 	  PKG_SHRDP_CMD },
-	{ "keep", "ke", "Marks package as \"non auto-removable\".",
+	{ "keep", "ke", "Mark package as \"non auto-removable\".",
 	  PKG_KEEP_CMD },
-	{ "unkeep", "uk", "Marks package as \"auto-removable\".",
+	{ "unkeep", "uk", "Mark package as \"auto-removable\".",
 	  PKG_UNKEEP_CMD },
 	{ "show-keep", "sk", "Display \"non auto-removable\" packages.",
 	  PKG_SHKP_CMD },
