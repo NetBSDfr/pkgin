@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.18 2011/10/22 12:48:40 imilh Exp $ */
+/* $Id: main.c,v 1.19 2011/10/23 13:11:32 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -56,7 +56,7 @@ main(int argc, char *argv[])
 
 	setprogname(argv[0]);
 
-	if (argc < 2)
+	if (argc < 2 || *argv[1] == 'h')
 		usage();
 
 	while ((ch = getopt(argc, argv, "dhyfFPvVl:nc:t:")) != -1) {

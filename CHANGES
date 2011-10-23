@@ -2,6 +2,7 @@
 	Various minor fixes from NetBSDfr hackathon
 	Moved break_depends() at the end of impact.c to avoid inconsistencies
 	Check for real filesystem size to be occuppied by upgrade
+	Check for user permissions before update_db
 
 20111016
 	Don't download packages when repository is a file:// scheme

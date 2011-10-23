@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.18 2011/09/18 18:18:04 imilh Exp $ */
+/* $Id: summary.c,v 1.19 2011/10/23 13:11:32 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -570,6 +570,9 @@ update_db(int which, char **pkgkeep)
 	Plisthead	*keeplisthead, *nokeeplisthead;
 	Pkglist		*pkglist;
 	char		**summary = NULL, **prepos, buf[BUFSIZ];
+
+	if (access(PKGIN_DB, W_OK) < 0 || access(PKG_DBDIR, W_OK) < 0)
+		return;
 
 	for (i = 0; i < 2; i++) {
 
