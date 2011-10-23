@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.18 2011/10/22 13:24:22 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.19 2011/10/23 11:46:58 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -83,8 +83,8 @@ const char LOCAL_REVERSE_DEPS[] =
 
 const char REMOTE_REVERSE_DEPS[] =
     "SELECT REMOTE_PKG.FULLPKGNAME, REMOTE_PKG.PKGNAME "
-    "FROM REMOTE_PKG, REMOTE_DEPS "
-	"WHERE REMOTE_DEPS.REMOTE_DEPS_PKGNAME  = '%s' "
+    "FROM REMOTE_PKG, REMOTE_DEPS, LOCAL_DEPS "
+	"WHERE LOCAL_DEPS.LOCAL_DEPS_PKGNAME  = '%s' "
     "AND REMOTE_PKG.PKG_ID = REMOTE_DEPS.PKG_ID;";
 
 const char LOCAL_CONFLICTS[] =

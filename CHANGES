@@ -1,3 +1,7 @@
+20111023
+	Various minor fixes from NetBSDfr hackathon
+	Moved break_depends() at the end of impact.c to avoid inconsistencies
+
 20111016
 	Don't download packages when repository is a file:// scheme
 	Reduce verbosity when marking non-autoremovable packages

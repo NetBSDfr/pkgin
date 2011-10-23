@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.13 2011/10/22 13:26:51 imilh Exp $ */
+/* $Id: impact.c,v 1.14 2011/10/23 11:46:58 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -73,92 +73,101 @@ dep_present(Plisthead *impacthead, char *depname)
 }
 
 static void
-break_depends(Plisthead *impacthead, Pkglist *pimpact)
+break_depends(Plisthead *impacthead)
 {
-	Pkglist	   	*rmimpact;
+	Pkglist	   	*rmimpact, *pimpact;
 	Plisthead	*rdphead, *fdphead;
 	Pkglist	   	*rdp, *fdp;
 	char		*pkgname, *rpkg;
 	int			dep_break, exists;
 
-	rdphead = init_head();
+	SLIST_FOREACH(pimpact, impacthead, next) {
 
-	XSTRDUP(pkgname, pimpact->old);
-	trunc_str(pkgname, '-', STR_BACKWARD);
-
-	/* fetch old package reverse dependencies */
-	full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, rdphead);
-
-	XFREE(pkgname);
-
-	/* browse reverse dependencies */
-	SLIST_FOREACH(rdp, rdphead, next) {
-
-		exists = 0;
-		/* check if rdp was already on impact list */
-		SLIST_FOREACH(rmimpact, impacthead, next)
-			if (strcmp(rmimpact->depend, rdp->depend) == 0) {
-				exists = 1;
-				break;
-			}
-		if (exists)
+		if (pimpact->old == NULL) /* DONOTHING or TOINSTALL  */
 			continue;
 
-		fdphead = init_head();
+		rdphead = init_head();
 
-		/* reverse dependency is a full package name, use it and strip it */
-		XSTRDUP(rpkg, rdp->depend);
-		trunc_str(rpkg, '-', STR_BACKWARD);
+		XSTRDUP(pkgname, pimpact->old);
+		trunc_str(pkgname, '-', STR_BACKWARD);
 
-		/* fetch dependencies for rdp */
-		full_dep_tree(rpkg, DIRECT_DEPS, fdphead);
+		/* fetch old package reverse dependencies */
+		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, rdphead);
 
-		/* initialize to broken dependency */
-		dep_break = 1;
+		XFREE(pkgname);
 
-		/* empty full dep tree, this can't happen in normal situation.
-		 * If it does, that means that the reverse dependency we're analyzing
-		 * has no direct dependency.
-		 * Such a situation could occur if the reverse dependency is not on
-		 * the repository anymore, leading to no information regarding this
-		 * package.
-		 * So we will check if local package dependencies are satisfied by
-		 * our newly upgraded packages.
-		 */
-		if (SLIST_EMPTY(fdphead)) {
-			free_pkglist(&fdphead, DEPTREE);
+		/* browse reverse dependencies */
+		SLIST_FOREACH(rdp, rdphead, next) {
+
+			exists = 0;
+			/* check if rdp was already on impact list */
+			SLIST_FOREACH(rmimpact, impacthead, next)
+				if (strcmp(rmimpact->depend, rdp->depend) == 0) {
+					exists = 1;
+					break;
+				}
+			if (exists)
+				continue;
+
 			fdphead = init_head();
-			full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, fdphead);
-		}
-		XFREE(rpkg);
 
-		/*
-		 * browse dependencies for rdp and see if
-		 * new package to be installed matches
-		 */
-		SLIST_FOREACH(fdp, fdphead, next) {
-			if (pkg_match(fdp->depend, pimpact->full)) {
-				dep_break = 0;
-				break;
+			/*
+			 * reverse dependency is a full package name,
+			 * use it and strip it
+			 */
+			XSTRDUP(rpkg, rdp->depend);
+			trunc_str(rpkg, '-', STR_BACKWARD);
+
+			/* fetch dependencies for rdp */
+			full_dep_tree(rpkg, DIRECT_DEPS, fdphead);
+
+			/* initialize to broken dependency */
+			dep_break = 1;
+
+			/* empty full dep tree, this can't happen in normal situation.
+			 * If it does, that means that the reverse dependency we're
+			 * analyzing has no direct dependency.
+			 * Such a situation could occur if the reverse dependency is not on
+			 * the repository anymore, leading to no information regarding this
+			 * package.
+			 * So we will check if local package dependencies are satisfied by
+			 * our newly upgraded packages.
+			 */
+			if (SLIST_EMPTY(fdphead)) {
+				free_pkglist(&fdphead, DEPTREE);
+				fdphead = init_head();
+				full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, fdphead);
 			}
+			XFREE(rpkg);
+
+			/*
+			 * browse dependencies for rdp and see if
+			 * new package to be installed matches
+			 */
+			SLIST_FOREACH(fdp, fdphead, next) {
+				if (pkg_match(fdp->depend, pimpact->full)) {
+					dep_break = 0;
+					break;
+				}
+			}
+
+			free_pkglist(&fdphead, DEPTREE);
+
+			if (!dep_break)
+				continue;
+
+			/* dependency break, insert rdp in remove-list */
+			rmimpact = malloc_pkglist(IMPACT);
+			XSTRDUP(rmimpact->depend, rdp->depend);
+			XSTRDUP(rmimpact->full, rdp->depend);
+			XSTRDUP(rmimpact->old, rdp->depend);
+			rmimpact->action = TOREMOVE;
+			rmimpact->level = 0;
+
+			SLIST_INSERT_HEAD(impacthead, rmimpact, next);
 		}
-
-		free_pkglist(&fdphead, DEPTREE);
-
-		if (!dep_break)
-			continue;
-
-		/* dependency break, insert rdp in remove-list */
-		rmimpact = malloc_pkglist(IMPACT);
-		XSTRDUP(rmimpact->depend, rdp->depend);
-		XSTRDUP(rmimpact->full, rdp->depend);
-		XSTRDUP(rmimpact->old, rdp->depend);
-		rmimpact->action = TOREMOVE;
-		rmimpact->level = 0;
-
-		SLIST_INSERT_HEAD(impacthead, rmimpact, next);
+		free_pkglist(&rdphead, DEPTREE);
 	}
-	free_pkglist(&rdphead, DEPTREE);
 }
 
 /**
@@ -241,8 +250,6 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				/* record installed package size */
 				pimpact->size_pkg = mapplist->size_pkg;
 
-				/* does this upgrade break depedencies ? (php-4 -> php-5) */
-				break_depends(impacthead, pimpact);
 			} /* !pkg_match */
 
 			TRACE("  > %s matched %s\n", plist->full, pdp->depend);
@@ -407,6 +414,9 @@ impactend:
 	TRACE("[<]-leaving impact\n");
 
 	free_pkglist(&pdphead, DEPTREE);
+
+	/* check for depedencies breakage (php-4 -> php-5) */
+	break_depends(impacthead);
 
 	/* remove DONOTHING entries */
 	SLIST_FOREACH_MUTABLE(pimpact, impacthead, next, tmpimpact) {
