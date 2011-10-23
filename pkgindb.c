@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.8 2011/09/11 10:51:37 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.9 2011/10/23 13:57:56 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -46,6 +46,15 @@ static const char *pragmaopts[] = {
 	"journal_mode = MEMORY",
 	NULL
 };
+
+uint8_t
+have_enough_rights()
+{
+	if (access(PKGIN_DB, W_OK) < 0 || access(PKG_DBDIR, W_OK) < 0)
+		return 0;
+
+	return 1;
+}
 
 const char *
 pdb_version(void)

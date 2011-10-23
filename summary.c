@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.20 2011/10/23 13:47:03 imilh Exp $ */
+/* $Id: summary.c,v 1.21 2011/10/23 13:57:56 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -571,7 +571,7 @@ update_db(int which, char **pkgkeep)
 	Pkglist		*pkglist;
 	char		**summary = NULL, **prepos, buf[BUFSIZ];
 
-	if (access(PKGIN_DB, W_OK) < 0 || access(PKG_DBDIR, W_OK) < 0)
+	if (!have_enough_rights())
 		return EXIT_FAILURE;
 
 	for (i = 0; i < 2; i++) {

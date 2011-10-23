@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.18 2011/10/23 13:47:03 imilh Exp $ */
+/* $Id: autoremove.c,v 1.19 2011/10/23 13:57:56 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -154,6 +154,9 @@ pkg_keep(int type, char **pkgargs)
 {
 	Pkglist	*pkglist = NULL;
 	char   	**pkeep, *pkgname, query[BUFSIZ];
+
+	if (!have_enough_rights())
+		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
 	if (SLIST_EMPTY(&l_plisthead)) /* no packages recorded */
 		return;
