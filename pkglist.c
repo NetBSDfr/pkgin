@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.5 2011/09/07 17:56:14 imilh Exp $ */
+/* $Id: pkglist.c,v 1.6 2011/10/23 12:22:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -54,6 +54,7 @@ malloc_pkglist(uint8_t type)
 	pkglist->version = NULL;
 	pkglist->depend = NULL;
 	pkglist->size_pkg = 0;
+	pkglist->old_size_pkg = -1;
 	pkglist->file_size = 0;
 	pkglist->level = 0;
 

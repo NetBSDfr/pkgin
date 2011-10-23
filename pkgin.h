@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.26 2011/10/22 12:48:40 imilh Exp $ */
+/* $Id: pkgin.h,v 1.27 2011/10/23 12:22:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -154,6 +154,7 @@ typedef struct Pkglist {
 	uint8_t	type; /*!< list type (LIST, DEPTREE or IMPACT) */
 
 	int64_t	size_pkg; /*!< installed package size (list and impact) */
+	int64_t old_size_pkg; /*!< old installed package size */
 	int64_t	file_size; /*!< binary package size */
 	int		level; /*<! recursion level (deptree and impact) */
 

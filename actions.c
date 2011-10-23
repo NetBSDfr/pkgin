@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.36 2011/10/23 11:46:58 imilh Exp $ */
+/* $Id: actions.c,v 1.37 2011/10/23 12:22:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -411,6 +411,9 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 			/* don't update file_size if repo is file:// */
 			strncmp(pkgpath, SCHEME_FILE, strlen(SCHEME_FILE) != 0))
 				file_size += pimpact->file_size;
+
+		if (pimpact->old_size_pkg > 0)
+			pimpact->size_pkg -= pimpact->old_size_pkg;
 
 		size_pkg += pimpact->size_pkg;
 

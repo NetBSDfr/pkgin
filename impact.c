@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.14 2011/10/23 11:46:58 imilh Exp $ */
+/* $Id: impact.c,v 1.15 2011/10/23 12:22:09 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -249,6 +249,8 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				pimpact->file_size = mapplist->file_size;
 				/* record installed package size */
 				pimpact->size_pkg = mapplist->size_pkg;
+				/* record old package size */
+				pimpact->old_size_pkg = plist->size_pkg;
 
 			} /* !pkg_match */
 
