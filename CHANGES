@@ -5,6 +5,7 @@
 	Check for user permissions before update_db
 	update_db() returns a status so we can warn simple users
 	introduced have_enough_rights(), fixed pkg_keep() perms
+	Various return codes fixed to satisfy frontends
 
 20111016
 	Don't download packages when repository is a file:// scheme
