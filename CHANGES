@@ -1,3 +1,6 @@
+20111024	
+	pkgin 0.5.2
+
 20111023
 	Various minor fixes from NetBSDfr hackathon
 	Moved break_depends() at the end of impact.c to avoid inconsistencies
