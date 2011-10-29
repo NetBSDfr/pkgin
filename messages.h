@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.25 2011/10/23 13:47:03 imilh Exp $ */
+/* $Id: messages.h,v 1.26 2011/10/29 11:50:22 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -116,6 +116,7 @@ in order to remove packages from the autoremove list, flag those with the `keep'
 #define MSG_NO_ORPHAN_DEPS "no orphan dependencies found.\n"
 
 /* summary.c */
+#define MSG_READING_LOCAL_SUMMARY "reading local summary...\n"
 #define MSG_UPDATING_DB "updating database:   0%%"
 #define MSG_UPDATING_DB_PCT "\b\b\b\b%3d%%"
 #define MSG_CLEANING_DB_FROM_REPO "cleaning database from %s entries...\n"

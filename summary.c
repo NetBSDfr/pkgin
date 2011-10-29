@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.21 2011/10/23 13:57:56 imilh Exp $ */
+/* $Id: summary.c,v 1.22 2011/10/29 11:50:22 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -590,6 +590,7 @@ update_db(int which, char **pkgkeep)
 			/* delete local pkg table (faster than updating) */
 			pkgindb_doquery(DELETE_LOCAL, NULL, NULL);
 
+			printf(MSG_READING_LOCAL_SUMMARY);
 			/* generate summary locally */
 			summary = exec_list(PKGTOOLS "/pkg_info -Xa", NULL);
 
