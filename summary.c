@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.22 2011/10/29 11:50:22 imilh Exp $ */
+/* $Id: summary.c,v 1.23 2011/10/29 14:06:22 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -173,9 +173,14 @@ progress(char c)
  * check if the field is PKGNAME
  */
 static int
-chk_pkgname(char *field)
+chk_pkgname(char *field, char *last_field)
 {
-	if (strncmp(field, "PKGNAME=", 8) == 0 ||
+	if (strncmp(field, "PKGNAME=", 8) == 0)
+		return 1;
+	/* in some very rare cases, CONFLICTS appears *after* PKGNAME */
+	if (strncmp(last_field, "PKGNAME=", 8) != 0 &&
+		/* never seen many CONFLICTS after PKGNAME, but just in case... */
+		strncmp(last_field, "CONFLICTS=", 10) != 0 &&
 		strncmp(field, "CONFLICTS=", 10) == 0)
 		return 1;
 
@@ -463,7 +468,7 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 		psum++;
 
 		/* browse entries following PKGNAME and build the SQL query */
-		while (*psum != NULL && !chk_pkgname(*psum)) {
+		while (*psum != NULL && !chk_pkgname(*psum, *(psum - 1))) {
 			update_col(sum, pkgid, *psum);
 			psum++;
 		}
