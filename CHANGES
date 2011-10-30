@@ -1,3 +1,8 @@
+20111030
+	pkgin 0.5.2.2
+	Handled misordered PKGNAME/CONFLICTS
+	Cleaned up DELETE_REMOTE query (thanks to anhj)
+
 20111024	
 	pkgin 0.5.2
 
