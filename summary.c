@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.23 2011/10/29 14:06:22 imilh Exp $ */
+/* $Id: summary.c,v 1.24 2011/10/30 18:02:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -528,7 +528,8 @@ delete_remote_tbl(struct Summary sum, char *repo)
 		if (strstr(ptbl, "_PKG") != NULL)
 			continue;
 
-		snprintf(buf, BUFSIZ, DELETE_REMOTE, ptbl, ptbl, repo, ptbl);
+		snprintf(buf, BUFSIZ, DELETE_REMOTE,
+			ptbl, ptbl, ptbl, ptbl, ptbl, repo, ptbl);
 		pkgindb_doquery(buf, NULL, NULL);
 	}
 

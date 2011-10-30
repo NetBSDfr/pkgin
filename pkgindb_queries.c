@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.19 2011/10/23 11:46:58 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.20 2011/10/30 18:02:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -52,10 +52,10 @@ const char DELETE_LOCAL[] =
     "DELETE FROM LOCAL_PROVIDES;";
 
 const char DELETE_REMOTE[] =
-    "DELETE FROM %s WHERE EXISTS "
-    "(SELECT * FROM REMOTE_PKG,%s "
-    "WHERE REMOTE_PKG.REPOSITORY GLOB '%s*' AND "
-    "REMOTE_PKG.PKG_ID = %s.PKG_ID);";
+	"DELETE FROM %s WHERE %s_ID IN "
+	"(SELECT %s.%s_ID FROM REMOTE_PKG, %s "
+	"WHERE REMOTE_PKG.REPOSITORY GLOB '%s*' AND "
+	"REMOTE_PKG.PKG_ID = %s.PKG_ID);";
 
 const char DIRECT_DEPS[] = /* prefer higher version */
 	"SELECT REMOTE_DEPS_DEWEY, REMOTE_DEPS_PKGNAME "
