@@ -1,4 +1,4 @@
-/* $Id: download.c,v 1.13 2011/08/27 14:23:31 imilh Exp $ */
+/* $Id: download.c,v 1.14 2012/04/09 07:14:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -58,7 +58,7 @@ download_file(char *str_url, time_t *db_mtime)
 
 	if (st.size == -1) { /* could not obtain file size */
 		if (db_mtime != NULL) /* we're downloading pkg_summary */
-			*db_mtime = 0; /* ! -1, don't force update */
+			*db_mtime = 0; /* not -1, don't force update */
 
 		return NULL;
 	}

@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.24 2011/10/30 18:02:12 imilh Exp $ */
+/* $Id: summary.c,v 1.25 2012/04/09 07:14:00 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -46,7 +46,7 @@ static const struct Summary {
 	const char	*provides;
 	const char	*end;
 } sumsw[] = {
-	{
+	[LOCAL_SUMMARY] = {
 		LOCAL_SUMMARY,
 		"LOCAL_PKG",
 		"LOCAL_DEPS",
@@ -55,7 +55,7 @@ static const struct Summary {
 		"LOCAL_PROVIDES",
 		NULL
 	},
-	{
+	[REMOTE_SUMMARY] = {
 		REMOTE_SUMMARY,
 		"REMOTE_PKG",
 		"REMOTE_DEPS",
@@ -511,25 +511,18 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 static void
 delete_remote_tbl(struct Summary sum, char *repo)
 {
-	char	*ptbl, buf[BUFSIZ];
-	int		i, nelms;
+	char		buf[BUFSIZ];
+	const char	**arr;
 
-	/* number of elements in sum */
-	nelms = (sizeof(sum) - sizeof(int)) / sizeof(char *) - 1;
 	/*
 	 * delete repository related tables
 	 * loop through sumsw structure to record table name
 	 * and call associated SQL query
 	 */
-	for (ptbl = __UNCONST(sum.tbl_name), i = 0;
-		 i < nelms;
-		 ptbl += ((strlen(ptbl) + 1) * sizeof(char)), i++) {
-
-		if (strstr(ptbl, "_PKG") != NULL)
-			continue;
-
+	/* (REMOTE[LOCAL)_PKG is first -> skip */
+	for (arr = &(sum.tbl_name) + 1; *arr != NULL; ++arr) {
 		snprintf(buf, BUFSIZ, DELETE_REMOTE,
-			ptbl, ptbl, ptbl, ptbl, ptbl, repo, ptbl);
+			*arr, *arr, *arr, *arr, *arr, repo, *arr);
 		pkgindb_doquery(buf, NULL, NULL);
 	}
 
@@ -557,7 +550,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 	/* did not find argv[0] (db repository) in pkg_repos */
 	printf(MSG_CLEANING_DB_FROM_REPO, argv[0]);
 
-	delete_remote_tbl(sumsw[1], argv[0]);
+	delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[0]);
 
 	snprintf(query, BUFSIZ,
 		"DELETE FROM REPOS WHERE REPO_URL = \'%s\';", argv[0]);

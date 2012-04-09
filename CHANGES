@@ -1,3 +1,7 @@
+20120409
+	pkgin 0.5.2.3
+	Fixed "upgrade too many packages" bug (thanks stacktic)
+
 20111030
 	pkgin 0.5.2.2
 	Handled misordered PKGNAME/CONFLICTS
