@@ -1,4 +1,4 @@
-/* $Id: pkgindb.h,v 1.10 2011/10/23 13:57:56 imilh Exp $ */
+/* $Id: pkgindb.h,v 1.11 2012/04/14 19:24:39 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -52,8 +52,10 @@ extern const char GET_PROVIDES_QUERY[];
 extern const char LOCAL_PROVIDES[];
 extern const char KEEP_PKG[];
 extern const char UNKEEP_PKG[];
-extern const char LOCAL_PKGS_QUERY[];
-extern const char REMOTE_PKGS_QUERY[];
+extern const char LOCAL_PKGS_QUERY_ASC[];
+extern const char REMOTE_PKGS_QUERY_ASC[];
+extern const char LOCAL_PKGS_QUERY_DESC[];
+extern const char REMOTE_PKGS_QUERY_DESC[];
 extern const char NOKEEP_LOCAL_PKGS[];
 extern const char KEEP_LOCAL_PKGS[];
 extern const char PKG_URL[];

@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.26 2011/10/29 11:50:22 imilh Exp $ */
+/* $Id: messages.h,v 1.27 2012/04/14 19:24:39 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -145,6 +145,7 @@ please re-run %s with a package name matching one of the following:\n"
 /* pkglist.c */
 #define MSG_IS_INSTALLED_CODE "\n=: package is installed and up-to-date\n<: package is installed but newer version is available\n>: installed package has a greater version than available package\n"
 #define MSG_NO_SEARCH_RESULTS "No results found for %s\n"
+#define MSG_EMPTY_LIST "Requested list is empty.\n"
 
 /* fsops.c */
 #define MSG_TRANS_FAILED "Failed to translate %s in repository config file"

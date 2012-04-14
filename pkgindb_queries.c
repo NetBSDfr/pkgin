@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.21 2012/04/14 09:32:03 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.22 2012/04/14 19:24:39 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -118,15 +118,27 @@ const char KEEP_PKG[] =
 const char UNKEEP_PKG[] =
     "UPDATE LOCAL_PKG SET PKG_KEEP = NULL WHERE PKGNAME = \'%s\';";
 
-const char LOCAL_PKGS_QUERY[] =
+/* for upgrades, prefer higher versions to be at the top of SLIST */
+const char LOCAL_PKGS_QUERY_ASC[] =
     "SELECT FULLPKGNAME,PKGNAME,PKGVERS,COMMENT,FILE_SIZE,SIZE_PKG "
 	"FROM LOCAL_PKG "
-    "ORDER BY PKGNAME,PKGVERS ASC;";
+    "ORDER BY FULLPKGNAME ASC;";
 
-const char REMOTE_PKGS_QUERY[] =
+const char REMOTE_PKGS_QUERY_ASC[] =
     "SELECT FULLPKGNAME,PKGNAME,PKGVERS,COMMENT,FILE_SIZE,SIZE_PKG "
 	"FROM REMOTE_PKG "
-    "ORDER BY PKGNAME,PKGVERS ASC;";
+    "ORDER BY FULLPKGNAME ASC;";
+
+/* for displays, prefer lower versions to be at the top of SLIST*/
+const char LOCAL_PKGS_QUERY_DESC[] =
+    "SELECT FULLPKGNAME,PKGNAME,PKGVERS,COMMENT,FILE_SIZE,SIZE_PKG "
+	"FROM LOCAL_PKG "
+    "ORDER BY FULLPKGNAME DESC;";
+
+const char REMOTE_PKGS_QUERY_DESC[] =
+    "SELECT FULLPKGNAME,PKGNAME,PKGVERS,COMMENT,FILE_SIZE,SIZE_PKG "
+	"FROM REMOTE_PKG "
+    "ORDER BY FULLPKGNAME DESC;";
 
 const char NOKEEP_LOCAL_PKGS[] =
     "SELECT FULLPKGNAME,PKGNAME FROM LOCAL_PKG WHERE PKG_KEEP IS NULL;";

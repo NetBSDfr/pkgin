@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.20 2011/10/23 13:47:03 imilh Exp $ */
+/* $Id: main.c,v 1.21 2012/04/14 19:24:39 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -189,10 +189,12 @@ main(int argc, char *argv[])
 			MSG_REVDEPTREE);
 		break;
 	case PKG_LLIST_CMD:
-		list_pkgs(LOCAL_PKGS_QUERY, PKG_LLIST_CMD); /* list local packages */
+		/* list local packages */
+		list_pkgs(LOCAL_PKGS_QUERY_DESC, PKG_LLIST_CMD);
 		break;
-	case PKG_RLIST_CMD: /* list available packages */
-		list_pkgs(REMOTE_PKGS_QUERY, PKG_RLIST_CMD);
+	case PKG_RLIST_CMD:
+		/* list available packages */
+		list_pkgs(REMOTE_PKGS_QUERY_DESC, PKG_RLIST_CMD);
 		break;
 	case PKG_INST_CMD: /* install a package and its dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_INST);

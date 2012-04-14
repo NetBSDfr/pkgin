@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.25 2012/04/09 07:14:00 imilh Exp $ */
+/* $Id: summary.c,v 1.26 2012/04/14 19:24:39 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -562,120 +562,124 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
+static void
+update_localdb(char **pkgkeep)
+{
+	char		**summary = NULL, buf[BUFSIZ];
+	Plisthead	*keeplisthead, *nokeeplisthead;
+	Pkglist		*pkglist;
+
+	/* has the pkgdb (pkgsrc) changed ? if not, continue */
+	if (!pkg_db_mtime() || !pkgdb_open(ReadWrite))
+		return;
+
+	/* just checking */
+	pkgdb_close();
+
+	/* record the keep list */
+	keeplisthead = rec_pkglist(KEEP_LOCAL_PKGS);
+	/* delete local pkg table (faster than updating) */
+	pkgindb_doquery(DELETE_LOCAL, NULL, NULL);
+
+	printf(MSG_READING_LOCAL_SUMMARY);
+	/* generate summary locally */
+	summary = exec_list(PKGTOOLS "/pkg_info -Xa", NULL);
+
+	printf(MSG_PROCESSING_LOCAL_SUMMARY);
+
+	/* insert the summary to the database */
+	insert_summary(sumsw[LOCAL_SUMMARY], summary, NULL);
+
+	/* re-read local packages list as it may have changed */
+	free_global_pkglists();
+	init_global_pkglists();
+
+	/* restore keep-list */
+	if (keeplisthead != NULL) {
+		SLIST_FOREACH(pkglist, keeplisthead, next) {
+			snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
+			pkgindb_doquery(buf, NULL, NULL);
+		}
+		free_pkglist(&keeplisthead, LIST);
+
+		/*
+		 * packages are installed "manually" by pkgin_install()
+		 * they are recorded as "non-automatic" in pkgdb, we
+		 * need to mark unkeeps as "automatic"
+		 */
+		if ((nokeeplisthead =
+				rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
+			SLIST_FOREACH(pkglist, nokeeplisthead, next)
+				mark_as_automatic_installed(pkglist->full, 1);
+
+			free_pkglist(&nokeeplisthead, LIST);
+		}
+	} else { /* empty keep list */
+		/*
+		 * no packages are marked as keep in pkgin's db
+		 * probably a fresh install or a rebuild
+		 * restore keep flags with pkgdb informations
+		 */
+		SLIST_FOREACH(pkglist, &l_plisthead, next) {
+			if (!is_automatic_installed(pkglist->full)) {
+				snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
+				pkgindb_doquery(buf, NULL, NULL);
+			}
+		}
+	}
+
+	/* insert new keep list if there's any */
+	if (pkgkeep != NULL)
+		/* installation: mark the packages as "keep" */
+		pkg_keep(KEEP, pkgkeep);
+
+	free_list(summary);
+}
+
+static void
+update_remotedb(void)
+{
+	char	**summary = NULL, **prepos;
+
+	/* delete unused repositories */
+	pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
+		pdb_clean_remote, NULL);
+
+	/* loop through PKG_REPOS */
+	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
+
+		/* load remote pkg_summary */
+		if ((summary = fetch_summary(*prepos)) == NULL) {
+			printf(MSG_DB_IS_UP_TO_DATE, *prepos);
+			return;
+		}
+
+		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
+
+		/* delete remote* associated to this repository */
+		delete_remote_tbl(sumsw[REMOTE_SUMMARY], *prepos);
+		/* update remote* table for this repository */
+		insert_summary(sumsw[REMOTE_SUMMARY], summary, *prepos);
+	}
+
+	/* remove empty rows (duplicates) */
+	pkgindb_doquery(DELETE_EMPTY_ROWS, NULL, NULL);
+
+	free_list(summary);
+}
+
 int
 update_db(int which, char **pkgkeep)
 {
-	int			i;
-	Plisthead	*keeplisthead, *nokeeplisthead;
-	Pkglist		*pkglist;
-	char		**summary = NULL, **prepos, buf[BUFSIZ];
-
 	if (!have_enough_rights())
 		return EXIT_FAILURE;
 
-	for (i = 0; i < 2; i++) {
+	/* always check for LOCAL_SUMMARY updates */
+	update_localdb(pkgkeep);
 
-		switch (sumsw[i].type) {
-		case LOCAL_SUMMARY:
-			/* has the pkgdb (pkgsrc) changed ? if not, continue */
-			if (!pkg_db_mtime() || !pkgdb_open(ReadWrite))
-				continue;
+	if (which == REMOTE_SUMMARY)
+		update_remotedb();
 
-			/* just checking */
-			pkgdb_close();
-
-			/* record the keep list */
-			keeplisthead = rec_pkglist(KEEP_LOCAL_PKGS);
-			/* delete local pkg table (faster than updating) */
-			pkgindb_doquery(DELETE_LOCAL, NULL, NULL);
-
-			printf(MSG_READING_LOCAL_SUMMARY);
-			/* generate summary locally */
-			summary = exec_list(PKGTOOLS "/pkg_info -Xa", NULL);
-
-			printf(MSG_PROCESSING_LOCAL_SUMMARY);
-
-			/* insert the summary to the database */
-			insert_summary(sumsw[i], summary, NULL);
-
-			/* re-read local packages list as it may have changed */
-			free_global_pkglists();
-			init_global_pkglists();
-
-			/* restore keep-list */
-			if (keeplisthead != NULL) {
-				SLIST_FOREACH(pkglist, keeplisthead, next) {
-					snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-					pkgindb_doquery(buf, NULL, NULL);
-				}
-				free_pkglist(&keeplisthead, LIST);
-
-				/*
-				 * packages are installed "manually" by pkgin_install()
-				 * they are recorded as "non-automatic" in pkgdb, we
-				 * need to mark unkeeps as "automatic"
-				 */
-				if ((nokeeplisthead =
-						rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
-					SLIST_FOREACH(pkglist, nokeeplisthead, next)
-						mark_as_automatic_installed(pkglist->full, 1);
-
-					free_pkglist(&nokeeplisthead, LIST);
-				}
-			} else { /* empty keep list */
-				/*
-				 * no packages are marked as keep in pkgin's db
-				 * probably a fresh install or a rebuild
-				 * restore keep flags with pkgdb informations
-				 */
-				SLIST_FOREACH(pkglist, &l_plisthead, next) {
-					if (!is_automatic_installed(pkglist->full)) {
-						snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-						pkgindb_doquery(buf, NULL, NULL);
-					}
-				}
-			}
-
-			/* insert new keep list if there's any */
-			if (pkgkeep != NULL)
-				/* installation: mark the packages as "keep" */
-				pkg_keep(KEEP, pkgkeep);
-
-			break;
-		case REMOTE_SUMMARY:
-			if (which == LOCAL_SUMMARY)
-				continue;
-
-			/* delete unused repositories */
-			pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
-				pdb_clean_remote, NULL);
-
-			/* loop through PKG_REPOS */
-			for (prepos = pkg_repos; *prepos != NULL; prepos++) {
-
-				/* load remote pkg_summary */
-				if ((summary = fetch_summary(*prepos)) == NULL) {
-					printf(MSG_DB_IS_UP_TO_DATE, *prepos);
-					continue;
-				}
-
-				printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
-
-				/* delete remote* associated to this repository */
-				delete_remote_tbl(sumsw[i], *prepos);
-				/* update remote* table for this repository */
-				insert_summary(sumsw[i], summary, *prepos);
-			}
-
-			/* remove empty rows (duplicates) */
-			pkgindb_doquery(DELETE_EMPTY_ROWS, NULL, NULL);
-
-			break;
-		}
-
-		free_list(summary);
-
-	} /* for sumsw */
 	/* columns name not needed anymore */
 	if (cols.name != NULL) {
 		/* reset colums count */
@@ -687,7 +691,7 @@ update_db(int which, char **pkgkeep)
 }
 
 void
-split_repos()
+split_repos(void)
 {
 	int		repocount;
 	char	*p;

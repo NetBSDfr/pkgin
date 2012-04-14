@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.6 2011/10/23 12:22:09 imilh Exp $ */
+/* $Id: pkglist.c,v 1.7 2012/04/14 19:24:39 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -129,8 +129,8 @@ init_global_pkglists()
 	SLIST_INIT(&r_plisthead);
 	SLIST_INIT(&l_plisthead);
 
-	pkgindb_doquery(REMOTE_PKGS_QUERY, pdb_rec_list, &r_plisthead);
-	pkgindb_doquery(LOCAL_PKGS_QUERY, pdb_rec_list, &l_plisthead);
+	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, pdb_rec_list, &r_plisthead);
+	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, pdb_rec_list, &l_plisthead);
 }
 
 static void
@@ -179,7 +179,7 @@ rec_pkglist(const char *fmt, ...)
 {
 	char		query[BUFSIZ];
 	va_list		ap;
-	Plisthead	*plisthead = NULL;
+	Plisthead	*plisthead;
 
 	plisthead = init_head();
 
@@ -227,8 +227,11 @@ list_pkgs(const char *pkgquery, int lstype)
 	/* list installed packages + status */
 	if (lstype == PKG_LLIST_CMD && lslimit != '\0') {
 
-		if (SLIST_EMPTY(&l_plisthead))
+		/* check if local package list is empty */
+		if (SLIST_EMPTY(&l_plisthead)) {
+			fprintf(stderr, MSG_EMPTY_LOCAL_PKGLIST);
 			return;
+		}
 
 		if (!SLIST_EMPTY(&r_plisthead)) {
 
@@ -252,25 +255,30 @@ list_pkgs(const char *pkgquery, int lstype)
 
 			}
 		}
+
 		return;
 	} /* lstype == LLIST && status */
 
-	if ((plisthead = rec_pkglist(pkgquery)) != NULL) {
-		SLIST_FOREACH(plist, plisthead, next)
-			printf("%-20s %s\n", plist->full, plist->comment);
-
-		free_pkglist(&plisthead, LIST);
+	/* regular package listing */
+	if ((plisthead = rec_pkglist(pkgquery)) == NULL) {
+		fprintf(stderr, MSG_EMPTY_LIST);
+		return;
 	}
+
+	SLIST_FOREACH(plist, plisthead, next)
+		printf("%-20s %s\n", plist->full, plist->comment);
+
+	free_pkglist(&plisthead, LIST);
 }
 
 void
 search_pkg(const char *pattern)
 {
-	Pkglist		 	*plist;
+	Pkglist	   	*plist;
 	regex_t		re;
 	int			rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
-	int		matched_pkgs;
+	int			matched_pkgs;
 
 	matched_pkgs = 0;
 
