@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.21 2012/04/14 19:24:39 imilh Exp $ */
+/* $Id: main.c,v 1.22 2012/04/15 19:37:25 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -245,6 +245,10 @@ main(int argc, char *argv[])
 	case PKG_SHREQ_CMD: /* show what a package requires */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
 		show_prov_req(GET_REQUIRES_QUERY, argv[1]);
+		break;
+	case PKG_SHPKGCONT_CMD: /* show remote package content */
+		missing_param(argc, 2, MSG_MISSING_PKGNAME);
+		show_pkg_info('L', argv[1]); /* pkg_info flag */
 		break;
 	case PKG_GINTO_CMD: /* Miod's request */
 		ginto();

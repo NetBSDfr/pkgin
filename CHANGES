@@ -1,3 +1,7 @@
+20120415
+	Introduced pkg_infos.c to fetch remote informations
+	Removed -D_FILE_OFFSET_BITS=64 from Makefile and added it in fsops.c
+
 20120414
 	Fire up pkgin 0.6.0
 	case: cleanup in summary.c (stacktic)
