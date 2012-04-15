@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.26 2012/04/14 19:24:39 imilh Exp $ */
+/* $Id: summary.c,v 1.27 2012/04/15 17:28:35 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -651,7 +651,7 @@ update_remotedb(void)
 		/* load remote pkg_summary */
 		if ((summary = fetch_summary(*prepos)) == NULL) {
 			printf(MSG_DB_IS_UP_TO_DATE, *prepos);
-			return;
+			continue;
 		}
 
 		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
