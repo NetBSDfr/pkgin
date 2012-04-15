@@ -1,4 +1,4 @@
-/* $Id: fsops.c,v 1.1 2011/03/03 14:43:12 imilh Exp $ */
+/* $Id: fsops.c,v 1.2 2012/04/15 11:48:56 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -32,6 +32,8 @@
 
 #include "pkgin.h"
 #include <dirent.h>
+
+#define FILE_OFFSET_BITS 64 /* needed for large filesystems on sunos */
 
 /* Variable options for the repositories file */
 static const struct VarParam {
