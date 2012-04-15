@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.9 2012/04/15 20:58:23 imilh Exp $ */
+/* $Id: cmd.h,v 1.10 2012/04/15 21:15:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -78,6 +78,8 @@ static struct command {
 	  PKG_SHREQ_CMD },
 	{ "pkg-content", "pc", "Show package's content.",
 	  PKG_SHPKGCONT_CMD },
+	{ "pkg-descr", "pd", "Show package's long-description.",
+	  PKG_SHPKGDESC_CMD },
 	{ "tonic", "to", "Gin Tonic recipe.",
 	  PKG_GINTO_CMD },
 	{ NULL, NULL, NULL, 0 }
