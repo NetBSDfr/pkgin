@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.22 2012/04/15 19:37:25 imilh Exp $ */
+/* $Id: main.c,v 1.23 2012/04/15 21:01:58 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -304,7 +304,7 @@ usage()
 
 	for (i = 0; cmd[i].name != NULL; i++)
 		if (cmd[i].cmdtype != PKG_GINTO_CMD)
-			printf("%s (%s) -  %s\n",
+			printf("%-15s (%-4s) -  %s\n",
 				cmd[i].name, cmd[i].shortcut, cmd[i].descr);
 
 	exit(EXIT_FAILURE);
