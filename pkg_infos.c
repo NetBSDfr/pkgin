@@ -1,4 +1,4 @@
-/* $Id: pkg_infos.c,v 1.1 2012/04/15 19:37:25 imilh Exp $ */
+/* $Id: pkg_infos.c,v 1.2 2012/04/15 20:58:23 imilh Exp $ */
 
 /*
  * Copyright (c) 2012 The NetBSD Foundation, Inc.
@@ -51,9 +51,10 @@ show_pkg_info(char flag, char *pkgname)
 
 		for (i = 0; out_cmd[i] != NULL; i++)	
 			printf("%s\n", out_cmd[i]);
+
+		free_list(out_cmd);
 	}
 
-	free_list(out_cmd);
 	XFREE(fullpkgname);
 
 	return;

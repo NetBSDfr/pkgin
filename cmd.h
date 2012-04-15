@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.8 2012/04/15 19:37:25 imilh Exp $ */
+/* $Id: cmd.h,v 1.9 2012/04/15 20:58:23 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -76,7 +76,7 @@ static struct command {
 	  PKG_SHPROV_CMD },
 	{ "requires", "req", "Show what files a package requires.",
 	  PKG_SHREQ_CMD },
-	{ "pkg-content", "pc", "Show package's files.",
+	{ "pkg-content", "pc", "Show package's content.",
 	  PKG_SHPKGCONT_CMD },
 	{ "tonic", "to", "Gin Tonic recipe.",
 	  PKG_GINTO_CMD },
