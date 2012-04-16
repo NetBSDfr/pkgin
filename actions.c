@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.39 2012/04/16 11:07:59 imilh Exp $ */
+/* $Id: actions.c,v 1.40 2012/04/16 11:57:53 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -650,10 +650,6 @@ narrow_match(char *pkgname, const char *fullpkgname)
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
 		if (strcmp(pkgname, pkglist->name) == 0) {
-
-			/* installed package is equal or greater that repo's one */
-			if (strcmp(fullpkgname, pkglist->full) >= 0)
-				continue;
 
 			r_fullpkglen = strlen(pkglist->full);
 
