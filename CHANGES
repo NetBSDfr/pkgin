@@ -1,3 +1,6 @@
+20120416
+	Added pkg-build-defs as requested by gls@
+
 20120415
 	Added pkg-content and pkg-descr
 	Introduced pkg_infos.c to fetch remote informations

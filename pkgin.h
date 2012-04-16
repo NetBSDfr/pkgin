@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.30 2012/04/15 21:15:13 imilh Exp $ */
+/* $Id: pkgin.h,v 1.31 2012/04/16 07:36:31 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -112,6 +112,7 @@
 #define PKG_SHREQ_CMD 19
 #define PKG_SHPKGCONT_CMD 20
 #define PKG_SHPKGDESC_CMD 21
+#define PKG_SHPKGBDEFS_CMD 22
 #define PKG_GINTO_CMD 255
 
 #define PKG_EQUAL '='

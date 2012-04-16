@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.11 2012/04/15 21:20:35 imilh Exp $ */
+/* $Id: cmd.h,v 1.12 2012/04/16 07:36:31 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -80,6 +80,8 @@ static struct command {
 	  PKG_SHPKGCONT_CMD },
 	{ "pkg-descr", "pd", "Show remote package's long-description.",
 	  PKG_SHPKGDESC_CMD },
+	{ "pkg-build-defs", "pbd", "Show remote package's build definitions.",
+	  PKG_SHPKGBDEFS_CMD },
 	{ "tonic", "to", "Gin Tonic recipe.",
 	  PKG_GINTO_CMD },
 	{ NULL, NULL, NULL, 0 }
