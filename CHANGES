@@ -1,4 +1,5 @@
 20120416
+	Fixed possible upgrades failures when remote repo is not clean
 	Added pkg-build-defs as requested by gls@
 
 20120415
