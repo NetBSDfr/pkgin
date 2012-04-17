@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.27 2012/04/14 19:24:39 imilh Exp $ */
+/* $Id: messages.h,v 1.28 2012/04/17 07:11:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -41,6 +41,7 @@
 #define MSG_PKG_ARGS_KEEP "specify at least one package to keep"
 #define MSG_PKG_ARGS_UNKEEP "specify at least one package to unkeep"
 #define MSG_MISSING_SRCH "missing search string"
+#define MSG_MISSING_CATEGORY "missing category"
 
 #define MSG_USAGE "Usage: %s [-cdfFhlnPtvVy] command [package ...]\n"
 #define MSG_CMDS_SHORTCUTS "\nCommands and shortcuts:\n"

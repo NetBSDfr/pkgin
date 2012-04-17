@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.12 2012/04/16 07:36:31 imilh Exp $ */
+/* $Id: cmd.h,v 1.13 2012/04/17 07:11:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -56,6 +56,10 @@ static struct command {
 	  PKG_SHFDP_CMD },
 	{ "show-rev-deps", "srd", "Display reverse dependencies recursively.",
 	  PKG_SHRDP_CMD },
+	{ "show-category", "sc", "Show packages belonging to category.",
+	  PKG_SHCAT_CMD },
+	{ "show-pkg-category", "spc", "Show package's category.",
+	  PKG_SHPCAT_CMD },
 	{ "keep", "ke", "Mark package as \"non auto-removable\".",
 	  PKG_KEEP_CMD },
 	{ "unkeep", "uk", "Mark package as \"auto-removable\".",

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.25 2012/04/16 07:36:31 imilh Exp $ */
+/* $Id: main.c,v 1.26 2012/04/17 07:11:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -258,6 +258,14 @@ main(int argc, char *argv[])
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
 		show_pkg_info('B', argv[1]); /* pkg_info flag */
 		break;
+	case PKG_SHCAT_CMD: /* show packages belonging to a category */
+		missing_param(argc, 2, MSG_MISSING_CATEGORY);
+		show_category(argv[1]);
+		break;
+	case PKG_SHPCAT_CMD: /* show package's category */
+		missing_param(argc, 2, MSG_MISSING_PKGNAME);
+		show_pkg_category(argv[1]);
+		break;		
 	case PKG_GINTO_CMD: /* Miod's request */
 		ginto();
 		break;
@@ -312,7 +320,7 @@ usage()
 
 	for (i = 0; cmd[i].name != NULL; i++)
 		if (cmd[i].cmdtype != PKG_GINTO_CMD)
-			printf("%-15s (%-4s) -  %s\n",
+			printf("%-17s (%-4s) -  %s\n",
 				cmd[i].name, cmd[i].shortcut, cmd[i].descr);
 
 	exit(EXIT_FAILURE);

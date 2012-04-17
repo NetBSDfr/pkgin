@@ -1,4 +1,7 @@
 20120416
+	Added show-{pkg-,}category as requested by Julian Fagir
+	Introduced preferred.conf, in order not to break preferred versions
+	when upgrading
 	Fixed possible upgrades failures when remote repo is not clean
 	Added pkg-build-defs as requested by gls@
 

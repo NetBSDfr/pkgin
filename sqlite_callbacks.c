@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.8 2011/10/06 15:28:06 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.9 2012/04/17 07:11:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -39,6 +39,7 @@
 #define COMMENT		argv[3]
 #define FILE_SIZE	argv[4]
 #define SIZE_PKG	argv[5]
+#define CATEGORY	argv[6]
 /** 
  * SQLite callback, record package list
  */
@@ -86,6 +87,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 		if (SIZE_PKG != NULL)
 			plist->size_pkg = strtol(SIZE_PKG, (char **)NULL, 10);
 
+		XSTRDUP(plist->category, CATEGORY);
 	} else
 		/* conflicts or requires list, only pkgname needed */
 		plist->comment = NULL;

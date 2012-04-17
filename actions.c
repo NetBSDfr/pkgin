@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.40 2012/04/16 11:57:53 imilh Exp $ */
+/* $Id: actions.c,v 1.41 2012/04/17 07:11:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -632,21 +632,49 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
+static char *
+read_preferred(char *pkgname)
+{
+	int		matchlen;
+	FILE	*fp;
+	char	match[BUFSIZ], line[BUFSIZ], *pref;
+
+	if ((fp = fopen(PKGIN_CONF"/"PREFERRED_PKGS, "r")) == NULL)
+		return NULL;
+
+	snprintf(match, BUFSIZ, "%s=", pkgname);
+	matchlen = strlen(match);
+
+	while (fgets(line, BUFSIZ, fp) != NULL) {
+		if (strncmp(match, line, matchlen) == 0) {
+			XSTRDUP(pref, line + strlen(match));
+			pref[strlen(pref) - 1] = '\0'; /* strip \n */
+			return pref;
+		}
+	}
+
+	fclose(fp);
+
+	return NULL;
+}
+
 /* 
  * find closest match for packages to be upgraded 
- * prefer mysql-5.1.20 over mysql-5.5.20 when upgrading
+ * if we have mysql-5.1.10 installed prefer mysql-5.1.20 over
+ * mysql-5.5.20 when upgrading
  */
 static char *
 narrow_match(char *pkgname, const char *fullpkgname)
 {
 	Pkglist	*pkglist;
-	char	*best_match = NULL;
+	char	*best_match = NULL, *preferred, chk_pref[BUFSIZ];
 	unsigned int		i;
-	size_t  pkglen, fullpkglen, r_fullpkglen, matchlen;
+	size_t  fullpkglen, r_fullpkglen, matchlen;
 
 	matchlen = 0;
-	pkglen = strlen(pkgname);
 	fullpkglen = strlen(fullpkgname);
+
+	preferred = read_preferred(pkgname);
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
 		if (strcmp(pkgname, pkglist->name) == 0) {
@@ -658,6 +686,15 @@ narrow_match(char *pkgname, const char *fullpkgname)
 				i++);
 
 			if (i > matchlen) {
+				/* a preferred.conf file exists */
+				if (preferred != NULL) {
+					snprintf(chk_pref, BUFSIZ, "%s-%s", pkgname, preferred);
+					/* compare remote pkg to preferred pkgname-preferred */
+					if (strncmp(pkglist->full, chk_pref,
+							strlen(chk_pref)) != 0)
+						continue;
+				}
+				XFREE(best_match);
 				matchlen = i;
 				XSTRDUP(best_match, pkglist->full);
 			}
@@ -665,6 +702,7 @@ narrow_match(char *pkgname, const char *fullpkgname)
 		}
 	} /* SLIST_FOREACH remoteplisthead */
 	XFREE(pkgname);
+	XFREE(preferred);
 
 	return best_match;
 }

@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.7 2012/04/14 19:24:39 imilh Exp $ */
+/* $Id: pkglist.c,v 1.8 2012/04/17 07:11:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -321,5 +321,27 @@ search_pkg(const char *pattern)
 			printf(MSG_IS_INSTALLED_CODE);
 		else
 			printf(MSG_NO_SEARCH_RESULTS, pattern);
+	}
+}
+
+void
+show_category(char *category)
+{
+	Pkglist	   	*plist;
+
+	SLIST_FOREACH(plist, &r_plisthead, next) {
+		if (strcmp(plist->category, category) == 0)
+			printf("%-12s - %s\n", plist->category, plist->full);
+	}
+}
+
+void
+show_pkg_category(char *pkgname)
+{
+	Pkglist	   	*plist;
+
+	SLIST_FOREACH(plist, &r_plisthead, next) {
+		if (strcmp(plist->name, pkgname) == 0)
+			printf("%-12s - %s\n", plist->category, plist->full);
 	}
 }

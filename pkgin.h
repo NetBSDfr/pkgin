@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.31 2012/04/16 07:36:31 imilh Exp $ */
+/* $Id: pkgin.h,v 1.32 2012/04/17 07:11:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -66,6 +66,7 @@
 #define PKGIN_CONF PKG_SYSCONFDIR"/pkgin"
 #define REPOS_FILE "repositories.conf"
 #define PKG_INSTALL "pkg_install"
+#define PREFERRED_PKGS "preferred.conf"
 
 #define LOCAL_SUMMARY 0
 #define REMOTE_SUMMARY 1
@@ -113,6 +114,8 @@
 #define PKG_SHPKGCONT_CMD 20
 #define PKG_SHPKGDESC_CMD 21
 #define PKG_SHPKGBDEFS_CMD 22
+#define PKG_SHCAT_CMD 23
+#define PKG_SHPCAT_CMD 24
 #define PKG_GINTO_CMD 255
 
 #define PKG_EQUAL '='
@@ -169,6 +172,7 @@ typedef struct Pkglist {
 					foo>=1.0
 					or full package name for reverse dependencies:
 					foo-1.0 */
+	char *category; /*!< package category */
 	union {
 		char		*comment; /*!< package list comment */
 		Deptree		deptree; /*<! dependency tree informations */
@@ -229,6 +233,8 @@ Plisthead	*init_head(void);
 Plisthead	*rec_pkglist(const char *, ...);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
+void		show_category(char *);
+void		show_pkg_category(char *);
 /* actions.c */
 int			check_yesno(uint8_t);
 void		do_pkg_remove(Plisthead *);
