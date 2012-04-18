@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.41 2012/04/17 07:11:38 imilh Exp $ */
+/* $Id: actions.c,v 1.42 2012/04/18 11:02:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -632,12 +632,12 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
-static char *
+char *
 read_preferred(char *pkgname)
 {
 	int		matchlen;
 	FILE	*fp;
-	char	match[BUFSIZ], line[BUFSIZ], *pref;
+	char	match[BUFSIZ], *pref;
 
 	if ((fp = fopen(PKGIN_CONF"/"PREFERRED_PKGS, "r")) == NULL)
 		return NULL;
@@ -645,10 +645,13 @@ read_preferred(char *pkgname)
 	snprintf(match, BUFSIZ, "%s=", pkgname);
 	matchlen = strlen(match);
 
-	while (fgets(line, BUFSIZ, fp) != NULL) {
-		if (strncmp(match, line, matchlen) == 0) {
-			XSTRDUP(pref, line + strlen(match));
-			pref[strlen(pref) - 1] = '\0'; /* strip \n */
+	XMALLOC(pref, BUFSIZ * sizeof(char));
+
+	while (fgets(pref, BUFSIZ, fp) != NULL) {
+		/* pref == "foobar=" */
+		if (strncmp(match, pref, matchlen) == 0) {
+			snprintf(pref, BUFSIZ, "%s-%s", pkgname, pref + strlen(match));
+			pref[strlen(pref) - 1] = '\0';
 			return pref;
 		}
 	}
@@ -667,7 +670,7 @@ static char *
 narrow_match(char *pkgname, const char *fullpkgname)
 {
 	Pkglist	*pkglist;
-	char	*best_match = NULL, *preferred, chk_pref[BUFSIZ];
+	char	*best_match = NULL, *preferred;
 	unsigned int		i;
 	size_t  fullpkglen, r_fullpkglen, matchlen;
 
@@ -677,29 +680,29 @@ narrow_match(char *pkgname, const char *fullpkgname)
 	preferred = read_preferred(pkgname);
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
-		if (strcmp(pkgname, pkglist->name) == 0) {
+		if (strcmp(pkgname, pkglist->name) != 0)
+			continue;
 
-			r_fullpkglen = strlen(pkglist->full);
+		r_fullpkglen = strlen(pkglist->full);
 
-			for (i = 0; i < fullpkglen && i < r_fullpkglen &&
-					 fullpkgname[i] == pkglist->full[i];
-				i++);
+		/* a preferred.conf file exists */
+		if (preferred != NULL &&
+			/* compare remote pkg to preferred pkgname-preferred */
+			strncmp(pkglist->full, preferred, strlen(preferred)) != 0)
+			/* the package does not match our preferred */
+			continue;
 
-			if (i > matchlen) {
-				/* a preferred.conf file exists */
-				if (preferred != NULL) {
-					snprintf(chk_pref, BUFSIZ, "%s-%s", pkgname, preferred);
-					/* compare remote pkg to preferred pkgname-preferred */
-					if (strncmp(pkglist->full, chk_pref,
-							strlen(chk_pref)) != 0)
-						continue;
-				}
-				XFREE(best_match);
-				matchlen = i;
-				XSTRDUP(best_match, pkglist->full);
-			}
+		/* match as long as we can */
+		for (i = 0; i < fullpkglen && i < r_fullpkglen &&
+				 fullpkgname[i] == pkglist->full[i];
+			 i++);
 
+		if (i > matchlen) {
+			XFREE(best_match);
+			matchlen = i;
+			XSTRDUP(best_match, pkglist->full);
 		}
+
 	} /* SLIST_FOREACH remoteplisthead */
 	XFREE(pkgname);
 	XFREE(preferred);

@@ -1,4 +1,4 @@
-/* $Id: impact.c,v 1.15 2011/10/23 12:22:09 imilh Exp $ */
+/* $Id: impact.c,v 1.16 2012/04/18 11:02:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -379,7 +379,7 @@ pkg_impact(char **pkgargs)
 	
 		XSTRDUP(pdp->name, pkgname);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
-	
+
 		/* pkgname is not already recorded */
 		if (!pkg_in_impact(impacthead, pkgname)) {
 			/* passing pkgname as depname */

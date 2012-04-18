@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.32 2012/04/17 07:11:38 imilh Exp $ */
+/* $Id: pkgin.h,v 1.33 2012/04/18 11:02:55 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -242,6 +242,7 @@ int			pkgin_remove(char **);
 int			pkgin_install(char **, uint8_t);
 char		*action_list(char *, char *);
 void		pkgin_upgrade(int);
+char		*read_preferred(char *);
 /* order.c */
 Plisthead	*order_remove(Plisthead *);
 Plisthead	*order_upgrade_remove(Plisthead *);
