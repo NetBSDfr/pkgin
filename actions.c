@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.42 2012/04/18 11:02:55 imilh Exp $ */
+/* $Id: actions.c,v 1.43 2012/04/18 11:14:29 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -637,7 +637,7 @@ read_preferred(char *pkgname)
 {
 	int		matchlen;
 	FILE	*fp;
-	char	match[BUFSIZ], *pref;
+	char	match[BUFSIZ], *pref, *p;
 
 	if ((fp = fopen(PKGIN_CONF"/"PREFERRED_PKGS, "r")) == NULL)
 		return NULL;
@@ -650,7 +650,14 @@ read_preferred(char *pkgname)
 	while (fgets(pref, BUFSIZ, fp) != NULL) {
 		/* pref == "foobar=" */
 		if (strncmp(match, pref, matchlen) == 0) {
-			snprintf(pref, BUFSIZ, "%s-%s", pkgname, pref + strlen(match));
+			p = pref + matchlen;
+
+			for (; *p == ' ' || *p == '\t'; p++);
+
+			if (*p == '\0')
+				return NULL;
+
+			snprintf(pref, BUFSIZ, "%s-%s", pkgname, p);
 			pref[strlen(pref) - 1] = '\0';
 			return pref;
 		}
