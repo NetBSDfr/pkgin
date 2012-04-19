@@ -1,3 +1,6 @@
+20120419
+	Hopefuly fixed the "dirty repository" bug thanks to bapt
+
 20120416
 	Added show-{pkg-,}category as requested by Julian Fagir
 	Introduced preferred.conf, in order not to break preferred versions

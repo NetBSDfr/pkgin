@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.33 2012/04/18 11:02:55 imilh Exp $ */
+/* $Id: pkgin.h,v 1.34 2012/04/19 21:40:10 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -173,6 +173,7 @@ typedef struct Pkglist {
 					or full package name for reverse dependencies:
 					foo-1.0 */
 	char *category; /*!< package category */
+	char *pkgpath; /*!< pkgsrc pkgpath */
 	union {
 		char		*comment; /*!< package list comment */
 		Deptree		deptree; /*<! dependency tree informations */

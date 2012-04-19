@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.43 2012/04/18 11:14:29 imilh Exp $ */
+/* $Id: actions.c,v 1.44 2012/04/19 21:40:10 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -632,6 +632,7 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
+/* actually unused, not sure if really needed */
 char *
 read_preferred(char *pkgname)
 {
@@ -674,34 +675,36 @@ read_preferred(char *pkgname)
  * mysql-5.5.20 when upgrading
  */
 static char *
-narrow_match(char *pkgname, const char *fullpkgname)
+narrow_match(Pkglist *opkg)
 {
 	Pkglist	*pkglist;
-	char	*best_match = NULL, *preferred;
+	char	*best_match, *preferred;
 	unsigned int		i;
 	size_t  fullpkglen, r_fullpkglen, matchlen;
 
 	matchlen = 0;
-	fullpkglen = strlen(fullpkgname);
+	fullpkglen = strlen(opkg->full);
 
-	preferred = read_preferred(pkgname);
+	preferred = read_preferred(opkg->name);
+	best_match = NULL;
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
-		if (strcmp(pkgname, pkglist->name) != 0)
+		if (strcmp(opkg->name, pkglist->name) != 0)
 			continue;
 
 		r_fullpkglen = strlen(pkglist->full);
 
-		/* a preferred.conf file exists */
-		if (preferred != NULL &&
-			/* compare remote pkg to preferred pkgname-preferred */
-			strncmp(pkglist->full, preferred, strlen(preferred)) != 0)
-			/* the package does not match our preferred */
+		/* if PKGPATH does not match, do not try to update (mysql 5.1/5.5) */
+		if (strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
+			continue;
+
+		/* we already have his package */
+		if (strcmp(opkg->full, pkglist->full) == 0)
 			continue;
 
 		/* match as long as we can */
 		for (i = 0; i < fullpkglen && i < r_fullpkglen &&
-				 fullpkgname[i] == pkglist->full[i];
+				 opkg->full[i] == pkglist->full[i];
 			 i++);
 
 		if (i > matchlen) {
@@ -711,8 +714,6 @@ narrow_match(char *pkgname, const char *fullpkgname)
 		}
 
 	} /* SLIST_FOREACH remoteplisthead */
-	XFREE(pkgname);
-	XFREE(preferred);
 
 	return best_match;
 }
@@ -731,9 +732,7 @@ record_upgrades(Plisthead *plisthead)
 
 	count = 0;
 	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(pkgargs[count], pkglist->name);
-
-		pkgargs[count] = narrow_match(pkgargs[count], pkglist->full);
+		pkgargs[count] = narrow_match(pkglist);
 
 		if (pkgargs[count] == NULL)
 			continue;
