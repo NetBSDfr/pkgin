@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.45 2012/04/20 09:15:53 imilh Exp $ */
+/* $Id: actions.c,v 1.46 2012/04/20 11:14:40 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -691,14 +691,19 @@ narrow_match(Pkglist *opkg)
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
 		if (strcmp(opkg->name, pkglist->name) != 0)
 			continue;
-		/* if PKGPATH does not match, do not try to update (mysql 5.1/5.5) */
-		if (strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
-			continue;
+
+		/*
+		 * if PKGPATH does not match, do not try to update (mysql 5.1/5.5)
+		 * opkg->pkgpath may be NULL if we are checking keeplist
+		 */
+		if (opkg->pkgpath != NULL &&
+			strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
+				continue;
 
 		r_fullpkglen = strlen(pkglist->full);
 
-		/* we already have his package */
-		if (strcmp(opkg->full, pkglist->full) == 0)
+		/* we already have his package, or installed version is greater */
+		if (strcmp(opkg->full, pkglist->full) >= 0)
 			continue;
 
 		/* match as long as we can */
@@ -713,6 +718,7 @@ narrow_match(Pkglist *opkg)
 		}
 
 	} /* SLIST_FOREACH remoteplisthead */
+
 
 	return best_match;
 }
