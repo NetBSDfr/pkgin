@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.8 2012/04/17 07:11:38 imilh Exp $ */
+/* $Id: pkglist.c,v 1.9 2012/04/20 09:15:53 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -61,6 +61,8 @@ malloc_pkglist(uint8_t type)
 	switch (type) {
 	case LIST:
 		pkglist->comment = NULL;
+		pkglist->category = NULL;
+		pkglist->pkgpath = NULL;
 		break;
 	case DEPTREE:
 		pkglist->computed = 0;
@@ -90,6 +92,8 @@ free_pkglist_entry(Pkglist **plist, uint8_t type)
 	switch (type) {
 	case LIST:
 		XFREE((*plist)->comment);
+		XFREE((*plist)->category);
+		XFREE((*plist)->pkgpath);
 		break;
 	case IMPACT:
 		XFREE((*plist)->old);
