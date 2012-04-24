@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.11 2012/04/24 13:23:27 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.12 2012/04/24 14:46:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -54,12 +54,13 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 
 	plist = malloc_pkglist(LIST);
 
-	for (i = 0; i < argc; i++) {
+	/* rec_pkglist is used for convenience for REQUIRES / PROVIDES */
+	XSTRDUP(plist->full, argv[0]);
+
+	for (i = 1; i < argc; i++) {
 		if (argv[i] == NULL)
 			continue;
 
-		if (strcmp(colname[i], "FULLPKGNAME") == 0)
-			XSTRDUP(plist->full, argv[i]);
 		if (strcmp(colname[i], "PKGNAME") == 0)
 			XSTRDUP(plist->name, argv[i]);
 		if (strcmp(colname[i], "PKGVERS") == 0)
