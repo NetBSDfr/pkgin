@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.46 2012/04/20 11:14:40 imilh Exp $ */
+/* $Id: actions.c,v 1.47 2012/04/24 13:23:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -694,10 +694,8 @@ narrow_match(Pkglist *opkg)
 
 		/*
 		 * if PKGPATH does not match, do not try to update (mysql 5.1/5.5)
-		 * opkg->pkgpath may be NULL if we are checking keeplist
 		 */
-		if (opkg->pkgpath != NULL &&
-			strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
+		if (strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
 				continue;
 
 		r_fullpkglen = strlen(pkglist->full);

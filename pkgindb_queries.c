@@ -1,7 +1,7 @@
-/* $Id: pkgindb_queries.c,v 1.24 2012/04/19 21:40:10 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.25 2012/04/24 13:23:27 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -30,7 +30,7 @@
  *
  */
 
-const char const DROP_LOCAL_TABLES[] =
+const char DROP_LOCAL_TABLES[] =
     "DROP TABLE IF EXISTS LOCAL_DEPS;"
     "DROP TABLE IF EXISTS LOCAL_PKG;"
     "DROP TABLE IF EXISTS LOCAL_CONFLICTS;"
@@ -145,10 +145,12 @@ const char REMOTE_PKGS_QUERY_DESC[] =
     "ORDER BY FULLPKGNAME DESC;";
 
 const char NOKEEP_LOCAL_PKGS[] =
-    "SELECT FULLPKGNAME,PKGNAME FROM LOCAL_PKG WHERE PKG_KEEP IS NULL;";
+    "SELECT FULLPKGNAME,PKGNAME,PKGPATH "
+	"FROM LOCAL_PKG WHERE PKG_KEEP IS NULL;";
 
 const char KEEP_LOCAL_PKGS[] =
-    "SELECT FULLPKGNAME,PKGNAME FROM LOCAL_PKG WHERE PKG_KEEP IS NOT NULL;";
+    "SELECT FULLPKGNAME,PKGNAME,PKGPATH "
+	"FROM LOCAL_PKG WHERE PKG_KEEP IS NOT NULL;";
 
 const char PKG_URL[] =
     "SELECT REPOSITORY FROM REMOTE_PKG WHERE FULLPKGNAME = \'%s\';";

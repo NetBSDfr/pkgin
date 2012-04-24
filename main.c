@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.26 2012/04/17 07:11:38 imilh Exp $ */
+/* $Id: main.c,v 1.27 2012/04/24 13:23:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -290,8 +290,10 @@ main(int argc, char *argv[])
 static void
 missing_param(int argc, int nargs, const char *msg)
 {
+	const char *foo = msg;
+
 	if (argc < nargs)
-		errx(EXIT_FAILURE, msg);
+		errx(EXIT_FAILURE, foo);
 }
 
 /* find command index */

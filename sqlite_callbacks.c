@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.10 2012/04/19 21:40:10 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.11 2012/04/24 13:23:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -32,15 +32,6 @@
 
 #include "pkgin.h"
 
-/* SQLite results columns */
-#define FULLPKGNAME	argv[0]
-#define PKGNAME		argv[1]
-#define PKGVERS		argv[2]
-#define COMMENT		argv[3]
-#define FILE_SIZE	argv[4]
-#define SIZE_PKG	argv[5]
-#define CATEGORY	argv[6]
-#define PKGPATH		argv[7]
 /** 
  * SQLite callback, record package list
  */
@@ -49,6 +40,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 {
 	Pkglist	   	*plist;
 	Plisthead 	*plisthead = (Plisthead *)param;
+	int			i;
 
 	if (argv == NULL)
 		return PDB_ERR;
@@ -57,42 +49,32 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 	 * from pkgsrc or wip that does not exist in
 	 * pkg_summary(5), return
 	 */
-	if (FULLPKGNAME == NULL)
+	if (argv[0] == NULL)
 		return PDB_ERR;
 
 	plist = malloc_pkglist(LIST);
-	XSTRDUP(plist->full, FULLPKGNAME);
 
-	/* it's convenient to have package name without version (autoremove.c) */
-	if (argc > 1)
-		XSTRDUP(plist->name, PKGNAME);
+	for (i = 0; i < argc; i++) {
+		if (argv[i] == NULL)
+			continue;
 
-	plist->size_pkg = 0;
-	plist->file_size = 0;
-
-	/* classic pkglist, has COMMENT and SIZEs */
-	if (argc > 2) {
-		if (COMMENT == NULL) {
-			/* COMMENT or SIZEs were empty
-			 * not a valid pkg_summary(5) entry, return
-			 */
-			XFREE(plist->full);
-			XFREE(plist);
-			return PDB_OK;
-		}
-
-		XSTRDUP(plist->version, PKGVERS);
-		XSTRDUP(plist->comment, COMMENT);
-		if (FILE_SIZE != NULL)
-			plist->file_size = strtol(FILE_SIZE, (char **)NULL, 10);
-		if (SIZE_PKG != NULL)
-			plist->size_pkg = strtol(SIZE_PKG, (char **)NULL, 10);
-
-		XSTRDUP(plist->category, CATEGORY);
-		XSTRDUP(plist->pkgpath, PKGPATH);
-	} else
-		/* conflicts or requires list, only pkgname needed */
-		plist->comment = NULL;
+		if (strcmp(colname[i], "FULLPKGNAME") == 0)
+			XSTRDUP(plist->full, argv[i]);
+		if (strcmp(colname[i], "PKGNAME") == 0)
+			XSTRDUP(plist->name, argv[i]);
+		if (strcmp(colname[i], "PKGVERS") == 0)
+			XSTRDUP(plist->version, argv[i]);
+		if (strcmp(colname[i], "COMMENT") == 0)
+			XSTRDUP(plist->comment, argv[i]);
+		if (strcmp(colname[i], "PKGPATH") == 0)
+			XSTRDUP(plist->pkgpath, argv[i]);
+		if (strcmp(colname[i], "CATEGORY") == 0)
+			XSTRDUP(plist->category, argv[i]);
+		if (strcmp(colname[i], "FILE_SIZE") == 0)
+			plist->file_size = strtol(argv[i], (char **)NULL, 10);
+		if (strcmp(colname[i], "SIZE_PKG") == 0)
+			plist->file_size = strtol(argv[i], (char **)NULL, 10);
+	}
 
 	SLIST_INSERT_HEAD(plisthead, plist, next);
 
