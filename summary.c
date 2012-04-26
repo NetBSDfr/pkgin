@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.27 2012/04/15 17:28:35 imilh Exp $ */
+/* $Id: summary.c,v 1.28 2012/04/26 21:27:33 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -199,7 +199,9 @@ field_record(const char *field, char *line)
 		pfield = strchr(line, '=');
 		trimcr(pfield++);
 
-		return pfield;
+		/* weird buggy packages with empty fields, like LICENSE= */
+		if (*pfield != '\0')
+			return pfield;
 	}
 
 	return NULL;
