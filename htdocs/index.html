@@ -156,6 +156,21 @@ $ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
 			<p>Shows what a package requires (pkgin 0.5 and up):</p>
 			<pre class="programlisting"># pkgin requires foo</pre>
 
+			<p>Show packages belonging to category (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin show-category www</pre>
+
+			<p>Show package's category (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin show-pkg-category foo</pre>
+
+			<p>Show remote package's content (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin pkg-content foo</pre>
+
+			<p>Show remote package's long-description (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin pkg-descr foo</pre>
+
+			<p>Show remote package's build definitions (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin pkg-build-defs foo</pre>
+
 			<p class="note">Every command has a shortcut, <code>pkgin -h</code> will show them.</p>
 
 			<a name="platforms"><h3>Platforms</h3></a>
@@ -163,14 +178,11 @@ $ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
 			<p>
 			<i>pkgin</i> is known to work and have been tested under the following platforms :
 			<ul>
-				<li>NetBSD 4.0</li>
-				<li>NetBSD 5.{0,1}</li>
-				<li>NetBSD current</li>
-				<li>DragonFly BSD 2.0 to 2.8</li>
-				<li>DragonFly BSD current</li>
+				<li>NetBSD {4,5,6, current}</li>
+				<li>DragonFly BSD 2.0 to 3.0</li>
 				<li>Solaris 10/SunOS 5.10</li>
 				<li>Opensolaris/SunOS 5.11</li>
-				<li>Debian GNU/Linux 5.0</li>
+				<li>Debian GNU/Linux {5,6}</li>
 				<li>Mac OS X 10.{5,6}</li>
 				<li>MINIX 3.1.8</li>
 			</ul>
