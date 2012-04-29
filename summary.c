@@ -1,7 +1,7 @@
-/* $Id: summary.c,v 1.28 2012/04/26 21:27:33 imilh Exp $ */
+/* $Id: summary.c,v 1.29 2012/04/29 10:15:44 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation

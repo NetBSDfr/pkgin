@@ -1,10 +1,16 @@
+20120429
+	When a package is marked as TOREMOVE and TOUPGRADE because of a
+	dependency breakage during upgrade, just follow the usual upgrade
+	process.
+
+20120427
+	Handled "no value field" for buggy packages.
+
 20120419
 	Hopefuly fixed the "dirty repository" bug thanks to bapt
 
 20120416
 	Added show-{pkg-,}category as requested by Julian Fagir
-	Introduced preferred.conf, in order not to break preferred versions
-	when upgrading
 	Added pkg-build-defs as requested by gls@
 
 20120415

@@ -1,7 +1,7 @@
-/* $Id: impact.c,v 1.16 2012/04/18 11:02:55 imilh Exp $ */
+/* $Id: impact.c,v 1.17 2012/04/29 10:15:44 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -138,7 +138,6 @@ break_depends(Plisthead *impacthead)
 				fdphead = init_head();
 				full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, fdphead);
 			}
-			XFREE(rpkg);
 
 			/*
 			 * browse dependencies for rdp and see if
@@ -153,16 +152,21 @@ break_depends(Plisthead *impacthead)
 
 			free_pkglist(&fdphead, DEPTREE);
 
-			if (!dep_break)
+			if (!dep_break) {
+				XFREE(rpkg);
 				continue;
+			}
 
 			/* dependency break, insert rdp in remove-list */
 			rmimpact = malloc_pkglist(IMPACT);
 			XSTRDUP(rmimpact->depend, rdp->depend);
+			XSTRDUP(rmimpact->name, rpkg);
 			XSTRDUP(rmimpact->full, rdp->depend);
 			XSTRDUP(rmimpact->old, rdp->depend);
 			rmimpact->action = TOREMOVE;
 			rmimpact->level = 0;
+
+			XFREE(rpkg);
 
 			SLIST_INSERT_HEAD(impacthead, rmimpact, next);
 		}
@@ -202,6 +206,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	pimpact->action = DONOTHING;
 	pimpact->old = NULL;
 	pimpact->full = NULL;
+	XSTRDUP(pimpact->name, mapplist->name);
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
@@ -419,6 +424,23 @@ impactend:
 
 	/* check for depedencies breakage (php-4 -> php-5) */
 	break_depends(impacthead);
+
+	/* 
+	 * a package has been placed in both TOUPGRADE and TOREMOVE impact
+	 * lists; this occurs when an upgrade will break some package's
+	 * dependency, thus removing it, then reinstalling it. Simply
+	 * mark the TOREMOVE action as DONOTHING.
+	 */
+	SLIST_FOREACH(pimpact, impacthead, next) {
+		SLIST_FOREACH(tmpimpact, impacthead, next) {
+			if (strcmp(pimpact->name, tmpimpact->name) != 0)
+				continue;
+
+			if (pimpact->action == TOUPGRADE &&
+				tmpimpact->action == TOREMOVE)
+				tmpimpact->action = DONOTHING;
+		}
+	}
 
 	/* remove DONOTHING entries */
 	SLIST_FOREACH_MUTABLE(pimpact, impacthead, next, tmpimpact) {
