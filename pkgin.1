@@ -61,34 +61,26 @@ The
 utility provides several commands:
 .Pp
 .Bl -tag -width Fl -compact
-
 .It Cm autoremove
 Automatically removes orphan dependencies.
-
 .It Cm avail
 Lists all packages available in the repository.
-
 .It Cm clean
 Delete downloaded packages from the cache directory.
-
 .It Cm export
 Export the list of non-autoremovable packages to stdout
 (one category/package by line)
-
 .It Cm full-upgrade
 Upgrade all packages to their newer versions present in the
 repository.
-
 .It Cm import Ar file
 Import a list of packages to be installed from file
 (one category/package by line)
-
 .It Cm install Ar package Ar ...
 Performs installation or upgrade of
 .Ar package .
 If more than one packages are specified on the command-line, all
 will be installed (or upgraded).
-
 .It Cm keep Ar package Ar ...
 Marks
 .Ar package
@@ -99,53 +91,43 @@ manually from pkgsrc, can't be removed through a
 upgrade.
 More than one package can be specified on the command-line, to mark
 several packages as non-removable in a single command.
-
 .It Cm list
 Lists all packages installed locally on a system. If the
 .Ar l
 modifier is added to this command, show only packages matching the status flag.
-
 .It Cm pkg-content Ar package
 Show remote
 .Ar package
 content.
-
 .It Cm pkg-descr Ar package
 Show remote
 .Ar package
 long-description.
-
 .It Cm pkg-build-defs Ar package
 Show remote
 .Ar package
 build definitions.
-
 .It Cm provides Ar package
 Shows what a
 .Ar package
 provides to others
-
 .It Cm remove Ar package Ar ...
 Removes
 .Ar package
 as well as all packages depending on it.
 When more than one package are specified, they will all be uninstalled.
 By default, it will prompt you to confirm before package removals.
-
 .It Cm requires Ar package
 Shows what a
 .Ar package
 requires from others
 .Ar packages .
-
 .It Cm search Ar pattern
 Performs a regular expression search for a pattern in the repository.
 .It Cm show-deps 
 Displays all direct dependencies
-
 .It Cm show-full-deps Ar package
 Displays all direct dependencies recursively
-
 .It Cm show-rev-deps Ar package 
 Displays all reverse direct dependencies for 
 .Ar package .
@@ -153,36 +135,29 @@ If more than one package is specified,
 .Nm
 will show recursively reverse direct dependencies for all packages
 on the command-line.
-
 .It Cm show-category Ar category
 Show packages belonging to
 .Ar category .
-
 .It Cm show-pkg-category Ar package
 Show
 .Ar package
 category.
-
 .It Cm show-keep
 Display "non auto-removable" packages.
-
 .It Cm unkeep Ar package Ar ...
 Marks
 .Ar package
 as "auto-removable".
 If no other package depends on it, it will be removed when using
 the autoremove modifier.
-
 .It Cm update
 Creates and populates the initial database.
 Must be run after the variable
-
 .It Cm upgrade
 Upgrade keepable packages to their newer versions present in the
 repository.
 If the installed dependencies match the listed needed dependencies,
 don't upgrade them.
-
 .El
 .Sh STATUS FLAGS
 .Pp
