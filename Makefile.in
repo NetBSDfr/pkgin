@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.16 2012/04/15 19:37:25 imilh Exp $
+# $Id: Makefile.in,v 1.17 2012/04/29 19:20:55 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -33,7 +33,7 @@ BSD_PKG_MK=	1
 
 .if ${OPSYS} == "Minix"
 PKGTOOLS?=	${PKG_TOOLS_BIN}
-CPPFLAGS+=	-D_POSIX_SOURCE -D_MINIX
+CPPFLAGS+=	-D_NETBSD_SOURCE -D_MINIX
 LDADD+=		-lsqlite3
 .else
 SRCS+=		sqlite3.c
