@@ -151,8 +151,17 @@ as "auto-removable".
 If no other package depends on it, it will be removed when using
 the autoremove modifier.
 .It Cm update
-Creates and populates the initial database.
-Must be run after the variable
+Creates and populates the initial database of locally installed packages
+and available packages (from the remote
+.Xr pkg_summary 5
+list).                                                                          
+This is done automatically when                                                 
+.Nm                                                                             
+is first used,                                                                  
+when the system package database has been modified.                             
+or when                                                                         
+.Nm                                                                             
+is upgraded to a new database version.
 .It Cm upgrade
 Upgrade keepable packages to their newer versions present in the
 repository.
