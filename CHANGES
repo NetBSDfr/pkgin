@@ -1,3 +1,6 @@
+20120524
+	Do not delete repository entries if the new one is unreachable.
+
 20120429
 	When a package is marked as TOREMOVE and TOUPGRADE because of a
 	dependency breakage during upgrade, just follow the usual upgrade

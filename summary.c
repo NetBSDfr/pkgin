@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.29 2012/04/29 10:15:44 imilh Exp $ */
+/* $Id: summary.c,v 1.30 2012/05/24 14:44:01 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -125,11 +125,8 @@ fetch_summary(char *cur_repo)
 			return NULL;
 	}
 
-	if (file == NULL) {
-		fprintf(stderr, MSG_COULDNT_FETCH, buf);
-
-		return NULL;
-	}
+	if (file == NULL)
+		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf);
 
 	snprintf(buf, BUFSIZ, UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
 	pkgindb_doquery(buf, NULL, NULL);
@@ -643,10 +640,6 @@ update_remotedb(void)
 {
 	char	**summary = NULL, **prepos;
 
-	/* delete unused repositories */
-	pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
-		pdb_clean_remote, NULL);
-
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
 
@@ -663,6 +656,10 @@ update_remotedb(void)
 		/* update remote* table for this repository */
 		insert_summary(sumsw[REMOTE_SUMMARY], summary, *prepos);
 	}
+
+	/* delete unused repositories */
+	pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
+		pdb_clean_remote, NULL);
 
 	/* remove empty rows (duplicates) */
 	pkgindb_doquery(DELETE_EMPTY_ROWS, NULL, NULL);
