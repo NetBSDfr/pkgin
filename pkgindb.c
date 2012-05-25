@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.9 2011/10/23 13:57:56 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.10 2012/05/25 13:59:44 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -47,10 +47,32 @@ static const char *pragmaopts[] = {
 	NULL
 };
 
+static char pkg_dbdir[BUFSIZ] = "";
+
+static void
+get_pkg_dbdir(void)
+{
+	char **exec_cmd;
+
+	if (pkg_dbdir[0] != '\0')
+		return;
+
+	if ((exec_cmd =
+			exec_list(PKGTOOLS"/pkg_admin config-var PKG_DBDIR", NULL))
+		== NULL)
+		strcpy(pkg_dbdir, PKG_DBDIR);
+	else {
+		XSTRCPY(pkg_dbdir, exec_cmd[0]);
+		free_list(exec_cmd);
+	}
+}
+
 uint8_t
 have_enough_rights()
 {
-	if (access(PKGIN_DB, W_OK) < 0 || access(PKG_DBDIR, W_OK) < 0)
+	get_pkg_dbdir();
+
+	if (access(pkg_dbdir, W_OK) < 0 || access(pkg_dbdir, W_OK) < 0)
 		return 0;
 
 	return 1;
@@ -197,18 +219,20 @@ pkgindb_reset()
 	pkgindb_init();
 }
 
-#define PKGDB_PATH PKG_DBDIR"/pkgdb.byfile.db"
-
 int
 pkg_db_mtime()
 {
 	uint8_t		pkgdb_present = 1;
 	struct stat	st;
 	time_t	   	db_mtime = 0;
-	char		str_mtime[20], query[BUFSIZ];
+	char		str_mtime[20], buf[BUFSIZ];
+
+	get_pkg_dbdir();
+
+	snprintf(buf, BUFSIZ, "%s/pkgdb.byfile.db", pkg_dbdir);
 
 	/* no pkgdb file */
-	if (stat(PKGDB_PATH, &st) < 0)
+	if (stat(buf, &st) < 0)
 		pkgdb_present = 0;
 
 	str_mtime[0] = '\0';
@@ -223,9 +247,9 @@ pkg_db_mtime()
 	if (!pkgdb_present || db_mtime == st.st_mtime)
 		return 0;
 
-	snprintf(query, BUFSIZ, UPDATE_PKGDB_MTIME, (long long)st.st_mtime);
+	snprintf(buf, BUFSIZ, UPDATE_PKGDB_MTIME, (long long)st.st_mtime);
 	/* update mtime */
-	pkgindb_doquery(query, NULL, NULL);
+	pkgindb_doquery(buf, NULL, NULL);
 
 	return 1;
 }

@@ -1,3 +1,6 @@
+20120525
+	Dynamically read PKG_DBDIR from pkg_admin
+
 20120524
 	Do not delete repository entries if the new one is unreachable.
 
