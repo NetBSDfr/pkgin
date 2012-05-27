@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.34 2012/04/19 21:40:10 imilh Exp $ */
+/* $Id: pkgin.h,v 1.35 2012/05/27 08:24:21 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -207,6 +207,7 @@ extern char			**pkg_repos;
 extern const char	*pkgin_cache;
 extern char  		lslimit;
 extern char			pkgtools_flags[];
+extern char			pkg_dbdir[];
 extern Plisthead	r_plisthead;
 extern Plisthead	l_plisthead;
 extern FILE			*tracefp;
@@ -278,5 +279,7 @@ int			pkg_has_conflicts(Pkglist *);
 void		show_prov_req(const char *, const char *);
 /* pkg_infos.c */
 void		show_pkg_info(char, char *);
+/* pkgindb.c */
+void		get_pkg_dbdir(void);
 
 #endif

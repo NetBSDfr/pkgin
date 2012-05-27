@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.10 2012/05/25 13:59:44 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.11 2012/05/27 08:24:21 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -47,15 +47,12 @@ static const char *pragmaopts[] = {
 	NULL
 };
 
-static char pkg_dbdir[BUFSIZ] = "";
+char pkg_dbdir[BUFSIZ];
 
-static void
+void
 get_pkg_dbdir(void)
 {
 	char **exec_cmd;
-
-	if (pkg_dbdir[0] != '\0')
-		return;
 
 	if ((exec_cmd =
 			exec_list(PKGTOOLS"/pkg_admin config-var PKG_DBDIR", NULL))
@@ -70,8 +67,6 @@ get_pkg_dbdir(void)
 uint8_t
 have_enough_rights()
 {
-	get_pkg_dbdir();
-
 	if (access(pkg_dbdir, W_OK) < 0 || access(pkg_dbdir, W_OK) < 0)
 		return 0;
 
@@ -226,8 +221,6 @@ pkg_db_mtime()
 	struct stat	st;
 	time_t	   	db_mtime = 0;
 	char		str_mtime[20], buf[BUFSIZ];
-
-	get_pkg_dbdir();
 
 	snprintf(buf, BUFSIZ, "%s/pkgdb.byfile.db", pkg_dbdir);
 
