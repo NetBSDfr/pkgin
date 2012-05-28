@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.13 2012/04/26 21:27:33 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.14 2012/05/28 07:53:25 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -72,7 +72,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 			XSTRDUP(plist->comment, argv[i]);
 		if (strcmp(colname[i], "PKGPATH") == 0)
 			XSTRDUP(plist->pkgpath, argv[i]);
-		if (strcmp(colname[i], "CATEGORY") == 0)
+		if (strcmp(colname[i], "CATEGORIES") == 0)
 			XSTRDUP(plist->category, argv[i]);
 		if (strcmp(colname[i], "FILE_SIZE") == 0)
 			plist->file_size = strtol(argv[i], (char **)NULL, 10);
