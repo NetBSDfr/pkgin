@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.47 2012/04/24 13:23:27 imilh Exp $ */
+/* $Id: actions.c,v 1.48 2012/05/28 10:56:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -118,6 +118,7 @@ pkg_download(Plisthead *installhead)
 
 		/* if pkg's repo URL is file://, just symlink */
 		if (strncmp(pkg_url, SCHEME_FILE, strlen(SCHEME_FILE)) == 0) {
+			(void)unlink(pkg_fs);
 			if (symlink(&pkg_url[strlen(SCHEME_FILE) + 3], pkg_fs) < 0)
 				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
 			printf(MSG_SYMLINKING_PKG, pkg_url);

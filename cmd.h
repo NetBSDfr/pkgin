@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.13 2012/04/17 07:11:38 imilh Exp $ */
+/* $Id: cmd.h,v 1.14 2012/05/28 10:56:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -60,6 +60,8 @@ static struct command {
 	  PKG_SHCAT_CMD },
 	{ "show-pkg-category", "spc", "Show package's category.",
 	  PKG_SHPCAT_CMD },
+	{ "show-all-categories", "sac", "Show all categories.",
+	  PKG_SHALLCAT_CMD },
 	{ "keep", "ke", "Mark package as \"non auto-removable\".",
 	  PKG_KEEP_CMD },
 	{ "unkeep", "uk", "Mark package as \"auto-removable\".",

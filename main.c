@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.28 2012/05/27 08:24:21 imilh Exp $ */
+/* $Id: main.c,v 1.29 2012/05/28 10:56:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -268,7 +268,10 @@ main(int argc, char *argv[])
 	case PKG_SHPCAT_CMD: /* show package's category */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
 		show_pkg_category(argv[1]);
-		break;		
+		break;
+	case PKG_SHALLCAT_CMD: /* show all categories */
+		show_all_categories();
+		break;
 	case PKG_GINTO_CMD: /* Miod's request */
 		ginto();
 		break;
@@ -325,7 +328,7 @@ usage()
 
 	for (i = 0; cmd[i].name != NULL; i++)
 		if (cmd[i].cmdtype != PKG_GINTO_CMD)
-			printf("%-17s (%-4s) -  %s\n",
+			printf("%-19s (%-4s) -  %s\n",
 				cmd[i].name, cmd[i].shortcut, cmd[i].descr);
 
 	exit(EXIT_FAILURE);

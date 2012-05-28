@@ -1,3 +1,7 @@
+20120528
+	Added show-all-categories
+	unlink() before symlink()
+
 20120525
 	Dynamically read PKG_DBDIR from pkg_admin
 

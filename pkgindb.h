@@ -1,4 +1,4 @@
-/* $Id: pkgindb.h,v 1.11 2012/04/14 19:24:39 imilh Exp $ */
+/* $Id: pkgindb.h,v 1.12 2012/05/28 10:56:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -72,6 +72,7 @@ extern const char EXPORT_KEEP_LIST[];
 extern const char GET_PKGNAME_BY_PKGPATH[];
 extern const char GET_ORPHAN_PACKAGES[];
 extern const char COMPAT_CHECK[];
+extern const char SHOW_ALL_CATEGORIES[];
 
 #define LOCAL_PKG "LOCAL_PKG"
 #define REMOTE_PKG "REMOTE_PKG"

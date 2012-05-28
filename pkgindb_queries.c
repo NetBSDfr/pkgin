@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.25 2012/04/24 13:23:27 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.26 2012/05/28 10:56:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -197,3 +197,7 @@ const char GET_ORPHAN_PACKAGES[] =
 
 const char COMPAT_CHECK[] =
 	"SELECT FULLPKGNAME FROM REMOTE_PKG LIMIT 1;";
+
+const char SHOW_ALL_CATEGORIES[] =
+	"SELECT DISTINCT CATEGORIES FROM REMOTE_PKG WHERE "
+	"CATEGORIES NOT LIKE '%% %%' ORDER BY CATEGORIES DESC;";

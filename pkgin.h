@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.35 2012/05/27 08:24:21 imilh Exp $ */
+/* $Id: pkgin.h,v 1.36 2012/05/28 10:56:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -116,6 +116,7 @@
 #define PKG_SHPKGBDEFS_CMD 22
 #define PKG_SHCAT_CMD 23
 #define PKG_SHPCAT_CMD 24
+#define PKG_SHALLCAT_CMD 25
 #define PKG_GINTO_CMD 255
 
 #define PKG_EQUAL '='
@@ -237,6 +238,7 @@ void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 void		show_category(char *);
 void		show_pkg_category(char *);
+void		show_all_categories(void);
 /* actions.c */
 int			check_yesno(uint8_t);
 void		do_pkg_remove(Plisthead *);

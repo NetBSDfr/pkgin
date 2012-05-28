@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.9 2012/04/20 09:15:53 imilh Exp $ */
+/* $Id: pkglist.c,v 1.10 2012/05/28 10:56:27 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -348,4 +348,21 @@ show_pkg_category(char *pkgname)
 		if (strcmp(plist->name, pkgname) == 0)
 			printf("%-12s - %s\n", plist->category, plist->full);
 	}
+}
+
+void
+show_all_categories(void)
+{
+	Plisthead	*cathead;
+	Pkglist		*plist;
+
+	if ((cathead = rec_pkglist(SHOW_ALL_CATEGORIES)) == NULL) {
+		fprintf(stderr, MSG_NO_CATEGORIES);
+		return;
+	}
+
+	SLIST_FOREACH(plist, cathead, next)
+		printf("%s\n", plist->full);
+
+	free_pkglist(&cathead, LIST);
 }
