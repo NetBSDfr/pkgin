@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.30 2012/05/24 14:44:01 imilh Exp $ */
+/* $Id: summary.c,v 1.31 2012/05/28 12:25:14 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -530,37 +530,6 @@ delete_remote_tbl(struct Summary sum, char *repo)
 	pkgindb_doquery(buf, NULL, NULL);
 }
 
-static int
-pdb_clean_remote(void *param, int argc, char **argv, char **colname)
-{
-	int	i;
-	size_t	repolen;
-	char	**repos = pkg_repos, query[BUFSIZ];
-
-	if (argv == NULL)
-		return PDB_ERR;
-
-	for (i = 0; repos[i] != NULL; i++) {
-		repolen = strlen(repos[i]);
-		if (repolen == strlen(argv[0]) &&
-			strncmp(repos[i], argv[0], repolen) == 0 && !force_update)
-		   	return PDB_OK;
-	}
-	/* did not find argv[0] (db repository) in pkg_repos */
-	printf(MSG_CLEANING_DB_FROM_REPO, argv[0]);
-
-	delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[0]);
-
-	snprintf(query, BUFSIZ,
-		"DELETE FROM REPOS WHERE REPO_URL = \'%s\';", argv[0]);
-	pkgindb_doquery(query, NULL, NULL);
-
-	/* force pkg_summary reload for available repository */
-	force_fetch = 1;
-
-	return PDB_OK;
-}
-
 static void
 update_localdb(char **pkgkeep)
 {
@@ -635,10 +604,42 @@ update_localdb(char **pkgkeep)
 	free_list(summary);
 }
 
+static int
+pdb_clean_remote(void *param, int argc, char **argv, char **colname)
+{
+	int	i;
+	size_t	repolen;
+	char	**repos = pkg_repos, query[BUFSIZ];
+
+	if (argv == NULL)
+		return PDB_ERR;
+
+	for (i = 0; repos[i] != NULL; i++) {
+		repolen = strlen(repos[i]);
+		if (repolen == strlen(argv[0]) &&
+			strncmp(repos[i], argv[0], repolen) == 0 && !force_update)
+		   	return PDB_OK;
+	}
+	/* did not find argv[0] (db repository) in pkg_repos */
+	printf(MSG_CLEANING_DB_FROM_REPO, argv[0]);
+
+	delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[0]);
+
+	snprintf(query, BUFSIZ,
+		"DELETE FROM REPOS WHERE REPO_URL = \'%s\';", argv[0]);
+	pkgindb_doquery(query, NULL, NULL);
+
+	/* force pkg_summary reload for available repository */
+	force_fetch = 1;
+
+	return PDB_OK;
+}
+
 static void
 update_remotedb(void)
 {
 	char	**summary = NULL, **prepos;
+	uint8_t	cleaned = 0;
 
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
@@ -649,6 +650,15 @@ update_remotedb(void)
 			continue;
 		}
 
+		/* do not cleanup repos before being sure new repo is reachable */
+		if (!cleaned) {
+			/* delete unused repositories */
+			pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
+				pdb_clean_remote, NULL);
+			cleaned = 1;
+		}
+
+
 		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
 
 		/* delete remote* associated to this repository */
@@ -656,10 +666,6 @@ update_remotedb(void)
 		/* update remote* table for this repository */
 		insert_summary(sumsw[REMOTE_SUMMARY], summary, *prepos);
 	}
-
-	/* delete unused repositories */
-	pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
-		pdb_clean_remote, NULL);
 
 	/* remove empty rows (duplicates) */
 	pkgindb_doquery(DELETE_EMPTY_ROWS, NULL, NULL);
