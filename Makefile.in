@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.17 2012/04/29 19:20:55 imilh Exp $
+# $Id: Makefile.in,v 1.18 2012/05/28 19:59:47 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -37,7 +37,7 @@ CPPFLAGS+=	-D_NETBSD_SOURCE -D_MINIX
 LDADD+=		-lsqlite3
 .else
 SRCS+=		sqlite3.c
-CPPFLAGS.sqlite3.c+=	-DUSE_PREAD
+CPPFLAGS.sqlite3.c+=	-DUSE_PREAD -DSQLITE_OMIT_LOAD_EXTENSION
 .endif
 
 LOCALBASE?=		@prefix@
@@ -90,6 +90,9 @@ CLEANFILES+=	${DPSRCS}
 
 pkgindb_create.h:
 	@SEDCMD=@SED@ ./mkpkgindb.sh > pkgindb_create.h
+
+sqlite3.o: sqlite3.c
+	${COMPILE.c} ${.IMPSRC} ${CPPFLAGS.sqlite3.c}
 
 afterinstall:	configinstall
 
