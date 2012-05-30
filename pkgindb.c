@@ -1,4 +1,4 @@
-/* $Id: pkgindb.c,v 1.11 2012/05/27 08:24:21 imilh Exp $ */
+/* $Id: pkgindb.c,v 1.12 2012/05/30 09:27:12 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -189,7 +189,7 @@ pkgindb_init()
 	/* generic query in order to check tables existence */
 	if (pkgindb_doquery("select * from sqlite_master;",
 			pkgindb_simple_callback, NULL) != PDB_OK)
-		pdb_err("Can't access database: %s");
+		pdb_err("Can't access database");
 
 	/* apply PRAGMA properties */
 	for (i = 0; pragmaopts[i] != NULL; i++) {

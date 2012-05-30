@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.18 2012/05/28 19:59:47 imilh Exp $
+# $Id: Makefile.in,v 1.19 2012/05/30 09:27:12 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -34,10 +34,6 @@ BSD_PKG_MK=	1
 .if ${OPSYS} == "Minix"
 PKGTOOLS?=	${PKG_TOOLS_BIN}
 CPPFLAGS+=	-D_NETBSD_SOURCE -D_MINIX
-LDADD+=		-lsqlite3
-.else
-SRCS+=		sqlite3.c
-CPPFLAGS.sqlite3.c+=	-DUSE_PREAD -DSQLITE_OMIT_LOAD_EXTENSION
 .endif
 
 LOCALBASE?=		@prefix@
@@ -54,7 +50,7 @@ CPPFLAGS+=	-DPKGIN_VERSION=\"${PKGIN_VERSION}\"
 
 .include <bsd.own.mk>
 
-.PATH:	external sqlite
+.PATH:	external
 
 .if defined(DEBUG)
 CPPFLAGS+=	-DDEBUG
@@ -81,18 +77,16 @@ CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
 CPPFLAGS+=	-DHAVE_CONFIG_H
 CPPFLAGS+=	-D_LARGEFILE_SOURCE -D_LARGE_FILES
 CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${MACHINE_ARCH}\"
-CPPFLAGS+=	-Iexternal -I. -Isqlite -I${LOCALBASE}/include
+CPPFLAGS+=	-Iexternal -I. -I${LOCALBASE}/include
 
 LDADD+=		-L${LOCALBASE}/lib @RPATH@,${LOCALBASE}/lib	\
 		-lbz2 -lz -larchive @LIBS@
+LDADD+=		-lsqlite3
 
 CLEANFILES+=	${DPSRCS}
 
 pkgindb_create.h:
 	@SEDCMD=@SED@ ./mkpkgindb.sh > pkgindb_create.h
-
-sqlite3.o: sqlite3.c
-	${COMPILE.c} ${.IMPSRC} ${CPPFLAGS.sqlite3.c}
 
 afterinstall:	configinstall
 
