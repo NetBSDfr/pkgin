@@ -28,7 +28,9 @@
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
+#if HAVE_NBCOMPAT_H
 #include <nbcompat.h>
+#endif
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
@@ -68,10 +70,6 @@
 #endif
 
 #include "path.h"
-
-#ifndef __UNCONST
-#define __UNCONST(a)	((void *)(unsigned long)(const void *)(a))
-#endif
 
 /* Macros */
 #define SUCCESS	(0)

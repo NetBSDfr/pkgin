@@ -1,4 +1,4 @@
-/* $Id: tools.c,v 1.3 2011/10/06 15:13:49 imilh Exp $ */
+/* $Id: tools.c,v 1.4 2012/06/13 13:50:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -191,7 +191,7 @@ exec_list(const char *cmd, const char *match)
 	return(res);
 }
 
-T_Bool
+uint8_t
 is_listed(const char **list, const char *item)
 {
 	for (; *list != NULL; list++)
@@ -273,7 +273,7 @@ strreplace(char *str, const char *from, const char *to)
 	fromlen = strlen(from);
 	tolen = strlen(to);
 
-	for (i = 0, p = str; *p != 0;) {
+	for (i = 0, p = str; *p != '\0';) {
 		if (strncmp(p, from, fromlen) == 0) {
 			strncat(buf, to, tolen);
 			p += fromlen;

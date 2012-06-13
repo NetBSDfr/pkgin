@@ -1,4 +1,4 @@
-/* $Id: tools.h,v 1.3 2011/10/06 15:13:49 imilh Exp $ */
+/* $Id: tools.h,v 1.4 2012/06/13 13:50:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -189,8 +189,6 @@
 		dst = pdst;								\
 } while (/* CONSTCOND */ 0)
 
-typedef uint8_t T_Bool;
-
 #ifndef SLIST_FOREACH_MUTABLE /* from DragonFlyBSD */
 #define SLIST_FOREACH_MUTABLE(var, head, field, tvar)		\
 	for ((var) = SLIST_FIRST((head));						\
@@ -206,7 +204,7 @@ extern int min(int, int);
 extern int max(int, int);
 extern int listlen(const char **);
 extern char **exec_list(const char *, const char *);
-extern T_Bool is_listed(const char **, const char *);
+extern uint8_t is_listed(const char **, const char *);
 extern void do_log(const char *, const char *, ...);
 extern void trunc_str(char *, char, int);
 extern char *safe_snprintf(int, const char *, ...);

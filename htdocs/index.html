@@ -49,8 +49,17 @@
 			<a name="req"><h3>Prerequisites</h3></a>
 
 			<p>
-			<i>pkgin</i> is developed using the C language. It uses <code>sqlite3</code> as a package database backend, in order to provide good speed on older architectures. <i>SQLite</i> is included in <i>pkgin's</i> source tree so you don't have to install it by yourself, it will simply be built along with <i>pkgin</i>.
+			<i>pkgin</i> is developed using the C language. It uses <code>sqlite3</code> as a package database backend, in order to provide good speed on older architectures.
 			</p>
+			<p>If you wish to build <i>pkgin</i> from sources, the following dependencies must be met
+			<ul>
+				<li><code>databases/sqlite3</code></li>
+				<li><code>pkgtools/libnbcompat</code> (yes, even for <i>NetBSD</i>)</li>
+				<li><code>net/libfetch</code></li>
+				<li><code>archivers/libarchive</code></li>
+			</ul>
+Since <i>NetBSD</i> 6.0, all of those are provided as part of the base system, except for <code>libnbcompat</code>. 
+</p>
 			<p>
 			<code>Pkgin</code> is available via CVS, <a href="http://pkgsrc-wip.cvs.sourceforge.net/viewvc/pkgsrc-wip/wip/pkgin/">pkgsrc-wip</a> and is available in <a href="http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/pkgtools/pkgin/">pkgsrc</a> as <code>pkgtools/pkgin</code>.
 			</p>

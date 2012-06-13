@@ -195,9 +195,17 @@ space separated repositories in order to override
 .Sh FILES
 .Bl -tag -width Ds -compact
 .It /usr/pkg/etc/pkgin/repositories.conf
-This file contains a list of repositories that
+This file contains a list of repository URIs that
 .Nm
 will use.
+It may contain macros
+.Va $arch
+to define the machine hardware platform
+and
+.Va $osrelease
+to define the release version for the operating system
+(as reported by
+.Xr uname 3 ) .
 .El
 .Sh EXAMPLES
 .Pp

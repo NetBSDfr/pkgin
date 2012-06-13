@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.29 2012/05/28 10:56:27 imilh Exp $ */
+/* $Id: main.c,v 1.30 2012/06/13 13:50:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -111,7 +111,7 @@ main(int argc, char *argv[])
 	argv += optind;
 
 	if (argc < 1) {
-		fprintf(stderr, MSG_MISSING_CMD);
+		fprintf(stderr, "%s\n", MSG_MISSING_CMD);
 		usage();
 		/* NOTREACHED */
 	}

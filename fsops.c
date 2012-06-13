@@ -1,4 +1,4 @@
-/* $Id: fsops.c,v 1.2 2012/04/15 11:48:56 imilh Exp $ */
+/* $Id: fsops.c,v 1.3 2012/06/13 13:50:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -32,6 +32,7 @@
 
 #include "pkgin.h"
 #include <dirent.h>
+#include <sys/statvfs.h>
 
 #define FILE_OFFSET_BITS 64 /* needed for large filesystems on sunos */
 

@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.31 2012/05/28 12:25:14 imilh Exp $ */
+/* $Id: summary.c,v 1.32 2012/06/13 13:50:17 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -395,6 +395,7 @@ update_col(struct Summary sum, int pkgid, char *line)
 	}
 }
 
+/* default version for (rare and buggy) packages with a version */
 #define NOVERSION "-0.0"
 
 static void
@@ -577,8 +578,9 @@ update_localdb(char **pkgkeep)
 		 */
 		if ((nokeeplisthead =
 				rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
-			SLIST_FOREACH(pkglist, nokeeplisthead, next)
+			SLIST_FOREACH(pkglist, nokeeplisthead, next) {
 				mark_as_automatic_installed(pkglist->full, 1);
+			}
 
 			free_pkglist(&nokeeplisthead, LIST);
 		}
@@ -657,7 +659,6 @@ update_remotedb(void)
 				pdb_clean_remote, NULL);
 			cleaned = 1;
 		}
-
 
 		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
 

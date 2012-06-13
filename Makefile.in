@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.19 2012/05/30 09:27:12 imilh Exp $
+# $Id: Makefile.in,v 1.20 2012/06/13 13:50:16 imilh Exp $
 
 PROG=		pkgin
 VERSION=	@PACKAGE_VERSION@
@@ -78,6 +78,8 @@ CPPFLAGS+=	-DHAVE_CONFIG_H
 CPPFLAGS+=	-D_LARGEFILE_SOURCE -D_LARGE_FILES
 CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${MACHINE_ARCH}\"
 CPPFLAGS+=	-Iexternal -I. -I${LOCALBASE}/include
+
+LDFLAGS+=	@LDFLAGS@
 
 LDADD+=		-L${LOCALBASE}/lib @RPATH@,${LOCALBASE}/lib	\
 		-lbz2 -lz -larchive @LIBS@
