@@ -1,7 +1,7 @@
-/* $Id: pkgin.h,v 1.36 2012/05/28 10:56:27 imilh Exp $ */
+/* $Id: pkgin.h,v 1.37 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -195,6 +195,10 @@ typedef struct Pkglist {
 #define IMPACT		2
 
 typedef SLIST_HEAD(, Pkglist) Plisthead;
+typedef struct Plistnumbered {
+	Plisthead	*P_Plisthead;
+	int	P_count;
+} Plistnumbered;
 
 extern uint8_t 		yesflag;
 extern uint8_t 		noflag;
@@ -203,6 +207,8 @@ extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
 extern uint8_t		pi_upgrade; /* pkg_install upgrade */
+extern int			r_plistcounter;
+extern int			l_plistcounter;
 extern char			*env_repos;
 extern char			**pkg_repos;
 extern const char	*pkgin_cache;
@@ -224,8 +230,7 @@ int			pdb_rec_depends(void *, int, char **, char **);
 /* depends.c */
 int			show_direct_depends(const char *);
 int			show_full_dep_tree(const char *, const char *, const char *);
-void 		full_dep_tree(const char *pkgname, const char *depquery,
-	Plisthead	*pdphead);
+void 		full_dep_tree(const char *, const char *, Plisthead *);
 /* pkglist.c */
 void		init_global_pkglists(void);
 void		free_global_pkglists(void);
@@ -233,7 +238,8 @@ Pkglist		*malloc_pkglist(uint8_t);
 void		free_pkglist_entry(Pkglist **, uint8_t);
 void		free_pkglist(Plisthead **, uint8_t);
 Plisthead	*init_head(void);
-Plisthead	*rec_pkglist(const char *, ...);
+Plistnumbered	*rec_pkglist(const char *, ...);
+int			pkg_is_installed(Plisthead *, Pkglist *);
 void		list_pkgs(const char *, int);
 void		search_pkg(const char *);
 void		show_category(char *);
@@ -257,6 +263,7 @@ Plisthead	*pkg_impact(char **);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);
+int			pkg_is_kept(Pkglist *);
 void		pkg_keep(int, char **);
 /* fsops.c */
 int			fs_has_room(const char *, int64_t);

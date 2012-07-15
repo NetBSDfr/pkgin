@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.19 2011/10/23 13:57:56 imilh Exp $ */
+/* $Id: autoremove.c,v 1.20 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -41,7 +41,8 @@
 void
 pkgin_autoremove()
 {
-	Plisthead	*plisthead, *keephead, *removehead, *orderedhead;
+	Plistnumbered	*plisthead;
+	Plisthead	*keephead, *removehead, *orderedhead;
 	Pkglist		*pkglist, *premove, *pdp;
 	char		*toremove = NULL;
 	int			is_keep_dep, removenb = 0;
@@ -56,10 +57,11 @@ pkgin_autoremove()
 	keephead = init_head();
 
 	/* record keep packages deps  */
-	SLIST_FOREACH(pkglist, plisthead, next)
+	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
 		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, keephead);
 
-	free_pkglist(&plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free(plisthead);
 
 	/* record all unkeep / automatic packages */
 	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
@@ -72,7 +74,7 @@ pkgin_autoremove()
 	removehead = init_head();
 
 	/* parse non-keepables packages */
-	SLIST_FOREACH(pkglist, plisthead, next) {
+	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next) {
 		is_keep_dep = 0;
 		/* is it a dependence for keepable packages ? */
 		SLIST_FOREACH(pdp, keephead, next) {
@@ -95,7 +97,8 @@ pkgin_autoremove()
 	} /* SLIST_FOREACH plisthead */
 
 	free_pkglist(&keephead, DEPTREE);
-	free_pkglist(&plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free(plisthead);
 
 	if (!removenb) {
 		printf(MSG_NO_ORPHAN_DEPS);
@@ -130,7 +133,7 @@ pkgin_autoremove()
 void
 show_pkg_keep(void)
 {
-	Plisthead	*plisthead;
+	Plistnumbered	*plisthead;
 	Pkglist		*pkglist;
 
 	plisthead = rec_pkglist(KEEP_LOCAL_PKGS);
@@ -140,10 +143,11 @@ show_pkg_keep(void)
 		return;
 	}
 
-	SLIST_FOREACH(pkglist, plisthead, next)
+	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
 		printf(MSG_MARK_PKG_KEEP, pkglist->full);
 
-	free_pkglist(&plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free(plisthead);
 }
 
 /**
@@ -203,4 +207,25 @@ pkg_keep(int type, char **pkgargs)
 		} else
 			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
 	} /* for (pkeep) */
+}
+
+int
+pkg_is_kept(Pkglist *pkgkeep)
+{
+	Plistnumbered	*plisthead;
+	Pkglist			*pkglist;
+	int				ret = 0;
+
+	plisthead = rec_pkglist(KEEP_LOCAL_PKGS);
+
+	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next) {
+		if (strcmp(pkgkeep->name, pkglist->name) == 0) {
+			ret = 1;
+			break;
+		}
+	}
+
+	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free(plisthead);
+	return ret;
 }

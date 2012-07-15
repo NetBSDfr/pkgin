@@ -1,3 +1,6 @@
+20120715
+	Preparing pkginteractive integration.
+
 20120530
 	SQLite is now part of NetBSD 6.0 base, remove it from pkgin's tree.
 	Dependency will be added in the package.

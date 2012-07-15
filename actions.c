@@ -1,7 +1,7 @@
-/* $Id: actions.c,v 1.48 2012/05/28 10:56:27 imilh Exp $ */
+/* $Id: actions.c,v 1.49 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -751,7 +751,8 @@ record_upgrades(Plisthead *plisthead)
 void
 pkgin_upgrade(int uptype)
 {
-	Plisthead	*keeplisthead, *localplisthead;
+	Plistnumbered	*keeplisthead;
+	Plisthead	*localplisthead;
 	char		**pkgargs;
 
 	/* used for pkgin_install not to update database, this is done below */
@@ -768,7 +769,7 @@ pkgin_upgrade(int uptype)
 		localplisthead = &l_plisthead;
 	} else
 		/* upgrade only keepables packages */
-		localplisthead = keeplisthead;
+		localplisthead = keeplisthead->P_Plisthead;
 
 	pkgargs = record_upgrades(localplisthead);
 
@@ -780,7 +781,7 @@ pkgin_upgrade(int uptype)
 		if (uptype == UPGRADE_ALL) {
 			free_list(pkgargs);
 			/* record keep list */
-			pkgargs = record_upgrades(keeplisthead);
+			pkgargs = record_upgrades(keeplisthead->P_Plisthead);
 		}
 
 		(void)update_db(LOCAL_SUMMARY, pkgargs);
@@ -788,5 +789,6 @@ pkgin_upgrade(int uptype)
 
 	free_list(pkgargs);
 
-	free_pkglist(&keeplisthead, LIST);
+	free_pkglist(&keeplisthead->P_Plisthead, LIST);
+	free(keeplisthead);
 }

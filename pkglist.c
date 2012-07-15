@@ -1,4 +1,4 @@
-/* $Id: pkglist.c,v 1.10 2012/05/28 10:56:27 imilh Exp $ */
+/* $Id: pkglist.c,v 1.11 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -34,6 +34,7 @@
 #include <regex.h>
 
 Plisthead	r_plisthead, l_plisthead;
+int	r_plistcounter, l_plistcounter;
 
 /**
  * \fn malloc_pkglist
@@ -130,11 +131,19 @@ free_pkglist(Plisthead **plisthead, uint8_t type)
 void
 init_global_pkglists()
 {
-	SLIST_INIT(&r_plisthead);
-	SLIST_INIT(&l_plisthead);
+	Plistnumbered plist;
 
-	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, pdb_rec_list, &r_plisthead);
-	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, pdb_rec_list, &l_plisthead);
+	SLIST_INIT(&r_plisthead);
+	plist.P_Plisthead = &r_plisthead;
+	plist.P_count = 0;
+	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, pdb_rec_list, &plist);
+	r_plistcounter = plist.P_count;
+
+	SLIST_INIT(&l_plisthead);
+	plist.P_Plisthead = &l_plisthead;
+	plist.P_count = 0;
+	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, pdb_rec_list, &plist);
+	l_plistcounter = plist.P_count;
 }
 
 static void
@@ -178,29 +187,32 @@ init_head(void)
  *
  * Record package list to SLIST
  */
-Plisthead *
+Plistnumbered *
 rec_pkglist(const char *fmt, ...)
 {
 	char		query[BUFSIZ];
 	va_list		ap;
-	Plisthead	*plisthead;
+	Plistnumbered	*plist;
 
-	plisthead = init_head();
+	plist = (Plistnumbered *)malloc(sizeof(Plistnumbered));
+	plist->P_Plisthead = init_head();
+	plist->P_count = 0;
 
 	va_start(ap, fmt);
 	vsnprintf(query, BUFSIZ, fmt, ap);
 	va_end(ap);
 
-	if (pkgindb_doquery(query, pdb_rec_list, plisthead) == PDB_OK)
-		return plisthead;
+	if (pkgindb_doquery(query, pdb_rec_list, plist) == PDB_OK)
+		return plist;
 
-	XFREE(plisthead);
+	XFREE(plist->P_Plisthead);
+	XFREE(plist);
 
 	return NULL;
 }
 
 /* compare pkg version */
-static int
+int
 pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
 {
 	Pkglist *pkglist;
@@ -224,7 +236,7 @@ void
 list_pkgs(const char *pkgquery, int lstype)
 {
 	Pkglist	   	*plist;
-	Plisthead 	*plisthead;
+	Plistnumbered	*plisthead;
 	int			rc;
 	char		pkgstatus, outpkg[BUFSIZ];
 
@@ -269,10 +281,11 @@ list_pkgs(const char *pkgquery, int lstype)
 		return;
 	}
 
-	SLIST_FOREACH(plist, plisthead, next)
+	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
 		printf("%-20s %s\n", plist->full, plist->comment);
 
-	free_pkglist(&plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free(plisthead);
 }
 
 void
@@ -353,16 +366,17 @@ show_pkg_category(char *pkgname)
 void
 show_all_categories(void)
 {
-	Plisthead	*cathead;
-	Pkglist		*plist;
+	Plistnumbered	*cathead;
+	Pkglist			*plist;
 
 	if ((cathead = rec_pkglist(SHOW_ALL_CATEGORIES)) == NULL) {
 		fprintf(stderr, MSG_NO_CATEGORIES);
 		return;
 	}
 
-	SLIST_FOREACH(plist, cathead, next)
+	SLIST_FOREACH(plist, cathead->P_Plisthead, next)
 		printf("%s\n", plist->full);
 
-	free_pkglist(&cathead, LIST);
+	free_pkglist(&cathead->P_Plisthead, LIST);
+	free(cathead);
 }

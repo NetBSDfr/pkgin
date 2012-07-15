@@ -1,7 +1,7 @@
-/* $Id: download.c,v 1.14 2012/04/09 07:14:00 imilh Exp $ */
+/* $Id: download.c,v 1.15 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation

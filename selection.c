@@ -1,4 +1,4 @@
-/* $Id: selection.c,v 1.3 2011/09/20 09:58:02 imilh Exp $ */
+/* $Id: selection.c,v 1.4 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -35,7 +35,7 @@
 void
 export_keep()
 {
-	Plisthead	*plisthead;
+	Plistnumbered	*plisthead;
 	Pkglist		*plist;
 
 	if ((plisthead = rec_pkglist(EXPORT_KEEP_LIST)) == NULL)
@@ -43,10 +43,11 @@ export_keep()
 	/* yes we could output directly from the sql reading, but we would lose
 	 * some genericity.
 	 */
-	SLIST_FOREACH(plist, plisthead, next)
+	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
 		printf("%s\n", plist->full);
 
-	free_pkglist(&plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free(plisthead);
 }
 
 void

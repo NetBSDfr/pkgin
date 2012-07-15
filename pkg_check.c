@@ -1,4 +1,4 @@
-/* $Id: pkg_check.c,v 1.6 2011/10/10 13:06:37 imilh Exp $ */
+/* $Id: pkg_check.c,v 1.7 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -38,11 +38,11 @@ pkg_met_reqs(Plisthead *impacthead)
 {
 	int			met_reqs = 1, foundreq;
 	Pkglist		*pimpact, *requires;
-	Plisthead	*requireshead = NULL;
+	Plistnumbered	*requireshead = NULL;
 	struct stat	sb;
 #ifdef CHECK_PROVIDES
 	Pkglist		*impactprov = NULL, *provides = NULL;
-	Plisthead	*l_provideshead = NULL, *r_provideshead = NULL;
+	Plistnumbered	*l_provideshead = NULL, *r_provideshead = NULL;
 
 	l_provideshead = rec_pkglist(LOCAL_PROVIDES);
 #endif
@@ -56,7 +56,7 @@ pkg_met_reqs(Plisthead *impacthead)
 			continue;
 
 		/* parse requires list */
-		SLIST_FOREACH(requires, requireshead, next) {
+		SLIST_FOREACH(requires, requireshead->P_Plisthead, next) {
 
 			foundreq = 0;
 
@@ -84,7 +84,7 @@ pkg_met_reqs(Plisthead *impacthead)
 			continue;
 #else
 			/* search what local packages provide */
-			SLIST_FOREACH(provides, l_provideshead, next) {
+			SLIST_FOREACH(provides, l_provideshead->P_Plisthead, next) {
 				if (strncmp(provides->full,
 						requires->full,
 						strlen(requires->full)) == 0) {
@@ -106,7 +106,7 @@ pkg_met_reqs(Plisthead *impacthead)
 						continue;
 
 					/* then parse provides list for every package */
-					SLIST_FOREACH(provides, r_provideshead, next) {
+					SLIST_FOREACH(provides, r_provideshead->P_Plisthead, next) {
 						if (strncmp(provides->full,
 								requires->full,
 								strlen(requires->full)) == 0) {
@@ -118,7 +118,8 @@ pkg_met_reqs(Plisthead *impacthead)
 							break;
 						} /* match */
 					}
-					free_pkglist(&r_provideshead, LIST);
+					free_pkglist(&r_provideshead->P_Plisthead, LIST);
+					free(r_provideshead);
 
 					if (foundreq) /* exit impactprov list loop */
 						break;
@@ -141,11 +142,13 @@ pkg_met_reqs(Plisthead *impacthead)
 			}
 #endif
 		} /* SLIST_FOREACH requires */
-		free_pkglist(&requireshead, LIST);
+		free_pkglist(&requireshead->P_Plisthead, LIST);
+		free(requireshead);
 	} /* 1st impact SLIST_FOREACH */
 
 #ifdef CHECK_PROVIDES
-	free_pkglist(&l_provideshead, LIST);
+	free_pkglist(&l_provideshead->P_Plisthead, LIST);
+	free(l_provideshead);
 #endif
 
 	return met_reqs;
@@ -158,14 +161,14 @@ pkg_has_conflicts(Pkglist *pimpact)
 	int			has_conflicts = 0;
 	char		*conflict_pkg, query[BUFSIZ];
 	Pkglist		*conflicts; /* SLIST conflicts pointer */
-	Plisthead	*conflictshead;
+	Plistnumbered	*conflictshead;
 
 	/* conflicts list */
 	if ((conflictshead = rec_pkglist(LOCAL_CONFLICTS)) == NULL)
 		return 0;
 
 	/* check conflicts */
-	SLIST_FOREACH(conflicts, conflictshead, next) {
+	SLIST_FOREACH(conflicts, conflictshead->P_Plisthead, next) {
 		if (pkg_match(conflicts->full, pimpact->full)) {
 
 			/* got a conflict, retrieve conflicting local package */
@@ -185,7 +188,8 @@ pkg_has_conflicts(Pkglist *pimpact)
 		} /* match conflict */
 	} /* SLIST_FOREACH conflicts */
 
-	free_pkglist(&conflictshead, LIST);
+	free_pkglist(&conflictshead->P_Plisthead, LIST);
+	free(conflictshead);
 
 	return has_conflicts;
 }
@@ -193,11 +197,11 @@ pkg_has_conflicts(Pkglist *pimpact)
 void
 show_prov_req(const char *query, const char *pkgname)
 {
-	const char	*out[] = { "provided", "required" };
-	const char	*say;
-	char		*fullpkgname;
-	Plisthead	*plisthead;
-	Pkglist		*plist;
+	const char		*out[] = { "provided", "required" };
+	const char		*say;
+	char			*fullpkgname;
+	Plistnumbered	*plisthead;
+	Pkglist			*plist;
 
 	if ((fullpkgname = unique_pkg(pkgname, REMOTE_PKG)) == NULL)
 		errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL, pkgname);
@@ -210,6 +214,6 @@ show_prov_req(const char *query, const char *pkgname)
 	}
 
 	printf(MSG_FILES_PROV_REQ, say, fullpkgname);
-	SLIST_FOREACH(plist, plisthead, next)
+	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
 		printf("\t%s\n", plist->full);
 }

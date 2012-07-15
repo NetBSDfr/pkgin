@@ -1,4 +1,4 @@
-/* $Id: summary.c,v 1.32 2012/06/13 13:50:17 imilh Exp $ */
+/* $Id: summary.c,v 1.33 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -534,9 +534,9 @@ delete_remote_tbl(struct Summary sum, char *repo)
 static void
 update_localdb(char **pkgkeep)
 {
-	char		**summary = NULL, buf[BUFSIZ];
-	Plisthead	*keeplisthead, *nokeeplisthead;
-	Pkglist		*pkglist;
+	char			**summary = NULL, buf[BUFSIZ];
+	Plistnumbered	*keeplisthead, *nokeeplisthead;
+	Pkglist			*pkglist;
 
 	/* has the pkgdb (pkgsrc) changed ? if not, continue */
 	if (!pkg_db_mtime() || !pkgdb_open(ReadWrite))
@@ -565,11 +565,12 @@ update_localdb(char **pkgkeep)
 
 	/* restore keep-list */
 	if (keeplisthead != NULL) {
-		SLIST_FOREACH(pkglist, keeplisthead, next) {
+		SLIST_FOREACH(pkglist, keeplisthead->P_Plisthead, next) {
 			snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
 			pkgindb_doquery(buf, NULL, NULL);
 		}
-		free_pkglist(&keeplisthead, LIST);
+		free_pkglist(&keeplisthead->P_Plisthead, LIST);
+		free(keeplisthead);
 
 		/*
 		 * packages are installed "manually" by pkgin_install()
@@ -578,11 +579,12 @@ update_localdb(char **pkgkeep)
 		 */
 		if ((nokeeplisthead =
 				rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
-			SLIST_FOREACH(pkglist, nokeeplisthead, next) {
+			SLIST_FOREACH(pkglist, nokeeplisthead->P_Plisthead, next) {
 				mark_as_automatic_installed(pkglist->full, 1);
 			}
 
-			free_pkglist(&nokeeplisthead, LIST);
+			free_pkglist(&nokeeplisthead->P_Plisthead, LIST);
+			free(nokeeplisthead);
 		}
 	} else { /* empty keep list */
 		/*
