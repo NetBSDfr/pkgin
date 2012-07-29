@@ -1,7 +1,7 @@
-/* $Id: main.c,v 1.30 2012/06/13 13:50:17 imilh Exp $ */
+/* $Id: main.c,v 1.31 2012/07/29 10:49:45 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
