@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.50 2012/07/29 10:49:45 imilh Exp $ */
+/* $Id: actions.c,v 1.51 2012/07/29 11:06:53 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -681,29 +681,33 @@ narrow_match(Pkglist *opkg)
 	Pkglist	*pkglist;
 	char	*best_match;
 
-	best_match = NULL;
+	/* for now, best match is old package itself */
+	XSTRDUP(best_match, opkg->full);
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
-		/* not the same package*/
+		/* not the same pkgname, next */
 		if (strcmp(opkg->name, pkglist->name) != 0)
 			continue;
 		/*
 		 * if PKGPATH does not match, do not try to update (mysql 5.1/5.5)
 		 */
 		if (strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
-				continue;
+			continue;
 
-		/* we already have his package, or installed version is greater */
-		if (strcmp(opkg->full, pkglist->full) >= 0)
+		/* same package version, next */
+		if (strcmp(opkg->full, pkglist->full) == 0)
 			continue;
 
 		/* second package is greater */
-		if (version_check(opkg->full, pkglist->full) == 2) {
+		if (version_check(best_match, pkglist->full) == 2) {
 			XFREE(best_match);
 			XSTRDUP(best_match, pkglist->full);			
 		}
 	} /* SLIST_FOREACH remoteplisthead */
 
+	/* there was no upgrade candidate */
+	if (strcmp(best_match, opkg->full) == 0)
+		XFREE(best_match);
 
 	return best_match;
 }
