@@ -1,3 +1,7 @@
+20120729
+	Rewrote narrow_match() using version_check() to avoid more
+	dirty repositories mistakes.
+
 20120715
 	Preparing pkginteractive integration.
 
