@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.51 2012/07/29 11:06:53 imilh Exp $ */
+/* $Id: actions.c,v 1.52 2012/07/29 21:36:10 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -51,14 +51,15 @@ check_yesno(uint8_t default_answer)
 		const char		charval;
 	} answer[] = { { ANSW_NO, 'n' }, { ANSW_YES, 'y' } };
 
-	uint8_t			r, reverse_answer;
-	int				c;
+	uint8_t	r, reverse_answer;
+	int		c;
 
 	if (yesflag)
 		return ANSW_YES;
 	else if (noflag)
 		return ANSW_NO;
 
+	/* reverse answer is default's answer opposite (you don't say!) */
 	reverse_answer = (default_answer == ANSW_YES) ? ANSW_NO : ANSW_YES;
 
 	if (default_answer == answer[ANSW_YES].numval)
@@ -66,11 +67,18 @@ check_yesno(uint8_t default_answer)
 	else
 		printf(MSG_PROCEED_NO);
 
-	if ((c = getchar()) == answer[reverse_answer].charval)
-		r = answer[reverse_answer].numval;
-	else
+	c = tolower(getchar());
+	
+	/* default answer */
+	if (c == answer[default_answer].charval || c == '\n')
 		r = answer[default_answer].numval;
-
+	/* reverse answer */
+	else if (c == answer[reverse_answer].charval)
+		r = answer[reverse_answer].numval;
+	/* bad key was given, default to No */
+	else
+		r = ANSW_NO;
+	
 	/* avoid residual char */
 	if (c != '\n')
 		while((c = getchar()) != '\n' && c != EOF)
