@@ -1,3 +1,7 @@
+20120730
+	Modified default behaviour for Proceed [Y/n]
+	Sync wip with pkgsrc: pkgin 0.6.2 
+
 20120729
 	Rewrote narrow_match() using version_check() to avoid more
 	dirty repositories mistakes.
