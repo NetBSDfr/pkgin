@@ -138,6 +138,10 @@
 #define MAXPATHLEN	1024
 #endif
 
+#ifndef __UNCONST
+#define __UNCONST(a)	((void *)(unsigned long)(const void *)(a))
+#endif
+
 enum {
 	MaxPathSize = MAXPATHLEN
 };
