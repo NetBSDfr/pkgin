@@ -1,3 +1,8 @@
+20120801
+	0.6.2.2
+	Fixed bad size_pkg
+	Fixed build on platforms lacking __UNCONST
+
 20120730
 	Modified default behaviour for Proceed [Y/n]
 	Sync wip with pkgsrc: pkgin 0.6.2 
