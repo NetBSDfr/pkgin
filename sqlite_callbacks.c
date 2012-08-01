@@ -1,4 +1,4 @@
-/* $Id: sqlite_callbacks.c,v 1.15 2012/07/15 17:36:34 imilh Exp $ */
+/* $Id: sqlite_callbacks.c,v 1.16 2012/08/01 11:07:51 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -77,7 +77,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 		if (strcmp(colname[i], "FILE_SIZE") == 0)
 			plist->file_size = strtol(argv[i], (char **)NULL, 10);
 		if (strcmp(colname[i], "SIZE_PKG") == 0)
-			plist->file_size = strtol(argv[i], (char **)NULL, 10);
+			plist->size_pkg = strtol(argv[i], (char **)NULL, 10);
 	}
 
 	SLIST_INSERT_HEAD(plisthead->P_Plisthead, plist, next);
