@@ -1,4 +1,4 @@
-/* $Id: tools.h,v 1.4 2012/06/13 13:50:17 imilh Exp $ */
+/* $Id: tools.h,v 1.5 2012/08/04 14:23:46 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -196,6 +196,15 @@
 		 (var) = (tvar))
 #endif
 
+#define ANSW_NO 0
+#define ANSW_YES 1
+#define MSG_PROCEED_YES "proceed ? [Y/n] "
+#define MSG_PROCEED_NO "proceed ? [y/N] "
+
+/* those need to be initialized (main.c) */
+extern uint8_t yesflag;
+extern uint8_t noflag;
+
 extern int charcount(char *, char);
 extern int trimcr(char *);
 extern char **splitstr(char *, const char *);
@@ -211,5 +220,6 @@ extern char *safe_snprintf(int, const char *, ...);
 extern char *strreplace(char *, const char *, const char *);
 extern char *getosarch(void);
 extern char *getosrelease(void);
+extern int check_yesno(uint8_t);
 
 #endif

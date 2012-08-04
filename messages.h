@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.29 2012/05/28 10:56:27 imilh Exp $ */
+/* $Id: messages.h,v 1.30 2012/08/04 14:23:46 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -56,8 +56,6 @@
 #define MSG_DONT_HAVE_RIGHTS "You don't have enough rights for this operation."
 
 /* actions.c */
-#define MSG_PROCEED_YES "proceed ? [Y/n] "
-#define MSG_PROCEED_NO "proceed ? [y/N] "
 #define MSG_REMOVING "removing %s...\n"
 #define MSG_DOWNLOAD_PKGS "downloading packages...\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"

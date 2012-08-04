@@ -1,4 +1,4 @@
-/* $Id: tools.c,v 1.4 2012/06/13 13:50:17 imilh Exp $ */
+/* $Id: tools.c,v 1.5 2012/08/04 14:23:46 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -288,4 +288,48 @@ strreplace(char *str, const char *from, const char *to)
 
 	XSTRDUP(ret, buf);
 	return(ret);
+}
+
+int
+check_yesno(uint8_t default_answer)
+{
+	const struct Answer	{
+		const uint8_t	numval;
+		const char		charval;
+	} answer[] = { { ANSW_NO, 'n' }, { ANSW_YES, 'y' } };
+
+	uint8_t	r, reverse_answer;
+	int		c;
+
+	if (yesflag)
+		return ANSW_YES;
+	else if (noflag)
+		return ANSW_NO;
+
+	/* reverse answer is default's answer opposite (you don't say!) */
+	reverse_answer = (default_answer == ANSW_YES) ? ANSW_NO : ANSW_YES;
+
+	if (default_answer == answer[ANSW_YES].numval)
+		printf(MSG_PROCEED_YES);
+	else
+		printf(MSG_PROCEED_NO);
+
+	c = tolower(getchar());
+	
+	/* default answer */
+	if (c == answer[default_answer].charval || c == '\n')
+		r = answer[default_answer].numval;
+	/* reverse answer */
+	else if (c == answer[reverse_answer].charval)
+		r = answer[reverse_answer].numval;
+	/* bad key was given, default to No */
+	else
+		r = ANSW_NO;
+	
+	/* avoid residual char */
+	if (c != '\n')
+		while((c = getchar()) != '\n' && c != EOF)
+			continue;
+
+	return r;
 }

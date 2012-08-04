@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.38 2012/07/30 18:22:45 imilh Exp $ */
+/* $Id: pkgin.h,v 1.39 2012/08/04 14:23:46 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -121,8 +121,6 @@
 
 #define DEFAULT_NO 0
 #define DEFAULT_YES 1
-#define ANSW_NO 0
-#define ANSW_YES 1
 
 #define TRACE(fmt...) if (tracefp != NULL) fprintf(tracefp, fmt)
 
@@ -196,8 +194,6 @@ typedef struct Plistnumbered {
 	int	P_count;
 } Plistnumbered;
 
-extern uint8_t 		yesflag;
-extern uint8_t 		noflag;
 extern uint8_t 		force_update;
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
@@ -242,7 +238,6 @@ void		show_category(char *);
 void		show_pkg_category(char *);
 void		show_all_categories(void);
 /* actions.c */
-int			check_yesno(uint8_t);
 void		do_pkg_remove(Plisthead *);
 int			pkgin_remove(char **);
 int			pkgin_install(char **, uint8_t);
