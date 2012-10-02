@@ -11,3 +11,4 @@ Baptiste Daroussin <baptiste.daroussin@gmail.com> - FreeBSD port + patches
 Gautam B.T. <gautam.bt@gmail.com> - MINIX port
 Thomas Adam <thomas@xteddy.org> - patches
 Sylvain "solevis" Mora <sylvain.mora@gmail.com> - padawan
+Nicolas Thauvin <nico@orgrim.net> - intensive tests + patches

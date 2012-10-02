@@ -1,4 +1,4 @@
-/* $Id: autoremove.c,v 1.20 2012/07/15 17:36:34 imilh Exp $ */
+/* $Id: autoremove.c,v 1.21 2012/10/02 10:20:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -145,6 +145,26 @@ show_pkg_keep(void)
 
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
 		printf(MSG_MARK_PKG_KEEP, pkglist->full);
+
+	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free(plisthead);
+}
+
+void
+show_pkg_nokeep(void)
+{
+	Plistnumbered	*plisthead;
+	Pkglist		*pkglist;
+
+	plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS);
+
+	if (plisthead == NULL) {
+		printf("%s\n", MSG_EMPTY_NOKEEP_LIST);
+		return;
+	}
+
+	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
+		printf(MSG_MARK_PKG_NOKEEP, pkglist->full);
 
 	free_pkglist(&plisthead->P_Plisthead, LIST);
 	free(plisthead);

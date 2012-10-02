@@ -1,4 +1,4 @@
-/* $Id: messages.h,v 1.30 2012/08/04 14:23:46 imilh Exp $ */
+/* $Id: messages.h,v 1.31 2012/10/02 10:20:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -86,6 +86,7 @@
 #define MSG_PKGS_TO_DELETE "%d packages to delete: %s\n"
 #define MSG_NO_PKGS_TO_DELETE "no packages to delete\n"
 #define MSG_EMPTY_KEEP_LIST "empty non-autoremovable package list"
+#define MSG_EMPTY_NOKEEP_LIST "empty autoremovable package list"
 #define MSG_EMPTY_AVAIL_PKGLIST "empty available packages list"
 #define MSG_UPGRADE_NEED_REMOVE "this upgrade needs package removal\n"
 #define MSG_PKG_INSTALL_LOGGING_TO "pkg_install error log can be found in %s\n"
@@ -110,6 +111,7 @@ in order to remove packages from the autoremove list, flag those with the `keep'
 #define MSG_ALL_KEEP_PKGS "all packages are marked as \"keepable\"\n."
 #define MSG_AUTOREMOVE_PKGS "%d packages to be autoremoved: %s\n"
 #define MSG_MARK_PKG_KEEP "%s is marked as non-autoremovable\n"
+#define MSG_MARK_PKG_NOKEEP "%s is marked as autoremovable\n"
 #define MSG_MARKING_PKG_KEEP "marking %s as non auto-removable\n"
 #define MSG_UNMARKING_PKG_KEEP "marking %s as auto-removable\n"
 #define MSG_NO_ORPHAN_DEPS "no orphan dependencies found.\n"

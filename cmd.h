@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.14 2012/05/28 10:56:27 imilh Exp $ */
+/* $Id: cmd.h,v 1.15 2012/10/02 10:20:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -68,6 +68,8 @@ static struct command {
 	  PKG_UNKEEP_CMD },
 	{ "show-keep", "sk", "Display \"non auto-removable\" packages.",
 	  PKG_SHKP_CMD },
+	{ "show-no-keep", "snk", "Display \"auto-removable\" packages.",
+	  PKG_SHNOKP_CMD },
 	{ "search", "se", "Search for a package.",
 	  PKG_SRCH_CMD },
 	{ "clean", "cl", "Clean packages cache.",

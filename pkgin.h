@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.39 2012/08/04 14:23:46 imilh Exp $ */
+/* $Id: pkgin.h,v 1.40 2012/10/02 10:20:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -100,19 +100,20 @@
 #define PKG_KEEP_CMD 10
 #define PKG_UNKEEP_CMD 11
 #define PKG_SHKP_CMD 12
-#define PKG_SRCH_CMD 13
-#define PKG_CLEAN_CMD 14
-#define PKG_AUTORM_CMD 15
-#define PKG_EXPORT_CMD 16
-#define PKG_IMPORT_CMD 17
-#define PKG_SHPROV_CMD 18
-#define PKG_SHREQ_CMD 19
-#define PKG_SHPKGCONT_CMD 20
-#define PKG_SHPKGDESC_CMD 21
-#define PKG_SHPKGBDEFS_CMD 22
-#define PKG_SHCAT_CMD 23
-#define PKG_SHPCAT_CMD 24
-#define PKG_SHALLCAT_CMD 25
+#define PKG_SHNOKP_CMD 13
+#define PKG_SRCH_CMD 14
+#define PKG_CLEAN_CMD 15
+#define PKG_AUTORM_CMD 16
+#define PKG_EXPORT_CMD 17
+#define PKG_IMPORT_CMD 18
+#define PKG_SHPROV_CMD 19
+#define PKG_SHREQ_CMD 20
+#define PKG_SHPKGCONT_CMD 21
+#define PKG_SHPKGDESC_CMD 22
+#define PKG_SHPKGBDEFS_CMD 23
+#define PKG_SHCAT_CMD 24
+#define PKG_SHPCAT_CMD 25
+#define PKG_SHALLCAT_CMD 26
 #define PKG_GINTO_CMD 255
 
 #define PKG_EQUAL '='
@@ -254,6 +255,7 @@ Plisthead	*pkg_impact(char **);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);
+void		show_pkg_nokeep(void);
 int			pkg_is_kept(Pkglist *);
 void		pkg_keep(int, char **);
 /* fsops.c */

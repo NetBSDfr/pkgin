@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.31 2012/07/29 10:49:45 imilh Exp $ */
+/* $Id: main.c,v 1.32 2012/10/02 10:20:24 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -226,6 +226,9 @@ main(int argc, char *argv[])
 		break;
 	case PKG_SHKP_CMD: /* show keep packages */
 		show_pkg_keep();
+		break;
+	case PKG_SHNOKP_CMD: /* show keep packages */
+		show_pkg_nokeep();
 		break;
 	case PKG_SRCH_CMD: /* search for package */
 		missing_param(argc, 2, MSG_MISSING_SRCH);
