@@ -1,3 +1,8 @@
+20121114
+	0.6.3
+	Added show-no-keep by orgrim
+	Fixed PR47192 (by stacktic)
+
 20120801
 	0.6.2.2
 	Fixed bad size_pkg
