@@ -1,4 +1,4 @@
-/* $Id: selection.c,v 1.4 2012/07/15 17:36:34 imilh Exp $ */
+/* $Id: selection.c,v 1.5 2012/11/14 19:48:53 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -75,7 +75,7 @@ import_keep(uint8_t do_inst, const char *import_file)
 		if ((pkgindb_doquery(query,
 					pdb_get_value, &fullpkgname[0])) == PDB_ERR) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, input);
-			list_size -= 2; /* reset list size */
+			continue;
 		}
 
 		XSTRDUP(pkglist[list_size], fullpkgname);
