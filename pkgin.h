@@ -1,4 +1,4 @@
-/* $Id: pkgin.h,v 1.40 2012/10/02 10:20:24 imilh Exp $ */
+/* $Id: pkgin.h,v 1.41 2012/11/17 14:04:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -260,6 +260,7 @@ int			pkg_is_kept(Pkglist *);
 void		pkg_keep(int, char **);
 /* fsops.c */
 int			fs_has_room(const char *, int64_t);
+uint64_t		fs_room(const char *);
 void		clean_cache(void);
 void		create_dirs(void);
 char		*read_repos(void);

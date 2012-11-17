@@ -1,4 +1,4 @@
-/* $Id: fsops.c,v 1.3 2012/06/13 13:50:17 imilh Exp $ */
+/* $Id: fsops.c,v 1.4 2012/11/17 14:04:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -62,6 +62,17 @@ fs_has_room(const char *dir, int64_t size)
 		return 1;
 
 	return 0;
+}
+
+uint64_t
+fs_room(const char *dir)
+{
+	struct statvfs		fsbuf;
+
+	if (statvfs(dir, &fsbuf) < 0)
+		err(EXIT_FAILURE, "Can't statvfs() `%s'", dir);
+
+	return (int64_t)fsbuf.f_bavail * (int64_t)fsbuf.f_frsize;
 }
 
 void
