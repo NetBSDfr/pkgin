@@ -1,4 +1,4 @@
-/* $Id: selection.c,v 1.5 2012/11/14 19:48:53 imilh Exp $ */
+/* $Id: selection.c,v 1.6 2012/11/24 18:37:42 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -54,7 +54,7 @@ void
 import_keep(uint8_t do_inst, const char *import_file)
 {
 	int		list_size = 0;
-	char	**pkglist = NULL;
+	char	**pkglist = NULL, *match = NULL;
 	char	input[BUFSIZ], fullpkgname[BUFSIZ], query[BUFSIZ];
 	FILE	*fp;
 
@@ -65,24 +65,24 @@ import_keep(uint8_t do_inst, const char *import_file)
 		if (!isalnum((int)input[0]))
 			continue;
 
-		 /* 1st element + NULL */
-		XREALLOC(pkglist, (list_size + 2) * sizeof(char *));
+		trimcr(input);
+		if (strchr(input, '/') != NULL) {
+			snprintf(query, BUFSIZ, GET_PKGNAME_BY_PKGPATH, input);
 
-		trimcr(&input[0]);
+			if ((pkgindb_doquery(query,
+					pdb_get_value, fullpkgname)) == PDB_OK)
+				XSTRDUP(match, fullpkgname);
+		} else
+			match = unique_pkg(input, REMOTE_PKG);
 
-		snprintf(query, BUFSIZ, GET_PKGNAME_BY_PKGPATH, input);
-
-		if ((pkgindb_doquery(query,
-					pdb_get_value, &fullpkgname[0])) == PDB_ERR) {
+		if (match == NULL) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, input);
 			continue;
 		}
-
-		XSTRDUP(pkglist[list_size], fullpkgname);
-
-		list_size++;
-
-		pkglist[list_size] = NULL;
+		/* 1st element + NULL */
+		XREALLOC(pkglist, (list_size + 2) * sizeof(char *));
+		pkglist[list_size] = match;
+		pkglist[++list_size] = NULL;
 	}
 	fclose(fp);
 

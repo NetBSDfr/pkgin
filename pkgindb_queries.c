@@ -1,4 +1,4 @@
-/* $Id: pkgindb_queries.c,v 1.26 2012/05/28 10:56:27 imilh Exp $ */
+/* $Id: pkgindb_queries.c,v 1.27 2012/11/24 18:37:42 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -177,12 +177,10 @@ const char INSERT_DEPENDS_VALUES[] =
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %s_DEWEY) VALUES (%d,\"%s\",\"%s\");";
 
 const char UNIQUE_PKG[] = 
-	"SELECT FULLPKGNAME FROM %s WHERE PKGNAME = '%s' "
-	"ORDER BY PKGVERS DESC LIMIT 1;";
+	"SELECT FULLPKGNAME, PKGVERS FROM %s WHERE PKGNAME = '%s';";
 
 const char UNIQUE_EXACT_PKG[] = 
-	"SELECT FULLPKGNAME FROM %s WHERE FULLPKGNAME GLOB '%s*' "
-	"ORDER BY PKGVERS DESC LIMIT 1;";
+	"SELECT FULLPKGNAME, PKGVERS FROM %s WHERE FULLPKGNAME GLOB '%s*';";
 
 const char EXPORT_KEEP_LIST[] =
 	"SELECT PKGPATH FROM LOCAL_PKG WHERE PKG_KEEP IS NOT NULL "

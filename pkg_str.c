@@ -1,4 +1,4 @@
-/* $Id: pkg_str.c,v 1.11 2011/10/06 16:11:52 imilh Exp $ */
+/* $Id: pkg_str.c,v 1.12 2012/11/24 18:37:42 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -42,21 +42,28 @@
 char *
 unique_pkg(const char *pkgname, const char *dest)
 {
-	char	*u_pkg = NULL, query[BUFSIZ];
+	char	*u_pkg;
+	Plistnumbered *plist;
+	Pkglist *best_match, *current;
 
-	XMALLOC(u_pkg, sizeof(char) * BUFSIZ);
+	best_match = NULL;
 
-	/* record if it's a versionned pkgname */
 	if (exact_pkgfmt(pkgname))
-		snprintf(query, BUFSIZ, UNIQUE_EXACT_PKG, dest, pkgname);
+		plist = rec_pkglist(UNIQUE_EXACT_PKG, dest, pkgname);
 	else
-		snprintf(query, BUFSIZ, UNIQUE_PKG, dest, pkgname);
+		plist = rec_pkglist(UNIQUE_PKG, dest, pkgname);
 
-	if (pkgindb_doquery(query, pdb_get_value, u_pkg) != PDB_OK) {
-		XFREE(u_pkg);
+	if (plist == NULL)
 		return NULL;
-	}
 
+	best_match = SLIST_FIRST(plist->P_Plisthead);
+	SLIST_FOREACH(current, plist->P_Plisthead, next) 
+		if (dewey_cmp(current->version, DEWEY_GT, best_match->version))
+			best_match = current;
+
+	XSTRDUP(u_pkg, best_match->full);
+	free_pkglist(&plist->P_Plisthead, LIST);
+	free(plist);
 	return u_pkg;
 }
 
