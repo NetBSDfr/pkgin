@@ -1,4 +1,4 @@
-/* $Id: selection.c,v 1.6 2012/11/24 18:37:42 imilh Exp $ */
+/* $Id: selection.c,v 1.7 2012/11/25 09:13:38 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
@@ -54,7 +54,7 @@ void
 import_keep(uint8_t do_inst, const char *import_file)
 {
 	int		list_size = 0;
-	char	**pkglist = NULL, *match = NULL;
+	char	**pkglist = NULL, *match;
 	char	input[BUFSIZ], fullpkgname[BUFSIZ], query[BUFSIZ];
 	FILE	*fp;
 
@@ -72,6 +72,8 @@ import_keep(uint8_t do_inst, const char *import_file)
 			if ((pkgindb_doquery(query,
 					pdb_get_value, fullpkgname)) == PDB_OK)
 				XSTRDUP(match, fullpkgname);
+			else
+				match = NULL;
 		} else
 			match = unique_pkg(input, REMOTE_PKG);
 
