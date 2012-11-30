@@ -267,7 +267,7 @@ start_progress_meter(char *f, off_t filesize, off_t *ctr)
 	start = last_update = time(NULL);
 	file = f;
 	end_pos = filesize;
-	cur_pos = 0;
+	last_pos = cur_pos = 0;
 	counter = ctr;
 	stalled = 0;
 	bytes_per_second = 0;
