@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.32 2012/10/02 10:20:24 imilh Exp $ */
+/* $Id: main.c,v 1.33 2012/12/02 13:33:28 stacktic Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -173,6 +173,8 @@ main(int argc, char *argv[])
 
 	switch (ch) {
 	case PKG_UPDT_CMD: /* update packages db */
+		if (updb_all) /* no need to do it twice */
+			break;
 		if (update_db(REMOTE_SUMMARY, NULL) == EXIT_FAILURE)
 			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 		break;
