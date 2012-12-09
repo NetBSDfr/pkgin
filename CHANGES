@@ -1,3 +1,7 @@
+20121202
+	PR3555339@sf (stacktic)
+	Avoid negative speed when a download start (stacktic)
+
 20121124
 	PR47196 fixed by stacktic
 
