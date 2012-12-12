@@ -1,4 +1,4 @@
-/* $Id: fsops.c,v 1.4 2012/11/17 14:04:13 imilh Exp $ */
+/* $Id: fsops.c,v 1.5 2012/12/12 22:41:13 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -34,7 +34,7 @@
 #include <dirent.h>
 #include <sys/statvfs.h>
 
-#define FILE_OFFSET_BITS 64 /* needed for large filesystems on sunos */
+#define _FILE_OFFSET_BITS 64 /* needed for large filesystems on sunos */
 
 /* Variable options for the repositories file */
 static const struct VarParam {
