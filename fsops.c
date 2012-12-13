@@ -1,4 +1,4 @@
-/* $Id: fsops.c,v 1.6 2012/12/13 12:32:20 imilh Exp $ */
+/* $Id: fsops.c,v 1.7 2012/12/13 21:51:03 imilh Exp $ */
 
 /*
  * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
@@ -34,7 +34,7 @@
 #include <dirent.h>
 #include <sys/statvfs.h>
 
-#if _FILE_OFFSET_BITS - 0 == 32
+#if _FILE_OFFSET_BITS == 32
 #undef _FILE_OFFSET_BITS
 #define _FILE_OFFSET_BITS 64 /* needed for large filesystems on sunos */
 #endif
