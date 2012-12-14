@@ -1,4 +1,4 @@
-/* $Id: actions.c,v 1.54 2012/11/17 14:04:13 imilh Exp $ */
+/* $Id: actions.c,v 1.55 2012/12/14 17:57:06 stacktic Exp $ */
 
 /*
  * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
@@ -330,7 +330,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 {
 	int			installnum = 0, upgradenum = 0, removenum = 0;
 	int			rc = EXIT_FAILURE;
-	uint64_t   	file_size = 0, size_pkg = 0, free_space;
+	uint64_t   	file_size = 0, free_space;
+	int64_t		size_pkg = 0;
 	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
@@ -400,7 +401,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 
 	(void)humanize_number(h_fsize, H_BUF, (int64_t)file_size, "",
 		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-	(void)humanize_number(h_psize, H_BUF, (int64_t)size_pkg, "",
+	(void)humanize_number(h_psize, H_BUF, size_pkg, "",
 		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
 
 	/* check disk space */
@@ -411,7 +412,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		errx(EXIT_FAILURE, MSG_NO_CACHE_SPACE, pkgin_cache, h_fsize, h_free);
 	}
 	free_space = fs_room(LOCALBASE);
-	if (free_space < size_pkg) {
+	if (size_pkg > 0 && free_space < (uint64_t)size_pkg) {
 		(void)humanize_number(h_free, H_BUF, (int64_t)free_space, "",
 				HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
 		errx(EXIT_FAILURE, MSG_NO_INSTALL_SPACE, LOCALBASE, h_psize, h_free);
