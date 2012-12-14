@@ -1,3 +1,7 @@
+20121214
+	0.6.3.1
+	Do not exit with not enough space message when install size is negative
+
 20121202
 	PR3555339@sf (stacktic)
 	Avoid negative speed when a download start (stacktic)
