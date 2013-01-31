@@ -1,3 +1,7 @@
+20130131
+	Fixed computing of download size for local repositories (Reported by
+	Ignatios Souvatzis in PR#47501)
+
 20121214
 	0.6.3.1
 	Do not exit with not enough space message when install size is negative

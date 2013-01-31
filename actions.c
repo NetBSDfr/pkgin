@@ -1,7 +1,7 @@
-/* $Id: actions.c,v 1.55 2012/12/14 17:57:06 stacktic Exp $ */
+/* $Id: actions.c,v 1.56 2013/01/31 19:49:34 stacktic Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -339,7 +339,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	char		**pkgargs;
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		*unmet_reqs = NULL;
-	char		pkgpath[BUFSIZ], h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
+	char		pkgpath[BUFSIZ], pkgurl[BUFSIZ], query[BUFSIZ];
+	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
 	struct stat	st;
 
 	/* transform command line globs into pkgnames */
@@ -372,10 +373,15 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		snprintf(pkgpath, BUFSIZ, "%s/%s%s",
 			pkgin_cache, pimpact->full, PKG_EXT);
 
+		snprintf(query, BUFSIZ, PKG_URL, pimpact->full);
+		/* retrieve repository for package  */
+		if (pkgindb_doquery(query, pdb_get_value, pkgurl) != 0)
+			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pimpact->full);
+
 		/* if package is not already downloaded or size mismatch, d/l it */
 		if ((stat(pkgpath, &st) < 0 || st.st_size != pimpact->file_size) &&
 			/* don't update file_size if repo is file:// */
-			strncmp(pkgpath, SCHEME_FILE, strlen(SCHEME_FILE) != 0))
+			strncmp(pkgurl, SCHEME_FILE, strlen(SCHEME_FILE)) != 0)
 				file_size += pimpact->file_size;
 
 		if (pimpact->old_size_pkg > 0)
