@@ -1,1 +1,2 @@
 . Fix multi-repository (add REPOSITORY to Pkglist)
+. Add a flag to show only keep-packages whth pkgin ls

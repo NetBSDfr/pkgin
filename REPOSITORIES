@@ -1,3 +1,4 @@
-ftp://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/$arch/5.0/All
+# NetBSD OS release can look like 6.0_STABLE, do not use it as-is
+ftp://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/$arch/@OSREL@/All
 http://mirror-master.dragonflybsd.org/packages/$arch/DragonFly-$osrelease/stable/All/
 ftp://ftp.minix3.org/pub/minix/packages/$osrelease/$arch/All
