@@ -43,7 +43,7 @@
 			<h3>Disclaimer</h3>
 
 			<p>
-			As <i>pkgin</i> CVS code may change quite deeply, please <strong>do not forget to look at the <a href="http://cvs.pkgin.net/viewvc/pkgin/pkgin/CHANGES">CHANGES</a> file</strong> if you chose to track development version.
+			As <i>pkgin</i> git code may change quite deeply, please <strong>do not forget to look at the <a href="https://github.com/NetBSDfr/pkgin/blob/master/CHANGES">CHANGES</a> file</strong> if you chose to track development version.
 			</p>
 
 			<a name="req"><h3>Prerequisites</h3></a>
@@ -61,15 +61,13 @@
 Since <i>NetBSD</i> 6.0, all of those are provided as part of the base system, except for <code>libnbcompat</code>. 
 </p>
 			<p>
-			<code>Pkgin</code> is available via CVS, <a href="http://pkgsrc-wip.cvs.sourceforge.net/viewvc/pkgsrc-wip/wip/pkgin/">pkgsrc-wip</a> and is available in <a href="http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/pkgtools/pkgin/">pkgsrc</a> as <code>pkgtools/pkgin</code>.
+			<code>Pkgin</code> is available via github, <a href="http://pkgsrc-wip.cvs.sourceforge.net/viewvc/pkgsrc-wip/wip/pkgin/">pkgsrc-wip</a> and is available in <a href="http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/pkgtools/pkgin/">pkgsrc</a> as <code>pkgtools/pkgin</code>.
 			</p>
 
 			<p>
-			While installing via <a href="http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/pkgtools/pkgin/">pkgsrc</a> is the preferred method, you may want to track CVS version to help improving <code>pkgin</code>'s quality. To check it out, use the following commands:
+			While installing via <a href="http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/pkgtools/pkgin/">pkgsrc</a> is the preferred method, you may want to track github version to help improving <code>pkgin</code>'s quality. To check it out, use the following command:
 			</p>
-			<pre class="programlisting">$ cvs -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin login
-passwd: [enter]
-$ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
+			<pre class="programlisting">$ git clone https://github.com/NetBSDfr/pkgin.git</pre>
 			<p>Invoke the <code>configure</code> script, for example:</p>
 			<pre class="programlisting">$ ./configure --prefix=/usr/pkg --with-libraries=/usr/pkg/lib --with-includes=/usr/pkg/include</pre>
 			<p>
