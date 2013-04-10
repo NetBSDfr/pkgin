@@ -1,0 +1,212 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+		<link rel="stylesheet" href="global.css" type="text/css">
+		<title>pkgin, a binary package manager for pkgsrc</title>
+	</head>
+
+	<body>
+
+		<div class="chapter">
+
+			<h2>pkgin, a binary package manager for pkgsrc</h2>
+
+			<p>
+			<i>pkgin</i> is aimed at being an <i>apt / yum</i> like tool for managing pkgsrc binary packages. It relies on <a href="http://netbsd.gw.com/cgi-bin/man-cgi?pkg_summary++NetBSD-current">pkg_summary(5)</a> for installation, removal and upgrade of packages and associated dependencies, using a remote repository.
+			</p>
+
+			<h3>Quickstart</h3>
+			<ul>
+				<li>
+				<a href="#req">Prerequisites</a>
+				</li>
+				<li>
+				<a href="#usage">Usage</a>
+				</li>
+				<li>
+				<a href="#examples">Usage examples</a>
+				</li>
+				<li>
+				<a href="#platforms">Platforms</a>
+				</li>
+			</ul>
+
+			<h3>Rationale</h3>
+
+			<p>
+			Many so-called GNU/Linux distributions provide a convenient way of searching, installing and upgrading software by using binary archives found on "repositories". <a href="http://www.NetBSD.org">NetBSD</a>, and more widely, all operating systems relying on <a href="http://www.pkgsrc.org">pkgsrc</a> have tools like <a href="http://netbsd.gw.com/cgi-bin/man-cgi?pkg_add++NetBSD-current">pkg_add</a> and <a href="http://netbsd.gw.com/cgi-bin/man-cgi?pkg_delete++NetBSD-current">pkg_delete</a>, but those are unable to correctly handle binary upgrades, and sometimes even installation itself.
+			</p>
+			<p>
+			This is the purpose of <i>pkgin</i>, to provide the user a convenient way to handle binary packages, using the same working mechanisms than tools like <i>apt-get</i>.
+			</p>
+
+			<h3>Disclaimer</h3>
+
+			<p>
+			As <i>pkgin</i> CVS code may change quite deeply, please <strong>do not forget to look at the <a href="http://cvs.pkgin.net/viewvc/pkgin/pkgin/CHANGES">CHANGES</a> file</strong> if you chose to track development version.
+			</p>
+
+			<a name="req"><h3>Prerequisites</h3></a>
+
+			<p>
+			<i>pkgin</i> is developed using the C language. It uses <code>sqlite3</code> as a package database backend, in order to provide good speed on older architectures.
+			</p>
+			<p>If you wish to build <i>pkgin</i> from sources, the following dependencies must be met
+			<ul>
+				<li><code>databases/sqlite3</code></li>
+				<li><code>pkgtools/libnbcompat</code> (yes, even for <i>NetBSD</i>)</li>
+				<li><code>net/libfetch</code></li>
+				<li><code>archivers/libarchive</code></li>
+			</ul>
+Since <i>NetBSD</i> 6.0, all of those are provided as part of the base system, except for <code>libnbcompat</code>. 
+</p>
+			<p>
+			<code>Pkgin</code> is available via CVS, <a href="http://pkgsrc-wip.cvs.sourceforge.net/viewvc/pkgsrc-wip/wip/pkgin/">pkgsrc-wip</a> and is available in <a href="http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/pkgtools/pkgin/">pkgsrc</a> as <code>pkgtools/pkgin</code>.
+			</p>
+
+			<p>
+			While installing via <a href="http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/pkgtools/pkgin/">pkgsrc</a> is the preferred method, you may want to track CVS version to help improving <code>pkgin</code>'s quality. To check it out, use the following commands:
+			</p>
+			<pre class="programlisting">$ cvs -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin login
+passwd: [enter]
+$ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
+			<p>Invoke the <code>configure</code> script, for example:</p>
+			<pre class="programlisting">$ ./configure --prefix=/usr/pkg --with-libraries=/usr/pkg/lib --with-includes=/usr/pkg/include</pre>
+			<p>
+			And finally build the binary:
+			</p>
+			<pre class="programlisting">$ make</pre>
+
+			<p><i>pkgin</i> is ready to run !</p>
+
+			<a name="usage"><h3>Usage</h3></a>
+
+			<p>
+			First thing to do before using <i>pkgin</i> is to setup a repository in the <code>${PREFIX}/etc/pkgin/repositories.conf</code> file :
+			</p>
+			<pre class="programlisting">$ echo ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All &gt; /usr/pkg/etc/pkgin/repositories.conf</pre>
+
+			<p>
+			Now you can build the initial database:
+			</p>
+			<pre class="programlisting"># pkgin update</pre>
+
+			<p>This operation will download the <code>pkg_summary(5)</code> file from the repository and then populate the <i>SQLite</i> database.</p>
+
+			<p>Once this is completed, <i>pkgin</i> is fully functionnal.</p>
+
+			<p class="note">The <code>pkgin update</code> command must be run regularly in order to keep the database synchronized with the repository.</p>
+
+			<a name="examples"><h4>Usage examples</h4></a>
+
+			<p>List available packages:</p>
+			<pre class="programlisting"># pkgin avail</pre>
+
+			<p>List installed packages:</p>
+			<pre class="programlisting"># pkgin list</pre>
+
+			<p>Search for a regular expression in the database:</p>
+			<pre class="programlisting"># pkgin search foo.*bar</pre>
+
+			<p>Install a package and its dependencies:</p>
+			<pre class="programlisting"># pkgin install foo</pre>
+
+			<p>Install many packages and their dependencies:</p>
+			<pre class="programlisting"># pkgin install foo bar baz</pre>
+
+			<p>Install a package and its dependencies using a "glob" syntax (pkgin 0.5 and up):</p>
+			<pre class="programlisting"># pkgin install 'foo<5.0'</pre>
+
+			<p>Remove a package and its reverse dependencies:</p>
+			<pre class="programlisting"># pkgin remove foo</pre>
+
+			<p>Upgrade a package:</p>
+			<pre class="programlisting"># pkgin install foo</pre>
+
+			<p>Remove orphan dependencies:</p>
+			<pre class="programlisting"># pkgin autoremove</pre>
+
+			<p>Mark a package as "keepable", i.e. a package that probably has not been installed by <i>pkgin</i> but that is not an orphan dependency:</p>
+			<pre class="programlisting"># pkgin keep foo</pre>
+
+			<p>Mark a package as "non-keepable":</p>
+			<pre class="programlisting"># pkgin unkeep foo</pre>
+
+			<p>Upgrade keepable packages to their newer versions present in the repository. If the installed dependencies match the listed needed dependencies, don't upgrade them:</p>
+			<pre class="programlisting"># pkgin upgrade</pre>
+
+			<p>Upgrade all packages to their newer versions present in the repository:</p>
+			<pre class="programlisting"># pkgin full-upgrade</pre>
+
+			<p>Delete downloaded packages from the cache directory:</p>
+			<pre class="programlisting"># pkgin clean</pre>
+
+			<p>Show package direct dependencies:</p>
+			<pre class="programlisting"># pkgin show-deps foo</pre>
+
+			<p>Show package full dependency tree:</p>
+			<pre class="programlisting"># pkgin show-full-deps foo</pre>
+
+			<p>Show package reverse dependency tree (packages depending directly or indirectly):</p>
+			<pre class="programlisting"># pkgin show-rev-deps foo</pre>
+
+			<p>Assume "yes" for all questions:</p>
+			<pre class="programlisting"># pkgin -y install foo</pre>
+
+			<p>Export your keep-list (in <code>pkg_chk(8)</code> format, pkgin 0.5 and up):</p>
+			<pre class="programlisting"># pkgin export > my-packages</pre>
+
+			<p>Import a package list (in <code>pkg_chk(8)</code> format, pkgin 0.5 and up):</p>
+			<pre class="programlisting"># pkgin import my-packages</pre>
+
+			<p>Shows what a package provides (pkgin 0.5 and up):</p>
+			<pre class="programlisting"># pkgin provides foo</pre>
+
+			<p>Shows what a package requires (pkgin 0.5 and up):</p>
+			<pre class="programlisting"># pkgin requires foo</pre>
+
+			<p>Show packages belonging to category (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin show-category www</pre>
+
+			<p>Show package's category (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin show-pkg-category foo</pre>
+
+			<p>Show remote package's content (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin pkg-content foo</pre>
+
+			<p>Show remote package's long-description (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin pkg-descr foo</pre>
+
+			<p>Show remote package's build definitions (pkgin 0.6 and up):</p>
+			<pre class="programlisting"># pkgin pkg-build-defs foo</pre>
+
+			<p class="note">Every command has a shortcut, <code>pkgin -h</code> will show them.</p>
+
+			<a name="platforms"><h3>Platforms</h3></a>
+
+			<p>
+			<i>pkgin</i> is known to work and have been tested under the following platforms :
+			<ul>
+				<li>NetBSD {4,5,6, current}</li>
+				<li>DragonFly BSD 2.0 to 3.0</li>
+				<li>Solaris 10/SunOS 5.10</li>
+				<li>Opensolaris/SunOS 5.11</li>
+				<li>Debian GNU/Linux {5,6}</li>
+				<li>Mac OS X 10.{5,6}</li>
+				<li>MINIX 3.2.0</li>
+			</ul>
+			</p>
+
+			<h3>Contact</h3>
+
+			<p>
+			Please do not hesitate to contact me, either by mail at <a href="mailto:imil@NetBSD.org">imil@NetBSD.org</a> or <i>iMil</i> on the <a href="http://freenode.net/">Freenode</a> IRC Network.
+			</p>
+
+			<p>
+			<script type="text/javascript" src="http://www.ohloh.net/p/346453/widgets/project_thin_badge.js"></script>
+			</p>
+		</div> <!-- chapter -->
+
+	</body>
+</html>

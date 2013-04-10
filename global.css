@@ -1,0 +1,636 @@
+/* ##### Common Styles ##### */
+
+body {
+  background-color: #ffffff;
+  color: #000000;
+  font-family: Tahoma, sans-serif;
+  font-size: small;
+  line-height: 1.3em;
+  margin: 0;
+  padding: 0;
+  background: url(/gfx/pkgin-icon-new.png) no-repeat;
+  background-position: 15px 15px;
+}
+
+acronym, .titleTip {
+  border-bottom: 1px dotted rgb(61,92,122);
+  cursor: help;
+  margin: 0;
+  padding: 0 0 0.4px 0;
+}
+
+img {
+  border: none;
+}
+
+a:link {
+  color: #b84e0d;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #f26711;
+  text-decoration: underline;
+}
+
+a:visited {
+  color: #880000;
+  text-decoration: none;
+}
+
+a:visited:hover {
+  color: #f26711;
+  text-decoration: underline;
+}
+
+h3 {
+  color: #777777;
+}
+
+h4 {
+  color: #777777;
+}
+
+.doNotDisplay {
+  display: none !important;
+}
+
+/* ##### Header ##### */
+
+.topNavigation {
+  color: #555555;
+  margin: 0;
+  padding: 0.5ex 5px;
+  border-bottom: 1px dotted #777777;
+}
+
+.topNavigation span {
+  color: #b84e0d;
+}
+
+.topNavigation small {
+  font-size: 80%;
+}
+
+.topNavigation a:link {
+  color: #555555;
+  text-decoration: none;
+  margin: 0;
+  padding: 0 0.25ex 0 0;
+}
+
+.topNavigation a:hover {
+  color: #000000;
+  text-decoration: underline;
+}
+
+.topNavigation a:visited {
+  color: #555555;
+  text-decoration: none;
+}
+
+.topNavigation a:visited:hover {
+  color: #000000;
+  text-decoration: underline;
+}
+
+.centralHeader {
+  background-color: #ffffff;
+  margin: 0;
+  padding-left: 10px;
+}
+
+.headerTools {
+  position: absolute;
+  top: 40px;
+  right: 1em;
+  margin: 0;
+}
+
+#headerLangs a {
+  color: #777777;
+  background-color: transparent;
+  text-decoration: none;
+  margin: 0;
+  padding: 0 0 0.5ex 0;
+}
+
+#headerLangs a:hover {
+  color: #f26711;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+#headerLangs {
+  position: absolute;
+  top: 2.5em;
+  right: 1em;
+  white-space: nowrap;
+}
+
+#headerSearch {
+  position: absolute;
+  top: 40px;
+  right: 0;
+}
+
+#headerSearch form {
+  margin: 0; /* need for IE Mac */
+  text-align: right; /* need for IE Mac */
+  white-space: nowrap; /* for Opera */
+}
+
+#headerSearch input {
+  background-color: #eeeeee;
+  color: #555555;
+  border: 1px solid #d4d4d4;
+  padding: 1px 5px 1px 5px;
+  font-size: small;
+  width: 5em;
+}
+
+.whiteOnBlack {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+#headerMirrors select {
+  font-size: 12px;
+}
+
+#headerMirrors input {
+  background-color: #eeeeee;
+  color: #555555;
+  border: 1px solid #d4d4d4;
+  padding: 1px 5px 1px 5px;
+  font-size: small;
+  width: 5em;
+}
+
+.navBar {
+  color: #ffffff;
+  background-color: #777777;
+  margin: 0;
+  padding-left: 25px;
+  padding-top: 2px;
+  border-bottom: 2px dotted #777777;
+}
+
+.navBar span {
+  color: #ffffff;
+}
+
+.navBar a {
+  color: #ffffff;
+  background-color: transparent;
+  font-weight: bold;
+  text-decoration: none;
+  margin: 0;
+  padding: 0 0.25ex 0 0;
+}
+
+.navBar a:hover {
+  text-decoration: none;
+}
+
+.navBar a:visited {
+  color: #ffffff;
+}
+
+/* ##### Content ##### */
+
+
+.sideBarLeft p {
+  clear: both;
+}
+
+.iconsLeft img {
+  float: left;
+}
+
+.iconsRight img {
+  float: right;
+}
+
+.featureList {
+  clear: both;
+}
+
+.featureList h2 {
+  margin-bottom: 1em !important;
+}
+
+#content {
+  margin: 0;
+  clear: left;
+}
+
+#content h1 {
+  color: #777777;
+  background-color: transparent;
+  line-height: 1.3em;
+  margin: 0;
+  padding: 1ex 0 0 0;
+}
+
+#content h2 {
+  color: #777777;
+  background-color: transparent;
+  line-height: 1.3em;
+  margin: 0;
+  padding: 1ex 0 0 0;
+}
+
+#content h3 {
+  color: #777777;
+  background-color: transparent;
+  line-height: 1.3em;
+  margin: 0;
+  padding: 1ex 0 0 0;
+}
+
+#content h4 {
+  color: #777777;
+  background-color: transparent;
+  line-height: 1.3em;
+  margin: 0;
+  padding: 1ex 0 0 0;
+}
+
+#content h5 {
+  color: #777777;
+  background-color: transparent;
+  line-height: 1.3em;
+  margin: 0;
+  padding: 1ex 0 0 0;
+}
+
+#content p {
+  line-height: 1.3em;
+  margin: 1em 0 1.5em 0;
+  padding: 0;
+}
+
+#platinumDonorLogo {
+  text-align: left;
+  width: 150px;
+  padding-left: 1em;
+}
+
+.buttons {
+  text-align: center;
+  margin-top: 2em;
+  line-height: 3em;
+}
+
+.buttons img, .buttons form {
+  margin: 1ex;
+}
+
+#news {
+  color: #777777;
+  font-style: italic;
+}
+
+#news ul {
+  list-style-type: none;
+  padding: 0;
+  padding-left: 1em;
+  margin: 0;
+  margin-top: 1em;
+}
+
+#news li {
+  margin: 0;
+  padding: 0;
+  padding-bottom: 1em;
+}
+
+#news li a {
+  font-style: normal;
+}
+
+#news img {
+  margin-top: 1em;
+}
+
+.more {
+  margin: 0;
+  padding: 0.5em 0;
+  white-space: nowrap;
+}
+
+.more a, .more li a {
+  color: #f26711;
+  background-color: transparent;
+  font-weight: bold;
+  text-decoration: none;
+  margin: 0;
+}
+
+.more a:hover {
+  color: #f26711;
+  text-decoration: underline;
+}
+
+.rowOfBoxes {
+  clear: both;
+}
+
+.quarter, .oneThird, .half, .twoThirds, .fullWidth {
+  margin: 1em 0;
+  float: left;
+  border-left: 1px solid rgb(204,204,204);
+}
+
+.quarter {
+  width: 17%;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+.oneThird {
+  width: 28%;
+  padding: 0 1em;
+}
+
+.half {
+  text-align: justify;
+  width: 50%;
+  padding: 0 2em;
+}
+
+.twoThirds {
+  width: 63%;
+  padding: 0 1em;
+}
+
+.fullWidth {
+  width: 96%;
+  padding: 0 1.2em;
+  border-left: none;
+}
+
+.filler {  /* use with an empty <p> element to add padding to the end of a text box */
+  border: 1px solid white;
+}
+ 
+.noBorderOnLeft {
+  border-left: none;
+}
+
+.BorderOnRight {
+  border-right: 1px solid #d4d4d4;
+}
+
+.dividingBorderAbove {
+  border-top: 1px solid rgb(204,204,204);
+}
+
+.greyLink a {
+  color: #777777;
+  text-decoration: none;
+}
+
+.greyLink a:hover {
+  text-decoration: underline
+}
+
+.greyLink a:visited {
+  color: #777777;
+  text-decoration: none;
+}
+
+.greyLink a:visited:hover {
+  color: #777777;
+  text-decoration: underline;
+}
+
+/* ##### Footer ##### */
+
+#footer {
+  color: #777777;
+  background-color: #f2f2f2;;
+  text-align: center;
+  line-height: 1.25em;
+  margin: 2em 0 0 0;
+  clear: both;
+  border-top: 1px solid #d4d4d4;
+  border-bottom: 1px solid #d4d4d4;
+}
+
+#footer a {
+  color: #777777;;
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+#footer a:hover {
+  text-decoration: none;
+}
+
+#footerContent {
+  padding: 1ex 10px;
+}
+
+#footerLogo {
+  float: right;
+  text-align: right;
+  width: 100px;
+  margin: 0;
+  padding: 0;
+}
+
+#hackathonBox {
+  background: #f26711;
+  color: #ffffff;
+  margin: 1em 2em;
+  padding: 1em 2em;
+  text-align: left;
+}
+
+#hackathonBox a {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+#warnBox {
+  font-weight: bold;
+  background: #f26711;
+  color: #ffffff;
+  margin: 5px 5px;
+  padding: 5px 5px;
+  text-align: center;
+}
+
+#warnBox a {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* #### Overrides from the old NetBSD.css stylesheet ### */
+
+table {
+	font-size: 100%; /* keeps font size the same as in the body */
+	Border-Width: 0.0em;
+}
+
+table td {
+	Font-Family: Tahoma, Verdana, sans-serif;
+	padding: 3pt;
+}
+
+.centered {
+	Width: 90%;
+	Margin-Left: auto;
+	Margin-Right: auto;
+}
+
+.strikethrough {
+	Text-Decoration: line-through;
+}
+
+.programlisting {
+	Background-Color: #f5f5f5;
+	Line-Height: 1.2em;
+	Border-Color: #d4d4d4;
+	Border-Style: solid;
+	Border-Width: thin;
+	Margin-Left: auto;
+	Margin-Right: auto;
+	Padding: 5pt;
+	Width: 90%;
+}
+
+
+tr {
+	Vertical-Align: top;
+}
+
+td {
+	Vertical-Align: top;
+}
+
+th, td.theader {
+	Background-Color: #f8f8f8;
+	Font-Weight: bold;
+	Vertical-Align: middle;
+	Padding: 5pt;
+}
+
+td.developerslist {
+	White-space: nowrap;
+	Padding: 0.3em 0.3em 0.3em 0.3em;
+}
+
+td.developerslistwrap {
+        White-space: normal;
+        Padding: 0.3em 0.3em 0.3em 0.3em;
+}
+
+table.developerslist {
+	Border-Width: 0.0em;
+	Margin-Left: 0.5em;
+	Margin-Right: 0.5em;
+}
+
+.center {
+	Vertical-Align: middle;
+	Text-Align: center;
+}
+
+tt.filename {
+	Line-Height: 1.3em;
+	Color: #AA0000;
+}
+
+tt.varname {
+	Line-Height: 1.3em;
+	Color: #2222AA;
+}
+
+.note {
+	Background-Color: #f5f5f5;
+	Border-Color: #d4d4d4;
+	Border-Style: solid;
+	Border-Width: thin;
+	Padding: 5pt;
+}
+
+.head {
+	Font-family: Arial, Verdana, Helvetica, sans-serif;
+	Font-size: 120%;
+	Font-weight: bold;
+	Color: #777777;
+}
+
+.subhead {
+	Font-family: Arial, Verdana, Helvetica, sans-serif;
+	Font-size: 90%;
+	Font-weight: bold;
+	Color: #777777;
+}
+
+.newsindex {
+	Font-family: Geneva, "Lucida Grande", Arial, Verdana, sans-serif;
+	Font-size: 80%;
+	Font-weight: normal;
+}
+
+.webtoc {
+	Font-Family: "Lucida Grande", Geneva, Arial, Verdana, sans-serif;
+}
+
+.foothome {
+	Line-Height: 1em;
+	Vertical-Align: middle;
+}
+
+.footfeed {
+	Line-Height: 1em;
+}
+
+.footcopy {
+	Line-Height: 1em;
+}
+
+.foottag {
+	Line-Height: 1em;
+}
+
+.pkgname {
+	Font-Family: "Arial", "Helvetica", "Courier New", "Courier", "fixed", monospace;
+	Font-Style: Italic;
+	Text-Decoration: none;
+	Line-Height: 1.3em;
+}
+
+.gnatspr {
+	Font-Weight: bold;
+}
+
+.warning {
+	Color: red;
+}
+
+.book {
+  margin: 2em;
+}
+
+.preface {
+  margin: 2em;
+}
+
+.chapter {
+  margin: 2em;
+}
+
+.chapter h2 {
+  margin-left: 150px;
+  padding-top: 55px;
+  padding-bottom: 20px;
+}
+
+.appendix {
+  margin: 2em;
+}
