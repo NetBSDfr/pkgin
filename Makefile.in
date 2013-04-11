@@ -94,7 +94,7 @@ afterinstall:	configinstall
 
 beforeinstall:
 	${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755 ${DESTDIR}${BINDIR}
-	${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755		\
+	${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755			\
 		${DESTDIR}${PKG_SYSCONFDIR}/pkgin
 
 install:
@@ -102,5 +102,23 @@ install:
 		${INSTALL_FILE} -o ${BINOWN} -g ${BINGRP} -m 644	\
 			repositories.conf				\
 		${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf
+
+# makes maintainer's life easier
+
+WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
+CURDATE!=date +%Y%m%d
+WIPREV!=git log --pretty=format:'%H' -n 1
+OLDREV!=sed -En 's/VERSION=[^0-9a-z]+([0-9a-z]+)/\1/p'			\
+	${WIPHOME}/pkgin/Makefile
+
+bump:
+	rm -f ${WIPHOME}/pkgin/distinfo					\
+		${WIPHOME}/../distfiles/pkgin-*				\
+		${WIPHOME}/../distfiles/${OLDREV}*
+	perl -pi -e "s/(VERSION=[\ \t]+).*/VERSION=\t\t${WIPREV}/"	\
+		${WIPHOME}/pkgin/Makefile
+	perl -pi -e "s/pkgin-[0-9]+/pkgin-${CURDATE}/"			\
+		${WIPHOME}/pkgin/Makefile
+	cd ${WIPHOME}/pkgin && make makesum
 
 .include <bsd.prog.mk>
