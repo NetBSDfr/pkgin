@@ -103,31 +103,4 @@ install:
 			repositories.conf				\
 		${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf
 
-# maintainer helpers
-
-PKGINCVS=":pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin"
-CURDATE!=date +%Y%m%d
-WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
-CURDIR!=pwd
-
-dist:
-	mkdir -p export
-	cd export && rm -rf pkgin* && cvs -d ${PKGINCVS} co pkgin &&     \
-	tar zcvf pkgin-${CURDATE}.tar.gz pkgin
-
-publish:
-	scp export/pkgin-*.tar.gz imilh,pkgin@frs.sourceforge.net:/home/frs/project/p/pk/pkgin
-
-bump:
-	rm -f ${WIPHOME}/pkgin/distinfo ${WIPHOME}/../distfiles/pkgin-*
-	perl -pi -e "s/pkgin-[0-9]+/pkgin-${CURDATE}/"  \
-		${WIPHOME}/pkgin/Makefile
-	cd ${WIPHOME}/pkgin && make makesum
-
-shar:
-	cd ${WIPHOME}/pkgin && shar `find .	\
-	-print -maxdepth 1|grep -v CVS` >	\
-		${CURDIR}/export/pkgin-pkgsrc-wip.shar
-	scp export/pkgin-*.shar korriban:www/public/NetBSD/
-
 .include <bsd.prog.mk>
