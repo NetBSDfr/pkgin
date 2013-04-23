@@ -348,7 +348,7 @@ show_category(char *category)
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
 		if (strcmp(plist->category, category) == 0)
-			printf("%-12s - %s\n", plist->category, plist->full);
+		        printf("%-20s %s\n", plist->full, plist->comment);
 	}
 }
 
