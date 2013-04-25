@@ -288,7 +288,7 @@ list_pkgs(const char *pkgquery, int lstype)
 	free(plisthead);
 }
 
-void
+int
 search_pkg(const char *pattern)
 {
 	Pkglist	   	*plist;
@@ -336,9 +336,12 @@ search_pkg(const char *pattern)
 
 		if (matched_pkgs == 1)
 			printf(MSG_IS_INSTALLED_CODE);
-		else
+		else {
 			printf(MSG_NO_SEARCH_RESULTS, pattern);
+			return(EXIT_FAILURE);
+		}
 	}
+	return(EXIT_SUCCESS);
 }
 
 void
@@ -348,7 +351,7 @@ show_category(char *category)
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
 		if (strcmp(plist->category, category) == 0)
-		        printf("%-20s %s\n", plist->full, plist->comment);
+			printf("%-20s %s\n", plist->full, plist->comment);
 	}
 }
 

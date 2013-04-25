@@ -234,7 +234,7 @@ main(int argc, char *argv[])
 		break;
 	case PKG_SRCH_CMD: /* search for package */
 		missing_param(argc, 2, MSG_MISSING_SRCH);
-		search_pkg(argv[1]);
+		rc = search_pkg(argv[1]);
 		break;
 	case PKG_CLEAN_CMD: /* clean pkgin's packages cache */
 		clean_cache();

@@ -234,7 +234,7 @@ Plisthead	*init_head(void);
 Plistnumbered	*rec_pkglist(const char *, ...);
 int			pkg_is_installed(Plisthead *, Pkglist *);
 void		list_pkgs(const char *, int);
-void		search_pkg(const char *);
+int			search_pkg(const char *);
 void		show_category(char *);
 void		show_pkg_category(char *);
 void		show_all_categories(void);

@@ -341,7 +341,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	char		*unmet_reqs = NULL;
 	char		pkgpath[BUFSIZ], pkgurl[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
-	struct stat	st;
+	struct		stat st;
 
 	/* transform command line globs into pkgnames */
 	if ((pkgargs = glob_to_pkgarg(opkgargs)) == NULL) {
