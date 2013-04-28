@@ -37,13 +37,13 @@
 #define LOCALBASE "/usr/pkg" /* see DISCLAIMER below */
 #endif
 
-const char			*pkgin_cache = PKGIN_CACHE;
-static int			upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
-static uint8_t		said = 0;
-FILE				*err_fp = NULL;
-long int			rm_filepos = -1, in_filepos = -1;
+const char	*pkgin_cache = PKGIN_CACHE;
+static int	upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
+static uint8_t	said = 0;
+FILE		*err_fp = NULL;
+long int	rm_filepos = -1, in_filepos = -1;
 
-static void
+static int
 pkg_download(Plisthead *installhead)
 {
 	FILE		*fp;
@@ -51,6 +51,7 @@ pkg_download(Plisthead *installhead)
 	struct stat	st;
 	Dlfile		*dlpkg;
 	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
+	int		rc = EXIT_SUCCESS;
 
 	printf(MSG_DOWNLOAD_PKGS);
 
@@ -83,7 +84,8 @@ pkg_download(Plisthead *installhead)
 		/* if pkg's repo URL is file://, just symlink */
 		if (strncmp(pkg_url, SCHEME_FILE, strlen(SCHEME_FILE)) == 0) {
 			(void)unlink(pkg_fs);
-			if (symlink(&pkg_url[strlen(SCHEME_FILE) + 3], pkg_fs) < 0)
+			if (symlink(&pkg_url[strlen(SCHEME_FILE) + 3],
+				pkg_fs) < 0)
 				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
 			printf(MSG_SYMLINKING_PKG, pkg_url);
 			continue;
@@ -95,6 +97,7 @@ pkg_download(Plisthead *installhead)
 
 		if ((dlpkg = download_file(pkg_url, NULL)) == NULL) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
+			rc = EXIT_FAILURE;
 			if (!check_yesno(DEFAULT_NO))
 				errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL,
 				    pinstall->depend);
@@ -111,6 +114,7 @@ pkg_download(Plisthead *installhead)
 
 	} /* download loop */
 
+	return rc;
 }
 
 /**
@@ -181,7 +185,8 @@ open_pi_log(void)
 {
 	if (!verbosity && !said) {
 		if ((err_fp = fopen(PKG_INSTALL_ERR_LOG, "a")) == NULL) {
- 			fprintf(stderr, MSG_CANT_OPEN_WRITE, PKG_INSTALL_ERR_LOG);
+ 			fprintf(stderr, MSG_CANT_OPEN_WRITE,
+				PKG_INSTALL_ERR_LOG);
 			exit(EXIT_FAILURE);
 		}
 
@@ -248,9 +253,10 @@ do_pkg_remove(Plisthead *removehead)
  * Besides, pkg_add cannot be used to install an "older" package remotely
  * i.e. apache 1.3
  */
-static void
+static int
 do_pkg_install(Plisthead *installhead)
 {
+	int		rc = EXIT_SUCCESS;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ];
 	char		pi_tmp_flags[5]; /* tmp force flags for pkg_install */
@@ -277,7 +283,8 @@ do_pkg_install(Plisthead *installhead)
 
 		/* are we upgrading pkg_install ? */
 		if (pi_upgrade) { /* set in order.c */
-			pi_upgrade = 0; /* 1st item on the list, reset the flag */
+			/* 1st item on the list, reset the flag */
+			pi_upgrade = 0;
 			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
 			/* set temporary force flags */
 			strncpy(pi_tmp_flags, "-ffu", 5);
@@ -286,19 +293,25 @@ do_pkg_install(Plisthead *installhead)
 				strncat(pi_tmp_flags, "v", 2);
 			if (check_yesno(DEFAULT_YES)) {
 #ifndef DEBUG
-				fexec(PKG_ADD, pi_tmp_flags, pkgpath, NULL);
+				if (fexec(PKG_ADD, pi_tmp_flags,
+					pkgpath, NULL) == EXIT_FAILURE)
+					rc = EXIT_FAILURE;
 #endif
 			} else
 				continue;
 		} else {
 			/* every other package */
 #ifndef DEBUG
-			fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL);
+			if (fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL) ==
+				EXIT_FAILURE)
+				rc = EXIT_FAILURE;
 #endif
 		}
 	} /* installation loop */
 
 	close_pi_log();
+
+	return rc;
 }
 
 /* build the output line */
@@ -328,8 +341,8 @@ action_list(char *flatlist, char *str)
 int
 pkgin_install(char **opkgargs, uint8_t do_inst)
 {
-	int			installnum = 0, upgradenum = 0, removenum = 0;
-	int			rc = EXIT_FAILURE;
+	int		installnum = 0, upgradenum = 0, removenum = 0;
+	int		rc = EXIT_SUCCESS;
 	uint64_t   	file_size = 0, free_space;
 	int64_t		size_pkg = 0;
 	Pkglist		*premove, *pinstall;
@@ -344,13 +357,13 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	struct		stat st;
 
 	/* transform command line globs into pkgnames */
-	if ((pkgargs = glob_to_pkgarg(opkgargs)) == NULL) {
+	if ((pkgargs = glob_to_pkgarg(opkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
 		return rc;
 	}
 
 	/* full impact list */
-	if ((impacthead = pkg_impact(pkgargs)) == NULL) {
+	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
 		free_list(pkgargs);
 		return rc;
@@ -360,7 +373,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	if (!pkg_met_reqs(impacthead))
 		SLIST_FOREACH(pimpact, impacthead, next)
 			if (pimpact->action == UNMET_REQ)
-				unmet_reqs = action_list(unmet_reqs, pimpact->full);
+				unmet_reqs =
+					action_list(unmet_reqs, pimpact->full);
 
 	/* browse impact tree */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -378,8 +392,12 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		if (pkgindb_doquery(query, pdb_get_value, pkgurl) != 0)
 			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pimpact->full);
 
-		/* if package is not already downloaded or size mismatch, d/l it */
-		if ((stat(pkgpath, &st) < 0 || st.st_size != pimpact->file_size) &&
+		/*
+		 * if package is not already downloaded or size mismatch,
+		 * d/l it
+		 */
+		if ((stat(pkgpath, &st) < 0 ||
+			st.st_size != pimpact->file_size) &&
 			/* don't update file_size if repo is file:// */
 			strncmp(pkgurl, SCHEME_FILE, strlen(SCHEME_FILE)) != 0)
 				file_size += pimpact->file_size;
@@ -415,13 +433,15 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 	if (free_space < file_size) {
 		(void)humanize_number(h_free, H_BUF, (int64_t)free_space, "",
 				HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-		errx(EXIT_FAILURE, MSG_NO_CACHE_SPACE, pkgin_cache, h_fsize, h_free);
+		errx(EXIT_FAILURE, MSG_NO_CACHE_SPACE,
+			pkgin_cache, h_fsize, h_free);
 	}
 	free_space = fs_room(LOCALBASE);
 	if (size_pkg > 0 && free_space < (uint64_t)size_pkg) {
 		(void)humanize_number(h_free, H_BUF, (int64_t)free_space, "",
 				HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-		errx(EXIT_FAILURE, MSG_NO_INSTALL_SPACE, LOCALBASE, h_psize, h_free);
+		errx(EXIT_FAILURE, MSG_NO_INSTALL_SPACE,
+			LOCALBASE, h_psize, h_free);
 	}
 
 	printf("\n");
@@ -477,32 +497,46 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 #endif
 		}
 
-		printf(MSG_PKGS_TO_INSTALL, installnum, toinstall, h_fsize, h_psize);
+		printf(MSG_PKGS_TO_INSTALL, installnum, toinstall,
+			h_fsize, h_psize);
 		printf("\n");
 
 		if (unmet_reqs != NULL)/* there were unmet requirements */
 			printf(MSG_REQT_MISSING, unmet_reqs);
 
-		if (check_yesno(DEFAULT_YES)) {
-			/* before erasing anything, download packages */
-			pkg_download(installhead);
+		if (check_yesno(DEFAULT_YES) == ANSW_NO)
+			exit(rc);
 
-			if (do_inst) { /* real install, not a simple download */
-				/* if there was upgrades, first remove old packages */
-				if (upgradenum > 0) {
-					printf(MSG_RM_UPGRADE_PKGS);
-					do_pkg_remove(removehead);
-				}
-				/* then pass ordered install list */
-				do_pkg_install(installhead);
+		/*
+		 * before erasing anything, download packages
+		 * If there was an error while downloading, record it
+		 */
+		if (pkg_download(installhead) == EXIT_FAILURE)
+			rc = EXIT_FAILURE;
 
-				/* pure install, not called by pkgin_upgrade */
-				if (upgrade_type == UPGRADE_NONE)
-					(void)update_db(LOCAL_SUMMARY, pkgargs);
-				
-				rc = EXIT_SUCCESS;
+		if (do_inst) {
+			/* real install, not a simple download */
+			/*
+			 * if there was upgrades, first remove
+			 * old packages
+			 */
+			if (upgradenum > 0) {
+				printf(MSG_RM_UPGRADE_PKGS);
+				do_pkg_remove(removehead);
 			}
-		} /* check_yesno */
+			/*
+			 * then pass ordered install list
+			 * If there was an error while installing,
+			 * record it
+			 */
+			if (do_pkg_install(installhead) == EXIT_FAILURE)
+				rc = EXIT_FAILURE;
+
+			/* pure install, not called by pkgin_upgrade */
+			if (upgrade_type == UPGRADE_NONE)
+				(void)update_db(LOCAL_SUMMARY, pkgargs);
+
+		}
 
 	} else
 		printf(MSG_NOTHING_TO_INSTALL);
@@ -522,7 +556,7 @@ installend:
 int
 pkgin_remove(char **pkgargs)
 {
-	int			deletenum = 0, exists, rc;
+	int		deletenum = 0, exists, rc = EXIT_SUCCESS;
 	Plisthead	*pdphead, *removehead;
 	Pkglist		*pdp;
 	char   		*todelete = NULL, **ppkgargs, *pkgname, *ppkg;
@@ -535,8 +569,10 @@ pkgin_remove(char **pkgargs)
 	/* act on every package passed to the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
 
-		if ((pkgname = find_exact_pkg(&l_plisthead, *ppkgargs)) == NULL) {
+		if ((pkgname =
+			find_exact_pkg(&l_plisthead, *ppkgargs)) == NULL) {
 			printf(MSG_PKG_NOT_INSTALLED, *ppkgargs);
+			rc = EXIT_FAILURE;
 			continue;
 		}
 		XSTRDUP(ppkg, pkgname);
@@ -568,7 +604,10 @@ pkgin_remove(char **pkgargs)
 		pdp->depend = pkgname;
 
 		if (SLIST_EMPTY(pdphead))
-			/* identify unique package, don't cut it when ordering */
+			/*
+			 * identify unique package,
+			 * don't cut it when ordering
+			 */
 			pdp->level = -1;
 		else
 			pdp->level = 0;
@@ -593,16 +632,11 @@ pkgin_remove(char **pkgargs)
 			do_pkg_remove(removehead);
 
 			(void)update_db(LOCAL_SUMMARY, NULL);
-
-			rc = EXIT_SUCCESS;
-		} else
-			rc = EXIT_FAILURE;
+		}
 
 		analyse_pkglog(rm_filepos);
-	} else {
+	} else
 		printf(MSG_NO_PKGS_TO_DELETE);
-		rc = EXIT_SUCCESS;
-	}
 
 	free_pkglist(&removehead, DEPTREE);
 	free_pkglist(&pdphead, DEPTREE);
@@ -616,7 +650,7 @@ pkgin_remove(char **pkgargs)
 char *
 read_preferred(char *pkgname)
 {
-	int		matchlen;
+	int	matchlen;
 	FILE	*fp;
 	char	match[BUFSIZ], *pref, *p;
 
@@ -668,7 +702,8 @@ narrow_match(Pkglist *opkg)
 		if (strcmp(opkg->name, pkglist->name) != 0)
 			continue;
 		/*
-		 * if PKGPATH does not match, do not try to update (mysql 5.1/5.5)
+		 * if PKGPATH does not match, do not try to update
+		 * (mysql 5.1/5.5)
 		 */
 		if (strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
 			continue;
@@ -717,12 +752,13 @@ record_upgrades(Plisthead *plisthead)
 	return pkgargs;
 }
 
-void
+int
 pkgin_upgrade(int uptype)
 {
 	Plistnumbered	*keeplisthead;
 	Plisthead	*localplisthead;
 	char		**pkgargs;
+	int		rc;
 
 	/* used for pkgin_install not to update database, this is done below */
 	upgrade_type = uptype;
@@ -742,22 +778,23 @@ pkgin_upgrade(int uptype)
 
 	pkgargs = record_upgrades(localplisthead);
 
-	if (pkgin_install(pkgargs, DO_INST) == EXIT_SUCCESS) {
-		/*
-		 * full upgrade, we need to record keep-packages
-		 * in order to restore them
-		 */
-		if (uptype == UPGRADE_ALL) {
-			free_list(pkgargs);
-			/* record keep list */
-			pkgargs = record_upgrades(keeplisthead->P_Plisthead);
-		}
-
-		(void)update_db(LOCAL_SUMMARY, pkgargs);
+	rc = pkgin_install(pkgargs, DO_INST);
+	/*
+	 * full upgrade, we need to record keep-packages
+	 * in order to restore them
+	 */
+	if (uptype == UPGRADE_ALL) {
+		free_list(pkgargs);
+		/* record keep list */
+		pkgargs = record_upgrades(keeplisthead->P_Plisthead);
 	}
+
+	(void)update_db(LOCAL_SUMMARY, pkgargs);
 
 	free_list(pkgargs);
 
 	free_pkglist(&keeplisthead->P_Plisthead, LIST);
 	free(keeplisthead);
+
+	return rc;
 }

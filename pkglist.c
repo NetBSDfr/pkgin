@@ -338,10 +338,10 @@ search_pkg(const char *pattern)
 			printf(MSG_IS_INSTALLED_CODE);
 		else {
 			printf(MSG_NO_SEARCH_RESULTS, pattern);
-			return(EXIT_FAILURE);
+			return EXIT_FAILURE;
 		}
 	}
-	return(EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }
 
 void

@@ -130,6 +130,12 @@ typedef struct Dlfile {
 	size_t size;
 } Dlfile;
 
+/* Used in pkg_str.c glob_to_pkgarg in order to get a return code */
+typedef struct Glob2pkg {
+	int		rc;
+	char	**pkgargs;
+} Glob2pkg;
+
 /**
  * \struct Deptree
  * \brief Package dependency tree
@@ -243,7 +249,7 @@ void		do_pkg_remove(Plisthead *);
 int			pkgin_remove(char **);
 int			pkgin_install(char **, uint8_t);
 char		*action_list(char *, char *);
-void		pkgin_upgrade(int);
+int			pkgin_upgrade(int);
 char		*read_preferred(char *);
 /* order.c */
 Plisthead	*order_remove(Plisthead *);
@@ -251,7 +257,7 @@ Plisthead	*order_upgrade_remove(Plisthead *);
 Plisthead	*order_install(Plisthead *);
 /* impact.c */
 uint8_t		pkg_in_impact(Plisthead *, char *);
-Plisthead	*pkg_impact(char **);
+Plisthead	*pkg_impact(char **, int *);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);
@@ -272,7 +278,7 @@ char		*get_pkgname_from_depend(char *);
 int			exact_pkgfmt(const char *);
 char		*find_exact_pkg(Plisthead *, const char *);
 int			version_check(char *, char *);
-char		**glob_to_pkgarg(char **);
+char		**glob_to_pkgarg(char **, int *);
 /* selection.c */
 void		export_keep(void);
 void		import_keep(uint8_t, const char *);

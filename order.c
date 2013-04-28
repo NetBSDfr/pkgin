@@ -59,8 +59,8 @@ remove_dep_deepness(Plisthead *deptreehead)
 		pdp->level = 1;
 		
 		if (pdp->depend == NULL)
-			/* there's something wrong with database's record, probably
-			 * a mistaken dependency
+			/* there's something wrong with database's record,
+			 * probably a mistaken dependency
 			 */
 			continue;
 

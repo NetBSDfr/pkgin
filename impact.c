@@ -1,7 +1,7 @@
 /* $Id: impact.c,v 1.17 2012/04/29 10:15:44 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -79,7 +79,7 @@ break_depends(Plisthead *impacthead)
 	Plisthead	*rdphead, *fdphead;
 	Pkglist	   	*rdp, *fdp;
 	char		*pkgname, *rpkg;
-	int			dep_break, exists;
+	int		dep_break, exists;
 
 	SLIST_FOREACH(pimpact, impacthead, next) {
 
@@ -180,7 +180,7 @@ break_depends(Plisthead *impacthead)
 static int
 deps_impact(Plisthead *impacthead, Pkglist *pdp)
 {
-	int			toupgrade;
+	int		toupgrade;
 	Pkglist		*pimpact, *plist, *mapplist;
 	char		*remotepkg;
 
@@ -311,7 +311,7 @@ pkg_in_impact(Plisthead *impacthead, char *depname)
 }
 
 Plisthead *
-pkg_impact(char **pkgargs)
+pkg_impact(char **pkgargs, int *rc)
 {
 #ifndef DEBUG
 	static char	*icon = __UNCONST(ICON_WAIT);
@@ -325,6 +325,7 @@ pkg_impact(char **pkgargs)
 
 	if (SLIST_EMPTY(&r_plisthead)) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
+		*rc = EXIT_FAILURE;
 		return NULL;
 	}
 
@@ -342,6 +343,7 @@ pkg_impact(char **pkgargs)
 		if ((pkgname = unique_pkg(*ppkgargs, REMOTE_PKG)) == NULL) {
 			/* package is not available on the repository */
 			printf(MSG_PKG_NOT_AVAIL, *ppkgargs);
+			*rc = EXIT_FAILURE;
 			continue;
 		}
 

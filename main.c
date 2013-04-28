@@ -1,7 +1,7 @@
 /* $Id: main.c,v 1.33 2012/12/02 13:33:28 stacktic Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -37,7 +37,7 @@
 static void	usage(void);
 static int	find_cmd(const char *);
 static void	missing_param(int, int, const char *);
-static void ginto(void);
+static void	ginto(void);
 
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0;
@@ -203,17 +203,17 @@ main(int argc, char *argv[])
 		break;
 	case PKG_INST_CMD: /* install a package and its dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_INST);
-		pkgin_install(&argv[1], do_inst);
+		rc = pkgin_install(&argv[1], do_inst);
 		break;
 	case PKG_UPGRD_CMD: /* upgrade keep-packages */
-		pkgin_upgrade(UPGRADE_KEEP);
+		rc = pkgin_upgrade(UPGRADE_KEEP);
 		break;
 	case PKG_FUPGRD_CMD: /* upgrade everything installed */
-		pkgin_upgrade(UPGRADE_ALL);
+		rc = pkgin_upgrade(UPGRADE_ALL);
 		break;
 	case PKG_REMV_CMD: /* remove packages and reverse dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_RM);
-		pkgin_remove(&argv[1]);
+		rc = pkgin_remove(&argv[1]);
 		break;
 	case PKG_AUTORM_CMD: /* autoremove orphan packages */
 		pkgin_autoremove();

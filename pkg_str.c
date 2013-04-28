@@ -249,11 +249,11 @@ get_pkgname_from_depend(char *depend)
 }
 
 char **
-glob_to_pkgarg(char **globpkg)
+glob_to_pkgarg(char **globpkg, int *rc)
 {
-	int		i = 0, count = 0;
-	char	**pkgargs = NULL;
-	Pkglist	*plist;
+	int			i = 0, count = 0;
+	char		**pkgargs = NULL;
+	Pkglist		*plist;
 
 	for (i = 0, count = 0; globpkg[i] != NULL; i++, count++) {
 		XREALLOC(pkgargs, (count + 2) * sizeof(char *));
@@ -264,6 +264,7 @@ glob_to_pkgarg(char **globpkg)
 			if ((plist = map_pkg_to_dep(&r_plisthead, globpkg[i])) == NULL) {
 				fprintf(stderr, MSG_PKG_NOT_AVAIL, globpkg[i]);
 				count--;
+				*rc = EXIT_FAILURE;
 			} else
 				XSTRDUP(pkgargs[count], plist->full);
 		}
