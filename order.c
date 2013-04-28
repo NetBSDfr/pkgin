@@ -92,7 +92,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 Plisthead *
 order_remove(Plisthead *deptreehead)
 {
-	int			i, maxlevel = 0;
+	int		i, maxlevel = 0;
 	Pkglist		*pdp, *next;
 	Plisthead	*ordtreehead;
 
@@ -126,7 +126,7 @@ upgrade_dep_deepness(Plisthead *impacthead)
 {
 	char		*pkgname;
 	Pkglist		*pimpact;
-    Plisthead	*lvldeptree;
+	Plisthead	*lvldeptree;
 
 	/* get higher recursion level */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -173,22 +173,25 @@ order_upgrade_remove(Plisthead *impacthead)
 {
 	Plisthead	*ordtreehead;
 	Pkglist		*pimpact, *pdp;
-	int			i, maxlevel = 0;
+	int		i, maxlevel = 0;
 
 	upgrade_dep_deepness(impacthead);
 
 	/* record higher dependency level on impact upgrade list */
 	SLIST_FOREACH(pimpact, impacthead, next)
-		if ((pimpact->action == TOUPGRADE || pimpact->action == TOREMOVE)
-				&& pimpact->level > maxlevel)
+		if ((pimpact->action == TOUPGRADE ||
+			pimpact->action == TOREMOVE) &&
+			pimpact->level > maxlevel)
+
 			maxlevel = pimpact->level;
 
 	ordtreehead = init_head();
 
 	for (i = maxlevel; i >= 0; i--)
 		SLIST_FOREACH(pimpact, impacthead, next) {
-			if ((pimpact->action == TOUPGRADE ||  pimpact->action == TOREMOVE)
-				&& pimpact->level == i) {
+			if ((pimpact->action == TOUPGRADE ||
+				pimpact->action == TOREMOVE) &&
+				pimpact->level == i) {
 
 				if (pkg_in_impact(ordtreehead, pimpact->old))
 					continue;
@@ -197,8 +200,12 @@ order_upgrade_remove(Plisthead *impacthead)
 
 				XSTRDUP(pdp->depend, pimpact->old);
 				pdp->name = NULL; /* safety */
-				pdp->computed = pimpact->action; /* XXX: ugly */
-				pdp->level = pimpact->level; /* informative only */
+				/* XXX: use the "computed" value to record
+				 * action type. Ugly.
+				 */
+				pdp->computed = pimpact->action;
+				/* informative only */
+				pdp->level = pimpact->level;
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
 
 			} /* action == TOUPGRADE || TOREMOVE */
@@ -225,7 +232,8 @@ order_install(Plisthead *impacthead)
 
 	/* record higher dependency level on impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
-		if ((pimpact->action == TOUPGRADE || pimpact->action == TOINSTALL) &&
+		if ((pimpact->action == TOUPGRADE ||
+			pimpact->action == TOINSTALL) &&
 			pimpact->level > maxlevel)
 			maxlevel = pimpact->level;
 	}
@@ -235,13 +243,15 @@ order_install(Plisthead *impacthead)
 	for (i = 0; i <= maxlevel; i++) {
 		SLIST_FOREACH(pimpact, impacthead, next) {
 			if ((pimpact->action == TOUPGRADE ||
-					pimpact->action == TOINSTALL) && pimpact->level == i) {
+				pimpact->action == TOINSTALL) &&
+				pimpact->level == i) {
 
 				if (pkg_in_impact(ordtreehead, pimpact->full))
 					continue;
 
 				pdp = malloc_pkglist(DEPTREE);
 
+				pdp->computed = pimpact->action; /* XXX: ugly*/
 				XSTRDUP(pdp->depend, pimpact->full);
 				pdp->name = NULL; /* safety */
 				pdp->level = pimpact->level;
@@ -257,7 +267,8 @@ order_install(Plisthead *impacthead)
 					/* backup pdp for future insertion */
 					pi_dp = pdp;
 				} else					
-					SLIST_INSERT_HEAD(ordtreehead, pdp, next);
+					SLIST_INSERT_HEAD(ordtreehead,
+						pdp, next);
 			} /* action == TOINSTALL */
 		} /* SLIST_FOREACH pimpact */
 	} /* for i < maxlevel */

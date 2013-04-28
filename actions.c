@@ -57,7 +57,7 @@ pkg_download(Plisthead *installhead)
 
 	SLIST_FOREACH(pinstall, installhead, next) {
 		snprintf(pkg_fs, BUFSIZ,
-		    "%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
+			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
 		/* pkg_info -X -a produces pkg_summary with empty FILE_SIZE,
 		 * people could spend some time blaming on pkgin before finding
@@ -70,7 +70,7 @@ pkg_download(Plisthead *installhead)
 		if (stat(pkg_fs, &st) == 0 && 
 			st.st_size == pinstall->file_size &&
 			pinstall->file_size != 0 )
-		    	continue;
+			continue;
 
 		snprintf(query, BUFSIZ, PKG_URL, pinstall->depend);
 		/* retrieve repository for package  */
@@ -98,9 +98,11 @@ pkg_download(Plisthead *installhead)
 		if ((dlpkg = download_file(pkg_url, NULL)) == NULL) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
 			rc = EXIT_FAILURE;
+
 			if (!check_yesno(DEFAULT_NO))
 				errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL,
-				    pinstall->depend);
+				pinstall->depend);
+
 			pinstall->file_size = -1;
 			fclose(fp);
 			continue;
@@ -123,8 +125,8 @@ pkg_download(Plisthead *installhead)
 static void
 analyse_pkglog(long int filepos)
 {
-	FILE		*err_ro;
-	char		err_line[BUFSIZ];
+	FILE	*err_ro;
+	char	err_line[BUFSIZ];
 
 	if (filepos < 0)
 		return;
@@ -343,7 +345,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 {
 	int		installnum = 0, upgradenum = 0, removenum = 0;
 	int		rc = EXIT_SUCCESS;
-	uint64_t   	file_size = 0, free_space;
+	uint64_t	file_size = 0, free_space;
 	int64_t		size_pkg = 0;
 	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
@@ -515,8 +517,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 			rc = EXIT_FAILURE;
 
 		if (do_inst) {
-			/* real install, not a simple download */
-			/*
+			/* real install, not a simple download
+			 *
 			 * if there was upgrades, first remove
 			 * old packages
 			 */
@@ -646,7 +648,11 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
-/* actually unused, not sure if really needed */
+/*
+ * The idea behind this function is to list preferred versions
+ * of packages. For example, mysql-server-5, apache-2.2.
+ * It is actually unused, not sure if really needed.
+ */
 char *
 read_preferred(char *pkgname)
 {
@@ -715,7 +721,7 @@ narrow_match(Pkglist *opkg)
 		/* second package is greater */
 		if (version_check(best_match, pkglist->full) == 2) {
 			XFREE(best_match);
-			XSTRDUP(best_match, pkglist->full);			
+			XSTRDUP(best_match, pkglist->full);
 		}
 	} /* SLIST_FOREACH remoteplisthead */
 

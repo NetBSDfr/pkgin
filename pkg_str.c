@@ -1,7 +1,7 @@
 /* $Id: pkg_str.c,v 1.12 2012/11/24 18:37:42 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -261,7 +261,8 @@ glob_to_pkgarg(char **globpkg, int *rc)
 		if (strpbrk(globpkg[i], GLOBCHARS) == NULL)
 			XSTRDUP(pkgargs[count], globpkg[i]);
 		else {
-			if ((plist = map_pkg_to_dep(&r_plisthead, globpkg[i])) == NULL) {
+			if ((plist = map_pkg_to_dep(&r_plisthead,
+					globpkg[i])) == NULL) {
 				fprintf(stderr, MSG_PKG_NOT_AVAIL, globpkg[i]);
 				count--;
 				*rc = EXIT_FAILURE;
