@@ -124,14 +124,15 @@ break_depends(Plisthead *impacthead)
 			/* initialize to broken dependency */
 			dep_break = 1;
 
-			/* empty full dep tree, this can't happen in normal situation.
-			 * If it does, that means that the reverse dependency we're
-			 * analyzing has no direct dependency.
-			 * Such a situation could occur if the reverse dependency is not on
-			 * the repository anymore, leading to no information regarding this
-			 * package.
-			 * So we will check if local package dependencies are satisfied by
-			 * our newly upgraded packages.
+			/*
+			 * empty full dep tree, this can't happen in normal
+			 * situation. If it does, that means that the reverse
+			 * dependency we're analyzing has no direct dependency.
+			 * Such a situation could occur if the reverse
+			 * dependency is not on the repository anymore, leading
+			 * to no information regarding this package.
+			 * So we will check if local package dependencies are
+			 * satisfied by our newly upgraded packages.
 			 */
 			if (SLIST_EMPTY(fdphead)) {
 				free_pkglist(&fdphead, DEPTREE);
@@ -221,28 +222,37 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 			/* default action when local package match */
 			toupgrade = TOUPGRADE;
 
-			/* installed version does not match dep requirement
-			 * OR force reinstall, pkgkeep being use to inform -F was given
+			/*
+			 * installed version does not match dep requirement
+			 * OR force reinstall, pkgkeep being use to inform -F
+			 * was given
 			 */
-			if (!pkg_match(pdp->depend, plist->full) || pdp->keep < 0) {
+			if (!pkg_match(pdp->depend, plist->full) ||
+				pdp->keep < 0) {
 
 				TRACE("   ! didn't match (or force reinstall)\n");
-				/* local pkgname didn't match deps, remote pkg has a
-				 * lesser version than local package.
-				*/
-				if (version_check(plist->full, remotepkg) == 1) {
+				/*
+				 * local pkgname didn't match deps, remote pkg
+				 * has a lesser version than local package.
+				 */
+				if (version_check(plist->full,
+					remotepkg) == 1) {
 					/*
-					 * proposing a downgrade is definitely not useful,
-					 * not sure what I want to do with this...
+					 * proposing a downgrade is definitely
+					 * not useful, not sure what I want to
+					 * do with this...
 					 */
-						toupgrade = DONOTHING;
+					toupgrade = DONOTHING;
 
-						return 1;
+					return 1;
 				}
 
 				TRACE("   * upgrade with %s\n", plist->full);
-				/* insert as an upgrade */
-				/* oldpkg is used when building removal order list */
+				/*
+				 * insert as an upgrade
+				 * oldpkg is used when building removal order
+				 * list
+				 */
 				XSTRDUP(pimpact->old, plist->full);
 
 				pimpact->action = toupgrade;
@@ -371,11 +381,14 @@ pkg_impact(char **pkgargs, int *rc)
 		
 			/* compare needed deps with local packages */
 			if (!deps_impact(impacthead, pdp)) {
-				/* there was a versionning mismatch, proceed ? */
+				/*
+				 * there was a versionning mismatch,
+				 * proceed?
+				 */
 				if (!check_yesno(DEFAULT_NO)) {
 					free_pkglist(&impacthead, IMPACT);
-				
-					goto impactend; /* avoid free's repetition */
+					/* avoid free's repetition */
+					goto impactend;
 				}
 			}
 		} /* SLIST_FOREACH deps */
@@ -396,9 +409,11 @@ pkg_impact(char **pkgargs, int *rc)
 			pdp->keep = 0;
 		
 			if (force_reinstall)
-				/* use pkgkeep field to inform deps_impact the package
-				 * has to be reinstalled. It is NOT the normal use for
-				 * the pkgkeep field, it is just used as a temporary field
+				/*
+				 * use pkgkeep field to inform deps_impact
+				 * the package has to be reinstalled. It is NOT
+				 * the normal use for the pkgkeep field, it is
+				 * just used as a temporary field
 				 */
 				pdp->keep = -1;
 
