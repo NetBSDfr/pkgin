@@ -454,7 +454,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 
 		SLIST_FOREACH(premove, removehead, next) {
 			if (premove->computed == TOUPGRADE) {
-				toupgrade = action_list(toupgrade, premove->depend);
+				toupgrade = action_list(toupgrade,
+						premove->depend);
 #ifdef DEBUG
 				printf("package: %s - level: %d\n",
 					premove->depend, premove->level);
@@ -467,7 +468,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		if (removenum > 0) {
 			SLIST_FOREACH(premove, removehead, next) {
 				if (premove->computed == TOREMOVE) {
-					toremove = action_list(toremove, premove->depend);
+					toremove = action_list(toremove,
+							premove->depend);
 #ifdef DEBUG
 					printf("package: %s - level: %d\n",
 						premove->depend, premove->level);
