@@ -30,14 +30,13 @@
  *
  */
 
-#include "pkgin.h"
-#include <dirent.h>
 #include <sys/statvfs.h>
-
 #if _FILE_OFFSET_BITS == 32
 #undef _FILE_OFFSET_BITS
 #define _FILE_OFFSET_BITS 64 /* needed for large filesystems on sunos */
 #endif
+#include "pkgin.h"
+#include <dirent.h>
 
 /* Variable options for the repositories file */
 static const struct VarParam {
@@ -52,8 +51,8 @@ static const struct VarParam {
 int
 fs_has_room(const char *dir, int64_t size)
 {
-	int64_t				freesize;
-	struct statvfs		fsbuf;
+	int64_t		freesize;
+	struct statvfs	fsbuf;
 
 
 	if (statvfs(dir, &fsbuf) < 0)
@@ -70,7 +69,7 @@ fs_has_room(const char *dir, int64_t size)
 uint64_t
 fs_room(const char *dir)
 {
-	struct statvfs		fsbuf;
+	struct statvfs	fsbuf;
 
 	if (statvfs(dir, &fsbuf) < 0)
 		err(EXIT_FAILURE, "Can't statvfs() `%s'", dir);
@@ -81,20 +80,22 @@ fs_room(const char *dir)
 void
 clean_cache()
 {
-	DIR				*dp;
+	DIR		*dp;
 	struct dirent	*ep;
-	char			pkgpath[BUFSIZ];
+	char		pkgpath[BUFSIZ];
 
-	if ((dp = opendir(pkgin_cache)) != NULL) {
-		while ((ep = readdir(dp)) != NULL)
-			if (ep->d_name[0] != '.') {
-				snprintf(pkgpath, BUFSIZ, "%s/%s", pkgin_cache, ep->d_name);
-				if (unlink(pkgpath) < 0)
-					err(EXIT_FAILURE, "could not delete %s", pkgpath);
-			}
-		closedir(dp);
-	} else
+	if ((dp = opendir(pkgin_cache)) == NULL)
 		err(EXIT_FAILURE, "couldn't open %s", pkgin_cache);
+
+	while ((ep = readdir(dp)) != NULL)
+		if (ep->d_name[0] != '.') {
+			snprintf(pkgpath, BUFSIZ, "%s/%s",
+				pkgin_cache, ep->d_name);
+			if (unlink(pkgpath) < 0)
+				err(EXIT_FAILURE,
+					"could not delete %s", pkgpath);
+		}
+	closedir(dp);
 }
 
 void

@@ -1,7 +1,7 @@
 /* $Id: pkglist.c,v 1.11 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -34,7 +34,7 @@
 #include <regex.h>
 
 Plisthead	r_plisthead, l_plisthead;
-int	r_plistcounter, l_plistcounter;
+int		r_plistcounter, l_plistcounter;
 
 /**
  * \fn malloc_pkglist
@@ -237,7 +237,7 @@ list_pkgs(const char *pkgquery, int lstype)
 {
 	Pkglist	   	*plist;
 	Plistnumbered	*plisthead;
-	int			rc;
+	int		rc;
 	char		pkgstatus, outpkg[BUFSIZ];
 
 	/* list installed packages + status */
@@ -266,7 +266,8 @@ list_pkgs(const char *pkgquery, int lstype)
 				if (pkgstatus != '\0') {
 					snprintf(outpkg, BUFSIZ, "%s %c",
 						plist->full, pkgstatus);
-					printf("%-20s %s\n", outpkg, plist->comment);
+					printf("%-20s %s\n", outpkg,
+							plist->comment);
 				}
 
 			}
@@ -293,15 +294,15 @@ search_pkg(const char *pattern)
 {
 	Pkglist	   	*plist;
 	regex_t		re;
-	int			rc;
+	int		rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
-	int			matched_pkgs;
+	int		matched_pkgs;
 
 	matched_pkgs = 0;
 
 	if (!SLIST_EMPTY(&r_plisthead)) {
-		if ((rc = regcomp(&re, pattern, REG_EXTENDED|REG_NOSUB|REG_ICASE))
-			!= 0) {
+		if ((rc = regcomp(&re, pattern,
+			REG_EXTENDED|REG_NOSUB|REG_ICASE)) != 0) {
 			regerror(rc, &re, eb, sizeof(eb));
 			errx(1, "regcomp: %s: %s", pattern, eb);
 		}
@@ -310,12 +311,14 @@ search_pkg(const char *pattern)
 			is_inst = '\0';
 
 			if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
-				regexec(&re, plist->comment, 0, NULL, 0) == 0) {
+				regexec(&re, plist->comment,
+					0, NULL, 0) == 0) {
 
 				matched_pkgs = 1;
 
 				if (!SLIST_EMPTY(&l_plisthead)) {
-					rc = pkg_is_installed(&l_plisthead, plist);
+					rc = pkg_is_installed(&l_plisthead,
+								plist);
 
 					if (rc == 0)
 						is_inst = PKG_EQUAL;
@@ -326,7 +329,8 @@ search_pkg(const char *pattern)
 
 				}
 
-				snprintf(outpkg, BUFSIZ, "%s %c", plist->full, is_inst);
+				snprintf(outpkg, BUFSIZ, "%s %c",
+						plist->full, is_inst);
 
 				printf("%-20s %s\n", outpkg, plist->comment);
 			}
