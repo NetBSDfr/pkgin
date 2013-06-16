@@ -46,8 +46,7 @@ download_file(char *str_url, time_t *db_mtime)
 	size_t			buf_len, buf_fetched;
 	ssize_t			cur_fetched;
 	off_t			statsize;
-	time_t			begin_dl, now;
-	struct url_stat	st;
+	struct url_stat		st;
 	struct url		*url;
 	fetchIO			*f = NULL;
 
@@ -65,7 +64,10 @@ download_file(char *str_url, time_t *db_mtime)
 
 	if (db_mtime != NULL) {
 		if (st.mtime <= *db_mtime) {
-			/* -1 used to identify return type, local summary up-to-date */
+			/*
+			 * -1 used to identify return type,
+			 * local summary up-to-date
+			 */
 			*db_mtime = -1; 
 
 			fetchIO_close(f);
@@ -96,13 +98,13 @@ download_file(char *str_url, time_t *db_mtime)
 	fflush(stdout);
 
 	buf_fetched = 0;
-	begin_dl = time(NULL);
 
 	statsize = 0;
 	start_progress_meter(p, buf_len, &statsize);
 
 	while (buf_fetched < buf_len) {
-		cur_fetched = fetchIO_read(f, file->buf + buf_fetched, fetch_buffer);
+		cur_fetched = fetchIO_read(f, file->buf + buf_fetched,
+						fetch_buffer);
 		if (cur_fetched == 0)
 			errx(EXIT_FAILURE, "truncated file");
 		else if (cur_fetched == -1)
@@ -111,7 +113,6 @@ download_file(char *str_url, time_t *db_mtime)
 
 		buf_fetched += cur_fetched;
 		statsize += cur_fetched;
-		now = time(NULL);
 	}
 
 	stop_progress_meter();
