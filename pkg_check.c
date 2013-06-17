@@ -1,7 +1,7 @@
 /* $Id: pkg_check.c,v 1.7 2012/07/15 17:36:34 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
@@ -218,11 +218,11 @@ pkg_has_conflicts(Pkglist *pimpact)
 void
 show_prov_req(const char *query, const char *pkgname)
 {
-	const char		*out[] = { "provided", "required" };
-	const char		*say;
-	char			*fullpkgname;
+	const char	*out[] = { "provided", "required" };
+	const char	*say;
+	char		*fullpkgname;
 	Plistnumbered	*plisthead;
-	Pkglist			*plist;
+	Pkglist		*plist;
 
 	if ((fullpkgname = unique_pkg(pkgname, REMOTE_PKG)) == NULL)
 		errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL, pkgname);

@@ -1,5 +1,6 @@
 20130616
 	0.6.4
+	Fixed many return codes
 	Large file systems fix by Filip Hajny
 	gcc 4.7 / unused-but-set-variable fix by Makoto Fujiwara
 
