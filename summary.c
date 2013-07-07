@@ -668,12 +668,12 @@ update_remotedb(void)
 		delete_remote_tbl(sumsw[REMOTE_SUMMARY], *prepos);
 		/* update remote* table for this repository */
 		insert_summary(sumsw[REMOTE_SUMMARY], summary, *prepos);
+
+		free_list(summary);
 	}
 
 	/* remove empty rows (duplicates) */
 	pkgindb_doquery(DELETE_EMPTY_ROWS, NULL, NULL);
-
-	free_list(summary);
 }
 
 int
