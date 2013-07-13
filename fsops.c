@@ -102,9 +102,14 @@ void
 create_dirs()
 {
 	/* create database repository */
-	mkdir(PKGIN_DB, 0755);
+	if(-1 == mkdir(PKGIN_DB, 0755)) 
+		errx(EXIT_FAILURE, MSG_MKDIR_DB_REPOSITORY_FAILED, 
+						strerror(errno)); // look errno
 	/* create cache repository */
-	mkdir(pkgin_cache, 0755);
+	if(-1 == mkdir(pkgin_cache, 0755))
+		errx(EXIT_FAILURE, MSG_MKDIR_CACHE_REPOSITORY_FAILED,
+						strerror(errno));
+		
 }
 
 char *
