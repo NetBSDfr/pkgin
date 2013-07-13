@@ -209,7 +209,7 @@ pkgindb_reset()
 	pkgindb_close();
 
 	if (unlink(PDB) < 0)
-		err(EXIT_FAILURE, "could not delete database file %s\n", PDB);
+		err(EXIT_FAILURE, MSG_DELETE_DB_FAILED, PDB);
 
 	pkgindb_init();
 }
