@@ -150,6 +150,9 @@ please re-run %s with a package name matching one of the following:\n"
 #define MSG_EMPTY_LIST "Requested list is empty.\n"
 #define MSG_NO_CATEGORIES "No categories found.\n"
 
+/* pkgindb.c */
+#define MSG_DELETE_DB_FAILED "Failed to delete database file %s\n"
+
 /* fsops.c */
 #define MSG_TRANS_FAILED "Failed to translate %s in repository config file"
 #define MSG_INVALID_REPOS "Invalid repository: %s"

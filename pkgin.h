@@ -41,6 +41,7 @@
 #endif
 
 #include <fetch.h>
+#include <errno.h>
 #include "messages.h"
 #include "pkgindb.h"
 #include "tools.h"
