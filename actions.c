@@ -139,9 +139,6 @@ analyse_pkglog(long int filepos)
 		/* Warning: [...] was built for a platform */
 		if (strstr(err_line, "Warning") != NULL)
 			warn_count++;
-		/* A different version [...] is already installed */
-		if (strstr(err_line, "already installed") != NULL)
-			err_count--;
 		/* 1 package addition failed */
 		if (strstr(err_line, "addition failed") != NULL)
 			err_count++;
