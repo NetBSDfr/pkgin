@@ -4,11 +4,12 @@ Tested and working on Darwin 13 ( Mac OS X 10.9 Mavericks )
 
 Pkgsrc Dependencies:
 
-- bsdmake 
+- bmake 
 - sqlite3
-- libnbcompat (included here)
+- libnbcompat
 - libfetch
 - libarchive
+- pkg_install
 
 Configure:
 
