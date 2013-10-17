@@ -2,9 +2,28 @@
 
 Tested and working on Darwin 13 ( Mac OS X 10.9 Mavericks )
 
-Run `bmake` to compile.
+Pkgsrc Dependencies:
+
+- bsdmake 
+- sqlite3
+- libnbcompat (included here)
+- libfetch
+- libarchive
+
+Configure:
+
+`$ ./configure --prefix=/usr/pkg --with-libraries=/usr/pkg/lib --with-includes=/usr/pkg/include`
+
+Compile:
+
+`$ bmake`
+
+Install:
+
+`$ sudo bmake install`
 
 Contact me if the build fails at youri.mout@gmail.com!
+
 
 
 
