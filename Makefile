@@ -82,7 +82,7 @@ CPPFLAGS+=	-Iexternal -I. -I${LOCALBASE}/include
 LDFLAGS+=	-Lexternal -L/usr/pkg/lib -L/usr/lib -lcrypto -lssl
 
 LDADD+=		-L${LOCALBASE}/lib -Wl,-rpath,${LOCALBASE}/lib	\
-		-lbz2 -lz -larchive -lfetch -lssl -lcrypto -ltermcap -lutil -lnbcompat -lnbcompat
+		-lbz2 -lz -larchive -lfetch -lssl -lcrypto -ltermcap -lutil -lnbcompat
 LDADD+=		-lsqlite3
 
 CLEANFILES+=	${DPSRCS}
