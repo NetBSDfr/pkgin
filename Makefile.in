@@ -64,7 +64,7 @@ WARNS=		2
 CPPFLAGS+=	-DNETBSD
 .endif
 
-CPPFLAGS+=	-DHAVE_NBCOMPAT_H=1 -Iexternal -I/usr/pkg/include -I/usr/include
+CPPFLAGS+=	-DHAVE_NBCOMPAT_H=1 -I/Volumes/Second/pkgsrc/pkgtools/pkgin/work/libnbcompat -I/usr/pkg/include -I/usr/include
 CPPFLAGS+=	-g
 
 CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
@@ -76,13 +76,13 @@ CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
 
 CPPFLAGS+=	-DHAVE_CONFIG_H
 CPPFLAGS+=	-D_LARGEFILE_SOURCE -D_LARGE_FILES
-CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${MACHINE_ARCH}\"
+CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${OS_ARCH}\"
 CPPFLAGS+=	-Iexternal -I. -I${LOCALBASE}/include
 
-LDFLAGS+=	-Lexternal -L/usr/pkg/lib -L/usr/lib -lcrypto -lssl
+LDFLAGS+=	-L/Volumes/Second/pkgsrc/pkgtools/pkgin/work/libnbcompat -L/usr/pkg/lib -L/usr/lib -lcrypto -lssl
 
 LDADD+=		-L${LOCALBASE}/lib -Wl,-rpath,${LOCALBASE}/lib	\
-		-lbz2 -lz -larchive -lfetch -lssl -lcrypto -ltermcap -lutil -lnbcompat
+		-lbz2 -lz -larchive -lfetch -lssl -lcrypto -ltermcap -lutil -lnbcompat -lnbcompat
 LDADD+=		-lsqlite3
 
 CLEANFILES+=	${DPSRCS}
@@ -105,7 +105,7 @@ install:
 
 # makes maintainer's life easier
 
-WIPHOME=/Users/yourimouton/Downloads/git
+WIPHOME=/Users/yrmt/downloads/git
 CURDATE!=date +%Y%m%d
 WIPREV!=git log --pretty=format:'%H' -n 1
 OLDREV!=sed -En 's/VERSION=[^0-9a-z]+([0-9a-z]+)/\1/p'			\
