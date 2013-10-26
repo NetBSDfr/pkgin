@@ -6,7 +6,7 @@ Pkgsrc Dependencies:
 
 - bmake 
 - sqlite3
-- libnbcompat (included here.)
+- libnbcompat (x86_64 lib included here.)
 - libfetch
 - libarchive
 - pkg_install
