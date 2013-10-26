@@ -6,14 +6,12 @@ Pkgsrc Dependencies:
 
 - bmake 
 - sqlite3
-- libnbcompat
+- libnbcompat (included here.)
 - libfetch
 - libarchive
 - pkg_install
 
-Configure:
-
-`$ ./configure --prefix=/usr/pkg --with-libraries=/usr/pkg/lib --with-includes=/usr/pkg/include`
+Here, we use /usr/pkg on Darwin!
 
 Compile:
 
