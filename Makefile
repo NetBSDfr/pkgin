@@ -64,7 +64,7 @@ WARNS=		2
 CPPFLAGS+=	-DNETBSD
 .endif
 
-CPPFLAGS+=	-DHAVE_NBCOMPAT_H=1 -I/Volumes/Second/pkgsrc/pkgtools/pkgin/work/libnbcompat -I/usr/pkg/include -I/usr/include
+CPPFLAGS+=	-DHAVE_NBCOMPAT_H=1 -Iexternal/libnbcompat -I/usr/pkg/include -I/usr/include
 CPPFLAGS+=	-g
 
 CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
@@ -79,7 +79,7 @@ CPPFLAGS+=	-D_LARGEFILE_SOURCE -D_LARGE_FILES
 CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${OS_ARCH}\"
 CPPFLAGS+=	-Iexternal -I. -I${LOCALBASE}/include
 
-LDFLAGS+=	-L/Volumes/Second/pkgsrc/pkgtools/pkgin/work/libnbcompat -L/usr/pkg/lib -L/usr/lib -lcrypto -lssl
+LDFLAGS+=	-L/usr/pkg/lib -L/usr/lib -lcrypto -lssl
 
 LDADD+=		-L${LOCALBASE}/lib -Wl,-rpath,${LOCALBASE}/lib	\
 		-lbz2 -lz -larchive -lfetch -lssl -lcrypto -ltermcap -lutil -lnbcompat -lnbcompat
