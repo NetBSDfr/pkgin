@@ -105,7 +105,7 @@ install:
 
 # makes maintainer's life easier
 
-WIPHOME=/Users/yrmt/downloads/git
+WIPHOME=~/downloads/git
 CURDATE!=date +%Y%m%d
 WIPREV!=git log --pretty=format:'%H' -n 1
 OLDREV!=sed -En 's/VERSION=[^0-9a-z]+([0-9a-z]+)/\1/p'			\
