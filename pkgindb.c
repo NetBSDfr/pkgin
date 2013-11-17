@@ -286,9 +286,11 @@ pkg_sum_mtime(char *repo)
 void
 pkgindb_stats()
 {
-	/* Add repo count and error checking */
-	char local_pkg_count[BUFSIZ], local_pkg_size[BUFSIZ], 
-		remote_pkg_count[BUFSIZ], remote_pkg_size[BUFSIZ];
+	FILE 	*fp;
+	char	local_pkg_count[BUFSIZ], local_pkg_size[BUFSIZ], 
+			remote_pkg_count[BUFSIZ], remote_pkg_size[BUFSIZ];
+	int 	i, remote_pkg_repos = 0;
+ 	char	buf[BUFSIZ];
 
 	pkgindb_doquery(LOCAL_PKG_COUNT, pdb_get_value, &local_pkg_count);
 	pkgindb_doquery(LOCAL_PKG_SIZE, pdb_get_value, &local_pkg_size);
@@ -298,11 +300,22 @@ pkgindb_stats()
  	double localsize = strtod(local_pkg_size,NULL);
  	double remotesize = strtod(remote_pkg_size,NULL);
 
+ 	if ((fp = fopen(PKGIN_CONF"/"REPOS_FILE, "r")) == NULL)
+		return;
+ 	
+ 	for (i=0; fgets(buf,BUFSIZ,fp); ++i) {
+ 		if (strstr(buf,"http://") == buf || 
+ 			strstr(buf,"https://") == buf || 
+ 			strstr(buf,"ftp://") == buf ||
+ 			strstr(buf,"file://") == buf) 
+			remote_pkg_repos++;
+ 	}
+
 	printf("Local package database:\n");
 	printf("\tInstalled packages: %s\n", local_pkg_count);
 	printf("\tDisk space occupied: %0.2f MB\n\n", localsize/1e+06);
 	printf("Remote package database(s):\n");
-	//printf("\tNumber of repositories: %s\n", remote_pkg_repos);
+	printf("\tNumber of repositories: %d\n", remote_pkg_repos);
 	printf("\tPackages available: %s\n", remote_pkg_count);
 	printf("\tTotal size of packages: %0.2f GB\n", remotesize/1e+09);
 }
