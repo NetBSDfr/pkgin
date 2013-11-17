@@ -1,0 +1,9 @@
+update the osx support to 10.9 on the pkgin website
+add me to contributors, changelog
+add saveosx to the repositories file
+add stats to man page
+
+
+add stats
+ - repo count
+ - error checking
