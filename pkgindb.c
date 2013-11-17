@@ -282,3 +282,27 @@ pkg_sum_mtime(char *repo)
 
 	return db_mtime;
 }
+
+void
+pkgindb_stats()
+{
+	/* Add repo count and error checking */
+	char local_pkg_count[BUFSIZ], local_pkg_size[BUFSIZ], 
+		remote_pkg_count[BUFSIZ], remote_pkg_size[BUFSIZ];
+
+	pkgindb_doquery(LOCAL_PKG_COUNT, pdb_get_value, &local_pkg_count);
+	pkgindb_doquery(LOCAL_PKG_SIZE, pdb_get_value, &local_pkg_size);
+    pkgindb_doquery(REMOTE_PKG_COUNT, pdb_get_value, &remote_pkg_count);
+    pkgindb_doquery(REMOTE_PKG_SIZE, pdb_get_value, &remote_pkg_size);
+
+ 	double localsize = strtod(local_pkg_size,NULL);
+ 	double remotesize = strtod(remote_pkg_size,NULL);
+
+	printf("Local package database:\n");
+	printf("\tInstalled packages: %s\n", local_pkg_count);
+	printf("\tDisk space occupied: %0.2f MB\n\n", localsize/1e+06);
+	printf("Remote package database(s):\n");
+	//printf("\tNumber of repositories: %s\n", remote_pkg_repos);
+	printf("\tPackages available: %s\n", remote_pkg_count);
+	printf("\tTotal size of packages: %0.2f GB\n", remotesize/1e+09);
+}

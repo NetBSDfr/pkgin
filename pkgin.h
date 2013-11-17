@@ -42,6 +42,7 @@
 
 #include <fetch.h>
 #include <errno.h>
+#include <stdlib.h>
 #include "messages.h"
 #include "pkgindb.h"
 #include "tools.h"
@@ -116,6 +117,7 @@
 #define PKG_SHPCAT_CMD 25
 #define PKG_SHALLCAT_CMD 26
 #define PKG_GINTO_CMD 255
+#define PKG_STATS_CMD 27
 
 #define PKG_EQUAL '='
 #define PKG_GREATER '>'
