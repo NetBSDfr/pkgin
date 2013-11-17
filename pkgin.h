@@ -42,7 +42,6 @@
 
 #include <fetch.h>
 #include <errno.h>
-#include <stdlib.h>
 #include "messages.h"
 #include "pkgindb.h"
 #include "tools.h"
