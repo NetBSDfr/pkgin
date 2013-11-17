@@ -287,10 +287,9 @@ void
 pkgindb_stats()
 {
 	FILE 	*fp;
-	char	local_pkg_count[BUFSIZ], local_pkg_size[BUFSIZ], 
+	char	buf[BUFSIZ], local_pkg_count[BUFSIZ], local_pkg_size[BUFSIZ], 
 			remote_pkg_count[BUFSIZ], remote_pkg_size[BUFSIZ];
 	int 	i, remote_pkg_repos = 0;
- 	char	buf[BUFSIZ];
 
 	pkgindb_doquery(LOCAL_PKG_COUNT, pdb_get_value, &local_pkg_count);
 	pkgindb_doquery(LOCAL_PKG_SIZE, pdb_get_value, &local_pkg_size);
