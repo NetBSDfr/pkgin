@@ -296,8 +296,8 @@ pkgindb_stats()
     pkgindb_doquery(REMOTE_PKG_COUNT, pdb_get_value, &remote_pkg_count);
     pkgindb_doquery(REMOTE_PKG_SIZE, pdb_get_value, &remote_pkg_size);
 
- 	double localsize = strtod(local_pkg_size,NULL);
- 	double remotesize = strtod(remote_pkg_size,NULL);
+ 	double localsize = strtod(local_pkg_size,NULL)/1e+06;
+ 	double remotesize = strtod(remote_pkg_size,NULL)/1e+09;
 
  	if ((fp = fopen(PKGIN_CONF"/"REPOS_FILE, "r")) == NULL)
 		return;
@@ -312,9 +312,9 @@ pkgindb_stats()
 
 	printf("Local package database:\n");
 	printf("\tInstalled packages: %s\n", local_pkg_count);
-	printf("\tDisk space occupied: %0.2f MB\n\n", localsize/1e+06);
+	printf("\tDisk space occupied: %.2f MB\n\n", localsize);
 	printf("Remote package database(s):\n");
 	printf("\tNumber of repositories: %d\n", remote_pkg_repos);
 	printf("\tPackages available: %s\n", remote_pkg_count);
-	printf("\tTotal size of packages: %0.2f GB\n", remotesize/1e+09);
+	printf("\tTotal size of packages: %.2f GB\n", remotesize);
 }
