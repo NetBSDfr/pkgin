@@ -1,0 +1,13 @@
+update the osx support to 10.9 on the pkgin website
+add me to contributors, changelog
+add saveosx to the repositories file
+add stats to man page
+
+fix spc,sc option; segfault if a package isn't linked in the right category
+fix ug,fug: segfault
+fix ar: deletes needed packages?
+
+
+
+add: @maintainer option in contents for pkg_create and an option in pkgin to show 
+packages by maintainer and list maintainers with basic info for contact
