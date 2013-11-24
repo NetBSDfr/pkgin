@@ -288,13 +288,13 @@ pkgindb_stats()
 {
 	FILE 	*fp;
 	char	buf[BUFSIZ], local_pkg_count[BUFSIZ], local_pkg_size[BUFSIZ], 
-			remote_pkg_count[BUFSIZ], remote_pkg_size[BUFSIZ];
+            remote_pkg_count[BUFSIZ], remote_pkg_size[BUFSIZ];
 	int 	i, remote_pkg_repos = 0;
 
 	pkgindb_doquery(LOCAL_PKG_COUNT, pdb_get_value, &local_pkg_count);
 	pkgindb_doquery(LOCAL_PKG_SIZE, pdb_get_value, &local_pkg_size);
-    pkgindb_doquery(REMOTE_PKG_COUNT, pdb_get_value, &remote_pkg_count);
-    pkgindb_doquery(REMOTE_PKG_SIZE, pdb_get_value, &remote_pkg_size);
+    	pkgindb_doquery(REMOTE_PKG_COUNT, pdb_get_value, &remote_pkg_count);
+    	pkgindb_doquery(REMOTE_PKG_SIZE, pdb_get_value, &remote_pkg_size);
 
  	double localsize = strtod(local_pkg_size,NULL)/1e+06;
  	double remotesize = strtod(remote_pkg_size,NULL)/1e+09;
@@ -317,4 +317,7 @@ pkgindb_stats()
 	printf("\tNumber of repositories: %d\n", remote_pkg_repos);
 	printf("\tPackages available: %s\n", remote_pkg_count);
 	printf("\tTotal size of packages: %.2f GB\n", remotesize);
+
+    	fclose(fp);
 }
+
