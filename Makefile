@@ -1,7 +1,7 @@
 # $Id: Makefile.in,v 1.20 2012/06/13 13:50:16 imilh Exp $
 
 PROG=		pkgin
-VERSION=	@PACKAGE_VERSION@
+VERSION=	0.6.4
 SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
 		pkglist.c download.c order.c impact.c autoremove.c fsops.c \
 		pkgindb_queries.c pkg_str.c sqlite_callbacks.c selection.c \
@@ -12,20 +12,20 @@ SRCS+=		automatic.c decompress.c dewey.c fexec.c global.c \
 # included from openssh
 SRCS+=		progressmeter.c
 
-SRCS+=		@SRCS@
+SRCS+=		
 
 DPSRCS=	pkgindb_create.h
 
-CC=		@CC@
-INSTALL=	@INSTALL@
+CC=		clang
+INSTALL=	/usr/bin/install -c -o root -g wheel
 
 OPSYS!=		uname
 OS_VER!=	uname -r
-OS_ARCH!=	uname -p
+OS_ARCH=	x86_64
 
 # satisfy mk.conf
 BSD_PKG_MK=	1
-.for MK_CONF in /etc/mk.conf @prefix@/etc/mk.conf /etc/pkgsrc.conf
+.for MK_CONF in /etc/mk.conf /usr/pkg/etc/mk.conf /etc/pkgsrc.conf
 .	if exists(${MK_CONF})
 .		include "${MK_CONF}"
 .	endif
@@ -36,7 +36,7 @@ PKGTOOLS?=	${PKG_TOOLS_BIN}
 CPPFLAGS+=	-D_NETBSD_SOURCE -D_MINIX
 .endif
 
-LOCALBASE?=		@prefix@
+LOCALBASE?=		/usr/pkg
 BINDIR?=		${LOCALBASE}/bin
 PKG_SYSCONFDIR?=	${LOCALBASE}/etc
 VARBASE?=		/var
@@ -64,7 +64,7 @@ WARNS=		2
 CPPFLAGS+=	-DNETBSD
 .endif
 
-CPPFLAGS+=	@CPPFLAGS@
+CPPFLAGS+=	-DHAVE_NBCOMPAT_H=1 -Iexternal/libnbcompat -I/usr/pkg/include -I/usr/include
 CPPFLAGS+=	-g
 
 CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
@@ -76,19 +76,19 @@ CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
 
 CPPFLAGS+=	-DHAVE_CONFIG_H
 CPPFLAGS+=	-D_LARGEFILE_SOURCE -D_LARGE_FILES
-CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${MACHINE_ARCH}\"
+CPPFLAGS+=	-DCHECK_MACHINE_ARCH=\"${OS_ARCH}\"
 CPPFLAGS+=	-Iexternal -I. -I${LOCALBASE}/include
 
-LDFLAGS+=	@LDFLAGS@
+LDFLAGS+=	-L/usr/pkg/lib -L/usr/lib -lcrypto -lssl
 
-LDADD+=		-L${LOCALBASE}/lib @RPATH@,${LOCALBASE}/lib	\
-		-lbz2 -lz -larchive @LIBS@
+LDADD+=		-L${LOCALBASE}/lib -Wl,-rpath,${LOCALBASE}/lib	\
+		-lbz2 -lz -larchive -lfetch -lssl -lcrypto -ltermcap -lutil -lnbcompat -lnbcompat
 LDADD+=		-lsqlite3
 
 CLEANFILES+=	${DPSRCS}
 
 pkgindb_create.h:
-	@SEDCMD=@SED@ ./mkpkgindb.sh > pkgindb_create.h
+	@SEDCMD=/usr/pkg/bin/nbsed ./mkpkgindb.sh > pkgindb_create.h
 
 afterinstall:	configinstall
 
@@ -105,7 +105,7 @@ install:
 
 # makes maintainer's life easier
 
-WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
+WIPHOME=~/downloads/git
 CURDATE!=date +%Y%m%d
 WIPREV!=git log --pretty=format:'%H' -n 1
 OLDREV!=sed -En 's/VERSION=[^0-9a-z]+([0-9a-z]+)/\1/p'			\

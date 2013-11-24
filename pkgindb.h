@@ -73,6 +73,10 @@ extern const char GET_PKGNAME_BY_PKGPATH[];
 extern const char GET_ORPHAN_PACKAGES[];
 extern const char COMPAT_CHECK[];
 extern const char SHOW_ALL_CATEGORIES[];
+extern const char LOCAL_PKG_COUNT[];
+extern const char LOCAL_PKG_SIZE[];
+extern const char REMOTE_PKG_COUNT[]; 
+extern const char REMOTE_PKG_SIZE[]; 
 
 #define LOCAL_PKG "LOCAL_PKG"
 #define REMOTE_PKG "REMOTE_PKG"
@@ -91,6 +95,7 @@ int			pkg_db_mtime(void);
 void		repo_record(char **);
 time_t		pkg_sum_mtime(char *);
 void		pkgindb_reset(void);
+void        	pkgindb_stats(void);
 
 #define PDB_OK 0
 #define PDB_ERR -1
