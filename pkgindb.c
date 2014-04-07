@@ -55,7 +55,7 @@ get_pkg_dbdir(void)
 	char **exec_cmd;
 
 	if ((exec_cmd =
-			exec_list(PKGTOOLS"/pkg_admin config-var PKG_DBDIR", NULL))
+		exec_list(PKGTOOLS"/pkg_admin config-var PKG_DBDIR", NULL))
 		== NULL)
 		strcpy(pkg_dbdir, PKG_DBDIR);
 	else {
@@ -158,7 +158,10 @@ upgrade_database()
 {
 	if (pkgindb_doquery(COMPAT_CHECK,
 			pkgindb_simple_callback, NULL) == PDB_ERR) {
-		/* COMPAT_CHECK query leads to an error for an incompatible database */
+		/*
+		 * COMPAT_CHECK query leads to an error for an
+		 * incompatible database
+		 */
 		printf(MSG_DATABASE_NOT_COMPAT);
 		if (!check_yesno(DEFAULT_YES))
 			exit(EXIT_FAILURE);

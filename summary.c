@@ -67,7 +67,7 @@ static const struct Summary {
 };
 
 struct Columns {
-	int		num;
+	int	num;
 	char	**name;
 } cols;
 
@@ -83,10 +83,10 @@ static char		**fetch_summary(char *url);
 static void		freecols(void);
 static void		free_insertlist(void);
 static void		prepare_insert(int, struct Summary, char *);
-int				colnames(void *, int, char **, char **);
+int			colnames(void *, int, char **, char **);
 
-char		*env_repos, **pkg_repos;
-char		**commit_list = NULL;
+char			*env_repos, **pkg_repos;
+char			**commit_list = NULL;
 int			commit_idx = 0;
 int			query_size = BUFSIZ;
 /* column count for table fields, given by colnames callback */
@@ -116,7 +116,8 @@ fetch_summary(char *cur_repo)
 		else
 			sum_mtime = 0; /* 0 sumtime == force reload */
 
-		snprintf(buf, BUFSIZ, "%s/%s.%s", cur_repo, PKG_SUMMARY, sumexts[i]);
+		snprintf(buf, BUFSIZ, "%s/%s.%s",
+				cur_repo, PKG_SUMMARY, sumexts[i]);
 
 		if ((file = download_file(buf, &sum_mtime)) != NULL)
 			break; /* pkg_summary found and not up-to-date */
@@ -128,7 +129,8 @@ fetch_summary(char *cur_repo)
 	if (file == NULL)
 		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf);
 
-	snprintf(buf, BUFSIZ, UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
+	snprintf(buf, BUFSIZ,
+			UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
 	pkgindb_doquery(buf, NULL, NULL);
 
 	if (decompress_buffer(file->buf, file->size, &decompressed_input,
@@ -342,7 +344,8 @@ update_col(struct Summary sum, int pkgid, char *line)
 
 	/* check MACHINE_ARCH */
 	if (!said && (val = field_record("MACHINE_ARCH", line)) != NULL) {
-		if (strncmp(CHECK_MACHINE_ARCH, val, strlen(CHECK_MACHINE_ARCH))) {
+		if (strncmp(CHECK_MACHINE_ARCH,
+				val, strlen(CHECK_MACHINE_ARCH))) {
 			printf(MSG_ARCH_DONT_MATCH, val, CHECK_MACHINE_ARCH);
 			if (!check_yesno(DEFAULT_NO))
 				exit(EXIT_FAILURE);
@@ -354,8 +357,8 @@ update_col(struct Summary sum, int pkgid, char *line)
 	/* DEPENDS */
 	if ((val = field_record("DEPENDS", line)) != NULL) {
 		if ((p = get_pkgname_from_depend(val)) != NULL) {
-			child_table(INSERT_DEPENDS_VALUES,	\
-				sum.deps, sum.deps, sum.deps,	\
+			child_table(INSERT_DEPENDS_VALUES,
+				sum.deps, sum.deps, sum.deps,
 				pkgid, p, val);
 			XFREE(p);
 		} else
@@ -401,9 +404,10 @@ update_col(struct Summary sum, int pkgid, char *line)
 static void
 insert_summary(struct Summary sum, char **summary, char *cur_repo)
 {
-	int			i;
+	int		i;
 	static int	pkgid = 1;
-	char		*pkgname, *pkgvers, **psum, query[BUFSIZ], tmpname[BUFSIZ];
+	char		*pkgname, *pkgvers, **psum;
+	char		query[BUFSIZ], tmpname[BUFSIZ];
 	const char	*alnum = ALNUM;
 
 	if (summary == NULL) {
@@ -534,9 +538,9 @@ delete_remote_tbl(struct Summary sum, char *repo)
 static void
 update_localdb(char **pkgkeep)
 {
-	char			**summary = NULL, buf[BUFSIZ];
+	char		**summary = NULL, buf[BUFSIZ];
 	Plistnumbered	*keeplisthead, *nokeeplisthead;
-	Pkglist			*pkglist;
+	Pkglist		*pkglist;
 
 	/* has the pkgdb (pkgsrc) changed ? if not, continue */
 	if (!pkg_db_mtime() || !pkgdb_open(ReadWrite))
@@ -621,7 +625,8 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 	for (i = 0; repos[i] != NULL; i++) {
 		repolen = strlen(repos[i]);
 		if (repolen == strlen(argv[0]) &&
-			strncmp(repos[i], argv[0], repolen) == 0 && !force_update)
+			strncmp(repos[i], argv[0], repolen) == 0 &&
+					!force_update)
 		   	return PDB_OK;
 	}
 	/* did not find argv[0] (db repository) in pkg_repos */
@@ -654,7 +659,9 @@ update_remotedb(void)
 			continue;
 		}
 
-		/* do not cleanup repos before being sure new repo is reachable */
+		/*
+		 * do not cleanup repos before being sure new repo is reachable
+		 */
 		if (!cleaned) {
 			/* delete unused repositories */
 			pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
@@ -701,7 +708,7 @@ update_db(int which, char **pkgkeep)
 void
 split_repos(void)
 {
-	int		repocount;
+	int	repocount;
 	char	*p;
 
 	XSTRDUP(env_repos, getenv("PKG_REPOS"));

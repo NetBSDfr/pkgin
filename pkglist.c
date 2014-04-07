@@ -48,7 +48,7 @@ malloc_pkglist(uint8_t type)
 
 	XMALLOC(pkglist, sizeof(Pkglist));
 
-	/*!< Init all the things ! (http://knowyourmeme.com/memes/x-all-the-y) */
+	/*!< Init all the things! (http://knowyourmeme.com/memes/x-all-the-y) */
 	pkglist->type = type;
 	pkglist->full = NULL;
 	pkglist->name = NULL;
