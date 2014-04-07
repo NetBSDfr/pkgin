@@ -1,6 +1,7 @@
 # $Id: Makefile.in,v 1.20 2012/06/13 13:50:16 imilh Exp $
 
 PROG=		pkgin
+MAN=		pkgin.1
 VERSION=	@PACKAGE_VERSION@
 SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
 		pkglist.c download.c order.c impact.c autoremove.c fsops.c \
