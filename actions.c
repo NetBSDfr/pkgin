@@ -673,14 +673,16 @@ read_preferred(char *pkgname)
 			for (; *p == ' ' || *p == '\t'; p++);
 
 			if (*p == '\0')
-				return NULL;
+				break;
 
 			snprintf(pref, BUFSIZ, "%s-%s", pkgname, p);
 			pref[strlen(pref) - 1] = '\0';
+			fclose(fp);
 			return pref;
 		}
 	}
 
+	XFREE(pref);
 	fclose(fp);
 
 	return NULL;
