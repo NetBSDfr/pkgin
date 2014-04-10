@@ -258,7 +258,7 @@ do_pkg_install(Plisthead *installhead)
 	int		rc = EXIT_SUCCESS;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ];
-	char		pi_tmp_flags[5]; /* tmp force flags for pkg_install */
+	const char	*pi_tmp_flags; /* tmp force flags for pkg_install */
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
@@ -286,10 +286,8 @@ do_pkg_install(Plisthead *installhead)
 			pi_upgrade = 0;
 			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
 			/* set temporary force flags */
-			strncpy(pi_tmp_flags, "-ffu", 5);
-			if (verbosity)
-				/* append verbosity if requested */
-				strncat(pi_tmp_flags, "v", 2);
+			/* append verbosity if requested */
+			pi_tmp_flags = verbosity ? "-ffuv" : "-ffu";
 			if (check_yesno(DEFAULT_YES)) {
 #ifndef DEBUG
 				if (fexec(PKG_ADD, pi_tmp_flags,
