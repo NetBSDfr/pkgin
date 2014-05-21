@@ -188,8 +188,11 @@ cleanup_version(char *pkgname)
 	if ((exten = strrchr(pkgname, '-')) == NULL)
 		return;
 
-	/* -something has a dot, it's a version number */
-	if (strchr(exten, '.') != NULL)
+	/*
+	 * -something has a dot, it's a version number
+	 * unless it was something like clutter-gtk0.10
+	 */
+	if (isdigit((int)exten[1]) && strchr(exten, '.') != NULL)
 		*exten = '\0';
 }
 
