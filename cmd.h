@@ -92,5 +92,7 @@ static struct command {
 	  PKG_SHPKGBDEFS_CMD },
 	{ "tonic", "to", "Gin Tonic recipe.",
 	  PKG_GINTO_CMD },
+        { "stats", "st", "Packages statistics.",
+          PKG_STATS_CMD },
 	{ NULL, NULL, NULL, 0 }
 };

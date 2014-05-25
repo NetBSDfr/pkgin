@@ -33,10 +33,13 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
+#define H_BUF   6
+
 static sqlite3	*pdb;
 static char		*pdberr = NULL;
 static int		pdbres = 0;
 static FILE		*sql_log_fp;
+static int              repo_counter = 0;
 
 static const char *pragmaopts[] = {
 	"cache_size = 1000000",
@@ -259,6 +262,7 @@ repo_record(char **repos)
 	for (i = 0; repos[i] != NULL; i++) {
 		snprintf(query, BUFSIZ, EXISTS_REPO, repos[i]);
 		pkgindb_doquery(query, pdb_get_value, &value[0]);
+                repo_counter++;
 
 		if (value[0] == '0') {
 			/* repository does not exists */
@@ -285,3 +289,44 @@ pkg_sum_mtime(char *repo)
 
 	return db_mtime;
 }
+
+void
+pkgindb_stats()
+{
+        int     i;
+        struct {
+                const char * name;
+                char value[BUFSIZ];
+                const char * query;
+        } stats[] = {
+                { "Installed packages: ", "", LOCAL_PKG_COUNT },
+                { "Packages available: ", "", REMOTE_PKG_COUNT },
+                { "Disk space occupied: ", "", LOCAL_PKG_SIZE },
+                { "Total size of packages: ", "", REMOTE_PKG_SIZE },
+                { NULL, "", NULL },
+        };
+
+        for (i = 0; stats[i].name != NULL; i++ ) {
+                pkgindb_doquery(stats[i].query, pdb_get_value, stats[i].value);
+        }
+
+        int64_t local_size = strtod(stats[2].value, NULL);
+        int64_t remote_size = strtod(stats[3].value, NULL);
+
+        char h_local_size[H_BUF];
+        char h_remote_size[H_BUF];
+
+        (void)humanize_number(h_local_size, H_BUF, local_size, "",
+                        HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+        (void)humanize_number(h_remote_size, H_BUF, remote_size, "",
+                        HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+
+        printf("Local package database:\n");
+        printf("\t Installed packages: %s\n", stats[0].value);
+        printf("\t Disk space occupied: %s\n\n", h_local_size);
+        printf("Remote package database(s):\n");
+        printf("\tNumber of repositories: %d\n", repo_counter);
+        printf("\tPackages available: %s\n", stats[1].value);
+        printf("\tTotal size of packages: %s\n", h_remote_size);
+}
+
