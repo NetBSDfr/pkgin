@@ -88,8 +88,10 @@ fetch_pkg_files(const char *cur_repo)
 		if ((file = download_file(buf, &files_mtime)) != NULL)
 			break; /* pkg_files found and not up-to-date */
 
-		if (files_mtime < 0) /* pkg_files found, but up-to-date */
+		if (files_mtime < 0) { /* pkg_files found, but up-to-date */
+			printf(MSG_PKG_FILES_IS_UP_TO_DATE, cur_repo);
 			return;
+		}
 	}
 
 	if (file == NULL)

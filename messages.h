@@ -166,3 +166,6 @@ please re-run %s with a package name matching one of the following:\n"
 /* pkg_check.c */
 #define MSG_NO_PROV_REQ "Nothing %s by %s.\n"
 #define MSG_FILES_PROV_REQ "Files %s by %s:\n"
+
+/* pkg_files.c */
+#define MSG_PKG_FILES_IS_UP_TO_DATE "pkg_files for %s is up-to-date\n"
