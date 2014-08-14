@@ -99,7 +99,7 @@ clean_cache()
 }
 
 void
-create_dir(char *path)
+create_dir(const char *path)
 {
 	if(-1 == mkdir(path, 0755) && errno != EEXIST) 
 		errx(EXIT_FAILURE, MSG_MKDIR_FAILED, path,

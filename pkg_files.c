@@ -32,16 +32,17 @@
 
 #include <regex.h>
 #include <zlib.h>
+#include <bzlib.h>
 #include "pkgin.h"
 
 #define PKG_FILES_GZ 0
 #define PKG_FILES_BZ2 1
 
 static const char *const files_exts[] = { "bz2", "gz", NULL };
-static const int files_kind { PKG_FILES_BZ2, PKG_FILES_GZ };
+static const int files_kinds[] = { PKG_FILES_BZ2, PKG_FILES_GZ };
 
 static void
-pkg_files_dir(char *repo, char *dir, int dir_size)
+pkg_files_dir(const char *repo, char *dir, int dir_size)
 {
 	char	*esc, repo_dir[BUFSIZ];
 
@@ -51,8 +52,8 @@ pkg_files_dir(char *repo, char *dir, int dir_size)
 		*esc = '_';
 	}
 
-	create_dir(PKG_FILES_CACHE);
-	snprintf(dir, dir_size, "%s/%s", PKG_FILES_CACHE, repo_dir);
+	create_dir(PKGIN_FILES_CACHE);
+	snprintf(dir, dir_size, "%s/%s", PKGIN_FILES_CACHE, repo_dir);
         create_dir(dir);
 } 
 
@@ -60,7 +61,7 @@ pkg_files_dir(char *repo, char *dir, int dir_size)
  * Fetch remote pkg_files to local cache
  */
 void
-fetch_pkg_files(char *cur_repo)
+fetch_pkg_files(const char *cur_repo)
 {
 	/* from pkg_install/files/admin/audit.c */
 	FILE		*fp = NULL;
@@ -78,9 +79,8 @@ fetch_pkg_files(char *cur_repo)
 		snprintf(buf, BUFSIZ, "%s/%s.%s", cur_repo, PKG_FILES, files_exts[i]);
 		snprintf(buf_fs, BUFSIZ, "%s/%s.%s", repo_dir, PKG_FILES, files_exts[i]);
 
-		if (!force_fetch && !force_update)
-			if (stat(buf_fs, &st) == 0)
-				files_mtime = st.st_mtime;
+		if (stat(buf_fs, &st) == 0)
+			files_mtime = st.st_mtime;
 		else
 			files_mtime = 0; /* 0 files_mtime == force reload */
 
@@ -181,8 +181,8 @@ read_pkg_files_bz2(void *fd, char *buf, int size)
 	const char	*err_str;
 	int		bytes_read;
 
-	if ((bytes_read = BZ_bzread(files, buf, size)) < size) {
-		err_str = BZ_bzerror(files, &err);
+	if ((bytes_read = BZ2_bzread(files, buf, size)) < size) {
+		err_str = BZ2_bzerror(files, &err);
 
 		if (err == BZ_OK) {
 			bytes_read = 0;
@@ -264,13 +264,13 @@ search_pkg_file_lines(regex_t *re, char *buf, int buf_size)
 }
 
 int
-search_pkg_file(char *repo, const char *pattern)
+search_pkg_file_in_repo(const char *repo, const char *pattern)
 {
 	regex_t		re;
 	struct stat	st;
 	int		i, kind, rc, bytes_read, wanted;
 	char		eb[64], repo_dir[BUFSIZ], buf[BUFSIZ], *repo_file, *bytes;
-        int		gz_buf_size = BUFSIZ * 128;
+        int		z_buf_size = BUFSIZ * 128;
 	char		*start, *end;
 	void		*files;
 
@@ -299,7 +299,8 @@ search_pkg_file(char *repo, const char *pattern)
 
 	files = open_pkg_files(buf, kind);
 
-	wanted = FBUFSIZ;
+	XMALLOC(bytes, z_buf_size + 1);
+	wanted = z_buf_size;
 	start = bytes;
 
 	while ((bytes_read = read_pkg_files(files, kind, bytes, wanted)) != 0) {
@@ -312,5 +313,36 @@ search_pkg_file(char *repo, const char *pattern)
 
 	close_pkg_files(files, kind);
 
+	XFREE(bytes);
+
 	return EXIT_SUCCESS;
+}
+
+int
+search_pkg_file(const char *pattern)
+{
+	char	**prepos;
+
+	/* loop through PKG_REPOS */
+	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
+		search_pkg_file_in_repo(*prepos);
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int
+update_pkg_files(void)
+{
+	char	**prepos;
+
+        if (!have_enough_rights())
+                return EXIT_FAILURE;
+
+	/* loop through PKG_REPOS */
+	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
+		fetch_pkg_files(*prepos);
+	}
+
+        return EXIT_SUCCESS;
 }

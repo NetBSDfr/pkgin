@@ -268,7 +268,7 @@ void		pkg_keep(int, char **);
 int		fs_has_room(const char *, int64_t);
 uint64_t	fs_room(const char *);
 void		clean_cache(void);
-void		create_dir(void);
+void		create_dir(const char *);
 void		create_dirs(void);
 char		*read_repos(void);
 /* pkg_str.c */
@@ -292,7 +292,7 @@ void		show_pkg_info(char, char *);
 /* pkgindb.c */
 void		get_pkg_dbdir(void);
 /* pkg_files.c */
-void		fetch_pkg_files(char *url);
-int		search_pkg_file(const char *);
+int		search_pkg_file(const char*);
+int		update_pkg_files(void);
 
 #endif
