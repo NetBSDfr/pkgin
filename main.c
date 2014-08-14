@@ -173,6 +173,8 @@ main(int argc, char *argv[])
 
 	switch (ch) {
 	case PKG_UPDT_CMD: /* update packages db */
+		if (update_pkg_files() == EXIT_FAILURE)
+			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 		if (updb_all) /* no need to do it twice */
 			break;
 		if (update_db(REMOTE_SUMMARY, NULL) == EXIT_FAILURE)
@@ -235,6 +237,10 @@ main(int argc, char *argv[])
 	case PKG_SRCH_CMD: /* search for package */
 		missing_param(argc, 2, MSG_MISSING_SRCH);
 		rc = search_pkg(argv[1]);
+		break;
+	case PKG_SRCHF_CMD: /* search for package */
+		missing_param(argc, 2, MSG_MISSING_SRCH);
+		rc = search_pkg_file(argv[1]);
 		break;
 	case PKG_CLEAN_CMD: /* clean pkgin's packages cache */
 		clean_cache();

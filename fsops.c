@@ -99,6 +99,14 @@ clean_cache()
 }
 
 void
+create_dir(const char *path)
+{
+	if(-1 == mkdir(path, 0755) && errno != EEXIST) 
+		errx(EXIT_FAILURE, MSG_MKDIR_FAILED, path,
+						strerror(errno));
+}
+
+void
 create_dirs()
 {
 	/* create database repository */
