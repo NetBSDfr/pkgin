@@ -308,7 +308,7 @@ search_pkg_file_in_repo(const char *repo, const char *pattern)
 	while ((bytes_read = read_pkg_files(
 			files, kind,
 			bytes + left_overs, z_buf_size - left_overs)) != 0) {
-		bytes[bytes_read] = '\0';
+		bytes[bytes_read + left_overs] = '\0';
 
 		if ((end = strrchr(bytes, '\n')) == NULL) {
 			/* failure not expected here */
