@@ -325,7 +325,7 @@ search_pkg_file(const char *pattern)
 
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
-		search_pkg_file_in_repo(*prepos);
+		search_pkg_file_in_repo(*prepos, pattern);
 	}
 
 	return EXIT_SUCCESS;
