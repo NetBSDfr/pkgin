@@ -270,10 +270,10 @@ search_pkg_file_in_repo(const char *repo, const char *pattern)
 {
 	regex_t		re;
 	struct stat	st;
-	int		i, kind, rc, bytes_read, wanted;
+	int		i, kind, rc, bytes_read, buf_size, left_overs;
 	char		eb[64], repo_dir[BUFSIZ], buf[BUFSIZ], *repo_file, *bytes;
         int		z_buf_size = BUFSIZ * 128;
-	char		*start, *end;
+	char		*end;
 	void		*files;
 
 	pkg_files_dir(repo, repo_dir, BUFSIZ);
@@ -302,15 +302,27 @@ search_pkg_file_in_repo(const char *repo, const char *pattern)
 	files = open_pkg_files(buf, kind);
 
 	XMALLOC(bytes, z_buf_size + 1);
-	wanted = z_buf_size;
-	start = bytes;
+        buf_size = 0;
+	left_overs = 0;
 
-	while ((bytes_read = read_pkg_files(files, kind, bytes, wanted)) != 0) {
+	while ((bytes_read = read_pkg_files(
+			files, kind,
+			bytes + left_overs, z_buf_size - left_overs)) != 0) {
 		bytes[bytes_read] = '\0';
 
-		if ((end = strrchr(bytes, '\n')) != NULL) {
-			search_pkg_file_lines(&re, bytes, end - start + 1);
-		}	
+		if ((end = strrchr(bytes, '\n')) == NULL) {
+			/* failure not expected here */
+			break;
+		}
+
+		buf_size = end - bytes + 1;
+		left_overs = bytes_read - buf_size;
+
+		search_pkg_file_lines(&re, bytes, buf_size);
+
+		if (left_overs > 0) {
+			memmove(bytes, end + 1, left_overs);
+		}
 	}
 
 	close_pkg_files(files, kind);
