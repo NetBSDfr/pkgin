@@ -158,6 +158,7 @@ please re-run %s with a package name matching one of the following:\n"
 #define MSG_INVALID_REPOS "Invalid repository: %s"
 #define MSG_MKDIR_DB_REPOSITORY_FAILED "Failed to create database repository %s\n"
 #define MSG_MKDIR_CACHE_REPOSITORY_FAILED "Failed to create cache repository %s\n"
+#define MSG_MKDIR_FAILED "Failed to create directory %s: %s\n"
 
 /* selection.c */
 #define MSG_EMPTY_IMPORT_LIST "Empty import list."

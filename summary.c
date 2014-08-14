@@ -652,6 +652,7 @@ update_remotedb(void)
 
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
+		fetch_files(*prepos);
 
 		/* load remote pkg_summary */
 		if ((summary = fetch_summary(*prepos)) == NULL) {

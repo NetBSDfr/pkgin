@@ -30,8 +30,8 @@
  *
  */
 
-#include "pkgin.h"
 #include <regex.h>
+#include "pkgin.h"
 
 Plisthead	r_plisthead, l_plisthead;
 int		r_plistcounter, l_plistcounter;

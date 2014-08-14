@@ -56,9 +56,11 @@
 #define PKG_INFO PKGTOOLS"/pkg_info"
 
 #define PKG_SUMMARY "pkg_summary"
+#define PKG_FILES "pkg_files"
 #define PKGIN_SQL_LOG PKGIN_DB"/sql.log"
 #define PKG_INSTALL_ERR_LOG PKGIN_DB"/pkg_install-err.log"
 #define PKGIN_CACHE PKGIN_DB"/cache"
+#define PKGIN_FILES_CACHE PKGIN_CACHE"/"PKG_FILES
 #define PKG_EXT ".tgz"
 #define PKGIN_CONF PKG_SYSCONFDIR"/pkgin"
 #define REPOS_FILE "repositories.conf"
@@ -115,6 +117,7 @@
 #define PKG_SHCAT_CMD 24
 #define PKG_SHPCAT_CMD 25
 #define PKG_SHALLCAT_CMD 26
+#define PKG_SRCHF_CMD 27
 #define PKG_GINTO_CMD 255
 
 #define PKG_EQUAL '='
@@ -265,6 +268,7 @@ void		pkg_keep(int, char **);
 int		fs_has_room(const char *, int64_t);
 uint64_t	fs_room(const char *);
 void		clean_cache(void);
+void		create_dir(void);
 void		create_dirs(void);
 char		*read_repos(void);
 /* pkg_str.c */
@@ -287,5 +291,8 @@ void		show_prov_req(const char *, const char *);
 void		show_pkg_info(char, char *);
 /* pkgindb.c */
 void		get_pkg_dbdir(void);
+/* pkg_files.c */
+void		fetch_pkg_files(char *url);
+int		search_pkg_file(const char *);
 
 #endif
