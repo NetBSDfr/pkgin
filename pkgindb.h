@@ -91,6 +91,7 @@ int			pkg_db_mtime(void);
 void		repo_record(char **);
 time_t		pkg_sum_mtime(char *);
 void		pkgindb_reset(void);
+void            pkgindb_stats(void);
 
 #define PDB_OK 0
 #define PDB_ERR -1

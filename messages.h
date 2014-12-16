@@ -152,6 +152,13 @@ please re-run %s with a package name matching one of the following:\n"
 
 /* pkgindb.c */
 #define MSG_DELETE_DB_FAILED "Failed to delete database file %s\n"
+#define MSG_LOCAL_STAT_TITLE "Local package datadase:\n"
+#define MSG_LOCAL_PACKAGES "\tInstalled packages: %s\n"
+#define MSG_LOCAL_PKG_SIZE "\tDisk space occupied: %s\n\n"
+#define MSG_REMOTE_STAT_TITLE "Remote package database(s):\n"
+#define MSG_REMOTE_NB_REPOS "\tNumber of repositories: %d\n"
+#define MSG_REMOTE_PACKAGES "\tPackages available: %s\n"
+#define MSG_REMOTE_PKG_SIZE "\tTotal size of packages: %s\n"
 
 /* fsops.c */
 #define MSG_TRANS_FAILED "Failed to translate %s in repository config file"
