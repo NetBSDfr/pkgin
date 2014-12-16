@@ -471,7 +471,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 #endif
 				}
 			}
-			/* 
+			/*
 			 * some packages may have been marked as TOREMOVE, then 
 			 * discovered as TOUPGRADE
 			 */

@@ -33,7 +33,7 @@
 #include "pkgin.h"
 #include "progressmeter.h"
 
-int		fetchTimeout = 15; /* wait 15 seconds before timeout */
+int	fetchTimeout = 15; /* wait 15 seconds before timeout */
 size_t	fetch_buffer = 1024;
 
 /* if db_mtime == NULL, we're downloading a package, pkg_summary otherwise */
@@ -94,13 +94,16 @@ download_file(char *str_url, time_t *db_mtime)
 	XMALLOC(file, sizeof(Dlfile));
 	XMALLOC(file->buf, buf_len + 1);
 
-	printf(MSG_DOWNLOADING, p);
-	fflush(stdout);
-
 	buf_fetched = 0;
-
 	statsize = 0;
-	start_progress_meter(p, buf_len, &statsize);
+
+	if (!parsable) { /* human readable output */
+		printf(MSG_DOWNLOADING, p);
+		fflush(stdout);
+
+		start_progress_meter(p, buf_len, &statsize);
+	} else
+		printf(MSG_DOWNLOAD_START);
 
 	while (buf_fetched < buf_len) {
 		cur_fetched = fetchIO_read(f, file->buf + buf_fetched,
@@ -115,7 +118,10 @@ download_file(char *str_url, time_t *db_mtime)
 		statsize += cur_fetched;
 	}
 
-	stop_progress_meter();
+	if (!parsable)
+		stop_progress_meter();
+	else
+		printf(MSG_DOWNLOAD_END);
 
 	file->buf[buf_len] = '\0';
 	file->size = buf_len;

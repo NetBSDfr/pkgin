@@ -40,7 +40,7 @@ static void	missing_param(int, int, const char *);
 static void	ginto(void);
 
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
-uint8_t		verbosity = 0, package_version = 0;
+uint8_t		verbosity = 0, package_version = 0, parsable = 0;
 char		lslimit = '\0';
 char		pkgtools_flags[5];
 FILE  		*tracefp = NULL;
@@ -59,7 +59,7 @@ main(int argc, char *argv[])
 	if (argc < 2 || *argv[1] == 'h')
 		usage();
 
-	while ((ch = getopt(argc, argv, "dhyfFPvVl:nc:t:")) != -1) {
+	while ((ch = getopt(argc, argv, "dhyfFPvVl:nc:t:p")) != -1) {
 		switch (ch) {
 		case 'f':
 			force_update = 1;
@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 			noflag = 1;
 			break;
 		case 'v':
-			printf("%s %s (using %s)\n", 
+			printf("%s %s (using %s)\n",
 				getprogname(), PKGIN_VERSION, pdb_version());
 			exit(EXIT_SUCCESS);
 			/* NOTREACHED */
@@ -101,6 +101,9 @@ main(int argc, char *argv[])
 		case 't':
 			if ((tracefp = fopen(optarg, "w")) == NULL)
 				err(EXIT_FAILURE, MSG_CANT_OPEN_WRITE, optarg);
+			break;
+		case 'p':
+			parsable = 1;
 			break;
 		default:
 			usage();
@@ -151,8 +154,8 @@ main(int argc, char *argv[])
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
 
-	/* 
-	 * upgrade remote database if pkgin version changed and not compatible 
+	/*
+	 * upgrade remote database if pkgin version changed and not compatible
 	 * or if empty database
 	 */
 	if (updb_all)

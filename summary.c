@@ -426,8 +426,10 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 	/* begin transaction */
 	XSTRDUP(commit_list[0], "BEGIN;");
 
-	printf(MSG_UPDATING_DB);
-	fflush(stdout);
+	if (!parsable) {
+		printf(MSG_UPDATING_DB);
+		fflush(stdout);
+	}
 
 	psum = summary;
 	/* main pkg_summary analysis loop */
@@ -466,7 +468,8 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 			add_to_slist("PKGVERS", pkgvers);
 
 			/* nice little counter */
-			progress(pkgname[0]);
+			if (!parsable)
+				progress(pkgname[0]);
 		}
 
 		psum++;
@@ -500,16 +503,17 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 	for (i = 0; commit_list[i] != NULL; i++)
 		pkgindb_doquery(commit_list[i], NULL, NULL);
 
-	progress(alnum[strlen(alnum) - 1]); /* XXX: nasty. */
+	if (!parsable)
+		progress(alnum[strlen(alnum) - 1]); /* XXX: nasty. */
 
 	free_list(commit_list);
 	commit_idx = 0;
 
 	/* reset pkgid */
-	if (sum.type == LOCAL_SUMMARY)
+	if (sum.type == LOCAL_SUMMARY) {
 		pkgid = 1;
-
-	printf("\n");
+		printf("\n");
+	}
 }
 
 static void

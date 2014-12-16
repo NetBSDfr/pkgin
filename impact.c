@@ -374,11 +374,11 @@ pkg_impact(char **pkgargs, int *rc)
 
 		/* parse dependencies for pkgname */
 		SLIST_FOREACH(pdp, pdphead, next) {
-		
+
 			/* is dependency already recorded in impact list ? */
 			if (pkg_in_impact(impacthead, pdp->depend))
 				continue;
-		
+
 			/* compare needed deps with local packages */
 			if (!deps_impact(impacthead, pdp)) {
 				/*
@@ -394,9 +394,9 @@ pkg_impact(char **pkgargs, int *rc)
 		} /* SLIST_FOREACH deps */
 		free_pkglist(&pdphead, DEPTREE);
 
-		/* finally, insert package itself */	
+		/* finally, insert package itself */
 		pdp = malloc_pkglist(DEPTREE);
-	
+
 		XSTRDUP(pdp->name, pkgname);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
 
@@ -404,10 +404,10 @@ pkg_impact(char **pkgargs, int *rc)
 		if (!pkg_in_impact(impacthead, pkgname)) {
 			/* passing pkgname as depname */
 			XSTRDUP(pdp->depend, pkgname);
-		
+
 			/* reset pkgkeep */
 			pdp->keep = 0;
-		
+
 			if (force_reinstall)
 				/*
 				 * use pkgkeep field to inform deps_impact
@@ -442,7 +442,7 @@ impactend:
 	/* check for depedencies breakage (php-4 -> php-5) */
 	break_depends(impacthead);
 
-	/* 
+	/*
 	 * a package has been placed in both TOUPGRADE and TOREMOVE impact
 	 * lists; this occurs when an upgrade will break some package's
 	 * dependency, thus removing it, then reinstalling it. Simply

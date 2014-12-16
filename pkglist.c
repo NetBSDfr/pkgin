@@ -36,6 +36,8 @@
 Plisthead	r_plisthead, l_plisthead;
 int		r_plistcounter, l_plistcounter;
 
+static void setfmt(char *, char *);
+
 /**
  * \fn malloc_pkglist
  *
@@ -232,6 +234,18 @@ pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
 	return -1;
 }
 
+static void
+setfmt(char *sfmt, char *pfmt)
+{
+	if (parsable) {
+		strncpy(sfmt, "%s;%c", 6); /* snprintf(outpkg) */
+		strncpy(pfmt, "%s;%s\n", 7); /* final printf */
+	} else {
+		strncpy(sfmt, "%s %c", 6);
+		strncpy(pfmt, "%-20s %s\n", 10);
+	}
+}
+
 void
 list_pkgs(const char *pkgquery, int lstype)
 {
@@ -239,6 +253,9 @@ list_pkgs(const char *pkgquery, int lstype)
 	Plistnumbered	*plisthead;
 	int		rc;
 	char		pkgstatus, outpkg[BUFSIZ];
+	char		sfmt[10], pfmt[10];
+
+	setfmt(&sfmt[0], &pfmt[0]);
 
 	/* list installed packages + status */
 	if (lstype == PKG_LLIST_CMD && lslimit != '\0') {
@@ -264,10 +281,9 @@ list_pkgs(const char *pkgquery, int lstype)
 					pkgstatus = PKG_LESSER;
 
 				if (pkgstatus != '\0') {
-					snprintf(outpkg, BUFSIZ, "%s %c",
+					snprintf(outpkg, BUFSIZ, sfmt,
 						plist->full, pkgstatus);
-					printf("%-20s %s\n", outpkg,
-							plist->comment);
+					printf(pfmt, outpkg, plist->comment);
 				}
 
 			}
@@ -283,7 +299,7 @@ list_pkgs(const char *pkgquery, int lstype)
 	}
 
 	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
-		printf("%-20s %s\n", plist->full, plist->comment);
+		printf(pfmt, plist->full, plist->comment);
 
 	free_pkglist(&plisthead->P_Plisthead, LIST);
 	free(plisthead);
@@ -297,10 +313,14 @@ search_pkg(const char *pattern)
 	int		rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
 	int		matched_pkgs;
+	char		sfmt[10], pfmt[10];
+
+	setfmt(&sfmt[0], &pfmt[0]);
 
 	matched_pkgs = 0;
 
 	if (!SLIST_EMPTY(&r_plisthead)) {
+
 		if ((rc = regcomp(&re, pattern,
 			REG_EXTENDED|REG_NOSUB|REG_ICASE)) != 0) {
 			regerror(rc, &re, eb, sizeof(eb));
@@ -329,10 +349,10 @@ search_pkg(const char *pattern)
 
 				}
 
-				snprintf(outpkg, BUFSIZ, "%s %c",
+				snprintf(outpkg, BUFSIZ, sfmt,
 						plist->full, is_inst);
 
-				printf("%-20s %s\n", outpkg, plist->comment);
+				printf(pfmt, outpkg, plist->comment);
 			}
 		}
 
