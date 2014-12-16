@@ -284,6 +284,9 @@ main(int argc, char *argv[])
 	case PKG_GINTO_CMD: /* Miod's request */
 		ginto();
 		break;
+        case PKG_STATS_CMD: /* show package statistics */
+                pkgindb_stats();
+                break;
 	default:
 		usage();
 		/* NOTREACHED */

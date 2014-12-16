@@ -33,10 +33,13 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
+#define H_BUF   6
+
 static sqlite3	*pdb;
 static char		*pdberr = NULL;
 static int		pdbres = 0;
 static FILE		*sql_log_fp;
+static int              repo_counter = 0;
 
 static const char *pragmaopts[] = {
 	"cache_size = 1000000",
@@ -259,6 +262,7 @@ repo_record(char **repos)
 	for (i = 0; repos[i] != NULL; i++) {
 		snprintf(query, BUFSIZ, EXISTS_REPO, repos[i]);
 		pkgindb_doquery(query, pdb_get_value, &value[0]);
+                repo_counter++;
 
 		if (value[0] == '0') {
 			/* repository does not exists */
@@ -284,4 +288,51 @@ pkg_sum_mtime(char *repo)
 		db_mtime = (time_t)strtol(str_mtime, (char **)NULL, 10);
 
 	return db_mtime;
+}
+
+void
+pkgindb_stats()
+{
+        int     i;
+        int64_t local_size;
+        int64_t remote_size;
+        char    h_local_size[H_BUF];
+        char    h_remote_size[H_BUF];
+        char    query[BUFSIZ];
+
+        struct {
+                char value[BUFSIZ];
+                const char *op;
+                const char *term;
+                const char *place;
+        } stats[] = {
+                { "", "COUNT", "PKG_ID", "LOCAL" },
+                { "", "COUNT", "PKG_ID", "REMOTE" },
+                { "", "SUM", "SIZE_PKG", "LOCAL" },
+                { "", "SUM", "FILE_SIZE", "REMOTE" },
+                { "", NULL, NULL, NULL },
+        };
+
+        for (i = 0; stats[i].op != NULL; i++) {
+                snprintf(query, BUFSIZ, "SELECT %s(%s) FROM %s_PKG;",
+                        stats[i].op, stats[i].term, stats[i].place);
+                pkgindb_doquery(query, pdb_get_value, stats[i].value);
+        }
+
+        local_size = strtol(stats[2].value, NULL, 10);
+        remote_size = strtol(stats[3].value, NULL, 10);
+
+        (void)humanize_number(h_local_size, H_BUF, local_size, "",
+                        HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+        (void)humanize_number(h_remote_size, H_BUF, remote_size, "",
+                        HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+
+        printf(MSG_LOCAL_STAT_TITLE
+                MSG_LOCAL_PACKAGES
+                MSG_LOCAL_PKG_SIZE
+                MSG_REMOTE_STAT_TITLE
+                MSG_REMOTE_NB_REPOS
+                MSG_REMOTE_PACKAGES
+                MSG_REMOTE_PKG_SIZE,
+                stats[0].value, h_local_size, repo_counter, stats[1].value, h_remote_size);
 }
