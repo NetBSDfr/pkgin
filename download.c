@@ -68,7 +68,7 @@ download_file(char *str_url, time_t *db_mtime)
 			 * -1 used to identify return type,
 			 * local summary up-to-date
 			 */
-			*db_mtime = -1; 
+			*db_mtime = -1;
 
 			fetchIO_close(f);
 

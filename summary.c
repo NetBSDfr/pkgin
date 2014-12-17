@@ -107,7 +107,7 @@ fetch_summary(char *cur_repo)
 	char	*decompressed_input;
 	size_t	decompressed_len;
 	time_t	sum_mtime;
-	int		i;
+	int	i;
 	char	**out, buf[BUFSIZ];
 
 	for (i = 0; sumexts[i] != NULL; i++) { /* try all extensions */
@@ -237,7 +237,7 @@ free_insertlist()
 int
 colnames(void *unused, int argc, char **argv, char **colname)
 {
-	int			i = 0;
+	int i = 0;
 
 	colcount++;
 
@@ -307,7 +307,7 @@ prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
 static void
 add_to_slist(const char *field, const char *value)
 {
-	Insertlist		*insert;
+	Insertlist	*insert;
 
 	XMALLOC(insert, sizeof(Insertlist));
 	XSTRDUP(insert->field, field);
@@ -339,8 +339,8 @@ static void
 update_col(struct Summary sum, int pkgid, char *line)
 {
 	static uint8_t	said = 0;
-	int				i;
-	char			*val, *p, buf[BUFSIZ];
+	int		i;
+	char		*val, *p, buf[BUFSIZ];
 
 	/* check MACHINE_ARCH */
 	if (!said && (val = field_record("MACHINE_ARCH", line)) != NULL) {
