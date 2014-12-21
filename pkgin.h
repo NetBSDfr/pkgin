@@ -186,7 +186,7 @@ typedef struct Pkglist {
 #define comment  	p_un.comment
 #define computed	p_un.deptree.computed
 #define keep		p_un.deptree.keep
-#define old		   	p_un.impact.old
+#define old		p_un.impact.old
 #define action   	p_un.impact.action
 
 #define LIST		0

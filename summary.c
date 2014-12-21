@@ -585,9 +585,11 @@ update_localdb(char **pkgkeep)
 		 * they are recorded as "non-automatic" in pkgdb, we
 		 * need to mark unkeeps as "automatic"
 		 */
-		if ((nokeeplisthead =
-				rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
-			SLIST_FOREACH(pkglist, nokeeplisthead->P_Plisthead, next) {
+		nokeeplisthead = rec_pkglist(NOKEEP_LOCAL_PKGS);
+		if (nokeeplisthead != NULL) {
+			SLIST_FOREACH(	pkglist,
+					nokeeplisthead->P_Plisthead,
+					next) {
 				mark_as_automatic_installed(pkglist->full, 1);
 			}
 
