@@ -467,7 +467,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 							premove->depend);
 #ifdef DEBUG
 					printf("package: %s - level: %d\n",
-						premove->depend, premove->level);
+						premove->depend,
+						premove->level);
 #endif
 				}
 			}

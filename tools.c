@@ -194,9 +194,10 @@ exec_list(const char *cmd, const char *match)
 uint8_t
 is_listed(const char **list, const char *item)
 {
-	for (; *list != NULL; list++)
-		if (strcmp(item, *list) == 0)
-			return(T_TRUE);
+	if (list != NULL)
+		for (; *list != NULL; list++)
+			if (strcmp(item, *list) == 0)
+				return(T_TRUE);
 
 	return(T_FALSE);
 }

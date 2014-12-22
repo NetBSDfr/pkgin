@@ -540,6 +540,28 @@ delete_remote_tbl(struct Summary sum, char *repo)
 }
 
 static void
+handle_manually_installed(Pkglist *pkglist, char **pkgkeep)
+{
+	char buf[BUFSIZ];
+
+	if (is_listed((const char **)pkgkeep, pkglist->full)) {
+		mark_as_automatic_installed(pkglist->full, 1);
+		return;
+	}
+
+	/* package installed with pkg_add */
+	if (is_automatic_installed(pkglist->full)) {
+		mark_as_automatic_installed(pkglist->full, 1);
+		snprintf(buf, BUFSIZ, UNKEEP_PKG, pkglist->name);
+	} else {
+		mark_as_automatic_installed(pkglist->full, 0);
+		snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
+	}
+
+	pkgindb_doquery(buf, NULL, NULL);
+}
+
+static void
 update_localdb(char **pkgkeep)
 {
 	char		**summary = NULL, buf[BUFSIZ];
@@ -583,14 +605,16 @@ update_localdb(char **pkgkeep)
 		/*
 		 * packages are installed "manually" by pkgin_install()
 		 * they are recorded as "non-automatic" in pkgdb, we
-		 * need to mark unkeeps as "automatic"
+		 * need to mark unkeeps as "automatic".
+		 * Only do this if no packages are passed as an argument, i.e.
+		 * if this is not a simple db update due to packages installed
+		 * via pkg_add(1), issue #36
 		 */
-		nokeeplisthead = rec_pkglist(NOKEEP_LOCAL_PKGS);
-		if (nokeeplisthead != NULL) {
+		if ((nokeeplisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
 			SLIST_FOREACH(	pkglist,
 					nokeeplisthead->P_Plisthead,
 					next) {
-				mark_as_automatic_installed(pkglist->full, 1);
+				handle_manually_installed(pkglist, pkgkeep);
 			}
 
 			free_pkglist(&nokeeplisthead->P_Plisthead, LIST);
