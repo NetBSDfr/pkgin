@@ -544,21 +544,13 @@ handle_manually_installed(Pkglist *pkglist, char **pkgkeep)
 {
 	char buf[BUFSIZ];
 
-	if (is_listed((const char **)pkgkeep, pkglist->full)) {
-		mark_as_automatic_installed(pkglist->full, 1);
+	/* update local db with manually installed packages */
+	if (pkgkeep == NULL && !is_automatic_installed(pkglist->full)) {
+		snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
+		pkgindb_doquery(buf, NULL, NULL);
 		return;
 	}
-
-	/* package installed with pkg_add */
-	if (is_automatic_installed(pkglist->full)) {
-		mark_as_automatic_installed(pkglist->full, 1);
-		snprintf(buf, BUFSIZ, UNKEEP_PKG, pkglist->name);
-	} else {
-		mark_as_automatic_installed(pkglist->full, 0);
-		snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-	}
-
-	pkgindb_doquery(buf, NULL, NULL);
+	mark_as_automatic_installed(pkglist->full, 1);
 }
 
 static void
