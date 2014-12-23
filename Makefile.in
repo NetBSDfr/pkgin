@@ -109,14 +109,14 @@ install:
 WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
 CURDATE!=date +%Y%m%d
 WIPREV!=git log --pretty=format:'%H' -n 1
-OLDREV!=sed -En 's/VERSION=[^0-9a-z]+([0-9a-z]+)/\1/p'			\
+OLDREV!=sed -En 's/GHCOMMIT=[^0-9a-z]+([0-9a-z]+)/\1/p'			\
 	${WIPHOME}/pkgin/Makefile
 
 bump:
 	rm -f ${WIPHOME}/pkgin/distinfo					\
 		${WIPHOME}/../distfiles/pkgin-*				\
 		${WIPHOME}/../distfiles/${OLDREV}*
-	perl -pi -e "s/(VERSION=[\ \t]+).*/VERSION=\t\t${WIPREV}/"	\
+	perl -pi -e "s/(GHCOMMIT=[\ \t]+).*/GHCOMMIT=\t\t${WIPREV}/"	\
 		${WIPHOME}/pkgin/Makefile
 	perl -pi -e "s/pkgin-[0-9]+/pkgin-${CURDATE}/"			\
 		${WIPHOME}/pkgin/Makefile
