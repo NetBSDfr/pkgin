@@ -3,6 +3,7 @@
 	installed via pkg_add(1)
 	Added -p (parsable) flag for 3rd party frontends
 	Added statistics (patch by Youri Mouton)
+	Package-names-containing-a-dot fix (patch by Yamamoto Takashi)
 
 20140407
 	0.6.5
