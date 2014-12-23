@@ -598,9 +598,6 @@ update_localdb(char **pkgkeep)
 		 * packages are installed "manually" by pkgin_install()
 		 * they are recorded as "non-automatic" in pkgdb, we
 		 * need to mark unkeeps as "automatic".
-		 * Only do this if no packages are passed as an argument, i.e.
-		 * if this is not a simple db update due to packages installed
-		 * via pkg_add(1), issue #36
 		 */
 		if ((nokeeplisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
 			SLIST_FOREACH(	pkglist,

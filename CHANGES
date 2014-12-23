@@ -1,3 +1,8 @@
+20141223
+	Fixed GH issue #36, automatic flag no more set when a package is
+	installed via pkg_add(1)
+	Added -p (parsable) flag for 3rd party frontends
+
 20140407
 	0.6.5
 	Multi-repo debugging, fixed packages order
