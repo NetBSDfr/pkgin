@@ -109,7 +109,6 @@ create_dirs()
 	if(-1 == mkdir(pkgin_cache, 0755) && errno != EEXIST)
 		errx(EXIT_FAILURE, MSG_MKDIR_CACHE_REPOSITORY_FAILED,
 						strerror(errno));
-		
 }
 
 char *
