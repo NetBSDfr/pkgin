@@ -42,6 +42,9 @@ BINDIR?=		${LOCALBASE}/bin
 PKG_SYSCONFDIR?=	${LOCALBASE}/etc
 VARBASE?=		/var
 PKG_DBDIR?=		${VARBASE}/db/pkg
+.if !defined(PKGMANDIR)
+MANDIR=		${LOCALBASE}/share/man
+.endif
 
 PKGTOOLS?=	${LOCALBASE}/sbin
 
@@ -97,12 +100,24 @@ beforeinstall:
 	${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755 ${DESTDIR}${BINDIR}
 	${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755			\
 		${DESTDIR}${PKG_SYSCONFDIR}/pkgin
+.if !defined(PKGMANDIR) # not installed via pkgsrc
+.	for _mandir in cat1 html1 man1
+		${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755		\
+			${MANDIR}/${_mandir}
+.	endfor
+.endif
 
 install:
 	test -f ${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf ||	\
 		${INSTALL_FILE} -o ${BINOWN} -g ${BINGRP} -m 644	\
 			repositories.conf				\
 		${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf
+
+deinstall:
+	rm -f ${DESTDIR}${BINDIR}/pkgin
+.for _mandir in cat1 html1 man1
+	rm -f ${MANDIR}/${_mandir}/pkgin*
+.endfor
 
 # makes maintainer's life easier
 
