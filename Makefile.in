@@ -106,11 +106,13 @@ install:
 
 # makes maintainer's life easier
 
-WIPHOME=/home/imil/netbsd-cvs/pkgsrc/wip
+.if defined(PKGIN_WIP)
+WIPHOME=${PKGIN_WIP}
 CURDATE!=date +%Y%m%d
 WIPREV!=git log --pretty=format:'%H' -n 1
 OLDREV!=sed -En 's/GHCOMMIT=[^0-9a-z]+([0-9a-z]+)/\1/p'			\
 	${WIPHOME}/pkgin/Makefile
+.endif
 
 bump:
 	rm -f ${WIPHOME}/pkgin/distinfo					\
