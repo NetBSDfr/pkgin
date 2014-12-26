@@ -103,7 +103,7 @@ beforeinstall:
 .if !defined(PKGMANDIR) # not installed via pkgsrc
 .	for _mandir in cat1 html1 man1
 		${INSTALL_DIR} -o ${BINOWN} -g ${BINGRP} -m 755		\
-			${MANDIR}/${_mandir}
+			${DESTDIR}${MANDIR}/${_mandir}
 .	endfor
 .endif
 
@@ -116,7 +116,7 @@ install:
 deinstall:
 	rm -f ${DESTDIR}${BINDIR}/pkgin
 .for _mandir in cat1 html1 man1
-	rm -f ${MANDIR}/${_mandir}/pkgin*
+	rm -f ${DESTDIR}${MANDIR}/${_mandir}/pkgin*
 .endfor
 
 # makes maintainer's life easier
