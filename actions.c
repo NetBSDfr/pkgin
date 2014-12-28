@@ -707,12 +707,14 @@ narrow_match(Pkglist *opkg)
 		/* not the same pkgname, next */
 		if (safe_strcmp(opkg->name, pkglist->name) != 0)
 			continue;
-		/*
-		 * if PKGPATH does not match, do not try to update
-		 * (mysql 5.1/5.5)
-		 */
-		if (safe_strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
-			continue;
+		/* some bad packages have their PKG_PATH set to NULL */
+		if (opkg->pkgpath != NULL && pkglist->pkgpath != NULL)
+			/*
+			 * if PKGPATH does not match, do not try to update
+			 * (mysql 5.1/5.5)
+			 */
+			if (strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
+				continue;
 
 		/* same package version, next */
 		if (safe_strcmp(opkg->full, pkglist->full) == 0)
@@ -736,7 +738,7 @@ static char **
 record_upgrades(Plisthead *plisthead)
 {
 	Pkglist	*pkglist;
-	int		count = 0;
+	int	count = 0;
 	char	**pkgargs;
 
 	SLIST_FOREACH(pkglist, plisthead, next)
