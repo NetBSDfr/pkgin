@@ -42,7 +42,9 @@ MANDIR=		${LOCALBASE}/share/man
 .endif
 
 # read pkginstall-prefix from configure if any
+.if "@PKGTOOLS@"
 PKGTOOLS?=	@PKGTOOLS@
+.endif
 
 .if ${OPSYS} == "Minix"
 PKGTOOLS?=	${PKG_TOOLS_BIN}

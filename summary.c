@@ -178,7 +178,7 @@ chk_pkgname(char *field, char *last_field)
 		return 1;
 	/* in some very rare cases, CONFLICTS appears *after* PKGNAME */
 	if (strncmp(last_field, "PKGNAME=", 8) != 0 &&
-		/* never seen many CONFLICTS after PKGNAME, but just in case... */
+		/* never seen many CONFLICTS after PKGNAME, just in case... */
 		strncmp(last_field, "CONFLICTS=", 10) != 0 &&
 		strncmp(field, "CONFLICTS=", 10) == 0)
 		return 1;
@@ -511,10 +511,10 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 	commit_idx = 0;
 
 	/* reset pkgid */
-	if (sum.type == LOCAL_SUMMARY) {
+	if (sum.type == LOCAL_SUMMARY)
 		pkgid = 1;
-		printf("\n");
-	}
+
+	printf("\n");
 }
 
 static void
