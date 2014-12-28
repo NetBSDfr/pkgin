@@ -100,98 +100,98 @@
 #define STR_FORWARD 0
 #define STR_BACKWARD 1
 
-#define R_READ(fd, buf, len)						\
-	if (read(fd, buf, len) < 0) {					\
-		warn("read()");								\
-		pthread_exit(NULL);							\
+#define R_READ(fd, buf, len)		\
+	if (read(fd, buf, len) < 0) {	\
+		warn("read()");		\
+		pthread_exit(NULL);	\
 	}
 
-#define R_CLOSE(fd)							\
-	do {									\
-		close(fd);							\
-		pthread_exit(NULL);					\
+#define R_CLOSE(fd)			\
+	do {				\
+		close(fd);		\
+		pthread_exit(NULL);	\
 	} while (/* CONSTCOND */ 0)
 
-#define XMALLOC(elm, size)						\
-	do {										\
-		elm = malloc(size);						\
-		if (elm == NULL)						\
+#define XMALLOC(elm, size)					\
+	do {							\
+		elm = malloc(size);				\
+		if (elm == NULL)				\
 			err(1, "can't allocate memory\n");	\
-		memset(elm, 0, size);					\
+		memset(elm, 0, size);				\
 	} while (/* CONSTCOND */ 0)
 
-#define XSTRDUP(dest, src)												\
-	do {																\
-		if (src == NULL)												\
-			dest = NULL;												\
-		else {															\
-			dest = strdup(src);											\
-			if (dest == NULL)											\
-				err(1, "can't strdup %s\n", src);						\
-		}																\
+#define XSTRDUP(dest, src)						\
+	do {								\
+		if (src == NULL)					\
+			dest = NULL;					\
+		else {							\
+			dest = strdup(src);				\
+			if (dest == NULL)				\
+				err(1, "can't strdup %s\n", src);	\
+		}							\
 	} while (/* CONSTCOND */ 0)
 
-#define XREALLOC(elm, size)												\
-	do {																\
-		void *telm;														\
-		if (elm == NULL)												\
-			XMALLOC(elm, size);											\
-		else {															\
-			telm = realloc(elm, size);									\
-			if (telm == NULL)											\
-				err(1, "can't allocate memory\n");						\
-			elm = telm;													\
-		}																\
+#define XREALLOC(elm, size)						\
+	do {								\
+		void *telm;						\
+		if (elm == NULL)					\
+			XMALLOC(elm, size);				\
+		else {							\
+			telm = realloc(elm, size);			\
+			if (telm == NULL)				\
+				err(1, "can't allocate memory\n");	\
+			elm = telm;					\
+		}							\
 	} while (/* CONSTCOND */ 0)
 
-#define DSTSRC_CHK(dst, src)					\
-	if (dst == NULL) {							\
-		warn("NULL destination");				\
-		break;									\
-	}											\
-	if (src == NULL) {							\
-		warn("NULL source");					\
-		break;									\
+#define DSTSRC_CHK(dst, src)			\
+	if (dst == NULL) {			\
+		warn("NULL destination");	\
+		break;				\
+	}					\
+	if (src == NULL) {			\
+		warn("NULL source");		\
+		break;				\
 	}
 
 
-#define XSTRCPY(dst, src)						\
-	do {										\
-		DSTSRC_CHK(dst, src);					\
-		strcpy(dst, src);						\
+#define XSTRCPY(dst, src)		\
+	do {				\
+		DSTSRC_CHK(dst, src);	\
+		strcpy(dst, src);	\
 	} while (/* CONSTCOND */ 0)
 
-#define XSTRCAT(dst, src)						\
-	do {										\
-		DSTSRC_CHK(dst, src);					\
-		strcat(dst, src);						\
+#define XSTRCAT(dst, src)		\
+	do {				\
+		DSTSRC_CHK(dst, src);	\
+		strcat(dst, src);	\
 	} while (/* CONSTCOND */ 0)
 
-#define XSTRMEMCAT(dst, src, size)										\
-	do {																\
-		XREALLOC(dst, size);											\
-		XSTRCAT(dst, src);												\
+#define XSTRMEMCAT(dst, src, size)	\
+	do {				\
+		XREALLOC(dst, size);	\
+		XSTRCAT(dst, src);	\
 	} while (/* CONSTCOND */ 0)
 
-#define XFREE(elm)		   					\
-	do {									\
-		if (elm != NULL) {					\
-			free(elm);						\
-			elm = NULL;						\
-		}									\
+#define XFREE(elm)		   	\
+	do {				\
+		if (elm != NULL) {	\
+			free(elm);	\
+			elm = NULL;	\
+		}			\
 	} while (/* CONSTCOND */ 0)
 
 #define XSNPRINTF(dst, size, fmt...) 			\
-	do {										\
-		char *pdst;								\
-		pdst = safe_snprintf(size, fmt);		\
-		XFREE(dst);								\
-		dst = pdst;								\
+	do {						\
+		char *pdst;				\
+		pdst = safe_snprintf(size, fmt);	\
+		XFREE(dst);				\
+		dst = pdst;				\
 } while (/* CONSTCOND */ 0)
 
 #ifndef SLIST_FOREACH_MUTABLE /* from DragonFlyBSD */
 #define SLIST_FOREACH_MUTABLE(var, head, field, tvar)		\
-	for ((var) = SLIST_FIRST((head));						\
+	for ((var) = SLIST_FIRST((head));			\
 	    (var) && ((tvar) = SLIST_NEXT((var), field), 1);	\
 		 (var) = (tvar))
 #endif
@@ -217,6 +217,7 @@ extern uint8_t is_listed(const char **, const char *);
 extern void do_log(const char *, const char *, ...);
 extern void trunc_str(char *, char, int);
 extern char *safe_snprintf(int, const char *, ...);
+extern int safe_strcmp(const char *s1, const char *s2);
 extern char *strreplace(char *, const char *, const char *);
 extern char *getosarch(void);
 extern char *getosrelease(void);

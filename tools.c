@@ -138,6 +138,16 @@ safe_snprintf(int size, const char *fmt, ...)
 	return p;
 }
 
+int
+safe_strcmp(const char *s1, const char *s2)
+{
+	if (s1 == NULL)
+		return -1;
+	if (s2 == NULL)
+		return 1;
+	return strcmp(s1, s2);
+}
+
 __inline int
 max(int a, int b)
 {
