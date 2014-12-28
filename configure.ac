@@ -24,9 +24,9 @@ AC_ARG_WITH(includes,
 	,
 )
 
-AC_ARG_WITH(pkginstall-prefix,
+AC_ARG_WITH(pkginstall,
 	[
-  --with-pkginstall-prefix=<path> pkg_install prefix],
+  --with-pkginstall=<path> pkg_install tools path],
 	[PKGTOOLS="$withval"],
 	,
 )
