@@ -629,6 +629,7 @@ SED
 EGREP
 GREP
 CPP
+PKGTOOLS
 SRCS
 INSTALL_DATA
 INSTALL_SCRIPT
@@ -691,6 +692,7 @@ ac_user_opts='
 enable_option_checking
 with_libraries
 with_includes
+with_pkginstall_prefix
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1317,6 +1319,8 @@ Optional Packages:
   --with-libraries=<path> additional place to look for libraries
 
   --with-includes=<path> additional place to look for header files
+
+  --with-pkginstall-prefix=<path> pkg_install prefix
 
 Some influential environment variables:
   CC          C compiler command
@@ -3298,6 +3302,13 @@ fi
 
 
 
+# Check whether --with-pkginstall-prefix was given.
+if test "${with_pkginstall_prefix+set}" = set; then :
+  withval=$with_pkginstall_prefix; PKGTOOLS="$withval"
+fi
+
+
+
 for ac_func in dup2 getcwd localeconv memmove memset mkdir putenv regcomp rmdir setenv strcasecmp strchr strcspn strdup strncasecmp strpbrk strrchr strstr strtol freopen tcgetpgrp
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
@@ -3432,6 +3443,7 @@ fi
 
 
 fi
+
 
 
 

@@ -32,11 +32,6 @@ BSD_PKG_MK=	1
 .	endif
 .endfor
 
-.if ${OPSYS} == "Minix"
-PKGTOOLS?=	${PKG_TOOLS_BIN}
-CPPFLAGS+=	-D_NETBSD_SOURCE -D_MINIX
-.endif
-
 LOCALBASE?=		@prefix@
 BINDIR?=		${LOCALBASE}/bin
 PKG_SYSCONFDIR?=	${LOCALBASE}/etc
@@ -46,7 +41,15 @@ PKG_DBDIR?=		${VARBASE}/db/pkg
 MANDIR=		${LOCALBASE}/share/man
 .endif
 
+# read pkginstall-prefix from configure if any
+PKGTOOLS?=	@PKGTOOLS@
+
+.if ${OPSYS} == "Minix"
+PKGTOOLS?=	${PKG_TOOLS_BIN}
+CPPFLAGS+=	-D_NETBSD_SOURCE -D_MINIX
+.else
 PKGTOOLS?=	${LOCALBASE}/sbin
+.endif
 
 PKGIN_VERSION=	"${VERSION} for ${OPSYS}-${OS_VER} ${OS_ARCH}"
 

@@ -24,6 +24,13 @@ AC_ARG_WITH(includes,
 	,
 )
 
+AC_ARG_WITH(pkginstall-prefix,
+	[
+  --with-pkginstall-prefix=<path> pkg_install prefix],
+	[PKGTOOLS="$withval"],
+	,
+)
+
 AC_CHECK_FUNCS([dup2 getcwd localeconv memmove memset mkdir putenv regcomp rmdir setenv strcasecmp strchr strcspn strdup strncasecmp strpbrk strrchr strstr strtol freopen tcgetpgrp])
 
 AC_CHECK_FUNC([pthread_create],,
@@ -41,6 +48,7 @@ AC_CHECK_FUNC([humanize_number],,
 )
 
 AC_SUBST(SRCS)
+AC_SUBST(PKGTOOLS)
 
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])

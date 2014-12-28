@@ -1,6 +1,7 @@
 20131228
 	Fixed GH issue #1, NULL PKG_PATH (which is wrong btw) makes pkgin
 	segfault, strcmp() secured with safe_strcmp()
+	Added --with-pkginstall-prefix to configure
 
 20141223
 	Fixed GH issue #36, automatic flag no more set when a package is
