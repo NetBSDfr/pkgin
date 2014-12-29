@@ -44,8 +44,8 @@ pkgin_autoremove()
 	Plistnumbered	*plisthead;
 	Plisthead	*keephead, *removehead, *orderedhead;
 	Pkglist		*pkglist, *premove, *pdp;
-	char		*toremove = NULL;
-	int			is_keep_dep, removenb = 0;
+	char		*toremove = NULL, preserve[BUFSIZ];
+	int		is_keep_dep, removenb = 0;
 
 	/*
 	 * test if there's any keep package and record them
@@ -83,7 +83,10 @@ pkgin_autoremove()
 				break;
 			}
 		}
-		if (is_keep_dep)
+		snprintf(preserve, BUFSIZ, "%s/%s/%s",
+				PKG_DBDIR, pkglist->full, PRESERVE_FNAME);
+		/* is or a dependency or a preserved package */
+		if (is_keep_dep || access(preserve, F_OK) != -1)
 			continue;
 
 		/* package was not found, insert it on removelist */
@@ -203,22 +206,30 @@ pkg_keep(int type, char **pkgargs)
 		if (pkglist != NULL && pkglist->full != NULL) {
 			switch (type) {
 			case KEEP:
-				/* pkglist is a keep-package but marked as automatic, tag it */
+				/*
+				 * pkglist is a keep-package but marked as
+				 * automatic, tag it
+				 */
 				if (is_automatic_installed(pkglist->full)) {
-					printf(MSG_MARKING_PKG_KEEP, pkglist->full);
+					printf(	MSG_MARKING_PKG_KEEP,
+						pkglist->full);
 					/* KEEP_PKG query needs full pkgname */
-					snprintf(query, BUFSIZ, KEEP_PKG, pkglist->name);
+					snprintf(query, BUFSIZ,
+						KEEP_PKG, pkglist->name);
 					/* mark as non-automatic in pkgdb */
-					if (mark_as_automatic_installed(pkglist->full, 0) < 0)
+					if (mark_as_automatic_installed(
+							pkglist->full, 0) < 0)
 						exit(EXIT_FAILURE);
 				}
 				break;
 			case UNKEEP:
 				printf(MSG_UNMARKING_PKG_KEEP, pkglist->full);
 				/* UNKEEP_PKG query needs full pkgname */
-				snprintf(query, BUFSIZ, UNKEEP_PKG, pkglist->name);
+				snprintf(query, BUFSIZ,
+						UNKEEP_PKG, pkglist->name);
 				/* mark as automatic in pkgdb */
-				if (mark_as_automatic_installed(pkglist->full, 1) < 0)
+				if (mark_as_automatic_installed(pkglist->full,
+							1) < 0)
 					exit(EXIT_FAILURE);
 				break;
 			}
