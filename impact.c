@@ -78,7 +78,7 @@ break_depends(Plisthead *impacthead)
 	Pkglist	   	*rmimpact, *pimpact;
 	Plisthead	*rdphead, *fdphead;
 	Pkglist	   	*rdp, *fdp;
-	char		*pkgname, *rpkg;
+	char		rpkg[BUFSIZ], pkgname[BUFSIZ];
 	int		dep_break, exists;
 
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -88,21 +88,19 @@ break_depends(Plisthead *impacthead)
 
 		rdphead = init_head();
 
-		XSTRDUP(pkgname, pimpact->old);
+		XSTRCPY(pkgname, pimpact->old);
 		trunc_str(pkgname, '-', STR_BACKWARD);
 
 		/* fetch old package reverse dependencies */
 		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, rdphead);
 
-		XFREE(pkgname);
-
 		/* browse reverse dependencies */
 		SLIST_FOREACH(rdp, rdphead, next) {
-
 			exists = 0;
 			/* check if rdp was already on impact list */
 			SLIST_FOREACH(rmimpact, impacthead, next)
-				if (strcmp(rmimpact->depend, rdp->depend) == 0) {
+				if (strcmp(	rmimpact->depend,
+						rdp->depend) == 0) {
 					exists = 1;
 					break;
 				}
@@ -115,7 +113,7 @@ break_depends(Plisthead *impacthead)
 			 * reverse dependency is a full package name,
 			 * use it and strip it
 			 */
-			XSTRDUP(rpkg, rdp->depend);
+			XSTRCPY(rpkg, rdp->depend);
 			trunc_str(rpkg, '-', STR_BACKWARD);
 
 			/* fetch dependencies for rdp */
@@ -153,10 +151,8 @@ break_depends(Plisthead *impacthead)
 
 			free_pkglist(&fdphead, DEPTREE);
 
-			if (!dep_break) {
-				XFREE(rpkg);
+			if (!dep_break)
 				continue;
-			}
 
 			/* dependency break, insert rdp in remove-list */
 			rmimpact = malloc_pkglist(IMPACT);
@@ -166,8 +162,6 @@ break_depends(Plisthead *impacthead)
 			XSTRDUP(rmimpact->old, rdp->depend);
 			rmimpact->action = TOREMOVE;
 			rmimpact->level = 0;
-
-			XFREE(rpkg);
 
 			SLIST_INSERT_HEAD(impacthead, rmimpact, next);
 		}

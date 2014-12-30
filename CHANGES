@@ -1,4 +1,7 @@
-20131228
+20141229
+	Avoid `preserved' packages to be `autoremoved'
+
+20141228
 	Fixed GH issue #1, NULL PKG_PATH (which is wrong btw) makes pkgin
 	segfault, strcmp() secured with safe_strcmp()
 	Added --with-pkginstall to configure
