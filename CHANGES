@@ -1,3 +1,7 @@
+20150102
+	Avoid deepness > 1 when checking for dependency upgrades, should fix
+	PR #48561
+
 20141229
 	Avoid `preserved' packages to be `autoremoved'
 

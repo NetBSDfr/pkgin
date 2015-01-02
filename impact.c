@@ -96,6 +96,18 @@ break_depends(Plisthead *impacthead)
 
 		/* browse reverse dependencies */
 		SLIST_FOREACH(rdp, rdphead, next) {
+			/*
+			 * do not go deeper than 1 level (direct dependency)
+			 * so we avoid removing packages that depend no more
+			 * on a child dep. Example:
+			 * qt4-libs had a direct depend on fontconfig, which had
+			 * a direct depend on freetype2. When fontconfig did not
+			 * depend anymore on freetype2, local qt4-libs has a
+			 * missing dependency on freetype2, which was wrong.
+			 */
+			if (rdp->level > 1)
+				continue;
+
 			exists = 0;
 			/* check if rdp was already on impact list */
 			SLIST_FOREACH(rmimpact, impacthead, next)

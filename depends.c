@@ -90,15 +90,19 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 		SLIST_FOREACH(pdp, pdphead, next) {
 			if (pdp->level != 0)
 				/* 
-				 * dependency already processed, no need to proceed
-				 * as the next pdp's already have a level too, remember
-				 * head has the deps to process.
+				 * dependency already processed, no need to
+				 * proceed as the next pdp's already have a
+				 * level too, remember head has the deps to
+				 * process.
 				 */
 				break;
 			/* set all this range to the current level */
 			pdp->level = level;
 			snprintf(query, BUFSIZ, depquery, pdp->name);
-			/* record pdp->name's direct dependencies in head with level = 0*/
+			/*
+			 * record pdp->name's direct dependencies in head
+			 * with level = 0
+			 * */
 			if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_OK)
 				TRACE(" > recording %s dependencies (will be level %d)\n",
 					pdp->name, level + 1);
@@ -135,7 +139,8 @@ show_direct_depends(const char *pkgarg)
 		printf(MSG_DIRECT_DEPS_FOR, pkgname);
 		SLIST_FOREACH(pdp, deptreehead, next) {
 			if (package_version && 
-				(mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend))
+				(mapplist = map_pkg_to_dep(&r_plisthead,
+							   pdp->depend))
 				!= NULL)
 				printf("\t%s\n", mapplist->full);
 			else
@@ -178,7 +183,8 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 
 	SLIST_FOREACH(pdp, deptreehead, next) {
 		if (package_version && 
-			(mapplist = map_pkg_to_dep(plisthead, pdp->depend)) != NULL)
+			(mapplist = map_pkg_to_dep(plisthead,
+						   pdp->depend)) != NULL)
 			printf("\t%s\n", mapplist->full);
 		else
 			printf("\t%s\n", pdp->depend);
