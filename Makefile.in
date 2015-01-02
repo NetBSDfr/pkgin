@@ -140,7 +140,7 @@ bump:
 		${WIPHOME}/../distfiles/${OLDREV}*
 	perl -pi -e "s/(GHCOMMIT=[\ \t]+).*/GHCOMMIT=\t\t${WIPREV}/"	\
 		${WIPHOME}/pkgin/Makefile
-	perl -pi -e "s/pkgin-[0-9]+/pkgin-${CURDATE}/"			\
+	perl -pi -e "s/pkgin-[0-9\.]+/pkgin-@PACKAGE_VERSION@.${CURDATE}/"\
 		${WIPHOME}/pkgin/Makefile
 	cd ${WIPHOME}/pkgin && make makesum
 
