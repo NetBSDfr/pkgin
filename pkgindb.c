@@ -228,10 +228,8 @@ pkg_db_mtime()
 	time_t	   	db_mtime = 0;
 	char		str_mtime[20], buf[BUFSIZ];
 
-	snprintf(buf, BUFSIZ, "%s/pkgdb.byfile.db", pkg_dbdir);
-
 	/* no pkgdb file */
-	if (stat(buf, &st) < 0)
+	if (stat(pkg_dbdir, &st) < 0)
 		pkgdb_present = 0;
 
 	str_mtime[0] = '\0';
