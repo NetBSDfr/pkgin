@@ -646,49 +646,6 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
-/*
- * The idea behind this function is to list preferred versions
- * of packages. For example, mysql-server-5, apache-2.2.
- * It is actually unused, not sure if really needed.
- */
-char *
-read_preferred(char *pkgname)
-{
-	int	matchlen;
-	FILE	*fp;
-	char	match[BUFSIZ], *pref, *p;
-
-	if ((fp = fopen(PKGIN_CONF"/"PREFERRED_PKGS, "r")) == NULL)
-		return NULL;
-
-	snprintf(match, BUFSIZ, "%s=", pkgname);
-	matchlen = strlen(match);
-
-	XMALLOC(pref, BUFSIZ * sizeof(char));
-
-	while (fgets(pref, BUFSIZ, fp) != NULL) {
-		/* pref == "foobar=" */
-		if (strncmp(match, pref, matchlen) == 0) {
-			p = pref + matchlen;
-
-			for (; *p == ' ' || *p == '\t'; p++);
-
-			if (*p == '\0')
-				break;
-
-			snprintf(pref, BUFSIZ, "%s-%s", pkgname, p);
-			pref[strlen(pref) - 1] = '\0';
-			fclose(fp);
-			return pref;
-		}
-	}
-
-	XFREE(pref);
-	fclose(fp);
-
-	return NULL;
-}
-
 /* 
  * find closest match for packages to be upgraded 
  * if we have mysql-5.1.10 installed prefer mysql-5.1.20 over
