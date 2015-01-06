@@ -335,6 +335,7 @@ pkg_impact(char **pkgargs, int *rc)
 	Plisthead	*impacthead, *pdphead = NULL;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
 	char		**ppkgargs, *pkgname;
+	int		istty;
 #ifndef DEBUG
 	char		tmpicon;
 #endif
@@ -348,6 +349,8 @@ pkg_impact(char **pkgargs, int *rc)
 	TRACE("[>]-entering impact\n");
 
 	impacthead = init_head();
+
+	istty = isatty(fileno(stdout));
 
 	/* retreive impact list for all packages listed in the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
@@ -366,11 +369,13 @@ pkg_impact(char **pkgargs, int *rc)
 		TRACE("[+]-impact for %s\n", pkgname);
 
 #ifndef DEBUG
-		tmpicon = *icon++;
-		printf(MSG_CALCULATING_DEPS" %c", tmpicon);
-		fflush(stdout);
-		if (*icon == '\0')
-			icon = icon - strlen(ICON_WAIT);
+		if (istty) {
+			tmpicon = *icon++;
+			printf(MSG_CALCULATING_DEPS" %c", tmpicon);
+			fflush(stdout);
+			if (*icon == '\0')
+				icon = icon - strlen(ICON_WAIT);
+		}
 #else
 		printf(MSG_CALCULATING_DEPS, pkgname);
 #endif

@@ -59,6 +59,9 @@ main(int argc, char *argv[])
 	if (argc < 2 || *argv[1] == 'h')
 		usage();
 
+	/* Default to not doing \r printouts if we don't send to a tty */
+	parsable = !isatty(fileno(stdout));
+
 	while ((ch = getopt(argc, argv, "dhyfFPvVl:nc:t:p")) != -1) {
 		switch (ch) {
 		case 'f':
