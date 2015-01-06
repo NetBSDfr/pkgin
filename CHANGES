@@ -1,6 +1,8 @@
 20150106
 	Dropped percentage printout if stdout is not a tty (patch by Havard
 	Eidnes)
+	Changed pkg_add -f flag with -D as suggested by Greg Troxel
+
 20150105
 	Fixed an issue with meta-packages not updating pkgdb, check for
 	PKG_DBDIR mtime instead
