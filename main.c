@@ -42,7 +42,6 @@ static void	ginto(void);
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0;
 char		lslimit = '\0';
-char		pkgtools_flags[5];
 FILE  		*tracefp = NULL;
 
 int
@@ -167,12 +166,6 @@ main(int argc, char *argv[])
 	/* we need packages lists for almost everything */
 	if (ch != PKG_UPDT_CMD) /* already loaded by update_db() */
 		init_global_pkglists();
-
-	/* fill pkgtools flags */
-	if (verbosity)
-		strncpy(pkgtools_flags, "-fv", 3);
-	else
-		strncpy(pkgtools_flags, "-f", 2);
 
 	switch (ch) {
 	case PKG_UPDT_CMD: /* update packages db */

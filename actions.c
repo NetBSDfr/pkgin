@@ -42,6 +42,18 @@ static int	upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
 FILE		*err_fp = NULL;
 long int	rm_filepos = -1, in_filepos = -1;
+char		pkgtools_flags[5];
+
+static char *
+verb_flag(const char *flags)
+{
+	strcpy(pkgtools_flags, flags);
+
+	if (verbosity)
+		strlcat(pkgtools_flags, "v", 1);
+
+	return pkgtools_flags;
+}
 
 static int
 pkg_download(Plisthead *installhead)
@@ -235,7 +247,7 @@ do_pkg_remove(Plisthead *removehead)
 #ifndef DEBUG
 		if (!verbosity)
 			log_tag(MSG_REMOVING, premove->depend);
-		if (fexec(PKG_DELETE, pkgtools_flags, premove->depend, NULL)
+		if (fexec(PKG_DELETE, verb_flag("-f"), premove->depend, NULL)
 			!= EXIT_SUCCESS)
 			err_count++;
 #endif
@@ -258,7 +270,6 @@ do_pkg_install(Plisthead *installhead)
 	int		rc = EXIT_SUCCESS;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ];
-	const char	*pi_tmp_flags; /* tmp force flags for pkg_install */
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
@@ -287,10 +298,9 @@ do_pkg_install(Plisthead *installhead)
 			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
 			/* set temporary force flags */
 			/* append verbosity if requested */
-			pi_tmp_flags = verbosity ? "-ffuv" : "-ffu";
 			if (check_yesno(DEFAULT_YES)) {
 #ifndef DEBUG
-				if (fexec(PKG_ADD, pi_tmp_flags,
+				if (fexec(PKG_ADD, verb_flag("ffu"),
 					pkgpath, NULL) == EXIT_FAILURE)
 					rc = EXIT_FAILURE;
 #endif
@@ -299,7 +309,7 @@ do_pkg_install(Plisthead *installhead)
 		} else {
 			/* every other package */
 #ifndef DEBUG
-			if (fexec(PKG_ADD, pkgtools_flags, pkgpath, NULL) ==
+			if (fexec(PKG_ADD, verb_flag("-D"), pkgpath, NULL) ==
 				EXIT_FAILURE)
 				rc = EXIT_FAILURE;
 #endif
