@@ -1,3 +1,10 @@
+20150106
+	Dropped percentage printout if stdout is not a tty (patch by Havard
+	Eidnes)
+20150105
+	Fixed an issue with meta-packages not updating pkgdb, check for
+	PKG_DBDIR mtime instead
+
 20150102
 	Avoid deepness > 1 when checking for dependency upgrades, should fix
 	PR #48561
@@ -11,6 +18,7 @@
 	Added --with-pkginstall to configure
 
 20141223
+	0.7.0
 	Fixed GH issue #36, automatic flag no more set when a package is
 	installed via pkg_add(1)
 	Added -p (parsable) flag for 3rd party frontends
