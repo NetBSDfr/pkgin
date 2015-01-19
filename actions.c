@@ -319,8 +319,7 @@ do_pkg_install(Plisthead *installhead)
 			/* every other package */
 			pflags = verb_flag("-D");
 
-		if (fexec(PKG_ADD, verb_flag("-D"),
-				pkgpath, NULL) == EXIT_FAILURE)
+		if (fexec(PKG_ADD, pflags, pkgpath, NULL) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
 #endif
 	} /* installation loop */
