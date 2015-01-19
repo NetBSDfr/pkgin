@@ -44,6 +44,7 @@ FILE		*err_fp = NULL;
 long int	rm_filepos = -1, in_filepos = -1;
 char		pkgtools_flags[5];
 
+#ifndef DEBUG
 static char *
 verb_flag(const char *flags)
 {
@@ -54,6 +55,7 @@ verb_flag(const char *flags)
 
 	return pkgtools_flags;
 }
+#endif
 
 static int
 pkg_download(Plisthead *installhead)
@@ -269,7 +271,10 @@ do_pkg_install(Plisthead *installhead)
 {
 	int		rc = EXIT_SUCCESS;
 	Pkglist		*pinstall;
-	char		pkgpath[BUFSIZ];
+	char		pkgpath[BUFSIZ], preserve[BUFSIZ];
+#ifndef DEBUG
+	char		*pflags;
+#endif
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
@@ -290,30 +295,34 @@ do_pkg_install(Plisthead *installhead)
 		if (!verbosity)
 			log_tag(MSG_INSTALLING, pinstall->depend);
 #endif
+		/* there was a previous version, record +PRESERVE path */
+		if (pinstall->old != NULL)
+			snprintf(preserve, BUFSIZ, "%s/%s/%s",
+				PKG_DBDIR, pinstall->old, PRESERVE_FNAME);
 
 		/* are we upgrading pkg_install ? */
 		if (pi_upgrade) { /* set in order.c */
 			/* 1st item on the list, reset the flag */
 			pi_upgrade = 0;
 			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
+			if (!check_yesno(DEFAULT_YES))
+				continue;
+		}
+
+#ifndef DEBUG
+		/* is the package marked as +PRESERVE ? */
+		if (pinstall->old != NULL && access(preserve, F_OK) != -1)
 			/* set temporary force flags */
 			/* append verbosity if requested */
-			if (check_yesno(DEFAULT_YES)) {
-#ifndef DEBUG
-				if (fexec(PKG_ADD, verb_flag("ffu"),
-					pkgpath, NULL) == EXIT_FAILURE)
-					rc = EXIT_FAILURE;
-#endif
-			} else
-				continue;
-		} else {
+			pflags = verb_flag("ffu");
+		else
 			/* every other package */
-#ifndef DEBUG
-			if (fexec(PKG_ADD, verb_flag("-D"), pkgpath, NULL) ==
-				EXIT_FAILURE)
-				rc = EXIT_FAILURE;
+			pflags = verb_flag("-D");
+
+		if (fexec(PKG_ADD, verb_flag("-D"),
+				pkgpath, NULL) == EXIT_FAILURE)
+			rc = EXIT_FAILURE;
 #endif
-		}
 	} /* installation loop */
 
 	close_pi_log();

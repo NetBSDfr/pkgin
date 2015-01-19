@@ -1,3 +1,6 @@
+20150119
+	+PRESERVE packages now correctly upgraded without pkg_add -f
+
 20150106
 	Dropped percentage printout if stdout is not a tty (patch by Havard
 	Eidnes)

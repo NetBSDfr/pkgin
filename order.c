@@ -253,11 +253,11 @@ order_install(Plisthead *impacthead)
 
 				pdp->computed = pimpact->action; /* XXX: ugly*/
 				XSTRDUP(pdp->depend, pimpact->full);
-				pdp->name = NULL; /* safety */
+				pdp->name = NULL;
 				pdp->level = pimpact->level;
 				/* record package size for download check */
 				pdp->file_size = pimpact->file_size;
-
+				pdp->old = pimpact->old;
 				/* check for pkg_install upgrade */
 				strcpy(tmpcheck, pimpact->full);
 				trunc_str(tmpcheck, '-', STR_BACKWARD);
