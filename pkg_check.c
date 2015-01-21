@@ -237,4 +237,6 @@ show_prov_req(const char *query, const char *pkgname)
 	printf(MSG_FILES_PROV_REQ, say, fullpkgname);
 	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
 		printf("\t%s\n", plist->full);
+
+	XFREE(fullpkgname);
 }

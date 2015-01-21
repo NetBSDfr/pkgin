@@ -189,7 +189,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 {
 	int		toupgrade;
 	Pkglist		*pimpact, *plist, *mapplist;
-	char		*remotepkg;
+	char		*remotepkg = NULL;
 
 	/* local package list is empty */
 	if (SLIST_EMPTY(&l_plisthead))
@@ -306,6 +306,8 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		pimpact->file_size = mapplist->file_size;
 		pimpact->size_pkg = mapplist->size_pkg;
 	}
+
+	XFREE(remotepkg);
 
 	return 1;
 }

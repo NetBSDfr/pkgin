@@ -563,6 +563,8 @@ installend:
 
 	XFREE(toinstall);
 	XFREE(toupgrade);
+	XFREE(toremove);
+	XFREE(unmet_reqs);
 	free_pkglist(&impacthead, IMPACT);
 	free_pkglist(&removehead, DEPTREE);
 	free_pkglist(&installhead, DEPTREE);

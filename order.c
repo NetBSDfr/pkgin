@@ -227,7 +227,7 @@ order_install(Plisthead *impacthead)
 {
 	Plisthead	*ordtreehead;
 	Pkglist		*pimpact, *pdp, *pi_dp = NULL;
-	int			i, maxlevel = 0;
+	int		i, maxlevel = 0;
 	char		tmpcheck[BUFSIZ];
 
 	/* record higher dependency level on impact list */

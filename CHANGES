@@ -1,3 +1,6 @@
+20150121
+	Fixed some resource leakage pointed out by coverity scan
+
 20150119
 	+PRESERVE packages now correctly upgraded without pkg_add -f
 
