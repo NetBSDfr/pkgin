@@ -249,6 +249,7 @@ pkg_is_kept(Pkglist *pkgkeep)
 
 	plisthead = rec_pkglist(KEEP_LOCAL_PKGS);
 
+	/* coverity[var_deref_op] */
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next) {
 		if (strcmp(pkgkeep->name, pkglist->name) == 0) {
 			ret = 1;

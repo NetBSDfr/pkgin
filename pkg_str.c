@@ -234,7 +234,8 @@ get_pkgname_from_depend(char *depend)
 	if (*depend == '{') {
 		XSTRDUP(pkgname, depend + 1);
 		tmp = strrchr(pkgname, '}');
-		*tmp = '\0'; /* pkgname == "foo,bar" */
+		if (tmp != NULL)
+			*tmp = '\0'; /* pkgname == "foo,bar" */
 
 		/* {foo,bar} should always have comma */
 		while ((tmp = strchr(pkgname, ',')) != NULL)

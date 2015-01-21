@@ -195,7 +195,8 @@ field_record(const char *field, char *line)
 	char *pfield;
 
 	if (strncmp(field, line, strlen(field)) == 0) {
-		pfield = strchr(line, '=');
+		if ((pfield = strchr(line, '=')) == NULL)
+			return NULL;
 		trimcr(pfield++);
 
 		/* weird buggy packages with empty fields, like LICENSE= */
@@ -463,7 +464,8 @@ insert_summary(struct Summary sum, char **summary, char *cur_repo)
 
 			/* split PKGNAME and VERSION */
 			pkgvers = strrchr(pkgname, '-');
-			*pkgvers++ = '\0';
+			if (pkgvers != NULL)
+				*pkgvers++ = '\0';
 
 			add_to_slist("PKGNAME", pkgname);
 			add_to_slist("PKGVERS", pkgvers);
