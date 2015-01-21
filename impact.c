@@ -189,7 +189,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 {
 	int		toupgrade;
 	Pkglist		*pimpact, *plist, *mapplist;
-	char		*remotepkg = NULL;
+	char		remotepkg[BUFSIZ];
 
 	/* local package list is empty */
 	if (SLIST_EMPTY(&l_plisthead))
@@ -199,7 +199,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	if ((mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
 
-	XSTRDUP(remotepkg, mapplist->full);
+	XSTRCPY(remotepkg, mapplist->full);
 
 	TRACE(" |-matching %s over installed packages\n", remotepkg);
 
@@ -263,7 +263,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 
 				pimpact->action = toupgrade;
 
-				pimpact->full = remotepkg;
+				XSTRDUP(pimpact->full, remotepkg);
 				/* record package dependency deepness */
 				pimpact->level = pdp->level;
 				/* record binary package size */
@@ -299,15 +299,13 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		pimpact->old = NULL;
 		pimpact->action = TOINSTALL;
 
-		pimpact->full = remotepkg;
+		XSTRDUP(pimpact->full, remotepkg);
 		/* record package dependency deepness */
 		pimpact->level = pdp->level;
 
 		pimpact->file_size = mapplist->file_size;
 		pimpact->size_pkg = mapplist->size_pkg;
 	}
-
-	XFREE(remotepkg);
 
 	return 1;
 }
