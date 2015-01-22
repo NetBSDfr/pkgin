@@ -262,7 +262,8 @@ order_install(Plisthead *impacthead)
 				strcpy(tmpcheck, pimpact->full);
 				trunc_str(tmpcheck, '-', STR_BACKWARD);
 				/* match on pkg_install */
-				if (strcmp(tmpcheck, PKG_INSTALL) == 0) {
+				if (pi_dp == NULL &&
+					strcmp(tmpcheck, PKG_INSTALL) == 0) {
 					pi_upgrade = 1;
 					/* backup pdp for future insertion */
 					pi_dp = pdp;

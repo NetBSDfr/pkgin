@@ -244,12 +244,12 @@ int
 pkg_is_kept(Pkglist *pkgkeep)
 {
 	Plistnumbered	*plisthead;
-	Pkglist			*pkglist;
-	int				ret = 0;
+	Pkglist		*pkglist;
+	int		ret = 0;
 
-	plisthead = rec_pkglist(KEEP_LOCAL_PKGS);
+	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
+		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
-	/* coverity[var_deref_op] */
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next) {
 		if (strcmp(pkgkeep->name, pkglist->name) == 0) {
 			ret = 1;
