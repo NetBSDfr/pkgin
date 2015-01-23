@@ -223,6 +223,7 @@ Dlfile		*download_file(char *, time_t *);
 /* summary.c */
 int		update_db(int, char **);
 void		split_repos(void);
+void		chk_repo_list(void);
 /* sqlite_callbacks.c */
 int		pdb_rec_list(void *, int, char **, char **);
 int		pdb_rec_depends(void *, int, char **, char **);

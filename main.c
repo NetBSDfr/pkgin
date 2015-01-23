@@ -156,6 +156,8 @@ main(int argc, char *argv[])
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
 
+	/* check repository consistency between repo list and recorded repos */
+	chk_repo_list();
 	/*
 	 * upgrade remote database if pkgin version changed and not compatible
 	 * or if empty database

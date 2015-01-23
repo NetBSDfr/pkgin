@@ -1,3 +1,6 @@
+20150122
+	Fixed GitHub issue #33: clean database when repository removed
+
 20150121
 	Fixed some resource leakage pointed out by coverity scan
 

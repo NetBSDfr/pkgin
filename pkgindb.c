@@ -254,7 +254,7 @@ pkg_db_mtime()
 void
 repo_record(char **repos)
 {
-	int		i;
+	int	i;
 	char	query[BUFSIZ], value[20];
 
 	for (i = 0; repos[i] != NULL; i++) {
@@ -279,7 +279,8 @@ pkg_sum_mtime(char *repo)
 	str_mtime[0] = '\0';
 
 	snprintf(query, BUFSIZ,
-		"SELECT REPO_MTIME FROM REPOS WHERE REPO_URL GLOB \'%s*\';", repo);
+		"SELECT REPO_MTIME FROM REPOS WHERE REPO_URL GLOB \'%s*\';",
+		repo);
 	pkgindb_doquery(query, pdb_get_value, str_mtime);
 
 	if (str_mtime[0] != '\0')

@@ -40,7 +40,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 {
 	Pkglist	   	*plist;
 	Plistnumbered	*plisthead = (Plistnumbered *)param;
-	int			i;
+	int		i;
 
 	if (argv == NULL)
 		return PDB_ERR;
@@ -90,7 +90,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 #define DEPS_FULLPKG		argv[0]
 /* pkgname for direct deps and reverse deps */
 #define DEPS_PKGNAME		argv[1]
-#define PKG_KEEP			argv[2]
+#define PKG_KEEP		argv[2]
 /**
  * sqlite callback
  * DIRECT_DEPS or REVERSE_DEPS result, feeds a Pkglist SLIST

@@ -275,7 +275,8 @@ prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
 
 	/* insert REPOSITORY field */
 	if (sum.type == REMOTE_SUMMARY)
-		XSNPRINTF(commit_query, query_size, "%s\"REPOSITORY\")", commit_query);
+		XSNPRINTF(commit_query, query_size, "%s\"REPOSITORY\")",
+				commit_query);
 	else
 		commit_query[strlen(commit_query) - 1] = ')';
 
@@ -758,4 +759,42 @@ split_repos(void)
 	pkg_repos[repocount - 1] = NULL;
 
 	repo_record(pkg_repos);
+}
+
+/* check if repositories listed in REPO_URL table are still relevant */
+static int
+cmp_repo_list(void *param, int argc, char **argv, char **colname)
+{
+	int	i, j, match;
+	char	query[BUFSIZ];
+
+	if (argv == NULL)
+		return PDB_ERR; /* no repo yet? */
+
+	for (i = 0; i < argc; i++) {
+		match = 0;
+		for (j = 0; pkg_repos[j] != NULL; j++)
+			if (strcmp(argv[i], pkg_repos[j]) == 0)
+				match = 1;
+		if (match == 0) {
+			printf(MSG_CLEANING_DB_FROM_REPO, argv[i]);
+			snprintf(query, BUFSIZ,
+			"DELETE FROM REPOS WHERE REPO_URL = '%s';", argv[i]);
+			pkgindb_doquery(query, NULL, NULL);
+			snprintf(query, BUFSIZ,
+			"DELETE FROM REMOTE_PKG WHERE REPOSITORY = '%s';",
+			argv[i]);
+			pkgindb_doquery(query, NULL, NULL);
+
+			force_fetch = 1;
+		}
+	}
+
+	return PDB_OK;
+}
+
+void
+chk_repo_list()
+{
+	pkgindb_doquery("SELECT REPO_URL FROM REPOS;", cmp_repo_list, NULL);
 }
