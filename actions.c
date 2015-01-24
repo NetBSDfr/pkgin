@@ -333,18 +333,20 @@ do_pkg_install(Plisthead *installhead)
 char *
 action_list(char *flatlist, char *str)
 {
-	int		newsize;
+	int	newsize;
 	char	*newlist = NULL;
 
-	if (flatlist == NULL)
-		XSTRDUP(newlist, str);
-	else {
+	if (flatlist == NULL) {
+		newsize = strlen(str) + 2;
+		XMALLOC(newlist, newsize * sizeof(char));
+		snprintf(newlist, newsize, "\n%s", str);
+	} else {
 		if (str == NULL)
 			return flatlist;
 
 		newsize = strlen(str) + strlen(flatlist) + 2;
 		newlist = realloc(flatlist, newsize * sizeof(char));
-		strlcat(newlist, " ", newsize);
+		strlcat(newlist, noflag ? "\n" : " ", newsize);
 		strlcat(newlist, str, newsize);
 	}
 

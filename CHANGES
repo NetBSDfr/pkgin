@@ -1,3 +1,8 @@
+20150124
+	When -n is provided to pkgin ar, rm, in, fug, packages list is shown
+	as one package per line so it is easier to read (feature proposed
+	by gdt@ in GitHub issue #41)
+
 20150122
 	Fixed GitHub issue #33: clean database when repository removed
 
