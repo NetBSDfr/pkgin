@@ -1,7 +1,7 @@
 /* $Id: actions.c,v 1.56 2013/01/31 19:49:34 stacktic Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation

@@ -1,7 +1,7 @@
 /* $Id: main.c,v 1.33 2012/12/02 13:33:28 stacktic Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation

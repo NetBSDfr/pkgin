@@ -1,7 +1,7 @@
 /* $Id: pkg_infos.c,v 1.2 2012/04/15 20:58:23 imilh Exp $ */
 
 /*
- * Copyright (c) 2012 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation

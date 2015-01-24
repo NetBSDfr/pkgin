@@ -1,7 +1,7 @@
 /* $Id: pkgin.h,v 1.41 2012/11/17 14:04:13 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011, 2012 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation

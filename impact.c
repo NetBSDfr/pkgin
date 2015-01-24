@@ -1,7 +1,7 @@
 /* $Id: impact.c,v 1.17 2012/04/29 10:15:44 imilh Exp $ */
 
 /*
- * Copyright (c) 2009, 2010, 2011, 2012, 2013 The NetBSD Foundation, Inc.
+ * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
  *
  * This code is derived from software contributed to The NetBSD Foundation
