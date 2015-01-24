@@ -119,7 +119,8 @@ pkgin_autoremove()
 		/* we want this action to be confirmed */
 		yesflag = 0;
 
-		printf(MSG_AUTOREMOVE_WARNING);
+		if (noflag == 0)
+			printf(MSG_AUTOREMOVE_WARNING);
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
 
 		if (check_yesno(DEFAULT_YES)) {
