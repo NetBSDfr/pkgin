@@ -517,8 +517,8 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 #endif
 		}
 
-		printf(MSG_PKGS_TO_INSTALL, installnum, toinstall,
-			h_fsize, h_psize);
+		printf(MSG_PKGS_TO_INSTALL, installnum, h_fsize, h_psize,
+				toinstall);
 		printf("\n");
 
 		if (unmet_reqs != NULL)/* there were unmet requirements */

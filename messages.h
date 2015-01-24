@@ -78,7 +78,7 @@
 #define MSG_PKGS_TO_REMOVE "%d packages to be removed: %s\n"
 #define MSG_NOTHING_TO_UPGRADE "nothing to upgrade.\n"
 #define MSG_PKGS_TO_INSTALL \
-	"%d packages to be installed: %s\n\n=> %s to download, %s to install\n"
+	"%d packages to be installed (%s to download, %s to install):\n%s\n"
 #define MSG_RM_UPGRADE_PKGS "removing packages to be upgraded...\n"
 #define MSG_NOTHING_TO_INSTALL "nothing to install.\n"
 #define MSG_EMPTY_LOCAL_PKGLIST "empty local package list."
