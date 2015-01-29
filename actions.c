@@ -650,6 +650,7 @@ pkgin_remove(char **pkgargs)
 
 	if (todelete != NULL) {
 		printf(MSG_PKGS_TO_DELETE, deletenum, todelete);
+		printf("\n");
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(removehead);
 
