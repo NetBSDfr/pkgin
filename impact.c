@@ -361,6 +361,7 @@ pkg_impact(char **pkgargs, int *rc)
 		 */
 		if ((pkgname = unique_pkg(*ppkgargs, REMOTE_PKG)) == NULL) {
 			/* package is not available on the repository */
+			printf("\r\n");
 			printf(MSG_PKG_NOT_AVAIL, *ppkgargs);
 			*rc = EXIT_FAILURE;
 			continue;

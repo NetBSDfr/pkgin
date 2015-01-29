@@ -1,3 +1,7 @@
+20150128
+	Added preferred.conf support
+	man page now based on ronn <http://rtomayko.github.io/ronn/ronn.1.html>
+
 20150124
 	When -n is provided to pkgin ar, rm, in, fug, packages list is shown
 	as one package per line so it is easier to read (feature proposed

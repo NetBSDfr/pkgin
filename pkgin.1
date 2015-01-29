@@ -1,292 +1,332 @@
-.\" $NetBSD: pkgin.1,v 1.0 2009/04/24 18:49:08 guigui2 Exp $
-.\"
-.\" View with following command: nroff -msafer -man pkgin.1 | more
-.\"
-.Dd Dec 6, 2009
-.Dt PKGIN 1
-.Os
-.Sh NAME
-.Nm pkgin
-.Nd A tool to manage pkgsrc binary packages.
-.Sh SYNOPSIS
-.Nm
-.Op Fl dfFhPvVyn
-.Op Fl l Ar limit_chars
-.Op Fl c Ar chroot_path
-.Op Fl t Ar log_file
-.Ar command
-.Op Ar package Ar ...
-.Sh DESCRIPTION
-The
-.Nm
-command is aimed at being an apt /
-yum like tool for managing pkgsrc binary packages.
-It relies on
-.Xr pkg_summary 5
-for installation, removal and upgrade
-of packages and associated dependencies, using a remote repository.
-.Sh OPTIONS
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "PKGIN" "1" "January 2015" "" ""
+.
+.SH "NAME"
+\fBpkgin\fR \- A tool to manage pkgsrc binary packages\.
+.
+.SH "SYNOPSIS"
+\fBpkgin\fR [\fB\-dfFhpPvVyn\fR] [\fB\-l\fR \fIlimit_chars\fR] [\fB\-c\fR \fIchroot_path\fR] [\fB\-t\fR \fIlog_file\fR] \fIcommand\fR [package \.\.\.]
+.
+.SH "DESCRIPTION"
+The pkgin command is aimed at being an apt / yum like tool for managing pkgsrc binary packages\. It relies on pkg_summary(5) for installation, removal and upgrade of packages and associated dependencies, using a remote repository\.
+.
+.SH "OPTIONS"
 The following command line arguments are supported:
-.Bl -tag -width indent
-.It Fl d
-Download only.
-.It Fl f
-Force database update.
-.It Fl F
-Force package reinstall.
-.It Fl h
-Displays help for the command.
-.It Fl P
-Displays packages versions instead of globs (sd, sfd, srd)
-.It Fl v
-Displays
-.Nm
-version
-.It Fl V
-Be verbose when (un)installing
-.It Fl y
-Assumes "yes" as default answer, except for autoremove.
-.It Fl n
-Assumes "no" as default answer.
-.It Fl l Ar limit_chars
-Only include the packages with the specified status flags.
-.It Fl c Ar chroot_path
+.
+.TP
+\fB\-c\fR chroot_path
 Enable chrooting pkgin in the given repository
-.It Fl t Ar log_file
+.
+.TP
+\fB\-d\fR
+Download only
+.
+.TP
+\fB\-f\fR
+Force database update
+.
+.TP
+\fB\-F\fR
+Force package reinstall
+.
+.TP
+\fB\-h\fR
+Displays help for the command
+.
+.TP
+\fB\-l\fR \fIlimit_chars\fR
+Only include the packages with the specified \fISTATUS FLAGS\fR
+.
+.TP
+\fB\-n\fR
+Assumes "no" as default answer and print results of actions to be taken line per line
+.
+.TP
+\fB\-p\fR
+Displays results in a parsable format
+.
+.TP
+\fB\-P\fR
+Displays packages versions instead of globs (sd, sfd, srd)
+.
+.TP
+\fB\-t\fR log_file
 Logs package browsing (dependencies and impact) to a given log file
-.El
-.Pp
-The
-.Nm
-utility provides several commands:
-.Pp
-.Bl -tag -width Fl -compact
-.It Cm autoremove
-Automatically removes orphan dependencies.
-.It Cm avail
-Lists all packages available in the repository.
-.It Cm clean
-Delete downloaded packages from the cache directory.
-.It Cm export
-Export the list of non-autoremovable packages to stdout
-(one category/package by line)
-.It Cm full-upgrade
-Upgrade all packages to their newer versions present in the
-repository.
-.It Cm import Ar file
-Import a list of packages to be installed from file
-(one category/package by line)
-.It Cm install Ar package Ar ...
-Performs installation or upgrade of
-.Ar package .
-If more than one packages are specified on the command-line, all
-will be installed (or upgraded).
-.It Cm keep Ar package Ar ...
-Marks
-.Ar package
-as "non auto-removable".
-This means that a package that has, for instance, been compiled
-manually from pkgsrc, can't be removed through a
-.Nm
-upgrade.
-More than one package can be specified on the command-line, to mark
-several packages as non-removable in a single command.
-.It Cm list
-Lists all packages installed locally on a system. If the
-.Ar l
-modifier is added to this command, show only packages matching the status flag.
-.It Cm pkg-content Ar package
-Show remote
-.Ar package
-content.
-.It Cm pkg-descr Ar package
-Show remote
-.Ar package
-long-description.
-.It Cm pkg-build-defs Ar package
-Show remote
-.Ar package
-build definitions.
-.It Cm provides Ar package
-Shows what a
-.Ar package
-provides to others
-.It Cm remove Ar package Ar ...
-Removes
-.Ar package
-as well as all packages depending on it.
-When more than one package are specified, they will all be uninstalled.
-By default, it will prompt you to confirm before package removals.
-.It Cm requires Ar package
-Shows what a
-.Ar package
-requires from others
-.Ar packages .
-.It Cm search Ar pattern
-Performs a regular expression search for a pattern in the repository.
-.It Cm show-deps 
+.
+.TP
+\fB\-v\fR
+Displays pkgin version
+.
+.TP
+\fB\-V\fR
+Be verbose when (un)installing
+.
+.TP
+\fB\-y\fR
+Assumes "yes" as default answer, except for autoremove
+.
+.P
+The pkgin utility provides several commands:
+.
+.TP
+\fBautoremove\fR
+Automatically removes orphan dependencies\.
+.
+.TP
+\fBavail\fR
+Lists all packages available in the repository\.
+.
+.TP
+\fBclean\fR
+Delete downloaded packages from the cache directory\.
+.
+.TP
+\fBexport\fR
+Export the list of non\-autoremovable packages to stdout (one category/package by line)
+.
+.TP
+\fBfull\-upgrade\fR
+Upgrade all packages to their newer versions present in the repository\.
+.
+.TP
+\fBimport\fR \fIfile\fR
+Import a list of packages to be installed from file (one category/package by line)
+.
+.TP
+\fBinstall\fR \fIpackage\fR \.\.\.
+Performs installation or upgrade of package\. If more than one packages are specified on the command\-line, all will be installed (or upgraded)\.
+.
+.TP
+\fBkeep\fR \fIpackage\fR \.\.\.
+Marks package as "non auto\-removable"\. This means that a package that has, for instance, been compiled manually from pkgsrc, can\'t be removed through a pkgin upgrade\. More than one package can be specified on the command\-line, to mark several packages as non\-removable in a single command\.
+.
+.TP
+\fBlist\fR
+Lists all packages installed locally on a system\. If the l modifier is added to this command, show only packages matching the status flag\.
+.
+.TP
+\fBpkg\-content\fR \fIpackage\fR
+Show remote package content\.
+.
+.TP
+\fBpkg\-descr\fR \fIpackage\fR
+Show remote package long\-description\.
+.
+.TP
+\fBpkg\-build\-defs\fR \fIpackage\fR
+Show remote package build definitions\.
+.
+.TP
+\fBprovides\fR \fIpackage\fR
+Shows what a package provides to others
+.
+.TP
+\fBremove\fR \fIpackage\fR \.\.\.
+Removes package as well as all packages depending on it\. When more than one package are specified, they will all be uninstalled\. By default, it will prompt you to confirm before package removals\.
+.
+.TP
+\fBrequires\fR \fIpackage\fR
+Shows what a package requires from others packages\.
+.
+.TP
+\fBsearch\fR \fIpattern\fR
+Performs a regular expression search for a pattern in the repository\.
+.
+.TP
+\fBshow\-deps\fR
 Displays all direct dependencies
-.It Cm show-full-deps Ar package
+.
+.TP
+\fBshow\-full\-deps\fR \fIpackage\fR
 Displays all direct dependencies recursively
-.It Cm show-rev-deps Ar package 
-Displays all reverse direct dependencies for 
-.Ar package .
-If more than one package is specified,
-.Nm
-will show recursively reverse direct dependencies for all packages
-on the command-line.
-.It Cm show-category Ar category
-Show packages belonging to
-.Ar category .
-.It Cm show-pkg-category Ar package
-Show
-.Ar package
-category.
-.It Cm show-keep
-Display "non auto-removable" packages.
-.It Cm show-no-keep
-Display "auto-removable" packages.
-.It Cm unkeep Ar package Ar ...
-Marks
-.Ar package
-as "auto-removable".
-If no other package depends on it, it will be removed when using
-the autoremove modifier.
-.It Cm update
-Creates and populates the initial database of locally installed packages
-and available packages (from the remote
-.Xr pkg_summary 5
-list).                                                                          
-This is done automatically when                                                 
-.Nm                                                                             
-is first used,                                                                  
-when the system package database has been modified.                             
-or when                                                                         
-.Nm                                                                             
-is upgraded to a new database version.
-.It Cm upgrade
-Upgrade keepable packages to their newer versions present in the
-repository.
-If the installed dependencies match the listed needed dependencies,
-don't upgrade them.
-.El
-.Sh STATUS FLAGS
-.Pp
-When using the
-.Ar l
-flag along with the
-.Ar list
-command, the following status flag must be set:
-.Bl -tag -width indent
-.It Li =
-The installed version of the package is current.
-.It Li \&<
-The installed version of the package is older than the current version.
-.It Li \&>
-The installed version of the package is newer than the current version.
-.El
-.Sh ENVIRONMENT
-.Bl -tag -width indent
-.It Ev PKG_REPOS
-The 
-.Ev PKG_REPOS
-environment variable can be pointed to a suitable repository or a list of
-space separated repositories in order to override
-.Pa  /usr/pkg/etc/pkgin/repositories.conf
-.El
-.Sh FILES
-.Bl -tag -width Ds -compact
-.It /usr/pkg/etc/pkgin/repositories.conf
-This file contains a list of repository URIs that
-.Nm
-will use.
-It may contain macros
-.Va $arch
-to define the machine hardware platform
-and
-.Va $osrelease
-to define the release version for the operating system
-(as reported by
-.Xr uname 3 ) .
-.El
-.Sh EXAMPLES
-.Pp
+.
+.TP
+\fBshow\-rev\-deps\fR \fIpackage\fR
+Displays all reverse direct dependencies for package\. If more than one package is specified, pkgin will show recursively reverse direct dependencies for all packages on the command\-line\.
+.
+.TP
+\fBshow\-category\fR \fIcategory\fR
+Show packages belonging to category\.
+.
+.TP
+\fBshow\-pkg\-category\fR \fIpackage\fR
+Show package category\.
+.
+.TP
+\fBshow\-keep\fR
+Display "non auto\-removable" packages\.
+.
+.TP
+\fBshow\-no\-keep\fR
+Display "auto\-removable" packages\.
+.
+.TP
+\fBunkeep\fR \fIpackage\fR \.\.\.
+Marks package as "auto\-removable"\. If no other package depends on it, it will be removed when using the autoremove modifier\.
+.
+.TP
+\fBupdate\fR
+Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list)\. This is done automatically when pkgin is first used, when the system package database has been modified\. or when pkgin is upgraded to a new database version\.
+.
+.TP
+\fBupgrade\fR
+Upgrade keepable packages to their newer versions present in the repository\. If the installed dependencies match the listed needed dependencies, don\'t upgrade them\.
+.
+.SH "STATUS FLAGS"
+When using the \fB\-l\fR flag along with the list command, the following status flag must be set:
+.
+.TP
+\fB=\fR
+The installed version of the package is current\.
+.
+.TP
+\fB<\fR
+The installed version of the package is older than the current version\.
+.
+.TP
+\fB>\fR
+The installed version of the package is newer than the current version\.
+.
+.SH "ENVIRONMENT"
+\fBPKG_REPOS\fR The \fBPKG_REPOS\fR environment variable can be pointed to a suitable repository or a list of space separated repositories in order to override </usr/pkg/etc/pkgin/repositories\.conf>
+.
+.SH "FILES"
+</usr/pkg/etc/pkgin/repositories\.conf> This file contains a list of repository URIs that pkgin will use\. It may contain macros \fB$arch\fR to define the machine hardware platform and \fB$osrelease\fR to define the release version for the operating system (as reported by uname(3))\.
+.
+.SH "EXAMPLES"
 Setup the initial database:
-.Bd -literal
-# echo ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All > /usr/pkg/etc/pkgin/repositories.conf
+.
+.IP "" 4
+.
+.nf
+
+# echo ftp://ftp\.fr\.netbsd\.org/pub/pkgsrc/packages/NetBSD/i386/5\.0/All > /usr/pkg/etc/pkgin/repositories\.conf
 # pkgin update
-processing local summary...
+processing local summary\.\.\.
 updating database: 100%
-downloading pkg_summary.bz2: 100%
-processing remote summary (ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All)...
+downloading pkg_summary\.bz2: 100%
+processing remote summary (ftp://ftp\.fr\.netbsd\.org/pub/pkgsrc/packages/NetBSD/i386/5\.0/All)\.\.\.
 updating database: 100%
-.Ed
-.Pp
-Listing all packages available in the repository: 
-.Bd -literal
+.
+.fi
+.
+.IP "" 0
+.
+.P
+Listing all packages available in the repository:
+.
+.IP "" 4
+.
+.nf
+
 # pkgin avail | more
-[...]
-autoconf-2.63        Generates automatic source code configuration scripts
-aumix-gtk-2.8nb3     Set mix levels (ncurses and GTK+ 2.0 interfaces)
-aumix-2.8nb7         Set mix levels (ncurses interface only)
-august-0.63b         Simple Tk-based HTML editor
-audacity-1.2.6nb3    Audio editor
-[...]
-.Ed
-.Pp
+[\.\.\.]
+autoconf\-2\.63        Generates automatic source code configuration scripts
+aumix\-gtk\-2\.8nb3     Set mix levels (ncurses and GTK+ 2\.0 interfaces)
+aumix\-2\.8nb7         Set mix levels (ncurses interface only)
+august\-0\.63b         Simple Tk\-based HTML editor
+audacity\-1\.2\.6nb3    Audio editor
+[\.\.\.]
+.
+.fi
+.
+.IP "" 0
+.
+.P
 Install packages and their dependencies:
-.Bd -literal
+.
+.IP "" 4
+.
+.nf
+
 # pkgin install links eterm
-nothing to upgrade.
-11 packages to be installed: tiff-3.8.2nb4 png-1.2.35 libungif-4.1.4nb1 libltdl-1.5.26 jpeg-6bnb4 pcre-7.8 perl-5.10.0nb5 libast-0.6.1nb3 imlib2-1.4.2nb1 links-2.2nb1 eterm-0.9.4nb1 (25M to download, 64M to install)
+nothing to upgrade\.
+11 packages to be installed: tiff\-3\.8\.2nb4 png\-1\.2\.35 libungif\-4\.1\.4nb1 libltdl\-1\.5\.26 jpeg\-6bnb4 pcre\-7\.8 perl\-5\.10\.0nb5 libast\-0\.6\.1nb3 imlib2\-1\.4\.2nb1 links\-2\.2nb1 eterm\-0\.9\.4nb1 (25M to download, 64M to install)
 proceed ? [y/N]
-.Ed
-.Pp
+.
+.fi
+.
+.IP "" 0
+.
+.P
 Remove packages and their reverse dependencies:
-.Bd -literal
+.
+.IP "" 4
+.
+.nf
+
 # pkgin remove links eterm
-2 packages to delete: links-2.2nb1 eterm-0.9.4nb1
+2 packages to delete: links\-2\.2nb1 eterm\-0\.9\.4nb1
 proceed ? [y/N]
-.Ed
-.Pp
+.
+.fi
+.
+.IP "" 0
+.
+.P
 Remove orphan dependencies:
-.Bd -literal
+.
+.IP "" 4
+.
+.nf
+
 # pkgin autoremove
-in order to remove packages from the autoremove list, flag those with the -k modifier.
-9 packages to be autoremoved: libast-0.6.1nb3 pcre-7.8 imlib2-1.4.2nb1 tiff-3.8.2nb4 png-1.2.35 libungif-4.1.4nb1 libltdl-1.5.26 perl-5.10.0nb5 jpeg-6bnb4
+in order to remove packages from the autoremove list, flag those with the \-k modifier\.
+9 packages to be autoremoved: libast\-0\.6\.1nb3 pcre\-7\.8 imlib2\-1\.4\.2nb1 tiff\-3\.8\.2nb4 png\-1\.2\.35 libungif\-4\.1\.4nb1 libltdl\-1\.5\.26 perl\-5\.10\.0nb5 jpeg\-6bnb4
 proceed ? [y/N]
-.Ed
-.Pp
-.Sh SEE ALSO
-.Xr pkg_add 1 ,
-.Xr pkg_info 1 ,
-.Xr pkg_summary 5 ,
-.Xr pkgsrc 7
-.Sh AUTHORS
-.Bl -tag -width indent -compact
-.It Emile Do "iMil" Dc Heitor
-Initial work and ongoing development.
-.El
-.Sh CONTRIBUTORS
-.Bl -tag -width indent -compact
-.It Jeremy C. Reed
-Testing and refinements.
-.It Arnaud Ysmal
+.
+.fi
+.
+.IP "" 0
+.
+.SH "SEE ALSO"
+pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
+.
+.SH "AUTHORS"
+.
+.TP
+Emile \fBiMil\fR Heitor
+Initial work and ongoing development\.
+.
+.SH "CONTRIBUTORS"
+.
+.TP
+Jeremy C\. Reed
+Testing and refinements\.
+.
+.TP
+Arnaud Ysmal
 Tests and patches
-.It Claude Charpentier
-SQLite schema, and SQL queries debugging.
-.It Guillaume Lasmayous
+.
+.TP
+Claude Charpentier
+SQLite schema, and SQL queries debugging\.
+.
+.TP
+Guillaume Lasmayous
 Man page
-.It Antonio Huete Jimenez
+.
+.TP
+Antonio Huete Jimenez
 DragonFly port
-.It Min Sik Kim
+.
+.TP
+Min Sik Kim
 Darwin port
-.It Filip Hajny
+.
+.TP
+Filip Hajny
 SunOS port
-.It Baptiste Daroussin
+.
+.TP
+Baptiste Daroussin
 FreeBSD port and patches
-.It Gautam B.T.
+.
+.TP
+Gautam B\.T\.
 MINIX port
-.El
-.Sh BUGS
-We're hunting them.
+.
+.SH "BUGS"
+We\'re hunting them\.

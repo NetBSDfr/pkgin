@@ -63,7 +63,7 @@
 #define PKGIN_CONF PKG_SYSCONFDIR"/pkgin"
 #define REPOS_FILE "repositories.conf"
 #define PKG_INSTALL "pkg_install"
-#define PREFERRED_PKGS "preferred.conf"
+#define PREF_FILE "preferred.conf"
 
 #define LOCAL_SUMMARY 0
 #define REMOTE_SUMMARY 1
@@ -200,6 +200,12 @@ typedef struct Plistnumbered {
 	int		P_count;
 } Plistnumbered;
 
+typedef struct Preflist {
+	char		*pkg;
+	char		*vers;
+	char		*glob;
+} Preflist;
+
 extern uint8_t 		force_update;
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
@@ -217,6 +223,7 @@ extern char		pkg_dbdir[];
 extern Plisthead	r_plisthead;
 extern Plisthead	l_plisthead;
 extern FILE		*tracefp;
+extern Preflist		**preflist;
 
 /* download.c*/
 Dlfile		*download_file(char *, time_t *);
@@ -291,5 +298,9 @@ void		show_prov_req(const char *, const char *);
 void		show_pkg_info(char, char *);
 /* pkgindb.c */
 void		get_pkg_dbdir(void);
+/* preferred.c */
+void		load_preferred(void);
+void		free_preferred(void);
+char		*is_preferred(char *);
 
 #endif

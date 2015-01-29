@@ -165,6 +165,9 @@ main(int argc, char *argv[])
 	if (updb_all)
 		(void)update_db(REMOTE_SUMMARY, NULL);
 
+	/* load preferred file */
+	load_preferred();
+
 	/* find command index */
 	ch = find_cmd(argv[0]);
 
@@ -299,6 +302,7 @@ main(int argc, char *argv[])
 
 	XFREE(env_repos);
 	XFREE(pkg_repos);
+	free_preferred();
 
 	return rc;
 }

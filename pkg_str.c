@@ -42,11 +42,9 @@
 char *
 unique_pkg(const char *pkgname, const char *dest)
 {
-	char	*u_pkg;
-	Plistnumbered *plist;
-	Pkglist *best_match, *current;
-
-	best_match = NULL;
+	char		*u_pkg = NULL, *pref;
+	Plistnumbered	*plist;
+	Pkglist		*best_match = NULL, *current;
 
 	if (exact_pkgfmt(pkgname))
 		plist = rec_pkglist(UNIQUE_EXACT_PKG, dest, pkgname);
@@ -56,14 +54,33 @@ unique_pkg(const char *pkgname, const char *dest)
 	if (plist == NULL)
 		return NULL;
 
-	best_match = SLIST_FIRST(plist->P_Plisthead);
-	SLIST_FOREACH(current, plist->P_Plisthead, next) 
-		if (dewey_cmp(current->version, DEWEY_GT, best_match->version))
-			best_match = current;
+	SLIST_FOREACH(current, plist->P_Plisthead, next) {
+		/*
+		 * there was a preferred.conf file and the current package
+		 * matches one of the lines
+		 */
+		if ((pref = is_preferred(current->full)) != NULL &&
+			!pkg_match(pref, current->full))
+				/*
+				 * package is listed in preferred.conf but the
+				 * version doesn't match requirement
+				 */
+				continue;
 
-	XSTRDUP(u_pkg, best_match->full);
+		/* first result */
+		if (best_match == NULL)
+			best_match = current;
+		else
+			if (dewey_cmp(current->version, DEWEY_GT,
+					best_match->version))
+				best_match = current;
+	}
+
+	if (best_match != NULL)
+		XSTRDUP(u_pkg, best_match->full);
 	free_pkglist(&plist->P_Plisthead, LIST);
 	free(plist);
+	/* u_pkg might be NULL if a version is preferred and not available */
 	return u_pkg;
 }
 
