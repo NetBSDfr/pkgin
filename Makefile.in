@@ -113,10 +113,12 @@ beforeinstall:
 .endif
 
 install:
-	test -f ${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf ||	\
+.for _conf in repositories.conf preferred.conf
+	test -f ${DESTDIR}${PKG_SYSCONFDIR}/pkgin/${_conf} ||		\
 		${INSTALL_FILE} -o ${BINOWN} -g ${BINGRP} -m 644	\
-			repositories.conf				\
-		${DESTDIR}${PKG_SYSCONFDIR}/pkgin/repositories.conf
+			${_conf}
+		${DESTDIR}${PKG_SYSCONFDIR}/pkgin/${_conf}
+.endfor
 
 deinstall:
 	rm -f ${DESTDIR}${BINDIR}/pkgin

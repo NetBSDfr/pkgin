@@ -103,7 +103,7 @@ is_preferred(char *fullpkg)
 				preflist[i]->vers[0] == '=')
 				preflist[i]->vers[0] = '-';
 
-			printf("\r\n%s preferred version is %s",
+			printf("\r%s preferred version is %-20s",
 					preflist[i]->pkg,
 					preflist[i]->glob);
 
