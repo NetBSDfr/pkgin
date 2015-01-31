@@ -7,7 +7,7 @@ pkgin(1) -- A tool to manage pkgsrc binary packages.
 
 ## DESCRIPTION
 
-The pkgin command is aimed at being an apt / yum like tool for managing pkgsrc binary packages. It relies on pkg_summary(5) for installation, removal and upgrade of packages and associated dependencies, using a remote repository.
+The pkgin command is aimed at being an `apt` / `yum` like tool for managing pkgsrc(7) binary packages. It relies on pkg_summary(5) for installation, removal and upgrade of packages and associated dependencies, using a remote repository.
 
 ## OPTIONS
 
@@ -52,10 +52,10 @@ The following command line arguments are supported:
   * `-y`:
     Assumes "yes" as default answer, except for autoremove
 
-The pkgin utility provides several commands:
+The `pkgin` utility provides several commands:
 
   * `autoremove`:
-    Automatically removes orphan dependencies.
+    Automatically removes orphan dependencies. When used with the `-n` flag, it can be used to show packages that are possibly not necessary.
 
   * `avail`:
     Lists all packages available in the repository.
@@ -76,7 +76,7 @@ The pkgin utility provides several commands:
     Performs installation or upgrade of package. If more than one packages are specified on the command-line, all will be installed (or upgraded).
 
   * `keep` <package> ...:
-    Marks package as "non auto-removable". This means that a package that has, for instance, been compiled manually from pkgsrc, can't be removed through a pkgin upgrade. More than one package can be specified on the command-line, to mark several packages as non-removable in a single command.
+    Marks package as "non auto-removable". A `keep`-able package is equivalent to a non-automatic package in pkgsrc(7) terminology.
 
   * `list`:
     Lists all packages installed locally on a system. If the l modifier is added to this command, show only packages matching the status flag.
@@ -124,13 +124,13 @@ The pkgin utility provides several commands:
     Display "auto-removable" packages.
 
   * `unkeep` <package> ...:
-    Marks package as "auto-removable". If no other package depends on it, it will be removed when using the autoremove modifier.
+    Marks package as "auto-removable". If no other package depends on it, it will be removed when using the autoremove modifier. It is equivalent to an `automatic` package in pkgsrc(7) terminology.
 
   * `update`:
     Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list). This is done automatically when pkgin is first used, when the system package database has been modified. or when pkgin is upgraded to a new database version.
 
   * `upgrade`:
-    Upgrade keepable packages to their newer versions present in the repository. If the installed dependencies match the listed needed dependencies, don't upgrade them.
+    Upgrade keepable packages to their newer versions present in the repository. If the installed dependencies match the listed needed dependencies, don't upgrade them. For a complete packages upgrade, `full-upgrade` shall be used.
 
 ## STATUS FLAGS
 
@@ -152,12 +152,37 @@ When using the `-l` flag along with the list command, the following status flag 
 
 ## FILES
 
-</usr/pkg/etc/pkgin/repositories.conf>
+  * _/usr/pkg/etc/pkgin/repositories.conf_:
     This file contains a list of repository URIs that pkgin will use. It may contain macros `$arch` to define the machine hardware platform and `$osrelease` to define the release version for the operating system (as reported by uname(3)).
+
+  * _/usr/pkg/etc/pkgin/preferred.conf_:
+    This files contains a list of preferences regarding packages to be installed or upgraded. Each line defines a package preference taking the form of a simple glob(3).
+
+    Example:
+
+    mysql-server<5.6<br />
+    php>=5.4<br />
+    autoconf=2.69.*
+
+
+  * _/var/db/pkgin_:
+    This directory contains component needed by `pkgin` at run time. This directory can be completely emptied if `pkgin`'s database gets corrupted, `pkgin` will rebuild its database based on `pkg_install`'s `PKG_DB` next time it is called.
+
+  * _/var/db/pkgin/cache_:
+    This directory contains the packages downloaded by `pkgin`. It is safe to empty it regularily using `pkgin clean` or simply `rm -rf /var/db/pkgin/cache`.
+
+  * _/var/db/pkgin/pkgin.db_:
+    <pkgin.db> is the main `pkgin` `SQLite` database. This format have been chosen in order to parse, query, match and order packages using the `SQL` language thus making packages list manipulation a lot easier.
+
+  * _/var/db/pkgin/pkg_install-err.log_:
+    This file contains errors and warnings given by pkg_add(1) and pkg_delete(2), which are the tools called by `pkgin` to manipulate packages themselves.
+
+  * _/var/db/pkgin/sql.log_:
+    This file contains `SQL` errors that might have occurred on a `SQLite` query. Mainly for debugging purposes. 
 
 ## EXAMPLES
 
-Setup the initial database:
+    Setup the initial database:
 
     # echo ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All > /usr/pkg/etc/pkgin/repositories.conf
     # pkgin update
@@ -167,7 +192,7 @@ Setup the initial database:
     processing remote summary (ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All)...
     updating database: 100%
 
-Listing all packages available in the repository:
+    Listing all packages available in the repository:
 
     # pkgin avail | more
     [...]
@@ -178,20 +203,20 @@ Listing all packages available in the repository:
     audacity-1.2.6nb3    Audio editor
     [...]
 
-Install packages and their dependencies:
+    Install packages and their dependencies:
 
     # pkgin install links eterm
     nothing to upgrade.
     11 packages to be installed: tiff-3.8.2nb4 png-1.2.35 libungif-4.1.4nb1 libltdl-1.5.26 jpeg-6bnb4 pcre-7.8 perl-5.10.0nb5 libast-0.6.1nb3 imlib2-1.4.2nb1 links-2.2nb1 eterm-0.9.4nb1 (25M to download, 64M to install)
     proceed ? [y/N]
 
-Remove packages and their reverse dependencies:
+    Remove packages and their reverse dependencies:
 
     # pkgin remove links eterm
     2 packages to delete: links-2.2nb1 eterm-0.9.4nb1
     proceed ? [y/N]
 
-Remove orphan dependencies:
+    Remove orphan dependencies:
 
     # pkgin autoremove
     in order to remove packages from the autoremove list, flag those with the -k modifier.
@@ -227,6 +252,8 @@ pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
     FreeBSD port and patches
   * Gautam B.T.:
     MINIX port
+  * Thomas `wiz` Klausner:
+    Testing and refinements.
 
 ## BUGS
 
