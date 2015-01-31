@@ -1,4 +1,5 @@
 20150128
+	0.8.0
 	Added preferred.conf support
 	man page now based on ronn <http://rtomayko.github.io/ronn/ronn.1.html>
 
