@@ -10,7 +10,7 @@
 \fBpkgin\fR [\fB\-dfFhpPvVyn\fR] [\fB\-l\fR \fIlimit_chars\fR] [\fB\-c\fR \fIchroot_path\fR] [\fB\-t\fR \fIlog_file\fR] \fIcommand\fR [package \.\.\.]
 .
 .SH "DESCRIPTION"
-The pkgin command is aimed at being an apt / yum like tool for managing pkgsrc binary packages\. It relies on pkg_summary(5) for installation, removal and upgrade of packages and associated dependencies, using a remote repository\.
+The pkgin command is aimed at being an \fBapt\fR / \fByum\fR like tool for managing pkgsrc(7) binary packages\. It relies on pkg_summary(5) for installation, removal and upgrade of packages and associated dependencies, using a remote repository\.
 .
 .SH "OPTIONS"
 The following command line arguments are supported:
@@ -68,11 +68,11 @@ Be verbose when (un)installing
 Assumes "yes" as default answer, except for autoremove
 .
 .P
-The pkgin utility provides several commands:
+The \fBpkgin\fR utility provides several commands:
 .
 .TP
 \fBautoremove\fR
-Automatically removes orphan dependencies\.
+Automatically removes orphan dependencies\. When used with the \fB\-n\fR flag, it can be used to show packages that are possibly not necessary\.
 .
 .TP
 \fBavail\fR
@@ -100,7 +100,7 @@ Performs installation or upgrade of package\. If more than one packages are spec
 .
 .TP
 \fBkeep\fR \fIpackage\fR \.\.\.
-Marks package as "non auto\-removable"\. This means that a package that has, for instance, been compiled manually from pkgsrc, can\'t be removed through a pkgin upgrade\. More than one package can be specified on the command\-line, to mark several packages as non\-removable in a single command\.
+Marks package as "non auto\-removable"\. A \fBkeep\fR\-able package is equivalent to a non\-automatic package in pkgsrc(7) terminology\.
 .
 .TP
 \fBlist\fR
@@ -164,7 +164,7 @@ Display "auto\-removable" packages\.
 .
 .TP
 \fBunkeep\fR \fIpackage\fR \.\.\.
-Marks package as "auto\-removable"\. If no other package depends on it, it will be removed when using the autoremove modifier\.
+Marks package as "auto\-removable"\. If no other package depends on it, it will be removed when using the autoremove modifier\. It is equivalent to an \fBautomatic\fR package in pkgsrc(7) terminology\.
 .
 .TP
 \fBupdate\fR
@@ -172,7 +172,7 @@ Creates and populates the initial database of locally installed packages and ava
 .
 .TP
 \fBupgrade\fR
-Upgrade keepable packages to their newer versions present in the repository\. If the installed dependencies match the listed needed dependencies, don\'t upgrade them\.
+Upgrade keepable packages to their newer versions present in the repository\. If the installed dependencies match the listed needed dependencies, don\'t upgrade them\. For a complete packages upgrade, \fBfull\-upgrade\fR shall be used\.
 .
 .SH "STATUS FLAGS"
 When using the \fB\-l\fR flag along with the list command, the following status flag must be set:
@@ -193,14 +193,52 @@ The installed version of the package is newer than the current version\.
 \fBPKG_REPOS\fR The \fBPKG_REPOS\fR environment variable can be pointed to a suitable repository or a list of space separated repositories in order to override </usr/pkg/etc/pkgin/repositories\.conf>
 .
 .SH "FILES"
-</usr/pkg/etc/pkgin/repositories\.conf> This file contains a list of repository URIs that pkgin will use\. It may contain macros \fB$arch\fR to define the machine hardware platform and \fB$osrelease\fR to define the release version for the operating system (as reported by uname(3))\.
+.
+.TP
+\fI/usr/pkg/etc/pkgin/repositories\.conf\fR
+This file contains a list of repository URIs that pkgin will use\. It may contain macros \fB$arch\fR to define the machine hardware platform and \fB$osrelease\fR to define the release version for the operating system (as reported by uname(3))\.
+.
+.TP
+\fI/usr/pkg/etc/pkgin/preferred\.conf\fR
+This files contains a list of preferences regarding packages to be installed or upgraded\. Each line defines a package preference taking the form of a simple glob(3)\.
+.
+.IP
+Example:
+.
+.IP
+mysql\-server<5\.6
+.
+.br
+php>=5\.4
+.
+.br
+autoconf=2\.69\.*
+.
+.TP
+\fI/var/db/pkgin\fR
+This directory contains component needed by \fBpkgin\fR at run time\. This directory can be completely emptied if \fBpkgin\fR\'s database gets corrupted, \fBpkgin\fR will rebuild its database based on \fBpkg_install\fR\'s \fBPKG_DB\fR next time it is called\.
+.
+.TP
+\fI/var/db/pkgin/cache\fR
+This directory contains the packages downloaded by \fBpkgin\fR\. It is safe to empty it regularily using \fBpkgin clean\fR or simply \fBrm \-rf /var/db/pkgin/cache\fR\.
+.
+.TP
+\fI/var/db/pkgin/pkgin\.db\fR
+<pkgin\.db> is the main \fBpkgin\fR \fBSQLite\fR database\. This format have been chosen in order to parse, query, match and order packages using the \fBSQL\fR language thus making packages list manipulation a lot easier\.
+.
+.TP
+\fI/var/db/pkgin/pkg_install\-err\.log\fR
+This file contains errors and warnings given by pkg_add(1) and pkg_delete(2), which are the tools called by \fBpkgin\fR to manipulate packages themselves\.
+.
+.TP
+\fI/var/db/pkgin/sql\.log\fR
+This file contains \fBSQL\fR errors that might have occurred on a \fBSQLite\fR query\. Mainly for debugging purposes\.
 .
 .SH "EXAMPLES"
-Setup the initial database:
-.
-.IP "" 4
 .
 .nf
+
+Setup the initial database:
 
 # echo ftp://ftp\.fr\.netbsd\.org/pub/pkgsrc/packages/NetBSD/i386/5\.0/All > /usr/pkg/etc/pkgin/repositories\.conf
 # pkgin update
@@ -209,17 +247,8 @@ updating database: 100%
 downloading pkg_summary\.bz2: 100%
 processing remote summary (ftp://ftp\.fr\.netbsd\.org/pub/pkgsrc/packages/NetBSD/i386/5\.0/All)\.\.\.
 updating database: 100%
-.
-.fi
-.
-.IP "" 0
-.
-.P
+
 Listing all packages available in the repository:
-.
-.IP "" 4
-.
-.nf
 
 # pkgin avail | more
 [\.\.\.]
@@ -229,48 +258,21 @@ aumix\-2\.8nb7         Set mix levels (ncurses interface only)
 august\-0\.63b         Simple Tk\-based HTML editor
 audacity\-1\.2\.6nb3    Audio editor
 [\.\.\.]
-.
-.fi
-.
-.IP "" 0
-.
-.P
+
 Install packages and their dependencies:
-.
-.IP "" 4
-.
-.nf
 
 # pkgin install links eterm
 nothing to upgrade\.
 11 packages to be installed: tiff\-3\.8\.2nb4 png\-1\.2\.35 libungif\-4\.1\.4nb1 libltdl\-1\.5\.26 jpeg\-6bnb4 pcre\-7\.8 perl\-5\.10\.0nb5 libast\-0\.6\.1nb3 imlib2\-1\.4\.2nb1 links\-2\.2nb1 eterm\-0\.9\.4nb1 (25M to download, 64M to install)
 proceed ? [y/N]
-.
-.fi
-.
-.IP "" 0
-.
-.P
+
 Remove packages and their reverse dependencies:
-.
-.IP "" 4
-.
-.nf
 
 # pkgin remove links eterm
 2 packages to delete: links\-2\.2nb1 eterm\-0\.9\.4nb1
 proceed ? [y/N]
-.
-.fi
-.
-.IP "" 0
-.
-.P
+
 Remove orphan dependencies:
-.
-.IP "" 4
-.
-.nf
 
 # pkgin autoremove
 in order to remove packages from the autoremove list, flag those with the \-k modifier\.
@@ -278,8 +280,6 @@ in order to remove packages from the autoremove list, flag those with the \-k mo
 proceed ? [y/N]
 .
 .fi
-.
-.IP "" 0
 .
 .SH "SEE ALSO"
 pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
@@ -327,6 +327,10 @@ FreeBSD port and patches
 .TP
 Gautam B\.T\.
 MINIX port
+.
+.TP
+Thomas \fBwiz\fR Klausner
+Testing and refinements\.
 .
 .SH "BUGS"
 We\'re hunting them\.
