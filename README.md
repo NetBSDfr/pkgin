@@ -139,10 +139,10 @@ When using the `-l` flag along with the list command, the following status flag 
   * `=`:
     The installed version of the package is current.
 
-  * `&lt;`:
+  * `<`:
     The installed version of the package is older than the current version.
 
-  * `&gt;`:
+  * `>`:
     The installed version of the package is newer than the current version.
 
 ## ENVIRONMENT
@@ -160,8 +160,8 @@ When using the `-l` flag along with the list command, the following status flag 
 
     Example:
 
-    mysql-server&lt;5.6&lt;br /&gt;
-    php&gt;=5.4&lt;br /&gt;
+    mysql-server<5.6<br />
+    php>=5.4<br />
     autoconf=2.69.*
 
 
@@ -184,7 +184,7 @@ When using the `-l` flag along with the list command, the following status flag 
 
     Setup the initial database:
 
-    # echo ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All &gt; /usr/pkg/etc/pkgin/repositories.conf
+    # echo ftp://ftp.fr.netbsd.org/pub/pkgsrc/packages/NetBSD/i386/5.0/All > /usr/pkg/etc/pkgin/repositories.conf
     # pkgin update
     processing local summary...
     updating database: 100%
