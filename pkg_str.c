@@ -42,6 +42,7 @@
 char *
 unique_pkg(const char *pkgname, const char *dest)
 {
+	uint8_t		ispref = 0;
 	char		*u_pkg = NULL, *pref;
 	Plistnumbered	*plist;
 	Pkglist		*best_match = NULL, *current;
@@ -60,12 +61,15 @@ unique_pkg(const char *pkgname, const char *dest)
 		 * matches one of the lines
 		 */
 		if ((pref = is_preferred(current->full)) != NULL &&
-			!pkg_match(pref, current->full))
+			!pkg_match(pref, current->full)) {
 				/*
 				 * package is listed in preferred.conf but the
 				 * version doesn't match requirement
 				 */
-				continue;
+			printf(MSG_PKG_IS_PREFERRED, current->full, pref);
+			ispref = 1;
+			continue;
+		}
 
 		/* first result */
 		if (best_match == NULL)
@@ -80,6 +84,11 @@ unique_pkg(const char *pkgname, const char *dest)
 		XSTRDUP(u_pkg, best_match->full);
 	free_pkglist(&plist->P_Plisthead, LIST);
 	free(plist);
+
+	/* chosen package has no installation candidate */
+	if (u_pkg == NULL && !ispref)
+		printf(MSG_PKG_NOT_INSTALLABLE, pkgname);
+
 	/* u_pkg might be NULL if a version is preferred and not available */
 	return u_pkg;
 }
