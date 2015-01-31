@@ -172,7 +172,7 @@ When using the `-l` flag along with the list command, the following status flag 
     This directory contains the packages downloaded by `pkgin`. It is safe to empty it regularily using `pkgin clean` or simply `rm -rf /var/db/pkgin/cache`.
 
   * _/var/db/pkgin/pkgin.db_:
-    <pkgin.db> is the main `pkgin` `SQLite` database. This format have been chosen in order to parse, query, match and order packages using the `SQL` language thus making packages list manipulation a lot easier.
+    _pkgin.db_ is the main `pkgin` `SQLite` database. This format have been chosen in order to parse, query, match and order packages using the `SQL` language thus making packages list manipulation a lot easier.
 
   * _/var/db/pkgin/pkg_install-err.log_:
     This file contains errors and warnings given by pkg_add(1) and pkg_delete(2), which are the tools called by `pkgin` to manipulate packages themselves.
