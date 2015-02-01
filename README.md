@@ -3,7 +3,7 @@ pkgin(1) -- A tool to manage pkgsrc binary packages.
 
 ## SYNOPSIS
 
-`pkgin` [`-dfFhpPvVyn`] [`-l` &lt;limit_chars&gt;] [`-c` &lt;chroot_path&gt;] [`-t` &lt;log_file&gt;] &lt;command&gt; [package ...]
+`pkgin` [`-dfFhpPvVyn`] [`-l` _limit_chars_] [`-c` _chroot_path_] [`-t` _log_file_] _command_ [package ...]
 
 ## DESCRIPTION
 
@@ -28,7 +28,7 @@ The following command line arguments are supported:
   * `-h`:
     Displays help for the command
 
-  * `-l` &lt;limit_chars&gt;:
+  * `-l` _limit_chars_:
     Only include the packages with the specified [STATUS FLAGS][]
 
   * `-n`:
@@ -69,52 +69,52 @@ The `pkgin` utility provides several commands:
   * `full-upgrade`:
     Upgrade all packages to their newer versions present in the repository.
 
-  * `import` &lt;file&gt;:
+  * `import` _file_:
     Import a list of packages to be installed from file (one category/package by line)
 
-  * `install` &lt;package&gt; ...:
+  * `install` _package_ ...:
     Performs installation or upgrade of package. If more than one packages are specified on the command-line, all will be installed (or upgraded).
 
-  * `keep` &lt;package&gt; ...:
+  * `keep` _package_ ...:
     Marks package as "non auto-removable". A `keep`-able package is equivalent to a non-automatic package in pkgsrc(7) terminology.
 
   * `list`:
     Lists all packages installed locally on a system. If the l modifier is added to this command, show only packages matching the status flag.
 
-  * `pkg-content` &lt;package&gt;:
+  * `pkg-content` _package_:
     Show remote package content.
 
-  * `pkg-descr` &lt;package&gt;:
+  * `pkg-descr` _package_:
     Show remote package long-description.
 
-  * `pkg-build-defs` &lt;package&gt;:
+  * `pkg-build-defs` _package_:
     Show remote package build definitions.
 
-  * `provides` &lt;package&gt;:
+  * `provides` _package_:
     Shows what a package provides to others
 
-  * `remove` &lt;package&gt; ...:
+  * `remove` _package_ ...:
     Removes package as well as all packages depending on it. When more than one package are specified, they will all be uninstalled. By default, it will prompt you to confirm before package removals.
 
-  * `requires` &lt;package&gt;:
+  * `requires` _package_:
     Shows what a package requires from others packages.
 
-  * `search` &lt;pattern&gt;:
+  * `search` _pattern_:
     Performs a regular expression search for a pattern in the repository.
 
   * `show-deps`:
     Displays all direct dependencies
 
-  * `show-full-deps` &lt;package&gt;:
+  * `show-full-deps` _package_:
     Displays all direct dependencies recursively
 
-  * `show-rev-deps` &lt;package&gt;:
+  * `show-rev-deps` _package_:
     Displays all reverse direct dependencies for package. If more than one package is specified, pkgin will show recursively reverse direct dependencies for all packages on the command-line.
 
-  * `show-category` &lt;category&gt;:
+  * `show-category` _category_:
     Show packages belonging to category.
 
-  * `show-pkg-category` &lt;package&gt;:
+  * `show-pkg-category` _package_:
     Show package category.
 
   * `show-keep`:
@@ -123,7 +123,7 @@ The `pkgin` utility provides several commands:
   * `show-no-keep`:
     Display "auto-removable" packages.
 
-  * `unkeep` &lt;package&gt; ...:
+  * `unkeep` _package_ ...:
     Marks package as "auto-removable". If no other package depends on it, it will be removed when using the autoremove modifier. It is equivalent to an `automatic` package in pkgsrc(7) terminology.
 
   * `update`:
@@ -148,7 +148,7 @@ When using the `-l` flag along with the list command, the following status flag 
 ## ENVIRONMENT
 
 `PKG_REPOS`
-    The `PKG_REPOS` environment variable can be pointed to a suitable repository or a list of space separated repositories in order to override &lt;/usr/pkg/etc/pkgin/repositories.conf&gt;
+    The `PKG_REPOS` environment variable can be pointed to a suitable repository or a list of space separated repositories in order to override _/usr/pkg/etc/pkgin/repositories.conf_
 
 ## FILES
 
@@ -160,8 +160,8 @@ When using the `-l` flag along with the list command, the following status flag 
 
     Example:
 
-    mysql-server<5.6<br />
-    php>=5.4<br />
+    mysql-server<5.6  
+    php>=5.4  
     autoconf=2.69.*
 
 
