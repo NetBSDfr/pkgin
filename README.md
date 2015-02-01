@@ -160,8 +160,8 @@ When using the `-l` flag along with the list command, the following status flag 
 
     Example:
 
-    mysql-server<5.6  
-    php>=5.4  
+    mysql-server&lt;5.6  
+    php&gt;=5.4  
     autoconf=2.69.*
 
 
