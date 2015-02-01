@@ -100,9 +100,9 @@ pkgindb_create.h:
 	@SEDCMD=@SED@ ./mkpkgindb.sh > pkgindb_create.h
 
 README.md:
-	@SED@ -E -e 's/<([^\ \<]+)>/_\1_/g'	\
-		-e 's/<([=0-9].+)+/\&lt;\1/g'	\
-		-e 's/>([=0-9].+)+/\&gt;\1/g' >README.md
+	@SED@ -E -e 's/<([^\ \<]+)>/_\1_/g'				\
+		-e 's/<([=0-9].+)/\&lt;\1/g;s/>([=0-9].+)/\&gt;\1/g'	\
+		pkgin.1.ronn >README.md
 
 afterinstall:	configinstall
 
