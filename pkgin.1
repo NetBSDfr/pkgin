@@ -95,8 +95,14 @@ Upgrade all packages to their newer versions present in the repository\.
 Import a list of packages to be installed from file (one category/package by line)
 .
 .TP
-\fBinstall\fR \fIpackage\fR \.\.\.
-Performs installation or upgrade of package\. If more than one packages are specified on the command\-line, all will be installed (or upgraded)\.
+\fBinstall\fR \fIpackage|glob\fR \.\.\.
+Performs installation or upgrade of package\. If more than one packages are specified on the command\-line, all will be installed (or upgraded)\. Instead of a package name, a glob can be specified in order to install specific versions\.
+.
+.IP
+Exemple:
+.
+.IP
+pkgin in \'mysql\-server>5\.1<5\.6\'
 .
 .TP
 \fBkeep\fR \fIpackage\fR \.\.\.
