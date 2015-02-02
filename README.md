@@ -72,8 +72,12 @@ The `pkgin` utility provides several commands:
   * `import` _file_:
     Import a list of packages to be installed from file (one category/package by line)
 
-  * `install` _package_ ...:
-    Performs installation or upgrade of package. If more than one packages are specified on the command-line, all will be installed (or upgraded).
+  * `install` _package|glob_ ...:
+    Performs installation or upgrade of package. If more than one packages are specified on the command-line, all will be installed (or upgraded). Instead of a package name, a glob can be specified in order to install specific versions.
+
+    Exemple:
+
+    pkgin in 'mysql-server&gt;5.1&lt;5.6'  
 
   * `keep` _package_ ...:
     Marks package as "non auto-removable". A `keep`-able package is equivalent to a non-automatic package in pkgsrc(7) terminology.
