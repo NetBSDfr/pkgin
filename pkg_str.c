@@ -43,7 +43,7 @@ char *
 unique_pkg(const char *pkgname, const char *dest)
 {
 	uint8_t		ispref = 0;
-	char		*u_pkg = NULL, *pref;
+	char		*u_pkg = NULL;
 	Plistnumbered	*plist;
 	Pkglist		*best_match = NULL, *current;
 
@@ -60,13 +60,11 @@ unique_pkg(const char *pkgname, const char *dest)
 		 * there was a preferred.conf file and the current package
 		 * matches one of the lines
 		 */
-		if ((pref = is_preferred(current->full)) != NULL &&
-			!pkg_match(pref, current->full)) {
-				/*
-				 * package is listed in preferred.conf but the
-				 * version doesn't match requirement
-				 */
-			printf(MSG_PKG_IS_PREFERRED, current->full, pref);
+		if (chk_preferred(current->full)) {
+			/*
+			 * package is listed in preferred.conf but the
+			 * version doesn't match requirement
+			 */
 			ispref = 1;
 			continue;
 		}

@@ -187,7 +187,10 @@
 		pdst = safe_snprintf(size, fmt);	\
 		XFREE(dst);				\
 		dst = pdst;				\
-} while (/* CONSTCOND */ 0)
+	} while (/* CONSTCOND */ 0)
+
+#define KVPRINTF(k, v)				\
+	printf("key: %s, val: %s\n", k, v);	\
 
 #ifndef SLIST_FOREACH_MUTABLE /* from DragonFlyBSD */
 #define SLIST_FOREACH_MUTABLE(var, head, field, tvar)		\

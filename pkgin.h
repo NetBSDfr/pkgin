@@ -302,5 +302,6 @@ void		get_pkg_dbdir(void);
 void		load_preferred(void);
 void		free_preferred(void);
 char		*is_preferred(char *);
+uint8_t		chk_preferred(char *);
 
 #endif

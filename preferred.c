@@ -108,3 +108,19 @@ is_preferred(char *fullpkg)
 
 	return NULL;
 }
+
+uint8_t
+chk_preferred(char *match)
+{
+	char *pref;
+
+	if ((pref = is_preferred(match)) != NULL && !pkg_match(pref, match)) {
+			/*
+			 * package is listed in preferred.conf but the
+			 * version doesn't match requirement
+			 */
+		printf(MSG_PKG_IS_PREFERRED, match, pref);
+		return 1;
+	}
+	return 0;
+}
