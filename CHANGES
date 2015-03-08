@@ -1,3 +1,6 @@
+20150308
+	bugfix: added missing dash before ffu
+
 20150128
 	0.8.0
 	Added preferred.conf support
