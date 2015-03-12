@@ -75,9 +75,9 @@ dep_present(Plisthead *impacthead, char *depname)
 static void
 break_depends(Plisthead *impacthead)
 {
-	Pkglist	   	*rmimpact, *pimpact;
+	Pkglist		*rmimpact, *pimpact;
 	Plisthead	*rdphead, *fdphead;
-	Pkglist	   	*rdp, *fdp;
+	Pkglist		*rdp, *fdp;
 	char		rpkg[BUFSIZ], pkgname[BUFSIZ];
 	int		dep_break, exists;
 

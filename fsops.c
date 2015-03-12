@@ -156,7 +156,7 @@ read_repos()
 
 		if (trimcr(buf) < 0) /* strip newline */
 			continue;
-	
+
 		curlen = strlen(buf) + 2; /* ' ' + '\0' */
 		repolen += curlen;
 

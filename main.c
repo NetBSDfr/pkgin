@@ -42,14 +42,14 @@ static void	ginto(void);
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0;
 char		lslimit = '\0';
-FILE  		*tracefp = NULL;
+FILE		*tracefp = NULL;
 
 int
 main(int argc, char *argv[])
 {
 	uint8_t		updb_all;
 	uint8_t		do_inst = DO_INST; /* by default, do install packages */
-	int 		ch, i, rc = EXIT_SUCCESS;
+	int		ch, i, rc = EXIT_SUCCESS;
 	struct stat	sb;
 	const char	*chrootpath = NULL;
 

@@ -181,7 +181,7 @@ void
 pkg_keep(int type, char **pkgargs)
 {
 	Pkglist	*pkglist = NULL;
-	char   	**pkeep, *pkgname, query[BUFSIZ];
+	char	**pkeep, *pkgname, query[BUFSIZ];
 
 	if (!have_enough_rights())
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);

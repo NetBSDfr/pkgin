@@ -184,11 +184,11 @@ typedef struct Pkglist {
 	SLIST_ENTRY(Pkglist) next;
 } Pkglist;
 
-#define comment  	p_un.comment
+#define comment		p_un.comment
 #define computed	p_un.deptree.computed
 #define keep		p_un.deptree.keep
 #define old		p_un.impact.old
-#define action   	p_un.impact.action
+#define action		p_un.impact.action
 
 #define LIST		0
 #define DEPTREE		1
@@ -206,8 +206,8 @@ typedef struct Preflist {
 	char		*glob;
 } Preflist;
 
-extern uint8_t 		force_update;
-extern uint8_t 		force_reinstall;
+extern uint8_t		force_update;
+extern uint8_t		force_reinstall;
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
 extern uint8_t		pi_upgrade; /* pkg_install upgrade */
@@ -217,7 +217,7 @@ extern int		l_plistcounter;
 extern char		*env_repos;
 extern char		**pkg_repos;
 extern const char	*pkgin_cache;
-extern char  		lslimit;
+extern char		lslimit;
 extern char		pkgtools_flags[];
 extern char		pkg_dbdir[];
 extern Plisthead	r_plisthead;
@@ -237,7 +237,7 @@ int		pdb_rec_depends(void *, int, char **, char **);
 /* depends.c */
 int		show_direct_depends(const char *);
 int		show_full_dep_tree(const char *, const char *, const char *);
-void 		full_dep_tree(const char *, const char *, Plisthead *);
+void		full_dep_tree(const char *, const char *, Plisthead *);
 /* pkglist.c */
 void		init_global_pkglists(void);
 void		free_global_pkglists(void);
@@ -267,7 +267,7 @@ Plisthead	*order_install(Plisthead *);
 uint8_t		pkg_in_impact(Plisthead *, char *);
 Plisthead	*pkg_impact(char **, int *);
 /* autoremove.c */
-void	   	pkgin_autoremove(void);
+void		pkgin_autoremove(void);
 void		show_pkg_keep(void);
 void		show_pkg_nokeep(void);
 int			pkg_is_kept(Pkglist *);
@@ -279,7 +279,7 @@ void		clean_cache(void);
 void		create_dirs(void);
 char		*read_repos(void);
 /* pkg_str.c */
-char	   	*unique_pkg(const char *, const char *);
+char		*unique_pkg(const char *, const char *);
 Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 uint8_t		non_trivial_glob(char *);
 char		*get_pkgname_from_depend(char *);

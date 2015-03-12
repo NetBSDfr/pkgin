@@ -225,7 +225,7 @@ pkg_db_mtime()
 {
 	uint8_t		pkgdb_present = 1;
 	struct stat	st;
-	time_t	   	db_mtime = 0;
+	time_t		db_mtime = 0;
 	char		str_mtime[20], buf[BUFSIZ];
 
 	/* no pkgdb file */

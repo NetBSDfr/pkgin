@@ -157,7 +157,7 @@ static void
 progress(char c)
 {
 	const char	*alnum = ALNUM;
-	int 		i, alnumlen = strlen(alnum);
+	int		i, alnumlen = strlen(alnum);
 	float		percent = 0;
 
 	for (i = 0; i < alnumlen; i++)
@@ -650,7 +650,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 		if (repolen == strlen(argv[0]) &&
 			strncmp(repos[i], argv[0], repolen) == 0 &&
 					!force_update)
-		   	return PDB_OK;
+			return PDB_OK;
 	}
 	/* did not find argv[0] (db repository) in pkg_repos */
 	printf(MSG_CLEANING_DB_FROM_REPO, argv[0]);

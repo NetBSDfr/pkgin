@@ -249,7 +249,7 @@ setfmt(char *sfmt, char *pfmt)
 void
 list_pkgs(const char *pkgquery, int lstype)
 {
-	Pkglist	   	*plist;
+	Pkglist		*plist;
 	Plistnumbered	*plisthead;
 	int		rc;
 	char		pkgstatus, outpkg[BUFSIZ];
@@ -308,7 +308,7 @@ list_pkgs(const char *pkgquery, int lstype)
 int
 search_pkg(const char *pattern)
 {
-	Pkglist	   	*plist;
+	Pkglist		*plist;
 	regex_t		re;
 	int		rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
@@ -371,7 +371,7 @@ search_pkg(const char *pattern)
 void
 show_category(char *category)
 {
-	Pkglist	   	*plist;
+	Pkglist		*plist;
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
 		if (strcmp(plist->category, category) == 0)
@@ -382,7 +382,7 @@ show_category(char *category)
 void
 show_pkg_category(char *pkgname)
 {
-	Pkglist	   	*plist;
+	Pkglist		*plist;
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
 		if (strcmp(plist->name, pkgname) == 0)

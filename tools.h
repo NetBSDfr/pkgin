@@ -173,7 +173,7 @@
 		XSTRCAT(dst, src);	\
 	} while (/* CONSTCOND */ 0)
 
-#define XFREE(elm)		   	\
+#define XFREE(elm)			\
 	do {				\
 		if (elm != NULL) {	\
 			free(elm);	\
@@ -181,7 +181,7 @@
 		}			\
 	} while (/* CONSTCOND */ 0)
 
-#define XSNPRINTF(dst, size, fmt...) 			\
+#define XSNPRINTF(dst, size, fmt...)			\
 	do {						\
 		char *pdst;				\
 		pdst = safe_snprintf(size, fmt);	\

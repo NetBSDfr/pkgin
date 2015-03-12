@@ -61,7 +61,7 @@ static int
 pkg_download(Plisthead *installhead)
 {
 	FILE		*fp;
-	Pkglist  	*pinstall;
+	Pkglist		*pinstall;
 	struct stat	st;
 	Dlfile		*dlpkg;
 	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
@@ -81,7 +81,7 @@ pkg_download(Plisthead *installhead)
 			printf(MSG_EMPTY_FILE_SIZE, pinstall->depend);
 
 		/* already fully downloaded */
-		if (stat(pkg_fs, &st) == 0 && 
+		if (stat(pkg_fs, &st) == 0 &&
 			st.st_size == pinstall->file_size &&
 			pinstall->file_size != 0 )
 			continue;
@@ -189,7 +189,7 @@ log_tag(const char *fmt, ...)
 
 	fprintf(err_fp, "---%s: %s", now_date, log_action);
 	fflush(err_fp);
-	
+
 }
 #endif
 
@@ -198,7 +198,7 @@ open_pi_log(void)
 {
 	if (!verbosity && !said) {
 		if ((err_fp = fopen(PKG_INSTALL_ERR_LOG, "a")) == NULL) {
- 			fprintf(stderr, MSG_CANT_OPEN_WRITE,
+			fprintf(stderr, MSG_CANT_OPEN_WRITE,
 				PKG_INSTALL_ERR_LOG);
 			exit(EXIT_FAILURE);
 		}
@@ -581,7 +581,7 @@ pkgin_remove(char **pkgargs)
 	int		deletenum = 0, exists, rc = EXIT_SUCCESS;
 	Plisthead	*pdphead, *removehead;
 	Pkglist		*pdp;
-	char   		*todelete = NULL, **ppkgargs, *pkgname, *ppkg;
+	char		*todelete = NULL, **ppkgargs, *pkgname, *ppkg;
 
 	pdphead = init_head();
 
@@ -669,8 +669,8 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
-/* 
- * find closest match for packages to be upgraded 
+/*
+ * find closest match for packages to be upgraded
  * if we have mysql-5.1.10 installed prefer mysql-5.1.20 over
  * mysql-5.5.20 when upgrading
  */
