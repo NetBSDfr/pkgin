@@ -57,7 +57,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 		}
 
 		pdp->level = 1;
-		
+
 		if (pdp->depend == NULL)
 			/* there's something wrong with database's record,
 			 * probably a mistaken dependency
@@ -73,7 +73,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 		full_dep_tree(depname, LOCAL_REVERSE_DEPS, lvldeptree);
 
 		if (!SLIST_EMPTY(lvldeptree))
-		    	pdp->level = SLIST_FIRST(lvldeptree)->level + 1;
+			pdp->level = SLIST_FIRST(lvldeptree)->level + 1;
 
 		XFREE(depname);
 		free_pkglist(&lvldeptree, DEPTREE);
@@ -150,7 +150,7 @@ upgrade_dep_deepness(Plisthead *impacthead)
 		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, lvldeptree);
 
 		if (!SLIST_EMPTY(lvldeptree))
-		    	pimpact->level = SLIST_FIRST(lvldeptree)->level + 1;
+			pimpact->level = SLIST_FIRST(lvldeptree)->level + 1;
 
 #if 0
 		printf("%s (%s) -> %d\n",
@@ -267,7 +267,7 @@ order_install(Plisthead *impacthead)
 					pi_upgrade = 1;
 					/* backup pdp for future insertion */
 					pi_dp = pdp;
-				} else					
+				} else
 					SLIST_INSERT_HEAD(ordtreehead,
 						pdp, next);
 			} /* action == TOINSTALL */

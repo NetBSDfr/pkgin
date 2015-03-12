@@ -125,7 +125,7 @@ exact_pkgfmt(const char *pkgname)
 	return isdigit((int)*p);
 }
 
-/* 
+/*
  * check whether or not pkgarg is a full pkgname (foo-1.0)
  */
 char *

@@ -39,7 +39,7 @@ show_pkg_info(char flag, char *pkgname)
 	char	cmd[BUFSIZ], *fullpkgname, **prepos, **out_cmd = NULL;
 
 	if ((fullpkgname = unique_pkg(pkgname, REMOTE_PKG)) == NULL)
-		errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL, pkgname);	
+		errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL, pkgname);
 
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
@@ -49,7 +49,7 @@ show_pkg_info(char flag, char *pkgname)
 		if ((out_cmd = exec_list(cmd, NULL)) == NULL)
 			continue;
 
-		for (i = 0; out_cmd[i] != NULL; i++)	
+		for (i = 0; out_cmd[i] != NULL; i++)
 			printf("%s\n", out_cmd[i]);
 
 		free_list(out_cmd);

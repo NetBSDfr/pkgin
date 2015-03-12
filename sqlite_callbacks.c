@@ -32,13 +32,13 @@
 
 #include "pkgin.h"
 
-/** 
+/**
  * SQLite callback, record package list
  */
 int
 pdb_rec_list(void *param, int argc, char **argv, char **colname)
 {
-	Pkglist	   	*plist;
+	Pkglist		*plist;
 	Plistnumbered	*plisthead = (Plistnumbered *)param;
 	int		i;
 

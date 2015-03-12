@@ -326,7 +326,7 @@ check_yesno(uint8_t default_answer)
 		printf(MSG_PROCEED_NO);
 
 	c = tolower(getchar());
-	
+
 	/* default answer */
 	if (c == answer[default_answer].charval || c == '\n')
 		r = answer[default_answer].numval;
@@ -336,7 +336,7 @@ check_yesno(uint8_t default_answer)
 	/* bad key was given, default to No */
 	else
 		r = ANSW_NO;
-	
+
 	/* avoid residual char */
 	if (c != '\n')
 		while((c = getchar()) != '\n' && c != EOF)
