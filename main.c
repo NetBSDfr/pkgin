@@ -40,7 +40,7 @@ static void	missing_param(int, int, const char *);
 static void	ginto(void);
 
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
-uint8_t		verbosity = 0, package_version = 0, parsable = 0;
+uint8_t		verbosity = 0, package_version = 0, parsable = 0, pflag = 0;
 char		lslimit = '\0';
 FILE  		*tracefp = NULL;
 
@@ -106,6 +106,7 @@ main(int argc, char *argv[])
 			break;
 		case 'p':
 			parsable = 1;
+			pflag = 1;
 			break;
 		default:
 			usage();
