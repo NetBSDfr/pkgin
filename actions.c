@@ -63,8 +63,8 @@ pkg_download(Plisthead *installhead)
 	FILE		*fp;
 	Pkglist  	*pinstall;
 	struct stat	st;
-	Dlfile		*dlpkg;
 	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
+	ssize_t		size;
 	int		rc = EXIT_SUCCESS;
 
 	printf(MSG_DOWNLOAD_PKGS);
@@ -109,7 +109,7 @@ pkg_download(Plisthead *installhead)
 		if ((fp = fopen(pkg_fs, "w")) == NULL)
 			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
 
-		if ((dlpkg = download_file(pkg_url, NULL)) == NULL) {
+		if ((size = download_pkg(pkg_url, fp)) == -1) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
 			rc = EXIT_FAILURE;
 
@@ -122,12 +122,11 @@ pkg_download(Plisthead *installhead)
 			continue;
 		}
 
-		fwrite(dlpkg->buf, dlpkg->size, 1, fp);
 		fclose(fp);
-
-		XFREE(dlpkg->buf);
-		XFREE(dlpkg);
-
+		if (size != pinstall->file_size) {
+			(void)unlink(pkg_fs);
+			errx(EXIT_FAILURE, "download mismatch: %s", pkg_fs);
+		}
 	} /* download loop */
 
 	return rc;
