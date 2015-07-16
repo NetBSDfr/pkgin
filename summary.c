@@ -129,9 +129,7 @@ fetch_summary(char *cur_repo)
 	if (file == NULL)
 		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf);
 
-	snprintf(buf, BUFSIZ,
-			UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
-	pkgindb_doquery(buf, NULL, NULL);
+	pkgindb_dovaquery(UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
 
 	if (decompress_buffer(file->buf, file->size, &decompressed_input,
 			&decompressed_len)) {
@@ -533,25 +531,19 @@ delete_remote_tbl(struct Summary sum, char *repo)
 	 */
 	/* (REMOTE[LOCAL)_PKG is first -> skip */
 	for (arr = &(sum.tbl_name) + 1; *arr != NULL; ++arr) {
-		snprintf(buf, BUFSIZ, DELETE_REMOTE,
-			*arr, *arr, *arr, *arr, *arr, repo, *arr);
-		pkgindb_doquery(buf, NULL, NULL);
+		pkgindb_dovaquery(DELETE_REMOTE, *arr, *arr, *arr, *arr, *arr,
+		    repo, *arr);
 	}
 
-	snprintf(buf, BUFSIZ,
-		"DELETE FROM REMOTE_PKG WHERE REPOSITORY = '%s';", repo);
-	pkgindb_doquery(buf, NULL, NULL);
+	pkgindb_dovaquery(DELETE_REMOTE_PKG_REPO, repo);
 }
 
 static void
 handle_manually_installed(Pkglist *pkglist, char **pkgkeep)
 {
-	char buf[BUFSIZ];
-
 	/* update local db with manually installed packages */
 	if (pkgkeep == NULL && !is_automatic_installed(pkglist->full)) {
-		snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-		pkgindb_doquery(buf, NULL, NULL);
+		pkgindb_dovaquery(KEEP_PKG, pkglist->name);
 		return;
 	}
 	mark_as_automatic_installed(pkglist->full, 1);
@@ -592,8 +584,7 @@ update_localdb(char **pkgkeep)
 	/* restore keep-list */
 	if (keeplisthead != NULL) {
 		SLIST_FOREACH(pkglist, keeplisthead->P_Plisthead, next) {
-			snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-			pkgindb_doquery(buf, NULL, NULL);
+			pkgindb_dovaquery(KEEP_PKG, pkglist->name);
 		}
 		free_pkglist(&keeplisthead->P_Plisthead, LIST);
 		free(keeplisthead);
@@ -621,8 +612,7 @@ update_localdb(char **pkgkeep)
 		 */
 		SLIST_FOREACH(pkglist, &l_plisthead, next) {
 			if (!is_automatic_installed(pkglist->full)) {
-				snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-				pkgindb_doquery(buf, NULL, NULL);
+				pkgindb_dovaquery(KEEP_PKG, pkglist->name);
 			}
 		}
 	}
@@ -657,9 +647,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 
 	delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[0]);
 
-	snprintf(query, BUFSIZ,
-		"DELETE FROM REPOS WHERE REPO_URL = \'%s\';", argv[0]);
-	pkgindb_doquery(query, NULL, NULL);
+	pkgindb_dovaquery(DELETE_REPO_URL, argv[0]);
 
 	/* force pkg_summary reload for available repository */
 	force_fetch = 1;
@@ -687,8 +675,8 @@ update_remotedb(void)
 		 */
 		if (!cleaned) {
 			/* delete unused repositories */
-			pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
-				pdb_clean_remote, NULL);
+			pkgindb_doquery(SELECT_REPO_URLS, pdb_clean_remote,
+			    NULL);
 			cleaned = 1;
 		}
 
@@ -766,7 +754,6 @@ static int
 cmp_repo_list(void *param, int argc, char **argv, char **colname)
 {
 	int	i, j, match;
-	char	query[BUFSIZ];
 
 	if (argv == NULL)
 		return PDB_ERR; /* no repo yet? */
@@ -778,13 +765,8 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 				match = 1;
 		if (match == 0) {
 			printf(MSG_CLEANING_DB_FROM_REPO, argv[i]);
-			snprintf(query, BUFSIZ,
-			"DELETE FROM REPOS WHERE REPO_URL = '%s';", argv[i]);
-			pkgindb_doquery(query, NULL, NULL);
-			snprintf(query, BUFSIZ,
-			"DELETE FROM REMOTE_PKG WHERE REPOSITORY = '%s';",
-			argv[i]);
-			pkgindb_doquery(query, NULL, NULL);
+			pkgindb_dovaquery(DELETE_REPO_URL, argv[i]);
+			pkgindb_dovaquery(DELETE_REMOTE_PKG_REPO, argv[i]);
 
 			force_fetch = 1;
 		}
@@ -796,5 +778,5 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 void
 chk_repo_list()
 {
-	pkgindb_doquery("SELECT REPO_URL FROM REPOS;", cmp_repo_list, NULL);
+	pkgindb_doquery(SELECT_REPO_URLS, cmp_repo_list, NULL);
 }

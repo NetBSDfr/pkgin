@@ -129,6 +129,25 @@ pdb_get_value(void *param, int argc, char **argv, char **colname)
 }
 
 int
+pkgindb_dovaquery(const char *fmt, ...)
+{
+	char *buf;
+	va_list ap;
+	int rv;
+
+	va_start(ap, fmt);
+	if (vasprintf(&buf, fmt, ap) == -1)
+		errx(EXIT_FAILURE, "Insufficient memory to construct query");
+	va_end(ap);
+
+	rv = pkgindb_doquery(buf, NULL, NULL);
+
+	free(buf);
+
+	return rv;
+}
+
+int
 pkgindb_doquery(const char *query,
 	int (*pkgindb_callback)(void *, int, char **, char **), void *param)
 {
