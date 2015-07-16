@@ -441,9 +441,6 @@ lpkg_t *alloc_lpkg(const char *);
 lpkg_t *find_on_queue(lpkg_head_t *, const char *);
 void    free_lpkg(lpkg_t *);
 
-/* Extract input if compressed to NUL terminated buffer (not counted) */
-int decompress_buffer(const char *, size_t, char **, size_t *);
-
 /* Parse NUL terminated inputed, argument is strlen of the input */
 struct pkg_vulnerabilities *parse_pkg_vulnerabilities(const char *, size_t, int);
 /* Read pkg_vulnerabilities from file */

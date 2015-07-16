@@ -8,8 +8,7 @@ SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
 		pkgindb_queries.c pkg_str.c sqlite_callbacks.c selection.c \
 		pkg_check.c pkg_infos.c preferred.c
 # included from libinstall
-SRCS+=		automatic.c decompress.c dewey.c fexec.c global.c \
-		opattern.c pkgdb.c var.c
+SRCS+=		automatic.c dewey.c fexec.c global.c opattern.c pkgdb.c var.c
 # included from openssh
 SRCS+=		progressmeter.c
 
