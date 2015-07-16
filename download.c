@@ -36,9 +36,8 @@
 int	fetchTimeout = 15; /* wait 15 seconds before timeout */
 size_t	fetch_buffer = 1024;
 
-/* if db_mtime == NULL, we're downloading a package, pkg_summary otherwise */
 Dlfile *
-download_file(char *str_url, time_t *db_mtime)
+download_summary(char *str_url, time_t *db_mtime)
 {
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile			*file;
@@ -56,28 +55,23 @@ download_file(char *str_url, time_t *db_mtime)
 		return NULL;
 
 	if (st.size == -1) { /* could not obtain file size */
-		if (db_mtime != NULL) /* we're downloading pkg_summary */
-			*db_mtime = 0; /* not -1, don't force update */
+		*db_mtime = 0; /* not -1, don't force update */
+		return NULL;
+	}
+
+	if (st.mtime <= *db_mtime) {
+		/*
+		 * -1 used to identify return type,
+		 * local summary up-to-date
+		 */
+		*db_mtime = -1;
+
+		fetchIO_close(f);
 
 		return NULL;
 	}
 
-	if (db_mtime != NULL) {
-		if (st.mtime <= *db_mtime) {
-			/*
-			 * -1 used to identify return type,
-			 * local summary up-to-date
-			 */
-			*db_mtime = -1;
-
-			fetchIO_close(f);
-
-			return NULL;
-		}
-
-		*db_mtime = st.mtime;
-	}
-
+	*db_mtime = st.mtime;
 
 	if ((p = strrchr(str_url, '/')) != NULL)
 		p++;
@@ -128,7 +122,6 @@ download_file(char *str_url, time_t *db_mtime)
 
 	if (file->buf[0] == '\0')
 		errx(EXIT_FAILURE, "empty download, exiting.\n");
-
 
 	fetchIO_close(f);
 

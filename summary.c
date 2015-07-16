@@ -119,7 +119,7 @@ fetch_summary(char *cur_repo)
 		snprintf(buf, BUFSIZ, "%s/%s.%s",
 				cur_repo, PKG_SUMMARY, sumexts[i]);
 
-		if ((file = download_file(buf, &sum_mtime)) != NULL)
+		if ((file = download_summary(buf, &sum_mtime)) != NULL)
 			break; /* pkg_summary found and not up-to-date */
 
 		if (sum_mtime < 0) /* pkg_summary found, but up-to-date */
