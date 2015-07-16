@@ -42,7 +42,6 @@ static FILE		*sql_log_fp;
 static int              repo_counter = 0;
 
 static const char *pragmaopts[] = {
-	"cache_size = 1000000",
 	"locking_mode = EXCLUSIVE",
 	"empty_result_callbacks = 1",
 	"synchronous = OFF",
