@@ -158,6 +158,9 @@ analyse_pkglog(long int filepos)
 		/* Can't install dependency */
 		if (strstr(err_line, "an\'t install") != NULL)
 			err_count++;
+		/* unable to verify signature */
+		if (strstr(err_line, "unable to verify signature") != NULL)
+			err_count++;
 	}
 
 	fclose(err_ro);
