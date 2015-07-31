@@ -57,6 +57,9 @@ const char DELETE_REMOTE[] =
 	"WHERE REMOTE_PKG.REPOSITORY GLOB '%s*' AND "
 	"REMOTE_PKG.PKG_ID = %s.PKG_ID);";
 
+const char DELETE_REMOTE_PKG_REPO[] =
+	"DELETE FROM REMOTE_PKG WHERE REPOSITORY = '%s';";
+
 const char DIRECT_DEPS[] = /* prefer higher version */
 	"SELECT REMOTE_DEPS_DEWEY, REMOTE_DEPS_PKGNAME "
 	"FROM REMOTE_DEPS WHERE PKG_ID = "
@@ -118,6 +121,13 @@ const char KEEP_PKG[] =
 const char UNKEEP_PKG[] =
 	"UPDATE LOCAL_PKG SET PKG_KEEP = NULL WHERE PKGNAME = \'%s\';";
 
+const char INSERT_REMOTE_PKG[] =
+	"INSERT INTO REMOTE_PKG (PKG_ID,FULLPKGNAME,PKGNAME,PKGVERS,COMMENT,"
+	"LICENSE,PKGTOOLS_VERSION,HOMEPAGE,OS_VERSION,PKGPATH,"
+	"PKG_OPTIONS,CATEGORIES,SIZE_PKG,FILE_SIZE,OPSYS,REPOSITORY) "
+	"VALUES (%d,'%s','%s','%s','%s','%s','%s','%s',"
+	"'%s','%s','%s','%s','%s','%s','%s','%s');";
+
 /* for upgrades, prefer higher versions to be at the top of SLIST */
 const char LOCAL_PKGS_QUERY_ASC[] =
 	"SELECT FULLPKGNAME,PKGNAME,PKGVERS,"
@@ -163,6 +173,9 @@ const char DELETE_EMPTY_ROWS[] =
 const char UPDATE_PKGDB_MTIME[] =
 	"REPLACE INTO PKGDB (PKGDB_MTIME) VALUES (%lld);";
 
+const char SELECT_REPO_URLS[] =
+	"SELECT REPO_URL FROM REPOS;";
+
 const char EXISTS_REPO[] =
 	"SELECT COUNT(*) FROM REPOS WHERE REPO_URL = \'%s\';";
 
@@ -171,6 +184,9 @@ const char INSERT_REPO[] =
 
 const char UPDATE_REPO_MTIME[] =
 	"UPDATE REPOS SET REPO_MTIME = %lld WHERE REPO_URL = \'%s\';";
+
+const char DELETE_REPO_URL[] =
+	"DELETE FROM REPOS WHERE REPO_URL = \'%s\';";
 
 const char INSERT_SINGLE_VALUE[] =
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME) VALUES (%d,\"%s\");";
