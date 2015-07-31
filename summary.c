@@ -784,8 +784,8 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 				match = 1;
 		if (match == 0) {
 			printf(MSG_CLEANING_DB_FROM_REPO, argv[i]);
+			delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[i]);
 			pkgindb_dovaquery(DELETE_REPO_URL, argv[i]);
-			pkgindb_dovaquery(DELETE_REMOTE_PKG_REPO, argv[i]);
 
 			force_fetch = 1;
 		}
