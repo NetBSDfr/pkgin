@@ -226,7 +226,8 @@ extern FILE		*tracefp;
 extern Preflist		**preflist;
 
 /* download.c*/
-Dlfile		*download_file(char *, time_t *);
+Dlfile		*download_summary(char *, time_t *);
+ssize_t		download_pkg(char *, FILE *);
 /* summary.c */
 int		update_db(int, char **);
 void		split_repos(void);

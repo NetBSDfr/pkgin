@@ -42,7 +42,6 @@ static FILE		*sql_log_fp;
 static int              repo_counter = 0;
 
 static const char *pragmaopts[] = {
-	"cache_size = 1000000",
 	"locking_mode = EXCLUSIVE",
 	"empty_result_callbacks = 1",
 	"synchronous = OFF",
@@ -126,6 +125,25 @@ pdb_get_value(void *param, int argc, char **argv, char **colname)
 	}
 
 	return PDB_ERR;
+}
+
+int
+pkgindb_dovaquery(const char *fmt, ...)
+{
+	char *buf;
+	va_list ap;
+	int rv;
+
+	va_start(ap, fmt);
+	if (vasprintf(&buf, fmt, ap) == -1)
+		errx(EXIT_FAILURE, "Insufficient memory to construct query");
+	va_end(ap);
+
+	rv = pkgindb_doquery(buf, NULL, NULL);
+
+	free(buf);
+
+	return rv;
 }
 
 int

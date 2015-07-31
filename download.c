@@ -36,9 +36,8 @@
 int	fetchTimeout = 15; /* wait 15 seconds before timeout */
 size_t	fetch_buffer = 1024;
 
-/* if db_mtime == NULL, we're downloading a package, pkg_summary otherwise */
 Dlfile *
-download_file(char *str_url, time_t *db_mtime)
+download_summary(char *str_url, time_t *db_mtime)
 {
 	/* from pkg_install/files/admin/audit.c */
 	Dlfile			*file;
@@ -56,28 +55,23 @@ download_file(char *str_url, time_t *db_mtime)
 		return NULL;
 
 	if (st.size == -1) { /* could not obtain file size */
-		if (db_mtime != NULL) /* we're downloading pkg_summary */
-			*db_mtime = 0; /* not -1, don't force update */
+		*db_mtime = 0; /* not -1, don't force update */
+		return NULL;
+	}
+
+	if (st.mtime <= *db_mtime) {
+		/*
+		 * -1 used to identify return type,
+		 * local summary up-to-date
+		 */
+		*db_mtime = -1;
+
+		fetchIO_close(f);
 
 		return NULL;
 	}
 
-	if (db_mtime != NULL) {
-		if (st.mtime <= *db_mtime) {
-			/*
-			 * -1 used to identify return type,
-			 * local summary up-to-date
-			 */
-			*db_mtime = -1;
-
-			fetchIO_close(f);
-
-			return NULL;
-		}
-
-		*db_mtime = st.mtime;
-	}
-
+	*db_mtime = st.mtime;
 
 	if ((p = strrchr(str_url, '/')) != NULL)
 		p++;
@@ -129,8 +123,82 @@ download_file(char *str_url, time_t *db_mtime)
 	if (file->buf[0] == '\0')
 		errx(EXIT_FAILURE, "empty download, exiting.\n");
 
-
 	fetchIO_close(f);
 
 	return file;
+}
+
+/*
+ * Download a package to the local cache.
+ */
+ssize_t
+download_pkg(char *pkg_url, FILE *fp)
+{
+	struct url_stat st;
+	size_t size, wrote;
+	ssize_t fetched, written = 0;
+	off_t statsize = 0;
+	struct url *url;
+	fetchIO *f = NULL;
+	char buf[4096];
+	char *pkg, *ptr;
+
+	if ((url = fetchParseURL(pkg_url)) == NULL)
+		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
+
+	if ((f = fetchXGet(url, &st, "")) == NULL)
+		errx(EXIT_FAILURE, "%s: %s", pkg_url, fetchLastErrString);
+
+	/* Package not available */
+	if (st.size == -1)
+		return st.size;
+
+	if ((pkg = strrchr(pkg_url, '/')) != NULL)
+		pkg++;
+	else
+		pkg = (char *)pkg_url; /* should not happen */
+
+	if (parsable) {
+		printf(MSG_DOWNLOAD_START);
+	} else {
+		printf(MSG_DOWNLOADING, pkg);
+		fflush(stdout);
+		start_progress_meter(pkg, st.size, &statsize);
+	}
+
+	while (written < st.size) {
+		if ((fetched = fetchIO_read(f, buf, sizeof(buf))) == 0)
+			break;
+		if (fetched == -1 && errno == EINTR)
+			continue;
+		if (fetched == -1)
+			errx(EXIT_FAILURE, "fetch failure: %s",
+			    fetchLastErrString);
+
+		statsize += fetched;
+		size = fetched;
+
+		for (ptr = buf; size > 0; ptr += wrote, size -= wrote) {
+			if ((wrote = fwrite(ptr, 1, size, fp)) < size) {
+				if (ferror(fp) && errno == EINTR)
+					clearerr(fp);
+				else
+					break;
+			}
+			written += wrote;
+		}
+	}
+
+	if (parsable)
+		printf(MSG_DOWNLOAD_END);
+	else
+		stop_progress_meter();
+
+	fetchIO_close(f);
+	fetchFreeURL(url);
+
+	if (written != st.size)
+		return -1;
+
+	return written;
 }
