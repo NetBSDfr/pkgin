@@ -778,12 +778,9 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 				match = 1;
 		if (match == 0) {
 			printf(MSG_CLEANING_DB_FROM_REPO, argv[i]);
+			delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[i]);
 			snprintf(query, BUFSIZ,
 			"DELETE FROM REPOS WHERE REPO_URL = '%s';", argv[i]);
-			pkgindb_doquery(query, NULL, NULL);
-			snprintf(query, BUFSIZ,
-			"DELETE FROM REMOTE_PKG WHERE REPOSITORY = '%s';",
-			argv[i]);
 			pkgindb_doquery(query, NULL, NULL);
 
 			force_fetch = 1;
