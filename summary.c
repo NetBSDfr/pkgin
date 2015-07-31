@@ -793,8 +793,10 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
-void
+int
 chk_repo_list()
 {
 	pkgindb_doquery("SELECT REPO_URL FROM REPOS;", cmp_repo_list, NULL);
+
+	return force_fetch;
 }

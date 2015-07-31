@@ -47,7 +47,7 @@ FILE  		*tracefp = NULL;
 int
 main(int argc, char *argv[])
 {
-	uint8_t		updb_all;
+	uint8_t		need_upgrade, need_refresh;
 	uint8_t		do_inst = DO_INST; /* by default, do install packages */
 	int 		ch, i, rc = EXIT_SUCCESS;
 	struct stat	sb;
@@ -148,7 +148,7 @@ main(int argc, char *argv[])
 	pkgindb_init();
 
 	/* check if current database fits our needs */
-	updb_all = upgrade_database();
+	need_upgrade = upgrade_database();
 
 	/* update local db if pkgdb mtime has changed */
 	(void)update_db(LOCAL_SUMMARY, NULL);
@@ -157,12 +157,13 @@ main(int argc, char *argv[])
 	split_repos();
 
 	/* check repository consistency between repo list and recorded repos */
-	chk_repo_list();
+	need_refresh = chk_repo_list();
+
 	/*
-	 * upgrade remote database if pkgin version changed and not compatible
-	 * or if empty database
+	 * upgrade remote database if pkgin version changed and not compatible,
+	 * or if empty database, or if repository list changed.
 	 */
-	if (updb_all)
+	if (need_upgrade || need_refresh)
 		(void)update_db(REMOTE_SUMMARY, NULL);
 
 	/* load preferred file */
@@ -177,7 +178,7 @@ main(int argc, char *argv[])
 
 	switch (ch) {
 	case PKG_UPDT_CMD: /* update packages db */
-		if (updb_all) /* no need to do it twice */
+		if (need_upgrade || need_refresh) /* no need to do it twice */
 			break;
 		if (update_db(REMOTE_SUMMARY, NULL) == EXIT_FAILURE)
 			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
