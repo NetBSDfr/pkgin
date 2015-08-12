@@ -40,6 +40,8 @@
 #include <sys/queue.h>
 #endif
 
+#include <archive.h>
+#include <archive_entry.h>
 #include <fetch.h>
 #include <errno.h>
 #include "messages.h"
@@ -127,10 +129,17 @@
 
 #define TRACE(fmt...) if (tracefp != NULL) fprintf(tracefp, fmt)
 
-typedef struct Dlfile {
-	char *buf;
+/**
+ * \struct Sumfile
+ * \brief Remote pkg_summary information
+ */
+typedef struct Sumfile {
+	fetchIO *fd;
+	struct url *url;
+	char buf[65536];
 	size_t size;
-} Dlfile;
+	off_t pos;
+} Sumfile;
 
 /**
  * \struct Deptree
@@ -227,7 +236,10 @@ extern FILE		*tracefp;
 extern Preflist		**preflist;
 
 /* download.c*/
-Dlfile		*download_summary(char *, time_t *);
+Sumfile		*sum_open(char *, time_t *);
+int		sum_start(struct archive *, void *);
+ssize_t		sum_read(struct archive *, void *, const void **);
+int		sum_close(struct archive *, void *);
 ssize_t		download_pkg(char *, FILE *);
 /* summary.c */
 int		update_db(int, char **);

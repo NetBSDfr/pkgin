@@ -36,8 +36,6 @@
 
 #include "tools.h"
 #include "pkgin.h"
-#include <archive.h>
-#include <archive_entry.h>
 
 static const struct Summary {
 	const int	type;
@@ -86,6 +84,7 @@ static void		freecols(void);
 static void		free_insertlist(void);
 static void		insert_local_summary(FILE *);
 static void		insert_remote_summary(struct archive *, char *);
+static void		delete_remote_tbl(struct Summary, char *);
 static void		prepare_insert(int, struct Summary);
 int			colnames(void *, int, char **, char **);
 
@@ -98,15 +97,14 @@ int			force_fetch = 0;
 static const char *const sumexts[] = { "bz2", "gz", NULL };
 
 /*
- * Download a remote summary into memory and return an open
- * libarchive handler to it.
+ * Open a remote summary and return an open libarchive handler to it.
  */
 static struct archive *
 fetch_summary(char *cur_repo)
 {
 	struct	archive *a;
 	struct	archive_entry *ae;
-	Dlfile	*file = NULL;
+	Sumfile	*sum = NULL;
 	time_t	sum_mtime;
 	int	i;
 	char	buf[BUFSIZ];
@@ -120,14 +118,14 @@ fetch_summary(char *cur_repo)
 		snprintf(buf, BUFSIZ, "%s/%s.%s",
 				cur_repo, PKG_SUMMARY, sumexts[i]);
 
-		if ((file = download_summary(buf, &sum_mtime)) != NULL)
+		if ((sum = sum_open(buf, &sum_mtime)) != NULL)
 			break; /* pkg_summary found and not up-to-date */
 
 		if (sum_mtime < 0) /* pkg_summary found, but up-to-date */
 			return NULL;
 	}
 
-	if (file == NULL)
+	if (sum == NULL)
 		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf);
 
 	pkgindb_dovaquery(UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
@@ -137,33 +135,15 @@ fetch_summary(char *cur_repo)
 
 	if (archive_read_support_filter_all(a) != ARCHIVE_OK ||
 	    archive_read_support_format_raw(a) != ARCHIVE_OK ||
-	    archive_read_open_memory(a, file->buf, file->size) != ARCHIVE_OK)
-		errx(EXIT_FAILURE, "Cannot open in-memory pkg_summary: %s",
+	    archive_read_open(a, sum, sum_start, sum_read, sum_close) != ARCHIVE_OK)
+		errx(EXIT_FAILURE, "Cannot open pkg_summary: %s",
 		    archive_error_string(a));
 
         if (archive_read_next_header(a, &ae) != ARCHIVE_OK)
-		errx(EXIT_FAILURE, "Cannot read in-memory pkg_summary: %s",
+		errx(EXIT_FAILURE, "Cannot read pkg_summary: %s",
 		    archive_error_string(a));
 
 	return a;
-}
-
-/**
- * progress percentage
- */
-static void
-progress(char c)
-{
-	const char	*alnum = ALNUM;
-	int 		i, alnumlen = strlen(alnum);
-	float		percent = 0;
-
-	for (i = 0; i < alnumlen; i++)
-		if (c == alnum[i])
-			percent = ((float)(i + 1)/ (float)alnumlen) * 100;
-
-	printf(MSG_UPDATING_DB_PCT, (int)percent);
-	fflush(stdout);
 }
 
 static void
@@ -278,11 +258,12 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	if (check_machine_arch && strncmp(line, "MACHINE_ARCH=", 13) == 0) {
 		if (strncmp(CHECK_MACHINE_ARCH, val,
 		    strlen(CHECK_MACHINE_ARCH))) {
+			alarm(0); /* Stop the progress meter */
 			printf(MSG_ARCH_DONT_MATCH, val, CHECK_MACHINE_ARCH);
 			if (!check_yesno(DEFAULT_NO))
 				exit(EXIT_FAILURE);
 			check_machine_arch = 0;
-			printf("\r"MSG_UPDATING_DB);
+			alarm(1); /* Restart progress XXX: UPDATE_INTERVAL */
 		}
 		return;
 	}
@@ -364,13 +345,6 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 					*v++ = '\0';
 				add_to_slist("PKGNAME", val);
 				add_to_slist("PKGVERS", v);
-
-				/*
-				 * Update progress counter based on position
-				 * in alphabet of first PKGNAME character.
-				 */
-				if (!parsable)
-					progress(val[0]);
 			} else
 				add_to_slist(cols.name[i], val);
 
@@ -451,11 +425,6 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 
 	pkgindb_doquery("BEGIN;", NULL, NULL);
 
-	if (!parsable) {
-		printf(MSG_UPDATING_DB);
-		fflush(stdout);
-	}
-
 	/*
 	 * Main loop.  Read in archive, split into package records and parse
 	 * each entry, then insert packge.  If we are in the middle of a
@@ -527,14 +496,11 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 
 	pkgindb_doquery("COMMIT;", NULL, NULL);
 
-	if (!parsable) {
-		printf("\n");
-		fflush(stdout);
-	}
-
-	if (r != ARCHIVE_OK)
+	if (r != ARCHIVE_OK) {
+		delete_remote_tbl(sumsw[REMOTE_SUMMARY], cur_repo);
 		errx(EXIT_FAILURE, "Short read of pkg_summary: %s",
 		    archive_error_string(a));
+	}
 
 	archive_read_close(a);
 }
@@ -685,6 +651,8 @@ update_remotedb(void)
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
 
+		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
+
 		/* load remote pkg_summary */
 		if ((a = fetch_summary(*prepos)) == NULL) {
 			printf(MSG_DB_IS_UP_TO_DATE, *prepos);
@@ -700,8 +668,6 @@ update_remotedb(void)
 			    NULL);
 			cleaned = 1;
 		}
-
-		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
 
 		/* delete remote* associated to this repository */
 		delete_remote_tbl(sumsw[REMOTE_SUMMARY], *prepos);
