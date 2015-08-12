@@ -94,7 +94,7 @@ int			colcount = 0;
 /* force pkg_summary reload */
 int			force_fetch = 0;
 
-static const char *const sumexts[] = { "bz2", "gz", NULL };
+static const char *const sumexts[] = { "xz", "bz2", "gz", NULL };
 
 /*
  * Open a remote summary and return an open libarchive handler to it.
