@@ -3,6 +3,7 @@
 	Various performance improvements from Joyent, see blog post at
 	<http://www.perkin.org.uk/posts/reducing-ram-usage-in-pkgin.html>
 	for more details.
+	Clean database entries correctly when changing repositories.
 	Support pkg_summary.xz if available.
 	Don't switch to parsable output when stdout isn't a tty, broke various
 	automation tools: NetBSDfr/pkgin#46.
