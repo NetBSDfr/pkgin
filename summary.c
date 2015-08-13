@@ -79,36 +79,35 @@ typedef struct Insertlist {
 
 SLIST_HEAD(, Insertlist) inserthead;
 
-static char		**fetch_summary(char *url);
+static struct archive	*fetch_summary(char *url);
 static void		freecols(void);
 static void		free_insertlist(void);
-static void		prepare_insert(int, struct Summary, char *);
+static void		insert_local_summary(FILE *);
+static void		insert_remote_summary(struct archive *, char *);
+static void		delete_remote_tbl(struct Summary, char *);
+static void		prepare_insert(int, struct Summary);
 int			colnames(void *, int, char **, char **);
 
 char			*env_repos, **pkg_repos;
-char			**commit_list = NULL;
-int			commit_idx = 0;
-int			query_size = BUFSIZ;
 /* column count for table fields, given by colnames callback */
 int			colcount = 0;
 /* force pkg_summary reload */
 int			force_fetch = 0;
 
-static const char *const sumexts[] = { "bz2", "gz", NULL };
+static const char *const sumexts[] = { "xz", "bz2", "gz", NULL };
 
-/**
- * remote summary fetch
+/*
+ * Open a remote summary and return an open libarchive handler to it.
  */
-static char **
+static struct archive *
 fetch_summary(char *cur_repo)
 {
-	/* from pkg_install/files/admin/audit.c */
-	Dlfile	*file = NULL;
-	char	*decompressed_input;
-	size_t	decompressed_len;
+	struct	archive *a;
+	struct	archive_entry *ae;
+	Sumfile	*sum = NULL;
 	time_t	sum_mtime;
 	int	i;
-	char	**out, buf[BUFSIZ];
+	char	buf[BUFSIZ];
 
 	for (i = 0; sumexts[i] != NULL; i++) { /* try all extensions */
 		if (!force_fetch && !force_update)
@@ -119,92 +118,32 @@ fetch_summary(char *cur_repo)
 		snprintf(buf, BUFSIZ, "%s/%s.%s",
 				cur_repo, PKG_SUMMARY, sumexts[i]);
 
-		if ((file = download_file(buf, &sum_mtime)) != NULL)
+		if ((sum = sum_open(buf, &sum_mtime)) != NULL)
 			break; /* pkg_summary found and not up-to-date */
 
 		if (sum_mtime < 0) /* pkg_summary found, but up-to-date */
 			return NULL;
 	}
 
-	if (file == NULL)
+	if (sum == NULL)
 		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf);
 
-	snprintf(buf, BUFSIZ,
-			UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
-	pkgindb_doquery(buf, NULL, NULL);
+	pkgindb_dovaquery(UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
 
-	if (decompress_buffer(file->buf, file->size, &decompressed_input,
-			&decompressed_len)) {
+	if ((a = archive_read_new()) == NULL)
+		errx(EXIT_FAILURE, "Cannot initialise archive");
 
-		out = splitstr(decompressed_input, "\n");
+	if (archive_read_support_filter_all(a) != ARCHIVE_OK ||
+	    archive_read_support_format_raw(a) != ARCHIVE_OK ||
+	    archive_read_open(a, sum, sum_start, sum_read, sum_close) != ARCHIVE_OK)
+		errx(EXIT_FAILURE, "Cannot open pkg_summary: %s",
+		    archive_error_string(a));
 
-		XFREE(file->buf);
-		XFREE(file);
+        if (archive_read_next_header(a, &ae) != ARCHIVE_OK)
+		errx(EXIT_FAILURE, "Cannot read pkg_summary: %s",
+		    archive_error_string(a));
 
-		return out;
-	}
-
-	XFREE(file->buf);
-	XFREE(file);
-
-	return NULL;
-}
-
-/**
- * progress percentage
- */
-static void
-progress(char c)
-{
-	const char	*alnum = ALNUM;
-	int 		i, alnumlen = strlen(alnum);
-	float		percent = 0;
-
-	for (i = 0; i < alnumlen; i++)
-		if (c == alnum[i])
-			percent = ((float)(i + 1)/ (float)alnumlen) * 100;
-
-	printf(MSG_UPDATING_DB_PCT, (int)percent);
-	fflush(stdout);
-}
-
-/**
- * check if the field is PKGNAME
- */
-static int
-chk_pkgname(char *field, char *last_field)
-{
-	if (strncmp(field, "PKGNAME=", 8) == 0)
-		return 1;
-	/* in some very rare cases, CONFLICTS appears *after* PKGNAME */
-	if (strncmp(last_field, "PKGNAME=", 8) != 0 &&
-		/* never seen many CONFLICTS after PKGNAME, just in case... */
-		strncmp(last_field, "CONFLICTS=", 10) != 0 &&
-		strncmp(field, "CONFLICTS=", 10) == 0)
-		return 1;
-
-	return 0;
-}
-
-/**
- * returns value for given field
- */
-static char *
-field_record(const char *field, char *line)
-{
-	char *pfield;
-
-	if (strncmp(field, line, strlen(field)) == 0) {
-		if ((pfield = strchr(line, '=')) == NULL)
-			return NULL;
-		trimcr(pfield++);
-
-		/* weird buggy packages with empty fields, like LICENSE= */
-		if (*pfield != '\0')
-			return pfield;
-	}
-
-	return NULL;
+	return a;
 }
 
 static void
@@ -256,51 +195,31 @@ colnames(void *unused, int argc, char **argv, char **colname)
  * for now, values are located on a SLIST, build INSERT line with them
  */
 static void
-prepare_insert(int pkgid, struct Summary sum, char *cur_repo)
+prepare_insert(int pkgid, struct Summary sum)
 {
-	char		*commit_query;
 	Insertlist	*pi;
+	/*
+	 * Currently INSERT lengths are under 1K, this should be plenty until
+	 * we support more columns.
+	 */
+	char		querybuf[4096];
 
-	if (sum.type == REMOTE_SUMMARY)
-		query_size = (query_size + strlen(cur_repo)) * sizeof(char);
-
-	XMALLOC(commit_query, query_size);
-
-	snprintf(commit_query, BUFSIZ, "INSERT INTO %s ( PKG_ID,", sum.tbl_name);
+	snprintf(querybuf, sizeof(querybuf), "INSERT INTO %s (PKG_ID", sum.tbl_name);
 
 	/* insert fields */
 	SLIST_FOREACH(pi, &inserthead, next)
-		XSNPRINTF(commit_query, query_size,
-			"%s\"%s\",", commit_query, pi->field);
+		snprintf(querybuf, sizeof(querybuf), "%s,\"%s\"", querybuf, pi->field);
 
-	/* insert REPOSITORY field */
-	if (sum.type == REMOTE_SUMMARY)
-		XSNPRINTF(commit_query, query_size, "%s\"REPOSITORY\")",
-				commit_query);
-	else
-		commit_query[strlen(commit_query) - 1] = ')';
-
-	XSNPRINTF(commit_query, query_size, "%s VALUES ( %d, ",
-		commit_query, pkgid);
+	snprintf(querybuf, sizeof(querybuf), "%s) VALUES (%d", querybuf, pkgid);
 
 	/* insert values */
 	SLIST_FOREACH(pi, &inserthead, next)
-		XSNPRINTF(commit_query, query_size,
-			"%s\"%s\",", commit_query, pi->value);
+		snprintf(querybuf, sizeof(querybuf), "%s,\"%s\"", querybuf, pi->value);
 
-	/* insert repository URL if it's a remote pkg_summary */
-	if (sum.type == REMOTE_SUMMARY) {
-		XSNPRINTF(commit_query, query_size, "%s\"%s\");",
-			commit_query, cur_repo);
-	} else {
-		commit_query[strlen(commit_query) - 1] = ')';
-		strcat(commit_query, ";");
-	}
+	snprintf(querybuf, sizeof(querybuf), "%s);", querybuf);
 
-	/* append query to commit list */
-	commit_idx++;
-	XREALLOC(commit_list, (commit_idx + 1) * sizeof(char *));
-	commit_list[commit_idx] = commit_query;
+	/* Apply the query */
+	pkgindb_doquery(querybuf, NULL, NULL);
 }
 
 /**
@@ -318,212 +237,277 @@ add_to_slist(const char *field, const char *value)
 	SLIST_INSERT_HEAD(&inserthead, insert, next);
 }
 
-/**
- * fill-in secondary tables
+/*
+ * Parse a KEY=value line.
  */
 static void
-child_table(const char *fmt, ...)
+parse_entry(struct Summary sum, int pkgid, char *line)
 {
-	char	buf[BUFSIZ];
-	va_list	ap;
-
-	va_start(ap, fmt);
-	vsnprintf(buf, BUFSIZ, fmt, ap);
-	va_end(ap);
-
-	/* append query to commit_list */
-	commit_idx++;
-	XREALLOC(commit_list, (commit_idx + 1) * sizeof(char *));
-	XSTRDUP(commit_list[commit_idx], buf);
-}
-
-static void
-update_col(struct Summary sum, int pkgid, char *line)
-{
-	static uint8_t	said = 0;
+	static uint8_t	check_machine_arch = 1;
 	int		i;
-	char		*val, *p, buf[BUFSIZ];
+	char		*val, *v, *pkg, buf[BUFSIZ];
 
-	/* check MACHINE_ARCH */
-	if (!said && (val = field_record("MACHINE_ARCH", line)) != NULL) {
-		if (strncmp(CHECK_MACHINE_ARCH,
-				val, strlen(CHECK_MACHINE_ARCH))) {
+	if ((val = strchr(line, '=')) == NULL)
+		errx(EXIT_FAILURE, "Invalid pkg_info entry: %s", line);
+
+	val++;
+
+	/*
+	 * Check MACHINE_ARCH of the package matches the local machine.
+	 */
+	if (check_machine_arch && strncmp(line, "MACHINE_ARCH=", 13) == 0) {
+		if (strncmp(CHECK_MACHINE_ARCH, val,
+		    strlen(CHECK_MACHINE_ARCH))) {
+			alarm(0); /* Stop the progress meter */
 			printf(MSG_ARCH_DONT_MATCH, val, CHECK_MACHINE_ARCH);
 			if (!check_yesno(DEFAULT_NO))
 				exit(EXIT_FAILURE);
-			said = 1;
-			printf("\r"MSG_UPDATING_DB);
+			check_machine_arch = 0;
+			alarm(1); /* Restart progress XXX: UPDATE_INTERVAL */
 		}
+		return;
+	}
+
+	/* CONFLICTS */
+	if (strncmp(line, "CONFLICTS=", 10) == 0) {
+		pkgindb_dovaquery(INSERT_SINGLE_VALUE, sum.conflicts,
+		    sum.conflicts, pkgid, val);
+		return;
 	}
 
 	/* DEPENDS */
-	if ((val = field_record("DEPENDS", line)) != NULL) {
-		if ((p = get_pkgname_from_depend(val)) != NULL) {
-			child_table(INSERT_DEPENDS_VALUES,
-				sum.deps, sum.deps, sum.deps,
-				pkgid, p, val);
-			XFREE(p);
+	if (strncmp(line, "DEPENDS=", 8) == 0) {
+		if ((pkg = get_pkgname_from_depend(val)) != NULL) {
+			pkgindb_dovaquery(INSERT_DEPENDS_VALUES, sum.deps,
+			    sum.deps, sum.deps, pkgid, pkg, val);
+			XFREE(pkg);
 		} else
 			printf(MSG_COULD_NOT_GET_PKGNAME, val);
+		return;
 	}
-	/* REQUIRES */
-	if ((val = field_record("REQUIRES", line)) != NULL)
-		child_table(INSERT_SINGLE_VALUE,		\
-			sum.requires, sum.requires, pkgid, val);
-	/* PROVIDES */
-	if ((val = field_record("PROVIDES", line)) != NULL)
-		child_table(INSERT_SINGLE_VALUE,		\
-			sum.provides, sum.provides, pkgid, val);
 
+	/* REQUIRES */
+	if (strncmp(line, "REQUIRES=", 9) == 0) {
+		pkgindb_dovaquery(INSERT_SINGLE_VALUE, sum.requires,
+		    sum.requires, pkgid, val);
+		return;
+	}
+
+	/* PROVIDES */
+	if (strncmp(line, "PROVIDES=", 9) == 0) {
+		pkgindb_dovaquery(INSERT_SINGLE_VALUE, sum.provides,
+		    sum.provides, pkgid, val);
+		return;
+	}
+
+	/*
+	 * Currently we ignore DESCRIPTION entries as they are multi-line
+	 * which aren't supported.
+	 */
+	if (strncmp(line, "DESCRIPTION=", 12) == 0)
+		return;
+
+	/*
+	 * Skip empty values like LICENSE=
+	 */
+	if (*val == '\0')
+		return;
+
+	/*
+	 * Handle remaining columns.
+	 */
 	for (i = 0; i < cols.num; i++) {
 		snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
 
-		val = field_record(cols.name[i], line);
+		if (strncmp(buf, line, strlen(buf)) == 0) {
+			/*
+			 * Avoid double quotes in our query by using
+			 * the MySQL-compatible "`" instead.
+			 */
+			if (strchr(val, '"') != NULL)
+				for (v = val; *v != '\0'; v++)
+					if (*v == '"')
+						*v = '`';
 
-		/* XXX: handle that later */
-		if (strncmp(cols.name[i], "DESCRIPTION", 11) == 0)
-			continue;
+			/* Split PKGNAME into parts */
+			if (strncmp(cols.name[i], "PKGNAME", 7) == 0) {
+				/* some rare packages have no version */
+				if (!exact_pkgfmt(val)) {
+					snprintf(buf, BUFSIZ, "%s%s", val,
+					    "-0.0");
+					val = buf;
+				}
+				add_to_slist("FULLPKGNAME", val);
 
-		if (val != NULL && strncmp(buf, line, strlen(buf)) == 0) {
-			/* nasty little hack to prevent double quotes */
-			if (strchr(line, '"') != NULL)
-				for (p = line; *p != '\0'; p++)
-					if (*p == '"')
-						*p = '`';
+				/* split PKGNAME and VERSION */
+				v = strrchr(val, '-');
+				if (v != NULL);
+					*v++ = '\0';
+				add_to_slist("PKGNAME", val);
+				add_to_slist("PKGVERS", v);
+			} else
+				add_to_slist(cols.name[i], val);
 
-			add_to_slist(cols.name[i], val);
-
-			/* update query size */
-			query_size += strlen(cols.name[i]) + strlen(val) + 5;
-			/* 5 = strlen(\"\",) */
+			break;
 		}
 	}
 }
 
-/* default version for (rare and buggy) packages with a version */
-#define NOVERSION "-0.0"
-
+/*
+ * Stream the local pkg_info information into the local summary.
+ */
 static void
-insert_summary(struct Summary sum, char **summary, char *cur_repo)
+insert_local_summary(FILE *fp)
 {
-	int		i;
 	static int	pkgid = 1;
-	char		*pkgname, *pkgvers, **psum;
-	char		query[BUFSIZ], tmpname[BUFSIZ];
-	const char	*alnum = ALNUM;
+	char		buf[BUFSIZ];
 
-	if (summary == NULL) {
+	if (fp == NULL) {
 		pkgindb_close();
-		errx(EXIT_FAILURE, "could not read summary");
+		errx(EXIT_FAILURE, "Couldn't read local pkg_info");
 	}
 
-	snprintf(query, BUFSIZ, "PRAGMA table_info(%s);", sum.tbl_name);
-
 	/* record columns names to cols */
-	pkgindb_doquery(query, colnames, NULL);
+	snprintf(buf, BUFSIZ, "PRAGMA table_info(%s);",
+			sumsw[LOCAL_SUMMARY].tbl_name);
+	pkgindb_doquery(buf, colnames, NULL);
 
 	SLIST_INIT(&inserthead);
 
-	XMALLOC(commit_list, sizeof(char *));
-	/* begin transaction */
-	XSTRDUP(commit_list[0], "BEGIN;");
+        pkgindb_doquery("BEGIN;", NULL, NULL);
 
-	if (!parsable) {
-		printf(MSG_UPDATING_DB);
-		fflush(stdout);
+	while (fgets(buf, BUFSIZ, fp) != NULL) {
+		/*
+		 * End of current package entry, commit and reset.
+		 */
+		if (*buf == '\n') {
+			prepare_insert(pkgid++, sumsw[LOCAL_SUMMARY]);
+			free_insertlist();
+			continue;
+		}
+		trimcr(buf);
+		parse_entry(sumsw[LOCAL_SUMMARY], pkgid, buf);
 	}
 
-	psum = summary;
-	/* main pkg_summary analysis loop */
-	while (*psum != NULL) {
-		/* CONFLICTS may appear before PKGNAME... */
-		if ((pkgname = field_record("CONFLICTS", *psum)) != NULL) {
-			snprintf(query, BUFSIZ,
-				"INSERT INTO %s (PKG_ID,%s_PKGNAME) VALUES (%d,\"%s\");",
-				sum.conflicts, sum.conflicts, pkgid, pkgname);
+        pkgindb_doquery("COMMIT;", NULL, NULL);
+}
 
-			/* append query to commit_list */
-			commit_idx++;
-			XREALLOC(commit_list, (commit_idx + 1) * sizeof(char *));
-			XSTRDUP(commit_list[commit_idx], query);
+/*
+ * Stream a remote pkg_summary via libarchive into the local database.
+ */
+static void
+insert_remote_summary(struct archive *a, char *cur_repo)
+{
+	static int	pkgid = 1;
+	size_t		buflen, offset;
+	ssize_t		r;
+	char		*buf, *pe, *pi, *npi;
 
-			psum++;
-			continue; /* there may be more */
+	if (a == NULL) {
+		pkgindb_close();
+		errx(EXIT_FAILURE, "Couldn't read pkg_summary");
+	}
+
+	/*
+	 * Initial archive buffer, we grow if required.  Try to hit the
+	 * sweet spot between memory usage and CPU time required to move
+	 * the buffer back to the beginning each time.
+	 */
+	buflen = 32768;
+	XMALLOC(buf, buflen);
+
+	/* record columns names to cols */
+	snprintf(buf, buflen, "PRAGMA table_info(%s);",
+	    sumsw[REMOTE_SUMMARY].tbl_name);
+	pkgindb_doquery(buf, colnames, NULL);
+
+	SLIST_INIT(&inserthead);
+
+	pkgindb_doquery("BEGIN;", NULL, NULL);
+
+	/*
+	 * Main loop.  Read in archive, split into package records and parse
+	 * each entry, then insert packge.  If we are in the middle of a
+	 * package, copy it to the beginning and read the remainder.
+	 */
+	offset = 0;
+	for (;;) {
+		r = archive_read_data(a, buf + offset, buflen - offset);
+
+		/* We're done with reading from the archive. */
+		if (r <= 0)
+			break;
+
+		pi = buf;
+		buf[buflen] = '\0';
+
+		/*
+		 * Highly unlikely, but if we can't fit a single pkg_info entry
+		 * into our reasonably sized buffer, then we have no choice but
+		 * to increase the buffer size.
+		 */
+		if (strstr(pi, "\n\n") == NULL) {
+			offset = buflen;
+			buflen *= 2;
+			XREALLOC(buf, buflen);
+			continue;
 		}
 
-		/* PKGNAME record, should always be true  */
-		if ((pkgname = field_record("PKGNAME", *psum)) != NULL) {
-
-			/* some rare packages have no version */
-			if (!exact_pkgfmt(pkgname)) {
-				snprintf(	tmpname, BUFSIZ,
-						"%s%s", pkgname, NOVERSION);
-				pkgname = tmpname;
+		/*
+		 * Packages are delimited by an empty line, we split the buffer
+		 * by package with pi pointing to the beginning and npi the end.
+		 */
+		for (;;) {
+			/*
+			 * No remaining complete package entries, move the
+			 * leftover to the beginning and start again.
+			 */
+			if ((npi = strstr(pi, "\n\n")) == NULL) {
+				offset = strlen(pi);
+				memmove(buf, pi, offset);
+				break;
 			}
 
-			add_to_slist("FULLPKGNAME", pkgname);
+			*npi = '\0';
+			npi += 2;
 
-			/* split PKGNAME and VERSION */
-			pkgvers = strrchr(pkgname, '-');
-			if (pkgvers != NULL)
-				*pkgvers++ = '\0';
+			/*
+			 * Handle each KEY=value pkg_info entry.
+			 */
+			while ((pe = strsep(&pi, "\n")) != NULL)
+				parse_entry(sumsw[REMOTE_SUMMARY], pkgid, pe);
 
-			add_to_slist("PKGNAME", pkgname);
-			add_to_slist("PKGVERS", pkgvers);
+			/* Add REPOSITORY information */
+			add_to_slist("REPOSITORY", cur_repo);
 
-			/* nice little counter */
-			if (!parsable)
-				progress(pkgname[0]);
+			/*
+			 * At this point we should have a fully populated slist
+			 * and all the data we need to construct the INSERT.
+			 */
+			prepare_insert(pkgid++, sumsw[REMOTE_SUMMARY]);
+
+			/* Set up for next pkg_info */
+			free_insertlist();
+			pi = npi;
 		}
+	}
 
-		psum++;
+	XFREE(buf);
 
-		/* browse entries following PKGNAME and build the SQL query */
-		while (*psum != NULL && !chk_pkgname(*psum, *(psum - 1))) {
-			update_col(sum, pkgid, *psum);
-			psum++;
-		}
+	pkgindb_doquery("COMMIT;", NULL, NULL);
 
-		/* build INSERT query */
-		prepare_insert(pkgid, sum, cur_repo);
+	if (r != ARCHIVE_OK) {
+		delete_remote_tbl(sumsw[REMOTE_SUMMARY], cur_repo);
+		errx(EXIT_FAILURE, "Short read of pkg_summary: %s",
+		    archive_error_string(a));
+	}
 
-		/* next PKG_ID */
-		pkgid++;
-
-		/* free the SLIST containing this package's key/vals */
-		free_insertlist();
-
-		/* reset max query size */
-		query_size = BUFSIZ;
-
-	} /* while *psum != NULL */
-
-	commit_idx++;
-	XREALLOC(commit_list, (commit_idx + 2) * sizeof(char *));
-	XSTRDUP(commit_list[commit_idx], "COMMIT;");
-	commit_list[commit_idx + 1] = NULL;
-
-	/* do the insert */
-	for (i = 0; commit_list[i] != NULL; i++)
-		pkgindb_doquery(commit_list[i], NULL, NULL);
-
-	if (!parsable)
-		progress(alnum[strlen(alnum) - 1]); /* XXX: nasty. */
-
-	free_list(commit_list);
-	commit_idx = 0;
-
-	/* reset pkgid */
-	if (sum.type == LOCAL_SUMMARY)
-		pkgid = 1;
-
-	printf("\n");
+	archive_read_close(a);
 }
 
 static void
 delete_remote_tbl(struct Summary sum, char *repo)
 {
-	char		buf[BUFSIZ];
 	const char	**arr;
 
 	/*
@@ -533,25 +517,19 @@ delete_remote_tbl(struct Summary sum, char *repo)
 	 */
 	/* (REMOTE[LOCAL)_PKG is first -> skip */
 	for (arr = &(sum.tbl_name) + 1; *arr != NULL; ++arr) {
-		snprintf(buf, BUFSIZ, DELETE_REMOTE,
-			*arr, *arr, *arr, *arr, *arr, repo, *arr);
-		pkgindb_doquery(buf, NULL, NULL);
+		pkgindb_dovaquery(DELETE_REMOTE, *arr, *arr, *arr, *arr, *arr,
+		    repo, *arr);
 	}
 
-	snprintf(buf, BUFSIZ,
-		"DELETE FROM REMOTE_PKG WHERE REPOSITORY = '%s';", repo);
-	pkgindb_doquery(buf, NULL, NULL);
+	pkgindb_dovaquery(DELETE_REMOTE_PKG_REPO, repo);
 }
 
 static void
 handle_manually_installed(Pkglist *pkglist, char **pkgkeep)
 {
-	char buf[BUFSIZ];
-
 	/* update local db with manually installed packages */
 	if (pkgkeep == NULL && !is_automatic_installed(pkglist->full)) {
-		snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-		pkgindb_doquery(buf, NULL, NULL);
+		pkgindb_dovaquery(KEEP_PKG, pkglist->name);
 		return;
 	}
 	mark_as_automatic_installed(pkglist->full, 1);
@@ -560,7 +538,7 @@ handle_manually_installed(Pkglist *pkglist, char **pkgkeep)
 static void
 update_localdb(char **pkgkeep)
 {
-	char		**summary = NULL, buf[BUFSIZ];
+	FILE		*pinfo;
 	Plistnumbered	*keeplisthead, *nokeeplisthead;
 	Pkglist		*pkglist;
 
@@ -578,12 +556,14 @@ update_localdb(char **pkgkeep)
 
 	printf(MSG_READING_LOCAL_SUMMARY);
 	/* generate summary locally */
-	summary = exec_list(PKGTOOLS "/pkg_info -Xa", NULL);
+	if ((pinfo = popen(PKGTOOLS "/pkg_info -Xa", "r")) == NULL)
+		errx(EXIT_FAILURE, "Couldn't run pkg_info");
 
 	printf(MSG_PROCESSING_LOCAL_SUMMARY);
 
 	/* insert the summary to the database */
-	insert_summary(sumsw[LOCAL_SUMMARY], summary, NULL);
+	insert_local_summary(pinfo);
+	pclose(pinfo);
 
 	/* re-read local packages list as it may have changed */
 	free_global_pkglists();
@@ -592,8 +572,7 @@ update_localdb(char **pkgkeep)
 	/* restore keep-list */
 	if (keeplisthead != NULL) {
 		SLIST_FOREACH(pkglist, keeplisthead->P_Plisthead, next) {
-			snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-			pkgindb_doquery(buf, NULL, NULL);
+			pkgindb_dovaquery(KEEP_PKG, pkglist->name);
 		}
 		free_pkglist(&keeplisthead->P_Plisthead, LIST);
 		free(keeplisthead);
@@ -621,8 +600,7 @@ update_localdb(char **pkgkeep)
 		 */
 		SLIST_FOREACH(pkglist, &l_plisthead, next) {
 			if (!is_automatic_installed(pkglist->full)) {
-				snprintf(buf, BUFSIZ, KEEP_PKG, pkglist->name);
-				pkgindb_doquery(buf, NULL, NULL);
+				pkgindb_dovaquery(KEEP_PKG, pkglist->name);
 			}
 		}
 	}
@@ -631,8 +609,6 @@ update_localdb(char **pkgkeep)
 	if (pkgkeep != NULL)
 		/* installation: mark the packages as "keep" */
 		pkg_keep(KEEP, pkgkeep);
-
-	free_list(summary);
 }
 
 static int
@@ -640,7 +616,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 {
 	int	i;
 	size_t	repolen;
-	char	**repos = pkg_repos, query[BUFSIZ];
+	char	**repos = pkg_repos;
 
 	if (argv == NULL)
 		return PDB_ERR;
@@ -657,9 +633,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 
 	delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[0]);
 
-	snprintf(query, BUFSIZ,
-		"DELETE FROM REPOS WHERE REPO_URL = \'%s\';", argv[0]);
-	pkgindb_doquery(query, NULL, NULL);
+	pkgindb_dovaquery(DELETE_REPO_URL, argv[0]);
 
 	/* force pkg_summary reload for available repository */
 	force_fetch = 1;
@@ -670,14 +644,17 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 static void
 update_remotedb(void)
 {
-	char	**summary = NULL, **prepos;
-	uint8_t	cleaned = 0;
+	struct archive	*a;
+	char		**prepos;
+	uint8_t		cleaned = 0;
 
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
 
+		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
+
 		/* load remote pkg_summary */
-		if ((summary = fetch_summary(*prepos)) == NULL) {
+		if ((a = fetch_summary(*prepos)) == NULL) {
 			printf(MSG_DB_IS_UP_TO_DATE, *prepos);
 			continue;
 		}
@@ -687,19 +664,15 @@ update_remotedb(void)
 		 */
 		if (!cleaned) {
 			/* delete unused repositories */
-			pkgindb_doquery("SELECT REPO_URL FROM REPOS;",
-				pdb_clean_remote, NULL);
+			pkgindb_doquery(SELECT_REPO_URLS, pdb_clean_remote,
+			    NULL);
 			cleaned = 1;
 		}
-
-		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
 
 		/* delete remote* associated to this repository */
 		delete_remote_tbl(sumsw[REMOTE_SUMMARY], *prepos);
 		/* update remote* table for this repository */
-		insert_summary(sumsw[REMOTE_SUMMARY], summary, *prepos);
-
-		free_list(summary);
+		insert_remote_summary(a, *prepos);
 	}
 
 	/* remove empty rows (duplicates) */
@@ -766,7 +739,6 @@ static int
 cmp_repo_list(void *param, int argc, char **argv, char **colname)
 {
 	int	i, j, match;
-	char	query[BUFSIZ];
 
 	if (argv == NULL)
 		return PDB_ERR; /* no repo yet? */
@@ -778,13 +750,8 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 				match = 1;
 		if (match == 0) {
 			printf(MSG_CLEANING_DB_FROM_REPO, argv[i]);
-			snprintf(query, BUFSIZ,
-			"DELETE FROM REPOS WHERE REPO_URL = '%s';", argv[i]);
-			pkgindb_doquery(query, NULL, NULL);
-			snprintf(query, BUFSIZ,
-			"DELETE FROM REMOTE_PKG WHERE REPOSITORY = '%s';",
-			argv[i]);
-			pkgindb_doquery(query, NULL, NULL);
+			delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[i]);
+			pkgindb_dovaquery(DELETE_REPO_URL, argv[i]);
 
 			force_fetch = 1;
 		}
@@ -793,8 +760,10 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
-void
+int
 chk_repo_list()
 {
-	pkgindb_doquery("SELECT REPO_URL FROM REPOS;", cmp_repo_list, NULL);
+	pkgindb_doquery(SELECT_REPO_URLS, cmp_repo_list, NULL);
+
+	return force_fetch;
 }

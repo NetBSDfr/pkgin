@@ -121,8 +121,6 @@ in order to remove packages from the autoremove list, flag those with the `keep'
 
 /* summary.c */
 #define MSG_READING_LOCAL_SUMMARY "reading local summary...\n"
-#define MSG_UPDATING_DB "updating database:   0%%"
-#define MSG_UPDATING_DB_PCT "\b\b\b\b%3d%%"
 #define MSG_CLEANING_DB_FROM_REPO "cleaning database from %s entries...\n"
 #define MSG_PROCESSING_LOCAL_SUMMARY "processing local summary...\n"
 #define MSG_DB_IS_UP_TO_DATE "database for %s is up-to-date\n"

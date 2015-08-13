@@ -237,7 +237,7 @@ pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
 static void
 setfmt(char *sfmt, char *pfmt)
 {
-	if (parsable) {
+	if (pflag) {
 		strncpy(sfmt, "%s;%c", 6); /* snprintf(outpkg) */
 		strncpy(pfmt, "%s;%s\n", 7); /* final printf */
 	} else {

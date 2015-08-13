@@ -40,6 +40,8 @@
 #include <sys/queue.h>
 #endif
 
+#include <archive.h>
+#include <archive_entry.h>
 #include <fetch.h>
 #include <errno.h>
 #include "messages.h"
@@ -127,10 +129,17 @@
 
 #define TRACE(fmt...) if (tracefp != NULL) fprintf(tracefp, fmt)
 
-typedef struct Dlfile {
-	char *buf;
+/**
+ * \struct Sumfile
+ * \brief Remote pkg_summary information
+ */
+typedef struct Sumfile {
+	fetchIO *fd;
+	struct url *url;
+	char buf[65536];
 	size_t size;
-} Dlfile;
+	off_t pos;
+} Sumfile;
 
 /**
  * \struct Deptree
@@ -212,6 +221,7 @@ extern uint8_t		verbosity;
 extern uint8_t		package_version;
 extern uint8_t		pi_upgrade; /* pkg_install upgrade */
 extern uint8_t		parsable;
+extern uint8_t		pflag;
 extern int		r_plistcounter;
 extern int		l_plistcounter;
 extern char		*env_repos;
@@ -226,11 +236,15 @@ extern FILE		*tracefp;
 extern Preflist		**preflist;
 
 /* download.c*/
-Dlfile		*download_file(char *, time_t *);
+Sumfile		*sum_open(char *, time_t *);
+int		sum_start(struct archive *, void *);
+ssize_t		sum_read(struct archive *, void *, const void **);
+int		sum_close(struct archive *, void *);
+ssize_t		download_pkg(char *, FILE *);
 /* summary.c */
 int		update_db(int, char **);
 void		split_repos(void);
-void		chk_repo_list(void);
+int		chk_repo_list(void);
 /* sqlite_callbacks.c */
 int		pdb_rec_list(void *, int, char **, char **);
 int		pdb_rec_depends(void *, int, char **, char **);

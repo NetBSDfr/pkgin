@@ -36,53 +36,38 @@
 int	fetchTimeout = 15; /* wait 15 seconds before timeout */
 size_t	fetch_buffer = 1024;
 
-/* if db_mtime == NULL, we're downloading a package, pkg_summary otherwise */
-Dlfile *
-download_file(char *str_url, time_t *db_mtime)
+/*
+ * Open a pkg_summary and if newer than local return an open libfetch
+ * connection to it.
+ */
+Sumfile *
+sum_open(char *str_url, time_t *db_mtime)
 {
-	/* from pkg_install/files/admin/audit.c */
-	Dlfile			*file;
-	char			*p;
-	size_t			buf_len, buf_fetched;
-	ssize_t			cur_fetched;
-	off_t			statsize;
-	struct url_stat		st;
-	struct url		*url;
-	fetchIO			*f = NULL;
+	Sumfile		*sum = NULL;
+	fetchIO		*f = NULL;
+	struct url	*url;
+	struct url_stat	st;
 
 	url = fetchParseURL(str_url);
 
 	if (url == NULL || (f = fetchXGet(url, &st, "")) == NULL)
-		return NULL;
+		goto nofetch;
 
 	if (st.size == -1) { /* could not obtain file size */
-		if (db_mtime != NULL) /* we're downloading pkg_summary */
-			*db_mtime = 0; /* not -1, don't force update */
-
-		return NULL;
+		*db_mtime = 0; /* not -1, don't force update */
+		goto nofetch;
 	}
 
-	if (db_mtime != NULL) {
-		if (st.mtime <= *db_mtime) {
-			/*
-			 * -1 used to identify return type,
-			 * local summary up-to-date
-			 */
-			*db_mtime = -1;
-
-			fetchIO_close(f);
-
-			return NULL;
-		}
-
-		*db_mtime = st.mtime;
+	if (st.mtime <= *db_mtime) {
+		/*
+		 * -1 used to identify return type,
+		 * local summary up-to-date
+		 */
+		*db_mtime = -1;
+		goto nofetch;
 	}
 
-
-	if ((p = strrchr(str_url, '/')) != NULL)
-		p++;
-	else
-		p = (char *)str_url; /* should not happen */
+	*db_mtime = st.mtime;
 
 #ifndef _MINIX /* XXX: SSIZE_MAX fails under MINIX */
 	/* st.size is an off_t, it will be > SSIZE_MAX on 32 bits systems */
@@ -90,47 +75,161 @@ download_file(char *str_url, time_t *db_mtime)
 		err(EXIT_FAILURE, "file is too large");
 #endif
 
-	buf_len = st.size;
-	XMALLOC(file, sizeof(Dlfile));
-	XMALLOC(file->buf, buf_len + 1);
+	XMALLOC(sum, sizeof(Sumfile));
 
-	buf_fetched = 0;
-	statsize = 0;
+	sum->fd = f;
+	sum->url = url;
+	sum->size = st.size;
+	goto out;
+nofetch:
+	if (url)
+		fetchFreeURL(url);
+	if (f)
+		fetchIO_close(f);
+out:
+	return sum;
+}
+
+/*
+ * archive_read_open open callback.  As we already have an open
+ * libfetch handler all we need to do is print the download messages.
+ */
+int
+sum_start(struct archive *a, void *data)
+{
+	Sumfile	*sum = data;
+	char	*p;
 
 	if (!parsable) { /* human readable output */
+		if ((p = strrchr(sum->url->doc, '/')) != NULL)
+			p++;
+		else
+			p = (char *)sum->url->doc; /* should not happen */
+
 		printf(MSG_DOWNLOADING, p);
 		fflush(stdout);
-
-		start_progress_meter(p, buf_len, &statsize);
+		start_progress_meter(p, sum->size, &sum->pos);
 	} else
 		printf(MSG_DOWNLOAD_START);
 
-	while (buf_fetched < buf_len) {
-		cur_fetched = fetchIO_read(f, file->buf + buf_fetched,
-						fetch_buffer);
-		if (cur_fetched == 0)
-			errx(EXIT_FAILURE, "truncated file");
-		else if (cur_fetched == -1)
-			errx(EXIT_FAILURE, "failure during fetch of file: %s",
-				fetchLastErrString);
+	return ARCHIVE_OK;
+}
 
-		buf_fetched += cur_fetched;
-		statsize += cur_fetched;
-	}
+/*
+ * archive_read_open read callback.  Read the next chunk of data from libfetch
+ * and update the read position for the progress meter.
+ */
+ssize_t
+sum_read(struct archive *a, void *data, const void **buf)
+{
+	Sumfile	*sum = data;
+	ssize_t	fetched;
+
+	*buf = sum->buf;
+
+	fetched = fetchIO_read(sum->fd, sum->buf, sizeof(sum->buf));
+
+	if (fetched == -1)
+		errx(EXIT_FAILURE, "failure during fetch of file: %s",
+		    fetchLastErrString);
+
+	sum->pos += fetched;
+
+	return fetched;
+}
+
+/*
+ * archive_read_open close callback.  Stop the progress meter and close the
+ * libfetch handler.
+ */
+int
+sum_close(struct archive *a, void *data)
+{
+	Sumfile	*sum = data;
 
 	if (!parsable)
 		stop_progress_meter();
 	else
 		printf(MSG_DOWNLOAD_END);
 
-	file->buf[buf_len] = '\0';
-	file->size = buf_len;
+	fetchIO_close(sum->fd);
+	fetchFreeURL(sum->url);
+	XFREE(sum);
 
-	if (file->buf[0] == '\0')
-		errx(EXIT_FAILURE, "empty download, exiting.\n");
+	return ARCHIVE_OK;
+}
 
+/*
+ * Download a package to the local cache.
+ */
+ssize_t
+download_pkg(char *pkg_url, FILE *fp)
+{
+	struct url_stat st;
+	size_t size, wrote;
+	ssize_t fetched, written = 0;
+	off_t statsize = 0;
+	struct url *url;
+	fetchIO *f = NULL;
+	char buf[4096];
+	char *pkg, *ptr;
+
+	if ((url = fetchParseURL(pkg_url)) == NULL)
+		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
+
+	if ((f = fetchXGet(url, &st, "")) == NULL)
+		errx(EXIT_FAILURE, "%s: %s", pkg_url, fetchLastErrString);
+
+	/* Package not available */
+	if (st.size == -1)
+		return st.size;
+
+	if ((pkg = strrchr(pkg_url, '/')) != NULL)
+		pkg++;
+	else
+		pkg = (char *)pkg_url; /* should not happen */
+
+	if (parsable) {
+		printf(MSG_DOWNLOAD_START);
+	} else {
+		printf(MSG_DOWNLOADING, pkg);
+		fflush(stdout);
+		start_progress_meter(pkg, st.size, &statsize);
+	}
+
+	while (written < st.size) {
+		if ((fetched = fetchIO_read(f, buf, sizeof(buf))) == 0)
+			break;
+		if (fetched == -1 && errno == EINTR)
+			continue;
+		if (fetched == -1)
+			errx(EXIT_FAILURE, "fetch failure: %s",
+			    fetchLastErrString);
+
+		statsize += fetched;
+		size = fetched;
+
+		for (ptr = buf; size > 0; ptr += wrote, size -= wrote) {
+			if ((wrote = fwrite(ptr, 1, size, fp)) < size) {
+				if (ferror(fp) && errno == EINTR)
+					clearerr(fp);
+				else
+					break;
+			}
+			written += wrote;
+		}
+	}
+
+	if (parsable)
+		printf(MSG_DOWNLOAD_END);
+	else
+		stop_progress_meter();
 
 	fetchIO_close(f);
+	fetchFreeURL(url);
 
-	return file;
+	if (written != st.size)
+		return -1;
+
+	return written;
 }

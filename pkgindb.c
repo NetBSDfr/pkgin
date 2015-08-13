@@ -42,7 +42,6 @@ static FILE		*sql_log_fp;
 static int              repo_counter = 0;
 
 static const char *pragmaopts[] = {
-	"cache_size = 1000000",
 	"locking_mode = EXCLUSIVE",
 	"empty_result_callbacks = 1",
 	"synchronous = OFF",
@@ -129,6 +128,25 @@ pdb_get_value(void *param, int argc, char **argv, char **colname)
 }
 
 int
+pkgindb_dovaquery(const char *fmt, ...)
+{
+	char *buf;
+	va_list ap;
+	int rv;
+
+	va_start(ap, fmt);
+	if (vasprintf(&buf, fmt, ap) == -1)
+		errx(EXIT_FAILURE, "Insufficient memory to construct query");
+	va_end(ap);
+
+	rv = pkgindb_doquery(buf, NULL, NULL);
+
+	free(buf);
+
+	return rv;
+}
+
+int
 pkgindb_doquery(const char *query,
 	int (*pkgindb_callback)(void *, int, char **, char **), void *param)
 {
@@ -161,6 +179,7 @@ upgrade_database()
 {
 	if (pkgindb_doquery(COMPAT_CHECK,
 			pkgindb_simple_callback, NULL) == PDB_ERR) {
+#ifdef notyet
 		/*
 		 * COMPAT_CHECK query leads to an error for an
 		 * incompatible database
@@ -168,6 +187,7 @@ upgrade_database()
 		printf(MSG_DATABASE_NOT_COMPAT);
 		if (!check_yesno(DEFAULT_YES))
 			exit(EXIT_FAILURE);
+#endif
 
 		pkgindb_reset();
 
