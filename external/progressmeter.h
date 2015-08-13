@@ -26,6 +26,10 @@
 
 #include "config.h"
 
+#if HAVE_NBCOMPAT_H
+#include <nbcompat.h>
+#endif
+
 #ifdef HAVE_SYS_TERMIOS_H
 #include <sys/termios.h>
 #elif HAVE_TERMIOS_H
