@@ -26,7 +26,7 @@
 
 #include "config.h"
 
-#ifdef HAVE_SYS_TERMIOS_H
+#if defined(HAVE_SYS_TERMIOS_H) && !defined(__FreeBSD__)
 #include <sys/termios.h>
 #elif HAVE_TERMIOS_H
 #include <termios.h>
