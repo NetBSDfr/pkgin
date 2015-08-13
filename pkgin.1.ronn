@@ -260,6 +260,8 @@ pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
     Testing and refinements.
   * Youri `yrmt` Mouton:
     OSX testing and patches
+  * Jonathan Perkin:
+    Performance improvements and patches.
 
 ## BUGS
 
