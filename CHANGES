@@ -1,3 +1,12 @@
+20150813
+	0.9.0
+	Various performance improvements from Joyent, see blog post at
+	<http://www.perkin.org.uk/posts/reducing-ram-usage-in-pkgin.html>
+	for more details.
+	Support pkg_summary.xz if available.
+	Don't switch to parsable output when stdout isn't a tty, broke various
+	automation tools: NetBSDfr/pkgin#46.
+
 20150308
 	bugfix: added missing dash before ffu
 
