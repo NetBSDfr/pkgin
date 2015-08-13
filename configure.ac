@@ -53,13 +53,6 @@ AC_SUBST(PKGTOOLS)
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
-AC_SEARCH_LIBS([BN_init], [crypto],
-	[LDFLAGS="$LDFLAGS -lcrypto"]
-	AC_SEARCH_LIBS([SSL_accept], [ssl],
-		[LDFLAGS="$LDFLAGS -lssl"]
-	)
-)
-
 # check for libnbcompat
 AC_CHECK_LIB([nbcompat], [strlcpy],
 	[LIBS="$LIBS -lnbcompat"]
