@@ -1,3 +1,7 @@
+20150817
+	0.9.2
+	Fix -Wempty-body build issue.
+
 20150813
 	0.9.1
 	Fix off-by-one NUL handling in pkg_summary.
