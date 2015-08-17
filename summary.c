@@ -341,7 +341,7 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 
 				/* split PKGNAME and VERSION */
 				v = strrchr(val, '-');
-				if (v != NULL);
+				if (v != NULL)
 					*v++ = '\0';
 				add_to_slist("PKGNAME", val);
 				add_to_slist("PKGVERS", v);
