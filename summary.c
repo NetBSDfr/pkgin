@@ -203,23 +203,38 @@ prepare_insert(int pkgid, struct Summary sum)
 	 * we support more columns.
 	 */
 	char		querybuf[4096];
+	char		tmpbuf[1024];
 
 	snprintf(querybuf, sizeof(querybuf), "INSERT INTO %s (PKG_ID", sum.tbl_name);
 
 	/* insert fields */
-	SLIST_FOREACH(pi, &inserthead, next)
-		snprintf(querybuf, sizeof(querybuf), "%s,\"%s\"", querybuf, pi->field);
+	SLIST_FOREACH(pi, &inserthead, next) {
+		snprintf(tmpbuf, sizeof(tmpbuf), ",\"%s\"", pi->field);
+		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
+			goto err;
+	}
 
-	snprintf(querybuf, sizeof(querybuf), "%s) VALUES (%d", querybuf, pkgid);
+	snprintf(tmpbuf, sizeof(tmpbuf), ") VALUES (%d", pkgid);
+	if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
+		goto err;
 
 	/* insert values */
-	SLIST_FOREACH(pi, &inserthead, next)
-		snprintf(querybuf, sizeof(querybuf), "%s,\"%s\"", querybuf, pi->value);
+	SLIST_FOREACH(pi, &inserthead, next) {
+		snprintf(tmpbuf, sizeof(tmpbuf), ",\"%s\"", pi->value);
+		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
+			goto err;
+	}
 
-	snprintf(querybuf, sizeof(querybuf), "%s);", querybuf);
+	snprintf(tmpbuf, sizeof(tmpbuf), ");");
+	if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
+		goto err;
 
 	/* Apply the query */
 	pkgindb_doquery(querybuf, NULL, NULL);
+
+	return;
+err:
+	errx(EXIT_FAILURE, "Increase query buffer");
 }
 
 /**
