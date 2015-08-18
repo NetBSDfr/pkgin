@@ -24,7 +24,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if HAVE_CONFIG_H
 #include "config.h"
+#endif
+#if HAVE_NBCOMPAT_H
+#include <nbcompat.h>
+#endif
 
 #if defined(HAVE_SYS_TERMIOS_H) && !defined(__FreeBSD__)
 #include <sys/termios.h>
