@@ -6,6 +6,7 @@ AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
 
 AC_CANONICAL_HOST
+AC_GNU_SOURCE
 
 # Checks for programs.
 AC_PROG_CC
