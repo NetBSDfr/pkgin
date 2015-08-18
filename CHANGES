@@ -1,3 +1,9 @@
+20150818
+	0.9.3
+	Ensure we aren't copying overlapping memory regions.
+	Free libarchive resources after use.
+	Various WARNS and build cleanups.
+
 20150817
 	0.9.2
 	Fix -Wempty-body build issue.
