@@ -74,7 +74,9 @@
 #if HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
 #endif
-#if defined(HAVE_LIBUTIL_H)
+#if defined(HAVE_BSD_LIBUTIL_H)
+#include <bsd/libutil.h>
+#elif defined(HAVE_LIBUTIL_H)
 #include <libutil.h>
 #elif defined(HAVE_UTIL_H)
 #include <util.h>
