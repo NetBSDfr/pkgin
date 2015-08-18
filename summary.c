@@ -517,7 +517,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 		    archive_error_string(a));
 	}
 
-	archive_read_close(a);
+	archive_read_free(a);
 }
 
 static void
