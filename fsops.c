@@ -122,10 +122,11 @@ read_repos()
 	if ((fp = fopen(PKGIN_CONF"/"REPOS_FILE, "r")) == NULL)
 		return NULL;
 
-	while (!feof(fp)) {
+	while (!feof(fp) && !ferror(fp)) {
 		memset(buf, 0, BUFSIZ);
 
-		(void)fgets(buf, BUFSIZ, fp);
+		if (fgets(buf, BUFSIZ, fp) == NULL)
+			continue;
 
 		if (strncmp(buf, "ftp://", 6) != 0 &&
 			strncmp(buf, "http://", 7) != 0 &&

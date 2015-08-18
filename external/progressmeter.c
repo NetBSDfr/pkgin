@@ -236,7 +236,9 @@ refresh_progress_meter(void)
 			strlcat(buf, "    ", win_size);
 	}
 
-	write(STDOUT_FILENO, buf, win_size - 1);
+	/* Silly workaround for -Werror=unused-result */
+	if (write(STDOUT_FILENO, buf, win_size - 1) <= 0)
+		;
 	last_update = now;
 	last_pos = cur_pos;
 }
@@ -293,7 +295,9 @@ stop_progress_meter(void)
 	if (cur_pos != end_pos)
 		refresh_progress_meter();
 
-	write(STDOUT_FILENO, "\n", 1);
+	/* Silly workaround for -Werror=unused-result */
+	if (write(STDOUT_FILENO, "\n", 1) <= 0)
+		;
 }
 
 /*ARGSUSED*/
