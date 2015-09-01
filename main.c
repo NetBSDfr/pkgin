@@ -122,7 +122,12 @@ main(int argc, char *argv[])
 		/* NOTREACHED */
 	}
 
-	/* initializations */
+	/* initializations if a correct cmd is entered */
+	if ((ch = find_cmd(argv[0])) == -1) {
+		usage();
+		/* NOTREACHED */
+	}
+
 
 	/* enter chroot if -c specified */
 	if (chrootpath != NULL) {
@@ -169,9 +174,6 @@ main(int argc, char *argv[])
 
 	/* load preferred file */
 	load_preferred();
-
-	/* find command index */
-	ch = find_cmd(argv[0]);
 
 	/* we need packages lists for almost everything */
 	if (ch != PKG_UPDT_CMD) /* already loaded by update_db() */
