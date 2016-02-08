@@ -381,6 +381,13 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		return rc;
 	}
 
+	/*
+	 * Perform an explicit summary update to avoid download mismatches
+	 * if the repository has been recently updated.
+	 */
+	if (update_db(REMOTE_SUMMARY, NULL, 0) == EXIT_FAILURE)
+		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
+
 	/* full impact list */
 	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
@@ -556,7 +563,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 
 			/* pure install, not called by pkgin_upgrade */
 			if (upgrade_type == UPGRADE_NONE)
-				(void)update_db(LOCAL_SUMMARY, pkgargs);
+				(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
 
 		}
 
@@ -656,7 +663,7 @@ pkgin_remove(char **pkgargs)
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(removehead);
 
-			(void)update_db(LOCAL_SUMMARY, NULL);
+			(void)update_db(LOCAL_SUMMARY, NULL, 1);
 		}
 
 		analyse_pkglog(rm_filepos);
@@ -779,7 +786,7 @@ pkgin_upgrade(int uptype)
 		pkgargs = record_upgrades(keeplisthead->P_Plisthead);
 	}
 
-	(void)update_db(LOCAL_SUMMARY, pkgargs);
+	(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
 
 	free_list(pkgargs);
 

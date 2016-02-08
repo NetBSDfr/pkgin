@@ -242,7 +242,7 @@ ssize_t		sum_read(struct archive *, void *, const void **);
 int		sum_close(struct archive *, void *);
 ssize_t		download_pkg(char *, FILE *);
 /* summary.c */
-int		update_db(int, char **);
+int		update_db(int, char **, int);
 void		split_repos(void);
 int		chk_repo_list(void);
 /* sqlite_callbacks.c */

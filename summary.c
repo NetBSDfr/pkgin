@@ -657,7 +657,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 }
 
 static void
-update_remotedb(void)
+update_remotedb(int verbose)
 {
 	struct archive	*a;
 	char		**prepos;
@@ -666,11 +666,13 @@ update_remotedb(void)
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
 
-		printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
+		if (verbose)
+			printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
 
 		/* load remote pkg_summary */
 		if ((a = fetch_summary(*prepos)) == NULL) {
-			printf(MSG_DB_IS_UP_TO_DATE, *prepos);
+			if (verbose)
+				printf(MSG_DB_IS_UP_TO_DATE, *prepos);
 			continue;
 		}
 
@@ -695,7 +697,7 @@ update_remotedb(void)
 }
 
 int
-update_db(int which, char **pkgkeep)
+update_db(int which, char **pkgkeep, int verbose)
 {
 	if (!have_enough_rights())
 		return EXIT_FAILURE;
@@ -704,7 +706,7 @@ update_db(int which, char **pkgkeep)
 	update_localdb(pkgkeep);
 
 	if (which == REMOTE_SUMMARY)
-		update_remotedb();
+		update_remotedb(verbose);
 
 	/* columns name not needed anymore */
 	if (cols.name != NULL) {

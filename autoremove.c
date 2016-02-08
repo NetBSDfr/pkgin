@@ -126,7 +126,7 @@ pkgin_autoremove()
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(orderedhead);
 
-			(void)update_db(LOCAL_SUMMARY, NULL);
+			(void)update_db(LOCAL_SUMMARY, NULL, 1);
 		}
 	}
 

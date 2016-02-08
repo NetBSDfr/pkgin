@@ -156,7 +156,7 @@ main(int argc, char *argv[])
 	need_upgrade = upgrade_database();
 
 	/* update local db if pkgdb mtime has changed */
-	(void)update_db(LOCAL_SUMMARY, NULL);
+	(void)update_db(LOCAL_SUMMARY, NULL, 1);
 
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
@@ -169,7 +169,7 @@ main(int argc, char *argv[])
 	 * or if empty database, or if repository list changed.
 	 */
 	if (need_upgrade || need_refresh)
-		(void)update_db(REMOTE_SUMMARY, NULL);
+		(void)update_db(REMOTE_SUMMARY, NULL, 0);
 
 	/* load preferred file */
 	load_preferred();
@@ -182,7 +182,7 @@ main(int argc, char *argv[])
 	case PKG_UPDT_CMD: /* update packages db */
 		if (need_upgrade || need_refresh) /* no need to do it twice */
 			break;
-		if (update_db(REMOTE_SUMMARY, NULL) == EXIT_FAILURE)
+		if (update_db(REMOTE_SUMMARY, NULL, 1) == EXIT_FAILURE)
 			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 		break;
 	case PKG_SHDDP_CMD: /* show direct depends */
