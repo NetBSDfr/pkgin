@@ -1,3 +1,7 @@
+20160208
+	0.9.4
+	Check for summary updates before fetching packages.
+
 20150818
 	0.9.3
 	Ensure we aren't copying overlapping memory regions.
