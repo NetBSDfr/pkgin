@@ -537,7 +537,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		if (unmet_reqs != NULL)/* there were unmet requirements */
 			printf(MSG_REQT_MISSING, unmet_reqs);
 
-		if (check_yesno(DEFAULT_YES) == ANSW_NO)
+		if (do_inst && check_yesno(DEFAULT_YES) == ANSW_NO)
 			exit(rc);
 
 		/*
