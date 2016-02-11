@@ -77,6 +77,7 @@
 #define MSG_PKGS_TO_UPGRADE "%d packages to be upgraded:\n%s\n"
 #define MSG_PKGS_TO_REMOVE "%d packages to be removed: \n%s\n"
 #define MSG_NOTHING_TO_UPGRADE "nothing to upgrade.\n"
+#define MSG_PKGS_TO_DOWNLOAD "%d packages to be downloaded (%s to download):\n%s\n"
 #define MSG_PKGS_TO_INSTALL \
 	"%d packages to be installed (%s to download, %s to install):\n%s\n"
 #define MSG_RM_UPGRADE_PKGS "removing packages to be upgraded...\n"

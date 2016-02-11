@@ -472,7 +472,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 
 	printf("\n");
 
-	if (upgradenum > 0) {
+	if (do_inst && upgradenum > 0) {
 		/* record ordered remove list before upgrade */
 		removehead = order_upgrade_remove(impacthead);
 
@@ -511,7 +511,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 			}
 		}
 
-	} else
+	} else if (do_inst)
 		printf(MSG_NOTHING_TO_UPGRADE);
 
 	if (installnum > 0) {
@@ -526,8 +526,12 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 #endif
 		}
 
-		printf(MSG_PKGS_TO_INSTALL, installnum, h_fsize, h_psize,
-				toinstall);
+		if (do_inst)
+			printf(MSG_PKGS_TO_INSTALL, installnum, h_fsize, h_psize,
+					toinstall);
+		else
+			printf(MSG_PKGS_TO_DOWNLOAD, installnum, h_fsize, toinstall);
+
 		printf("\n");
 
 		if (unmet_reqs != NULL)/* there were unmet requirements */
