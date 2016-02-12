@@ -100,17 +100,18 @@ sum_start(struct archive *a, void *data)
 	Sumfile	*sum = data;
 	char	*p;
 
-	if (!parsable) { /* human readable output */
-		if ((p = strrchr(sum->url->doc, '/')) != NULL)
-			p++;
-		else
-			p = (char *)sum->url->doc; /* should not happen */
+	if ((p = strrchr(sum->url->doc, '/')) != NULL)
+		p++;
+	else
+		p = (char *)sum->url->doc; /* should not happen */
 
+	if (parsable)
+		printf(MSG_DOWNLOAD_START, p);
+	else {
 		printf(MSG_DOWNLOADING, p);
 		fflush(stdout);
 		start_progress_meter(p, sum->size, &sum->pos);
-	} else
-		printf(MSG_DOWNLOAD_START);
+	}
 
 	return ARCHIVE_OK;
 }
@@ -147,10 +148,10 @@ sum_close(struct archive *a, void *data)
 {
 	Sumfile	*sum = data;
 
-	if (!parsable)
-		stop_progress_meter();
-	else
+	if (parsable)
 		printf(MSG_DOWNLOAD_END);
+	else
+		stop_progress_meter();
 
 	fetchIO_close(sum->fd);
 	fetchFreeURL(sum->url);
@@ -190,7 +191,7 @@ download_pkg(char *pkg_url, FILE *fp)
 		pkg = (char *)pkg_url; /* should not happen */
 
 	if (parsable) {
-		printf(MSG_DOWNLOAD_START);
+		printf(MSG_DOWNLOAD_START, pkg);
 	} else {
 		printf(MSG_DOWNLOADING, pkg);
 		fflush(stdout);

@@ -105,8 +105,8 @@
 /* download.c */
 #define MSG_DOWNLOADING "downloading %s:   0%%"
 #define MSG_DOWNLOADING_PCT "\rdownloading %s: %8s %3d%%"
-#define MSG_DOWNLOAD_START "download started.\n"
-#define MSG_DOWNLOAD_END "download ended.\n"
+#define MSG_DOWNLOAD_START "downloading %s"
+#define MSG_DOWNLOAD_END " done.\n"
 
 /* autoremove.c */
 #define MSG_AUTOREMOVE_WARNING "\
