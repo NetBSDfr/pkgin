@@ -240,7 +240,7 @@ Sumfile		*sum_open(char *, time_t *);
 int		sum_start(struct archive *, void *);
 ssize_t		sum_read(struct archive *, void *, const void **);
 int		sum_close(struct archive *, void *);
-ssize_t		download_pkg(char *, FILE *);
+ssize_t		download_pkg(char *, FILE *, int, int);
 /* summary.c */
 int		update_db(int, char **, int);
 void		split_repos(void);

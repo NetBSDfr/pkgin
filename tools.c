@@ -32,6 +32,12 @@
 
 #include "tools.h"
 
+__inline int
+digitcount(int n)
+{
+	return floor(log10(abs(n))) + 1;
+}
+
 int
 charcount(char *str, char c)
 {
