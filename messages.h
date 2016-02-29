@@ -56,6 +56,7 @@
 #define MSG_DONT_HAVE_RIGHTS "You don't have enough rights for this operation."
 
 /* actions.c */
+#define MSG_PROGRESS "[%*d/%d] "
 #define MSG_REMOVING "removing %s...\n"
 #define MSG_DOWNLOAD_PKGS "downloading packages...\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"
