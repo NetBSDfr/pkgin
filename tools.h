@@ -51,6 +51,9 @@
 #if HAVE_LIMITS_H
 #include <limits.h>
 #endif
+#if HAVE_MATH_H
+#include <math.h>
+#endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -210,6 +213,7 @@
 extern uint8_t yesflag;
 extern uint8_t noflag;
 
+extern int digitcount(int);
 extern int charcount(char *, char);
 extern int trimcr(char *);
 extern char **splitstr(char *, const char *);

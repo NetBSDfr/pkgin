@@ -31,6 +31,7 @@
  */
 
 #include "pkgin.h"
+#include <math.h>
 #include <time.h>
 
 #ifndef LOCALBASE
@@ -58,14 +59,14 @@ verb_flag(const char *flags)
 #endif
 
 static int
-pkg_download(Plisthead *installhead)
+pkg_download(Plisthead *installhead, int downloadnum)
 {
 	FILE		*fp;
 	Pkglist  	*pinstall;
 	struct stat	st;
 	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
 	ssize_t		size;
-	int		rc = EXIT_SUCCESS;
+	int		rc = EXIT_SUCCESS, curdownload = 0;
 
 	printf(MSG_DOWNLOAD_PKGS);
 
@@ -109,7 +110,7 @@ pkg_download(Plisthead *installhead)
 		if ((fp = fopen(pkg_fs, "w")) == NULL)
 			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
 
-		if ((size = download_pkg(pkg_url, fp)) == -1) {
+		if ((size = download_pkg(pkg_url, fp, ++curdownload, downloadnum)) == -1) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
 			rc = EXIT_FAILURE;
 
@@ -269,9 +270,9 @@ do_pkg_remove(Plisthead *removehead)
  * i.e. apache 1.3
  */
 static int
-do_pkg_install(Plisthead *installhead)
+do_pkg_install(Plisthead *installhead, int installnum)
 {
-	int		rc = EXIT_SUCCESS;
+	int		rc = EXIT_SUCCESS, width = 1, curinstall = 0;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ], preserve[BUFSIZ];
 #ifndef DEBUG
@@ -289,6 +290,9 @@ do_pkg_install(Plisthead *installhead)
 		if (pinstall->file_size == -1)
 			continue;
 
+		width = digitcount(installnum);
+
+		printf(MSG_PROGRESS, width, ++curinstall, installnum);
 		printf(MSG_INSTALLING, pinstall->depend);
 		snprintf(pkgpath, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
@@ -544,7 +548,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		 * before erasing anything, download packages
 		 * If there was an error while downloading, record it
 		 */
-		if (pkg_download(installhead) == EXIT_FAILURE)
+		if (pkg_download(installhead, installnum) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
 
 		if (do_inst) {
@@ -562,7 +566,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 			 * If there was an error while installing,
 			 * record it
 			 */
-			if (do_pkg_install(installhead) == EXIT_FAILURE)
+			if (do_pkg_install(installhead, installnum) == EXIT_FAILURE)
 				rc = EXIT_FAILURE;
 
 			/* pure install, not called by pkgin_upgrade */

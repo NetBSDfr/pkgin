@@ -91,7 +91,7 @@ LDFLAGS+=	@LDFLAGS@
 
 LDADD+=		-L${LOCALBASE}/lib @RPATH@,${LOCALBASE}/lib	\
 		-lbz2 -lz -larchive @LIBS@
-LDADD+=		-lsqlite3
+LDADD+=		-lsqlite3 -lm
 
 CLEANFILES+=	${DPSRCS}
 
