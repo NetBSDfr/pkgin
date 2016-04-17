@@ -43,6 +43,9 @@ static uint8_t	said = 0;
 FILE		*err_fp = NULL;
 long int	rm_filepos = -1, in_filepos = -1;
 char		pkgtools_flags[5];
+int		current_download;
+int		total_install;
+int		total_download;
 
 #ifndef DEBUG
 static char *
@@ -58,14 +61,14 @@ verb_flag(const char *flags)
 #endif
 
 static int
-pkg_download(Plisthead *installhead, int downloadnum)
+pkg_download(Plisthead *installhead)
 {
 	FILE		*fp;
 	Pkglist  	*pinstall;
 	struct stat	st;
 	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
 	ssize_t		size;
-	int		rc = EXIT_SUCCESS, curdownload = 0;
+	int		rc = EXIT_SUCCESS;
 
 	printf(MSG_DOWNLOAD_PKGS);
 
@@ -83,8 +86,10 @@ pkg_download(Plisthead *installhead, int downloadnum)
 		/* already fully downloaded */
 		if (stat(pkg_fs, &st) == 0 && 
 			st.st_size == pinstall->file_size &&
-			pinstall->file_size != 0 )
+			pinstall->file_size != 0 ) {
+			total_download--;
 			continue;
+		}
 
 		snprintf(query, BUFSIZ, PKG_URL, pinstall->depend);
 		/* retrieve repository for package  */
@@ -109,7 +114,9 @@ pkg_download(Plisthead *installhead, int downloadnum)
 		if ((fp = fopen(pkg_fs, "w")) == NULL)
 			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
 
-		if ((size = download_pkg(pkg_url, fp, ++curdownload, downloadnum)) == -1) {
+		current_download++;
+
+		if ((size = download_pkg(pkg_url, fp)) == -1) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
 			rc = EXIT_FAILURE;
 
@@ -269,9 +276,9 @@ do_pkg_remove(Plisthead *removehead)
  * i.e. apache 1.3
  */
 static int
-do_pkg_install(Plisthead *installhead, int installnum)
+do_pkg_install(Plisthead *installhead)
 {
-	int		rc = EXIT_SUCCESS, curinstall = 0;
+	int		rc = EXIT_SUCCESS, current_install = 0;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ], preserve[BUFSIZ];
 #ifndef DEBUG
@@ -289,7 +296,7 @@ do_pkg_install(Plisthead *installhead, int installnum)
 		if (pinstall->file_size == -1)
 			continue;
 
-		printf(MSG_PROGRESS, ++curinstall, installnum);
+		printf(MSG_PROGRESS, ++current_install, total_install);
 		printf(MSG_INSTALLING, pinstall->depend);
 		snprintf(pkgpath, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
@@ -448,6 +455,9 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 			removenum++;
 			break;
 		}
+
+		total_download = installnum;
+		total_install = installnum;
 	}
 
 	(void)humanize_number(h_fsize, H_BUF, (int64_t)file_size, "",
@@ -545,7 +555,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		 * before erasing anything, download packages
 		 * If there was an error while downloading, record it
 		 */
-		if (pkg_download(installhead, installnum) == EXIT_FAILURE)
+		if (pkg_download(installhead) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
 
 		if (do_inst) {
@@ -563,7 +573,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 			 * If there was an error while installing,
 			 * record it
 			 */
-			if (do_pkg_install(installhead, installnum) == EXIT_FAILURE)
+			if (do_pkg_install(installhead) == EXIT_FAILURE)
 				rc = EXIT_FAILURE;
 
 			/* pure install, not called by pkgin_upgrade */

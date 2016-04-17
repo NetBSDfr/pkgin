@@ -224,6 +224,9 @@ extern uint8_t		parsable;
 extern uint8_t		pflag;
 extern int		r_plistcounter;
 extern int		l_plistcounter;
+extern int		current_download;
+extern int		total_download;
+extern int		total_install;
 extern char		*env_repos;
 extern char		**pkg_repos;
 extern const char	*pkgin_cache;
@@ -240,7 +243,7 @@ Sumfile		*sum_open(char *, time_t *);
 int		sum_start(struct archive *, void *);
 ssize_t		sum_read(struct archive *, void *, const void **);
 int		sum_close(struct archive *, void *);
-ssize_t		download_pkg(char *, FILE *, int, int);
+ssize_t		download_pkg(char *, FILE *);
 /* summary.c */
 int		update_db(int, char **, int);
 void		split_repos(void);

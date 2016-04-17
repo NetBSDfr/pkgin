@@ -35,6 +35,9 @@
 
 int	fetchTimeout = 15; /* wait 15 seconds before timeout */
 size_t	fetch_buffer = 1024;
+int	total_install;
+int	current_download;
+int	total_download;
 
 /*
  * Open a pkg_summary and if newer than local return an open libfetch
@@ -164,7 +167,7 @@ sum_close(struct archive *a, void *data)
  * Download a package to the local cache.
  */
 ssize_t
-download_pkg(char *pkg_url, FILE *fp, int curdownload, int downloadnum)
+download_pkg(char *pkg_url, FILE *fp)
 {
 	struct url_stat st;
 	size_t size, wrote;
@@ -192,7 +195,7 @@ download_pkg(char *pkg_url, FILE *fp, int curdownload, int downloadnum)
 
 	/* Add progress info */
 	snprintf(progress_and_pkg, BUFSIZ,
-		MSG_PROGRESS"%s", curdownload, downloadnum, pkg);
+		MSG_PROGRESS"%s", current_download, total_download, pkg);
 
 	if (parsable) {
 		printf(MSG_DOWNLOAD_START, pkg);
