@@ -35,6 +35,9 @@
 
 int	fetchTimeout = 15; /* wait 15 seconds before timeout */
 size_t	fetch_buffer = 1024;
+int	total_install;
+int	current_download;
+int	total_download;
 
 /*
  * Open a pkg_summary and if newer than local return an open libfetch
@@ -173,7 +176,7 @@ download_pkg(char *pkg_url, FILE *fp)
 	struct url *url;
 	fetchIO *f = NULL;
 	char buf[4096];
-	char *pkg, *ptr;
+	char *pkg, *ptr, progress_and_pkg[BUFSIZ];
 
 	if ((url = fetchParseURL(pkg_url)) == NULL)
 		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
@@ -190,12 +193,16 @@ download_pkg(char *pkg_url, FILE *fp)
 	else
 		pkg = (char *)pkg_url; /* should not happen */
 
+	/* Add progress info */
+	snprintf(progress_and_pkg, BUFSIZ,
+		MSG_PROGRESS"%s", current_download, total_download, pkg);
+
 	if (parsable) {
 		printf(MSG_DOWNLOAD_START, pkg);
 	} else {
 		printf(MSG_DOWNLOADING, pkg);
 		fflush(stdout);
-		start_progress_meter(pkg, st.size, &statsize);
+		start_progress_meter(progress_and_pkg, st.size, &statsize);
 	}
 
 	while (written < st.size) {

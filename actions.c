@@ -43,6 +43,9 @@ static uint8_t	said = 0;
 FILE		*err_fp = NULL;
 long int	rm_filepos = -1, in_filepos = -1;
 char		pkgtools_flags[5];
+int		current_download;
+int		total_install;
+int		total_download;
 
 #ifndef DEBUG
 static char *
@@ -73,6 +76,17 @@ pkg_download(Plisthead *installhead)
 		snprintf(pkg_fs, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
+		/* already fully downloaded */
+		if (stat(pkg_fs, &st) == 0 &&
+			st.st_size == pinstall->file_size &&
+			pinstall->file_size != 0)
+			total_download--;
+	}
+
+	SLIST_FOREACH(pinstall, installhead, next) {
+		snprintf(pkg_fs, BUFSIZ,
+			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
+
 		/* pkg_info -X -a produces pkg_summary with empty FILE_SIZE,
 		 * people could spend some time blaming on pkgin before finding
 		 * what's really going on.
@@ -83,7 +97,7 @@ pkg_download(Plisthead *installhead)
 		/* already fully downloaded */
 		if (stat(pkg_fs, &st) == 0 && 
 			st.st_size == pinstall->file_size &&
-			pinstall->file_size != 0 )
+			pinstall->file_size != 0)
 			continue;
 
 		snprintf(query, BUFSIZ, PKG_URL, pinstall->depend);
@@ -108,6 +122,8 @@ pkg_download(Plisthead *installhead)
 		umask(DEF_UMASK);
 		if ((fp = fopen(pkg_fs, "w")) == NULL)
 			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
+
+		current_download++;
 
 		if ((size = download_pkg(pkg_url, fp)) == -1) {
 			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
@@ -271,7 +287,7 @@ do_pkg_remove(Plisthead *removehead)
 static int
 do_pkg_install(Plisthead *installhead)
 {
-	int		rc = EXIT_SUCCESS;
+	int		rc = EXIT_SUCCESS, current_install = 0;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ], preserve[BUFSIZ];
 #ifndef DEBUG
@@ -289,6 +305,7 @@ do_pkg_install(Plisthead *installhead)
 		if (pinstall->file_size == -1)
 			continue;
 
+		printf(MSG_PROGRESS, ++current_install, total_install);
 		printf(MSG_INSTALLING, pinstall->depend);
 		snprintf(pkgpath, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
@@ -447,6 +464,9 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 			removenum++;
 			break;
 		}
+
+		total_download = installnum;
+		total_install = installnum;
 	}
 
 	(void)humanize_number(h_fsize, H_BUF, (int64_t)file_size, "",
