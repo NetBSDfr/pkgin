@@ -76,6 +76,17 @@ pkg_download(Plisthead *installhead)
 		snprintf(pkg_fs, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
+		/* already fully downloaded */
+		if (stat(pkg_fs, &st) == 0 &&
+			st.st_size == pinstall->file_size &&
+			pinstall->file_size != 0)
+			total_download--;
+	}
+
+	SLIST_FOREACH(pinstall, installhead, next) {
+		snprintf(pkg_fs, BUFSIZ,
+			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
+
 		/* pkg_info -X -a produces pkg_summary with empty FILE_SIZE,
 		 * people could spend some time blaming on pkgin before finding
 		 * what's really going on.
@@ -86,10 +97,8 @@ pkg_download(Plisthead *installhead)
 		/* already fully downloaded */
 		if (stat(pkg_fs, &st) == 0 && 
 			st.st_size == pinstall->file_size &&
-			pinstall->file_size != 0 ) {
-			total_download--;
+			pinstall->file_size != 0)
 			continue;
-		}
 
 		snprintf(query, BUFSIZ, PKG_URL, pinstall->depend);
 		/* retrieve repository for package  */
