@@ -118,6 +118,7 @@
 #define PKG_SHPCAT_CMD 25
 #define PKG_SHALLCAT_CMD 26
 #define PKG_STATS_CMD 27
+#define PKG_SHREPO_CMD 28
 #define PKG_GINTO_CMD 255
 
 #define PKG_EQUAL '='
@@ -193,6 +194,18 @@ typedef struct Pkglist {
 	SLIST_ENTRY(Pkglist) next;
 } Pkglist;
 
+/**
+ * \struct Repolist
+ * \brief structure of repositories information
+ */
+typedef struct Repolist {
+	char	*url;	/*<! repository URL */
+	int	mtime;	/*<! repository mtime */
+	SLIST_ENTRY(Repolist) next;
+} Repolist;
+
+typedef SLIST_HEAD(, Repolist) Rlisthead;
+
 #define comment  	p_un.comment
 #define computed	p_un.deptree.computed
 #define keep		p_un.deptree.keep
@@ -234,6 +247,7 @@ extern Plisthead	r_plisthead;
 extern Plisthead	l_plisthead;
 extern FILE		*tracefp;
 extern Preflist		**preflist;
+extern Rlisthead	rlisthead;
 
 /* download.c*/
 Sumfile		*sum_open(char *, time_t *);
@@ -248,6 +262,10 @@ int		chk_repo_list(void);
 /* sqlite_callbacks.c */
 int		pdb_rec_list(void *, int, char **, char **);
 int		pdb_rec_depends(void *, int, char **, char **);
+Repolist	*malloc_repolist(void);
+void		init_repo_list(void);
+void		free_repo_list(void);
+int		pdb_rec_repos(void *, int, char **, char **);
 /* depends.c */
 int		show_direct_depends(const char *);
 int		show_full_dep_tree(const char *, const char *, const char *);

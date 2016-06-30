@@ -291,6 +291,9 @@ main(int argc, char *argv[])
         case PKG_STATS_CMD: /* show package statistics */
                 pkgindb_stats();
                 break;
+	case PKG_SHREPO_CMD: /* show repositories' url */
+		pkgindb_repo_urls();
+		break;
 	default:
 		usage();
 		/* NOTREACHED */

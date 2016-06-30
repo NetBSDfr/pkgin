@@ -94,5 +94,7 @@ static struct command {
 	  PKG_GINTO_CMD },
         { "stats", "st", "Packages statistics.",
           PKG_STATS_CMD },
+	{ "repo-url", "ru", "Show repositories URL",
+	  PKG_SHREPO_CMD },
 	{ NULL, NULL, NULL, 0 }
 };

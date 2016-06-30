@@ -32,6 +32,8 @@
 
 #include "pkgin.h"
 
+Rlisthead	rlisthead;
+
 /** 
  * SQLite callback, record package list
  */
@@ -143,6 +145,72 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 		deptree->keep = 0;
 
 	SLIST_INSERT_HEAD(pdphead, deptree, next);
+
+	return PDB_OK;
+}
+
+Repolist *
+malloc_repolist()
+{
+	Repolist *repolist;
+
+	XMALLOC(repolist, sizeof(Repolist));
+
+	repolist->url = NULL;
+	repolist->mtime = 0;
+
+	return repolist;
+}
+void
+init_repo_list()
+{
+	SLIST_INIT(&rlisthead);
+	pkgindb_doquery(SELECT_REPO, pdb_rec_repos, &rlisthead);
+}
+
+void
+free_repo_list()
+{
+	Repolist	*rlist;
+
+	while (!SLIST_EMPTY(&rlisthead)) {
+		rlist = SLIST_FIRST(&rlisthead);
+		SLIST_REMOVE_HEAD(&rlisthead, next);
+		free(rlist->url);
+		rlist->url = NULL;
+	}
+}
+
+/**
+ * sqlite callback
+ * record REPOS list
+ */
+int
+pdb_rec_repos(void *param, int argc, char **argv, char **colname)
+{
+	Repolist	*repos;
+	Rlisthead	*reposhead = (Rlisthead *)param;
+	int		i;
+
+	if (argv == NULL)
+		return PDB_ERR;
+
+	if (argv[0] == NULL)
+		return PDB_ERR;
+
+	repos = malloc_repolist();
+
+	for (i = 0; i < argc; i++) {
+		if (argv[i] == NULL)
+			continue;
+
+		if (strcmp(colname[i], "REPO_URL") == 0)
+			XSTRDUP(repos->url, argv[i]);
+		if (strcmp(colname[i], "REPO_MTIME") == 0)
+			repos->mtime = strtol(argv[i], (char **)NULL, 10);
+	}
+
+	SLIST_INSERT_HEAD(reposhead, repos, next);
 
 	return PDB_OK;
 }

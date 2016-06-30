@@ -40,6 +40,7 @@ static char		*pdberr = NULL;
 static int		pdbres = 0;
 static FILE		*sql_log_fp;
 static int              repo_counter = 0;
+Rlisthead		rlisthead;
 
 static const char *pragmaopts[] = {
 	"locking_mode = EXCLUSIVE",
@@ -354,4 +355,22 @@ pkgindb_stats()
                 MSG_REMOTE_PACKAGES
                 MSG_REMOTE_PKG_SIZE,
                 stats[0].value, h_local_size, repo_counter, stats[1].value, h_remote_size);
+}
+
+void
+pkgindb_repo_urls()
+{
+	Repolist	*rlist;
+	rlist = malloc(sizeof(Repolist));
+
+	init_repo_list();
+
+	SLIST_FOREACH(rlist, &rlisthead, next) {
+		printf("%s\n", rlist->url);
+	}
+
+	XFREE(rlist);
+	rlist = NULL;
+
+	free_repo_list();
 }

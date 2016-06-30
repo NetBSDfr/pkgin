@@ -66,6 +66,7 @@ extern const char UPDATE_PKGDB_MTIME[];
 extern const char EXISTS_REPO[];
 extern const char INSERT_REPO[];
 extern const char SELECT_REPO_URLS[];
+extern const char SELECT_REPO[];
 extern const char DELETE_REPO_URL[];
 extern const char UPDATE_REPO_MTIME[];
 extern const char INSERT_SINGLE_VALUE[];
@@ -97,6 +98,7 @@ void		repo_record(char **);
 time_t		pkg_sum_mtime(char *);
 void		pkgindb_reset(void);
 void            pkgindb_stats(void);
+void		pkgindb_repo_urls(void);
 
 #define PDB_OK 0
 #define PDB_ERR -1
