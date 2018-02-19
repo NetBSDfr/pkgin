@@ -41,6 +41,7 @@ static void	ginto(void);
 
 uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0, pflag = 0;
+uint8_t		download_only = DO_INST; /* by default, do install packages */
 char		lslimit = '\0';
 FILE  		*tracefp = NULL;
 
@@ -48,7 +49,6 @@ int
 main(int argc, char *argv[])
 {
 	uint8_t		need_upgrade, need_refresh;
-	uint8_t		do_inst = DO_INST; /* by default, do install packages */
 	int 		ch, i, rc = EXIT_SUCCESS;
 	struct stat	sb;
 	const char	*chrootpath = NULL;
@@ -89,7 +89,7 @@ main(int argc, char *argv[])
 			lslimit = optarg[0];
 			break;
 		case 'd':
-			do_inst = DONT_INST; /* download only */
+			download_only = DONT_INST; /* download only */
 			break;
 		case 'c':
 			chrootpath = optarg;
@@ -210,7 +210,7 @@ main(int argc, char *argv[])
 		break;
 	case PKG_INST_CMD: /* install a package and its dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_INST);
-		rc = pkgin_install(&argv[1], do_inst);
+		rc = pkgin_install(&argv[1], download_only);
 		break;
 	case PKG_UPGRD_CMD: /* upgrade keep-packages */
 		rc = pkgin_upgrade(UPGRADE_KEEP);
@@ -252,7 +252,7 @@ main(int argc, char *argv[])
 	case PKG_IMPORT_CMD: /* import for keep packages and install them */
 		missing_param(argc, 2, MSG_MISSING_FILENAME);
 		for (i=1; i<argc; i++)
-			import_keep(do_inst, argv[i]);
+			import_keep(download_only, argv[i]);
 		break;
 	case PKG_SHPROV_CMD: /* show what a package provides */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);

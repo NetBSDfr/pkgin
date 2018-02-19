@@ -215,6 +215,7 @@ typedef struct Preflist {
 	char		*glob;
 } Preflist;
 
+extern uint8_t 		download_only;
 extern uint8_t 		force_update;
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
