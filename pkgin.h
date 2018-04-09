@@ -58,9 +58,6 @@
 #define PKG_INFO PKGTOOLS"/pkg_info"
 
 #define PKG_SUMMARY "pkg_summary"
-#define PKGIN_SQL_LOG PKGIN_DB"/sql.log"
-#define PKG_INSTALL_ERR_LOG PKGIN_DB"/pkg_install-err.log"
-#define PKGIN_CACHE PKGIN_DB"/cache"
 #define PKG_EXT ".tgz"
 #define PKGIN_CONF PKG_SYSCONFDIR"/pkgin"
 #define REPOS_FILE "repositories.conf"
@@ -226,7 +223,6 @@ extern int		r_plistcounter;
 extern int		l_plistcounter;
 extern char		*env_repos;
 extern char		**pkg_repos;
-extern const char	*pkgin_cache;
 extern char  		lslimit;
 extern char		pkgtools_flags[];
 extern char		pkg_dbdir[];
@@ -290,7 +286,6 @@ void		pkg_keep(int, char **);
 int		fs_has_room(const char *, int64_t);
 uint64_t	fs_room(const char *);
 void		clean_cache(void);
-void		create_dirs(void);
 char		*read_repos(void);
 /* pkg_str.c */
 char	   	*unique_pkg(const char *, const char *);
@@ -310,8 +305,19 @@ int		pkg_has_conflicts(Pkglist *);
 void		show_prov_req(const char *, const char *);
 /* pkg_infos.c */
 void		show_pkg_info(char, char *);
+
 /* pkgindb.c */
+#define PRIVS_PKGDB	0x1
+#define PRIVS_PKGINDB	0x2
+extern char	*pkgin_dbdir;
+extern char	*pkgin_sqldb;
+extern char	*pkgin_cache;
+extern char	*pkgin_errlog;
+extern char	*pkgin_sqllog;
+void		setup_pkgin_dbdir(void);
 void		get_pkg_dbdir(void);
+uint8_t		have_privs(int);
+
 /* preferred.c */
 void		load_preferred(void);
 void		free_preferred(void);

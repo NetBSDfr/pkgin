@@ -63,9 +63,9 @@ CPPFLAGS+=	-DPKGIN_VERSION=\"${PKGIN_VERSION}\"
 
 .if defined(DEBUG)
 CPPFLAGS+=	-DDEBUG
-PKGIN_DB!=	pwd
+PKGIN_DBDIR!=	pwd
 .else
-PKGIN_DB=	${VARBASE}/db/pkgin
+PKGIN_DBDIR=	${VARBASE}/db/pkgin
 .endif
 
 .if ${OPSYS} == "NetBSD"
@@ -80,7 +80,7 @@ CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
 		-DPKG_SYSCONFDIR=\"${PKG_SYSCONFDIR}\"		\
 		-DPKG_DBDIR="\"${PKG_DBDIR}\""			\
 		-DDEF_LOG_DIR="\"${PKG_DBDIR}\""		\
-		-DPKGIN_DB=\"${PKGIN_DB}\"			\
+		-DPKGIN_DBDIR=\"${PKGIN_DBDIR}\"		\
 		-DPKGTOOLS=\"${PKGTOOLS}\"
 
 CPPFLAGS+=	-DHAVE_CONFIG_H

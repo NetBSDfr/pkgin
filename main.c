@@ -146,9 +146,9 @@ main(int argc, char *argv[])
 
 	/* for pkg_install */
 	unsetenv("PKG_PATH");
-	/* create base directories */
-	if (stat(pkgin_cache, &sb) < 0)
-		create_dirs();
+
+	/* Configure pkgin database directory */
+	setup_pkgin_dbdir();
 
 	pkgindb_init();
 

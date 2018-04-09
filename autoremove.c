@@ -183,7 +183,7 @@ pkg_keep(int type, char **pkgargs)
 	Pkglist	*pkglist = NULL;
 	char   	**pkeep, *pkgname, query[BUFSIZ];
 
-	if (!have_enough_rights())
+	if (!have_privs(PRIVS_PKGDB|PRIVS_PKGINDB))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
 	if (SLIST_EMPTY(&l_plisthead)) /* no packages recorded */

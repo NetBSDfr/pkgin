@@ -51,6 +51,38 @@ static const char *pragmaopts[] = {
 
 char pkg_dbdir[BUFSIZ];
 
+char *pkgin_dbdir;
+char *pkgin_sqldb;
+char *pkgin_cache;
+char *pkgin_errlog;
+char *pkgin_sqllog;
+
+void
+setup_pkgin_dbdir(void)
+{
+	char *p;
+
+	if ((p = getenv("PKGIN_DBDIR")) != NULL)
+		pkgin_dbdir = xasprintf("%s", p);
+	else
+		pkgin_dbdir = xasprintf("%s", PKGIN_DBDIR);
+
+	pkgin_sqldb = xasprintf("%s/pkgin.db", pkgin_dbdir);
+	pkgin_cache = xasprintf("%s/cache", pkgin_dbdir);
+	pkgin_errlog = xasprintf("%s/pkg_install-err.log", pkgin_dbdir);
+	pkgin_sqllog = xasprintf("%s/sql.log", pkgin_dbdir);
+
+	if (access(pkgin_dbdir, F_OK) != 0) {
+		if (mkdir(pkgin_dbdir, 0755) < 0)
+			err(1, "Failed to create %s", pkgin_dbdir);
+	}
+
+	if (access(pkgin_cache, F_OK) != 0) {
+		if (mkdir(pkgin_cache, 0755) < 0)
+			err(1, "Failed to create %s", pkgin_cache);
+	}
+}
+
 void
 get_pkg_dbdir(void)
 {
@@ -67,9 +99,16 @@ get_pkg_dbdir(void)
 }
 
 uint8_t
-have_enough_rights()
+have_privs(int reqd)
 {
-	if (access(pkg_dbdir, W_OK) < 0 || access(pkg_dbdir, W_OK) < 0)
+	if ((reqd & PRIVS_PKGDB) &&
+	    (access(pkg_dbdir, F_OK) == 0) &&
+	    (access(pkg_dbdir, W_OK) < 0))
+		return 0;
+
+	if ((reqd & PRIVS_PKGINDB) &&
+	    (access(pkgin_dbdir, F_OK) == 0) &&
+	    (access(pkgin_dbdir, W_OK) < 0))
 		return 0;
 
 	return 1;
@@ -204,13 +243,13 @@ pkgindb_init()
 	char buf[BUFSIZ];
 
 	/*
-	 * Do not exit if PKGIN_SQL_LOG is not writable.
+	 * Do not exit if pkgin_sqllog is not writable.
 	 * Permit users to do list-operations
 	 */
-	sql_log_fp = fopen(PKGIN_SQL_LOG, "w");
+	sql_log_fp = fopen(pkgin_sqllog, "w");
 
-	if (sqlite3_open(PDB, &pdb) != SQLITE_OK)
-		pdb_err("Can't open database " PDB);
+	if (sqlite3_open(pkgin_sqldb, &pdb) != SQLITE_OK)
+		pdb_err("Can't open database");
 
 	/* generic query in order to check tables existence */
 	if (pkgindb_doquery("select * from sqlite_master;",
@@ -234,8 +273,8 @@ pkgindb_reset()
 {
 	pkgindb_close();
 
-	if (unlink(PDB) < 0)
-		err(EXIT_FAILURE, MSG_DELETE_DB_FAILED, PDB);
+	if (unlink(pkgin_sqldb) < 0)
+		err(EXIT_FAILURE, MSG_DELETE_DB_FAILED, pkgin_sqldb);
 
 	pkgindb_init();
 }

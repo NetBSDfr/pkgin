@@ -37,7 +37,6 @@
 #define LOCALBASE "/usr/pkg" /* see DISCLAIMER below */
 #endif
 
-const char	*pkgin_cache = PKGIN_CACHE;
 static int	upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
 FILE		*err_fp = NULL;
@@ -133,7 +132,7 @@ pkg_download(Plisthead *installhead)
 }
 
 /**
- * \brief Analyse PKG_INSTALL_ERR_LOG for warnings
+ * \brief Analyse pkgin_errlog for warnings
  */
 static void
 analyse_pkglog(long int filepos)
@@ -144,7 +143,7 @@ analyse_pkglog(long int filepos)
 	if (filepos < 0)
 		return;
 
-	err_ro = fopen(PKG_INSTALL_ERR_LOG, "r");
+	err_ro = fopen(pkgin_errlog, "r");
 
 	(void)fseek(err_ro, filepos, SEEK_SET);
 
@@ -167,7 +166,7 @@ analyse_pkglog(long int filepos)
 }
 
 /**
- * \brief Tags PKG_INSTALL_ERR_LOG with date
+ * \brief Tags pkgin_errlog with date
  */
 #define DATELEN 64
 
@@ -199,9 +198,9 @@ static void
 open_pi_log(void)
 {
 	if (!verbosity && !said) {
-		if ((err_fp = fopen(PKG_INSTALL_ERR_LOG, "a")) == NULL) {
+		if ((err_fp = fopen(pkgin_errlog, "a")) == NULL) {
  			fprintf(stderr, MSG_CANT_OPEN_WRITE,
-				PKG_INSTALL_ERR_LOG);
+				pkgin_errlog);
 			exit(EXIT_FAILURE);
 		}
 
@@ -219,7 +218,7 @@ close_pi_log(void)
 		analyse_pkglog(rm_filepos);
 		printf(MSG_WARNS_ERRS, warn_count, err_count);
 		if (warn_count > 0 || err_count > 0)
-			printf(MSG_PKG_INSTALL_LOGGING_TO, PKG_INSTALL_ERR_LOG);
+			printf(MSG_PKG_INSTALL_LOGGING_TO, pkgin_errlog);
 	}
 }
 
@@ -362,6 +361,7 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 {
 	int		installnum = 0, upgradenum = 0, removenum = 0;
 	int		rc = EXIT_SUCCESS;
+	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	file_size = 0, free_space;
 	int64_t		size_pkg = 0;
 	Pkglist		*premove, *pinstall;
@@ -381,12 +381,17 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		return rc;
 	}
 
+	if (do_inst)
+		privsreqd |= PRIVS_PKGDB;
+
+	if (!have_privs(privsreqd))
+		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
+
 	/*
 	 * Perform an explicit summary update to avoid download mismatches
 	 * if the repository has been recently updated.
 	 */
-	if (update_db(REMOTE_SUMMARY, NULL, 0) == EXIT_FAILURE)
-		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
+	(void)update_db(REMOTE_SUMMARY, NULL, 0);
 
 	/* full impact list */
 	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {

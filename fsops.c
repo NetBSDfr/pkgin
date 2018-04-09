@@ -98,19 +98,6 @@ clean_cache()
 	closedir(dp);
 }
 
-void
-create_dirs()
-{
-	/* create database repository */
-	if(-1 == mkdir(PKGIN_DB, 0755) && errno != EEXIST) 
-		errx(EXIT_FAILURE, MSG_MKDIR_DB_REPOSITORY_FAILED, 
-						strerror(errno));
-	/* create cache repository */
-	if(-1 == mkdir(pkgin_cache, 0755) && errno != EEXIST)
-		errx(EXIT_FAILURE, MSG_MKDIR_CACHE_REPOSITORY_FAILED,
-						strerror(errno));
-}
-
 char *
 read_repos()
 {

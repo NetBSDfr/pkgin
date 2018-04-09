@@ -699,7 +699,7 @@ update_remotedb(int verbose)
 int
 update_db(int which, char **pkgkeep, int verbose)
 {
-	if (!have_enough_rights())
+	if (!have_privs(PRIVS_PKGINDB))
 		return EXIT_FAILURE;
 
 	/* always check for LOCAL_SUMMARY updates */
