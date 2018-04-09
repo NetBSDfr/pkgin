@@ -447,6 +447,18 @@ struct pkg_vulnerabilities *parse_pkg_vulnerabilities(const char *, size_t, int)
 struct pkg_vulnerabilities *read_pkg_vulnerabilities(const char *, int, int);
 void free_pkg_vulnerabilities(struct pkg_vulnerabilities *);
 
+/* Helper functions for memory allocation */
+char *xstrdup(const char *);
+void *xrealloc(void *, size_t);
+void *xcalloc(size_t, size_t);
+void *xmalloc(size_t);
+#if defined(__GNUC__) && __GNUC__ >= 2
+char	*xasprintf(const char *, ...)
+			   __attribute__((__format__(__printf__, 1, 2)));
+#else
+char	*xasprintf(const char *, ...);
+#endif
+
 /* Externs */
 extern Boolean Verbose;
 extern Boolean Fake;

@@ -9,6 +9,7 @@ SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
 		pkg_check.c pkg_infos.c preferred.c
 # included from libinstall
 SRCS+=		automatic.c dewey.c fexec.c global.c opattern.c pkgdb.c var.c
+SRCS+=		xwrapper.c
 # included from openssh
 SRCS+=		progressmeter.c
 
