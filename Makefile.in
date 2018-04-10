@@ -6,7 +6,7 @@ VERSION=	@PACKAGE_VERSION@
 SRCS=		main.c summary.c tools.c pkgindb.c depends.c actions.c \
 		pkglist.c download.c order.c impact.c autoremove.c fsops.c \
 		pkgindb_queries.c pkg_str.c sqlite_callbacks.c selection.c \
-		pkg_check.c pkg_infos.c preferred.c
+		pkg_check.c pkg_infos.c pkg_install.c preferred.c
 # included from libinstall
 SRCS+=		automatic.c dewey.c fexec.c global.c opattern.c pkgdb.c var.c
 SRCS+=		xwrapper.c
@@ -36,7 +36,6 @@ LOCALBASE?=		@prefix@
 BINDIR?=		${LOCALBASE}/bin
 PKG_SYSCONFDIR?=	${LOCALBASE}/etc
 VARBASE?=		/var
-PKG_DBDIR?=		${VARBASE}/db/pkg
 .if !defined(PKGMANDIR)
 MANDIR=		${LOCALBASE}/share/man
 .endif
@@ -78,8 +77,6 @@ CPPFLAGS+=	-g
 
 CPPFLAGS+=	-DLOCALBASE=\"${LOCALBASE}\" 			\
 		-DPKG_SYSCONFDIR=\"${PKG_SYSCONFDIR}\"		\
-		-DPKG_DBDIR="\"${PKG_DBDIR}\""			\
-		-DDEF_LOG_DIR="\"${PKG_DBDIR}\""		\
 		-DPKGIN_DBDIR=\"${PKGIN_DBDIR}\"		\
 		-DPKGTOOLS=\"${PKGTOOLS}\"
 

@@ -84,7 +84,7 @@ pkgin_autoremove()
 			}
 		}
 		snprintf(preserve, BUFSIZ, "%s/%s/%s",
-				PKG_DBDIR, pkglist->full, PRESERVE_FNAME);
+		    pkgdb_get_dir(), pkglist->full, PRESERVE_FNAME);
 		/* is or a dependency or a preserved package */
 		if (is_keep_dep || access(preserve, F_OK) != -1)
 			continue;

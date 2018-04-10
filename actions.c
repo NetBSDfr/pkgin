@@ -250,7 +250,7 @@ do_pkg_remove(Plisthead *removehead)
 #ifndef DEBUG
 		if (!verbosity)
 			log_tag(MSG_REMOVING, premove->depend);
-		if (fexec(PKG_DELETE, verb_flag("-f"), premove->depend, NULL)
+		if (fexec(pkg_delete, verb_flag("-f"), premove->depend, NULL)
 			!= EXIT_SUCCESS)
 			err_count++;
 #endif
@@ -299,7 +299,7 @@ do_pkg_install(Plisthead *installhead)
 		/* there was a previous version, record +PRESERVE path */
 		if (pinstall->old != NULL)
 			snprintf(preserve, BUFSIZ, "%s/%s/%s",
-				PKG_DBDIR, pinstall->old, PRESERVE_FNAME);
+				pkgdb_get_dir(), pinstall->old, PRESERVE_FNAME);
 
 		/* are we upgrading pkg_install ? */
 		if (pi_upgrade) { /* set in order.c */
@@ -320,7 +320,7 @@ do_pkg_install(Plisthead *installhead)
 			/* every other package */
 			pflags = verb_flag("-D");
 
-		if (fexec(PKG_ADD, pflags, pkgpath, NULL) == EXIT_FAILURE)
+		if (fexec(pkg_add, pflags, pkgpath, NULL) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
 #endif
 	} /* installation loop */

@@ -422,18 +422,8 @@ void    append_plist(package_t *, FILE *);
 int     delete_package(Boolean, Boolean, package_t *, Boolean);
 
 /* Package Database */
-int     pkgdb_open(int);
-void    pkgdb_close(void);
-int     pkgdb_store(const char *, const char *);
-char   *pkgdb_retrieve(const char *);
-int	pkgdb_dump(void);
-int     pkgdb_remove(const char *);
-int	pkgdb_remove_pkg(const char *);
-char   *pkgdb_refcount_dir(void);
-char   *_pkgdb_getPKGDB_FILE(char *, unsigned);
-const char *_pkgdb_getPKGDB_DIR(void);
-void	_pkgdb_setPKGDB_DIR(const char *);
-
+const char   *pkgdb_get_dir(void);
+void	pkgdb_set_dir(const char *, int);
 char   *pkgdb_pkg_file(const char *, const char *);
 
 /* List of packages functions */

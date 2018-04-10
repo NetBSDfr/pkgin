@@ -558,11 +558,8 @@ update_localdb(char **pkgkeep)
 	Pkglist		*pkglist;
 
 	/* has the pkgdb (pkgsrc) changed ? if not, continue */
-	if (!pkg_db_mtime() || !pkgdb_open(ReadWrite))
+	if (!pkg_db_mtime())
 		return;
-
-	/* just checking */
-	pkgdb_close();
 
 	/* record the keep list */
 	keeplisthead = rec_pkglist(KEEP_LOCAL_PKGS);

@@ -50,7 +50,6 @@ main(int argc, char *argv[])
 	uint8_t		need_upgrade, need_refresh;
 	uint8_t		do_inst = DO_INST; /* by default, do install packages */
 	int 		ch, i, rc = EXIT_SUCCESS;
-	struct stat	sb;
 	const char	*chrootpath = NULL;
 
 	setprogname(argv[0]);
@@ -137,15 +136,8 @@ main(int argc, char *argv[])
 			errx(-1, MSG_CHDIR_FAILED);
 	}
 
-	/* check for pkg_install */
-	if (stat(PKG_ADD, &sb) < 0)
-		errx(EXIT_FAILURE, MSG_PKG_INSTALL_NOT_PRESENT);
-
-	/* retrieve PKG_DBDIR from pkg_admin(1) */
-	get_pkg_dbdir();
-
-	/* for pkg_install */
-	unsetenv("PKG_PATH");
+	/* Configure pkg_install */
+	setup_pkg_install();
 
 	/* Configure pkgin database directory */
 	setup_pkgin_dbdir();

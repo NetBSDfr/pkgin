@@ -49,8 +49,6 @@ static const char *pragmaopts[] = {
 	NULL
 };
 
-char pkg_dbdir[BUFSIZ];
-
 char *pkgin_dbdir;
 char *pkgin_sqldb;
 char *pkgin_cache;
@@ -83,27 +81,12 @@ setup_pkgin_dbdir(void)
 	}
 }
 
-void
-get_pkg_dbdir(void)
-{
-	char **exec_cmd;
-
-	if ((exec_cmd =
-		exec_list(PKGTOOLS"/pkg_admin config-var PKG_DBDIR", NULL))
-		== NULL)
-		strcpy(pkg_dbdir, PKG_DBDIR);
-	else {
-		XSTRCPY(pkg_dbdir, exec_cmd[0]);
-		free_list(exec_cmd);
-	}
-}
-
 uint8_t
 have_privs(int reqd)
 {
 	if ((reqd & PRIVS_PKGDB) &&
-	    (access(pkg_dbdir, F_OK) == 0) &&
-	    (access(pkg_dbdir, W_OK) < 0))
+	    (access(pkgdb_get_dir(), F_OK) == 0) &&
+	    (access(pkgdb_get_dir(), W_OK) < 0))
 		return 0;
 
 	if ((reqd & PRIVS_PKGINDB) &&
@@ -282,14 +265,13 @@ pkgindb_reset()
 int
 pkg_db_mtime()
 {
-	uint8_t		pkgdb_present = 1;
 	struct stat	st;
 	time_t	   	db_mtime = 0;
 	char		str_mtime[20], buf[BUFSIZ];
 
 	/* no pkgdb file */
-	if (stat(pkg_dbdir, &st) < 0)
-		pkgdb_present = 0;
+	if (stat(pkgdb_get_dir(), &st) < 0)
+		return 0;
 
 	str_mtime[0] = '\0';
 
@@ -300,7 +282,7 @@ pkg_db_mtime()
 		db_mtime = (time_t)strtol(str_mtime, (char **)NULL, 10);
 
 	/* mtime is up to date */
-	if (!pkgdb_present || db_mtime == st.st_mtime)
+	if (db_mtime == st.st_mtime)
 		return 0;
 
 	snprintf(buf, BUFSIZ, UPDATE_PKGDB_MTIME, (long long)st.st_mtime);

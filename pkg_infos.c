@@ -43,8 +43,8 @@ show_pkg_info(char flag, char *pkgname)
 
 	/* loop through PKG_REPOS */
 	for (prepos = pkg_repos; *prepos != NULL; prepos++) {
-		snprintf(cmd, BUFSIZ,
-			PKG_INFO" -%c %s/%s%s", flag, *prepos, fullpkgname, PKG_EXT);
+		snprintf(cmd, BUFSIZ, "%s -%c %s/%s%s",
+		    pkg_info, flag, *prepos, fullpkgname, PKG_EXT);
 
 		if ((out_cmd = exec_list(cmd, NULL)) == NULL)
 			continue;
