@@ -1,4 +1,4 @@
-/*	$NetBSD: var.c,v 1.1.1.1 2008/09/30 19:00:27 joerg Exp $	*/
+/* NetBSD: var.c,v 1.10 2013/09/12 07:28:28 wiz Exp */
 
 /*-
  * Copyright (c) 2005, 2008 The NetBSD Foundation, Inc.
@@ -41,9 +41,6 @@
 #if HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
 #endif
-#ifndef lint
-__RCSID("$NetBSD: var.c,v 1.1.1.1 2008/09/30 19:00:27 joerg Exp $");
-#endif
 
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
@@ -64,12 +61,12 @@ static const char *var_cmp(const char *, size_t, const char *, size_t);
 static void var_print(FILE *, const char *, const char *);
 
 /*
- * Copy the specified varibales from the file fname to stdout.
+ * Copy the specified variables from the file fname to stdout.
  */
 int
 var_copy_list(const char *buf, const char **variables)
 {
-	const char *eol, *next, *p;
+	const char *eol, *next;
 	size_t len;
 	int i;
 
@@ -78,13 +75,13 @@ var_copy_list(const char *buf, const char **variables)
 			next = eol + 1;
 			len = eol - buf;
 		} else {
-			next = eol;
 			len = strlen(buf);
+			next = buf + len;
 		}
 
 		for (i=0; variables[i]; i++) {
-			if ((p=var_cmp(buf, len, variables[i],
-				       strlen(variables[i]))) != NULL) {
+			if (var_cmp(buf, len, variables[i],
+				       strlen(variables[i])) != NULL) {
 				printf("%.*s\n", (int)len, buf);
 				break;
 			}
@@ -130,11 +127,11 @@ var_get(const char *fname, const char *variable)
 
 		thislen = line+len - p;
 		if (value) {
-			value = realloc(value, valuelen+thislen+2);
+			value = xrealloc(value, valuelen+thislen+2);
 			value[valuelen++] = '\n';
 		}
 		else {
-			value = malloc(thislen+1);
+			value = xmalloc(thislen+1);
 		}
 		sprintf(value+valuelen, "%.*s", (int)thislen, p);
 		valuelen += thislen;
@@ -160,7 +157,7 @@ var_get_memory(const char *buf, const char *variable)
 	value = NULL;
 	valuelen = 0;
 
-	for (; *buf; buf = next) {
+	for (; buf && *buf; buf = next) {
 		if ((eol = strchr(buf, '\n')) != NULL) {
 			next = eol + 1;
 			len = eol - buf;
@@ -173,11 +170,11 @@ var_get_memory(const char *buf, const char *variable)
 
 		thislen = buf + len - data;
 		if (value) {
-			value = realloc(value, valuelen+thislen+2);
+			value = xrealloc(value, valuelen+thislen+2);
 			value[valuelen++] = '\n';
 		}
 		else {
-			value = malloc(thislen+1);
+			value = xmalloc(thislen+1);
 		}
 		sprintf(value + valuelen, "%.*s", (int)thislen, data);
 		valuelen += thislen;
@@ -216,9 +213,8 @@ var_set(const char *fname, const char *variable, const char *value)
 			return 0; /* Nothing to do */
 	}
 
-	tmpname = malloc(strlen(fname)+8);
-	sprintf(tmpname, "%s.XXXXXX", fname);
-	if ((fd=mkstemp(tmpname)) < 0) {
+	tmpname = xasprintf("%s.XXXXXX", fname);
+	if ((fd = mkstemp(tmpname)) < 0) {
 		free(tmpname);
 		if (fp != NULL)
 			fclose(fp);

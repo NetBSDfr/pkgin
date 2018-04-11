@@ -1,4 +1,4 @@
-/*	$NetBSD: opattern.c,v 1.1.1.1 2008/09/30 19:00:27 joerg Exp $	*/
+/* NetBSD: opattern.c,v 1.6 2012/01/28 12:33:05 joerg Exp */
 
 #if HAVE_CONFIG_H
 #include "config.h"
@@ -8,13 +8,6 @@
 #endif
 #if HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
-#endif
-#ifndef lint
-#if 0
-static const char *rcsid = "Id: str.c,v 1.5 1997/10/08 07:48:21 charnier Exp";
-#else
-__RCSID("$NetBSD: opattern.c,v 1.1.1.1 2008/09/30 19:00:27 joerg Exp $");
-#endif
 #endif
 
 /*
@@ -121,11 +114,35 @@ simple_match(const char *pattern, const char *pkg)
 }
 
 /*
+ * Performs a fast check if pattern can ever match pkg.
+ * Returns 1 if a match is possible and 0 otherwise.
+ */
+int
+quick_pkg_match(const char *pattern, const char *pkg)
+{
+#define simple(x) (isalnum((unsigned char)(x)) || (x) == '-')
+	if (!simple(pattern[0]))
+		return 1;
+	if (pattern[0] != pkg[0])
+		return 0;
+
+	if (!simple(pattern[1]))
+		return 1;
+	if (pattern[1] != pkg[1])
+		return 0;
+	return 1;
+#undef simple
+}
+
+/*
  * Match pkg against pattern, return 1 if matching, 0 else
  */
 int
 pkg_match(const char *pattern, const char *pkg)
 {
+	if (!quick_pkg_match(pattern, pkg))
+		return 0;
+
 	if (strchr(pattern, '{') != (char *) NULL) {
 		/* emulate csh-type alternates */
 		return alternate_match(pattern, pkg);
@@ -156,8 +173,7 @@ pkg_match(const char *pattern, const char *pkg)
 		char *pattern_ver;
 		int retval;
 
-		if (asprintf(&pattern_ver, "%s-[0-9]*", pattern) == -1)
-			errx(EXIT_FAILURE, "Out of memory");
+		pattern_ver = xasprintf("%s-[0-9]*", pattern);
 		retval = glob_match(pattern_ver, pkg);
 		free(pattern_ver);
 		return retval;
@@ -188,6 +204,10 @@ pkg_order(const char *pattern, const char *first_pkg, const char *second_pkg)
 		return pkg_match(pattern, first_pkg) ? 1 : 0;
 
 	if (dewey_cmp(first_version + 1, DEWEY_GT, second_version + 1))
+		return 1;
+	else if (dewey_cmp(first_version + 1, DEWEY_LT, second_version + 1))
+		return 2;
+	else if (strcmp(first_pkg, second_pkg) < 0)
 		return 1;
 	else
 		return 2;

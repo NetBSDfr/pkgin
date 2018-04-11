@@ -1,4 +1,4 @@
-/*	$NetBSD: automatic.c,v 1.1.1.1 2008/09/30 19:00:26 joerg Exp $	*/
+/* NetBSD: automatic.c,v 1.5 2009/02/02 12:35:01 joerg Exp */
 
 /*-
  * Copyright (c) 2005 The NetBSD Foundation, Inc.
@@ -40,9 +40,6 @@
 #endif
 #if HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
-#endif
-#ifndef lint
-__RCSID("$NetBSD: automatic.c,v 1.1.1.1 2008/09/30 19:00:26 joerg Exp $");
 #endif
 
 #if HAVE_ASSERT_H

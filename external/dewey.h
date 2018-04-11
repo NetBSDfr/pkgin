@@ -1,4 +1,4 @@
-/* $NetBSD: dewey.h,v 1.1.1.1 2008/09/30 19:00:27 joerg Exp $ */
+/* NetBSD: dewey.h,v 1.2 2007/04/16 12:55:35 joerg Exp */
 
 #ifndef _INST_LIB_DEWEY_H_
 #define _INST_LIB_DEWEY_H_
