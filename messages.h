@@ -1,5 +1,3 @@
-/* $Id: messages.h,v 1.33 2012/11/25 09:13:38 imilh Exp $ */
-
 /*
  * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -27,7 +25,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
 /* main.c */

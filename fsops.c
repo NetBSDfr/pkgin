@@ -1,5 +1,3 @@
-/* $Id: fsops.c,v 1.7 2012/12/13 21:51:03 imilh Exp $ */
-
 /*
  * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -27,7 +25,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
 #include <sys/statvfs.h>

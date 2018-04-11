@@ -1,5 +1,5 @@
-/*	$NetBSD: progressmeter.c,v 1.9 2008/08/05 14:13:34 simonb Exp $	*/
-/* $OpenBSD: progressmeter.c,v 1.37 2006/08/03 03:34:42 deraadt Exp $ */
+/* NetBSD: progressmeter.c,v 1.9 2008/08/05 14:13:34 simonb Exp */
+/* OpenBSD: progressmeter.c,v 1.37 2006/08/03 03:34:42 deraadt Exp */
 /*
  * Copyright (c) 2003 Nils Nordman.  All rights reserved.
  *

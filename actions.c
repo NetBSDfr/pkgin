@@ -1,5 +1,3 @@
-/* $Id: actions.c,v 1.56 2013/01/31 19:49:34 stacktic Exp $ */
-
 /*
  * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -27,7 +25,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
 #include "pkgin.h"

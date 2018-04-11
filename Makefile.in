@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 1.20 2012/06/13 13:50:16 imilh Exp $
+# This is a BSD-style Makefile for pkgin.
 
 PROG=		pkgin
 MAN=		pkgin.1

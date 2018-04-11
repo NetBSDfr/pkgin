@@ -1,5 +1,3 @@
-/* $Id: pkgindb_queries.c,v 1.27 2012/11/24 18:37:42 imilh Exp $ */
-
 /*
  * Copyright (c) 2009-2015 The NetBSD Foundation, Inc.
  * All rights reserved.
@@ -27,7 +25,6 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
  */
 
 const char DROP_LOCAL_TABLES[] =

@@ -1,5 +1,3 @@
-# $Id: configure.ac,v 1.22 2013/02/25 11:34:46 imilh Exp $
-
 AC_PREREQ([2.61])
 AC_INIT([pkgin], [0.9.4.99], [imil@NetBSD.org])
 AC_CONFIG_SRCDIR([actions.c])
