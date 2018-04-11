@@ -32,7 +32,7 @@
 
 #include "pkgin.h"
 #include "cmd.h"
-#include "lib.h"
+#include "external/lib.h"
 
 static void	usage(void);
 static int	find_cmd(const char *);

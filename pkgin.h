@@ -47,8 +47,8 @@
 #include "messages.h"
 #include "pkgindb.h"
 #include "tools.h"
-#include "lib.h"
-#include "dewey.h"
+#include "external/lib.h"
+#include "external/dewey.h"
 
 #define PKG_SUMMARY "pkg_summary"
 #define PKG_EXT ".tgz"

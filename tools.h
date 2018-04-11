@@ -85,7 +85,7 @@
 #endif
 
 #ifndef HN_AUTOSCALE
-#include "humanize_number.h"
+#include "external/humanize_number.h"
 #endif
 
 #ifdef LINE_MAX
