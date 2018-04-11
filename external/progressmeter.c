@@ -79,7 +79,11 @@ static const char unit[] = " KMGT";
 static int
 can_output(void)
 {
-#ifdef HAVE_TCGETPGRP /* MINIX, again */
+	/*
+	 * Minix now has tcgetpgrp but is currently unsupported and returns
+	 * -1 here, but output works so just force it for now.
+	 */
+#if defined(HAVE_TCGETPGRP) && !defined(__minix)
 	return (getpgrp() == tcgetpgrp(STDOUT_FILENO));
 #else
 	return 1;

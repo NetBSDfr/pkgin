@@ -256,11 +256,7 @@ getosrelease(void)
 	if (uname(&un) < 0)
 		return NULL;
 
-#ifdef _MINIX
-	asprintf(&ret, "%s.%s", un.release, un.version);
-#else
 	ret = xstrdup(un.release);
-#endif
 
 	for (p = ret; isdigit((int)*p) || *p == '.'; p++);
 	*p = '\0';

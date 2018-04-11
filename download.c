@@ -69,11 +69,9 @@ sum_open(char *str_url, time_t *db_mtime)
 
 	*db_mtime = st.mtime;
 
-#ifndef _MINIX /* XXX: SSIZE_MAX fails under MINIX */
 	/* st.size is an off_t, it will be > SSIZE_MAX on 32 bits systems */
 	if (sizeof(st.size) == sizeof(SSIZE_MAX) && st.size > SSIZE_MAX - 1)
 		err(EXIT_FAILURE, "file is too large");
-#endif
 
 	sum = xmalloc(sizeof(Sumfile));
 

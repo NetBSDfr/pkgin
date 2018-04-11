@@ -43,13 +43,7 @@ MANDIR=		${LOCALBASE}/share/man
 .if "@PKGTOOLS@"
 PKGTOOLS?=	@PKGTOOLS@
 .endif
-
-.if ${OPSYS} == "Minix"
-PKGTOOLS?=	${PKG_TOOLS_BIN}
-CPPFLAGS+=	-D_NETBSD_SOURCE -D_MINIX
-.else
 PKGTOOLS?=	${LOCALBASE}/sbin
-.endif
 
 PKGIN_VERSION=	"${VERSION} for ${OPSYS}-${OS_VER} ${OS_ARCH}"
 
