@@ -45,7 +45,7 @@ load_preferred()
 	if ((fp = fopen(PKGIN_CONF"/"PREF_FILE, "r")) == NULL)
 		return;
 
-	XMALLOC(preflist, sizeof(Preflist *));
+	preflist = xmalloc(sizeof(Preflist *));
 
 	while (!feof(fp)) {
 		if (fgets(buf, BUFSIZ, fp) == NULL ||
@@ -54,9 +54,9 @@ load_preferred()
 
 		trimcr(&buf[0]);
 
-		XMALLOC(preflist[size], sizeof(Preflist));
-		XSTRDUP(preflist[size]->glob, buf);
-		XSTRDUP(preflist[size]->pkg, buf);
+		preflist[size] = xmalloc(sizeof(Preflist));
+		preflist[size]->glob = xstrdup(buf);
+		preflist[size]->pkg = xstrdup(buf);
 		preflist[size]->vers = NULL;
 		if ((p = strpbrk(preflist[size]->pkg, cmp)) != NULL)
 			trunc_str(preflist[size]->pkg, *p, STR_FORWARD);
@@ -64,7 +64,7 @@ load_preferred()
 		if (pkglen < strlen(preflist[size]->glob))
 			preflist[size]->vers = preflist[size]->glob + pkglen;
 
-		XREALLOC(preflist, (++size + 1) * sizeof(Preflist *));
+		preflist = xrealloc(preflist, (++size + 1) * sizeof(Preflist *));
 		preflist[size] = NULL;
 	}
 

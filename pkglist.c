@@ -48,7 +48,7 @@ malloc_pkglist(uint8_t type)
 {
 	Pkglist *pkglist;
 
-	XMALLOC(pkglist, sizeof(Pkglist));
+	pkglist = xmalloc(sizeof(Pkglist));
 
 	/*!< Init all the things! (http://knowyourmeme.com/memes/x-all-the-y) */
 	pkglist->type = type;
@@ -178,7 +178,7 @@ init_head(void)
 {
 	Plisthead *plisthead;
 
-	XMALLOC(plisthead, sizeof(Plisthead));
+	plisthead = xmalloc(sizeof(Plisthead));
 	SLIST_INIT(plisthead);
 
 	return plisthead;

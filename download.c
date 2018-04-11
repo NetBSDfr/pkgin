@@ -75,11 +75,12 @@ sum_open(char *str_url, time_t *db_mtime)
 		err(EXIT_FAILURE, "file is too large");
 #endif
 
-	XMALLOC(sum, sizeof(Sumfile));
+	sum = xmalloc(sizeof(Sumfile));
 
 	sum->fd = f;
 	sum->url = url;
 	sum->size = st.size;
+	sum->pos = 0;
 	goto out;
 nofetch:
 	if (url)

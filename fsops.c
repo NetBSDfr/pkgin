@@ -148,7 +148,7 @@ read_repos()
 		curlen = strlen(buf) + 2; /* ' ' + '\0' */
 		repolen += curlen;
 
-		XREALLOC(repos, repolen * sizeof(char));
+		repos = xrealloc(repos, repolen * sizeof(char));
 
 		if (repolen > curlen) /* more than one repo */ {
 			/* add a space character */

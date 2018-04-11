@@ -168,10 +168,10 @@ break_depends(Plisthead *impacthead)
 
 			/* dependency break, insert rdp in remove-list */
 			rmimpact = malloc_pkglist(IMPACT);
-			XSTRDUP(rmimpact->depend, rdp->depend);
-			XSTRDUP(rmimpact->name, rpkg);
-			XSTRDUP(rmimpact->full, rdp->depend);
-			XSTRDUP(rmimpact->old, rdp->depend);
+			rmimpact->depend = xstrdup(rdp->depend);
+			rmimpact->name = xstrdup(rpkg);
+			rmimpact->full = xstrdup(rdp->depend);
+			rmimpact->old = xstrdup(rdp->depend);
 			rmimpact->action = TOREMOVE;
 			rmimpact->level = 0;
 
@@ -208,12 +208,12 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	 */
 	pimpact = malloc_pkglist(IMPACT);
 
-	XSTRDUP(pimpact->depend, pdp->depend);
+	pimpact->depend = xstrdup(pdp->depend);
 
 	pimpact->action = DONOTHING;
 	pimpact->old = NULL;
 	pimpact->full = NULL;
-	XSTRDUP(pimpact->name, mapplist->name);
+	pimpact->name = xstrdup(mapplist->name);
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
@@ -259,11 +259,11 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				 * oldpkg is used when building removal order
 				 * list
 				 */
-				XSTRDUP(pimpact->old, plist->full);
+				pimpact->old = xstrdup(plist->full);
 
 				pimpact->action = toupgrade;
 
-				XSTRDUP(pimpact->full, remotepkg);
+				pimpact->full = xstrdup(remotepkg);
 				/* record package dependency deepness */
 				pimpact->level = pdp->level;
 				/* record binary package size */
@@ -299,7 +299,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		pimpact->old = NULL;
 		pimpact->action = TOINSTALL;
 
-		XSTRDUP(pimpact->full, remotepkg);
+		pimpact->full = xstrdup(remotepkg);
 		/* record package dependency deepness */
 		pimpact->level = pdp->level;
 
@@ -407,13 +407,13 @@ pkg_impact(char **pkgargs, int *rc)
 		/* finally, insert package itself */
 		pdp = malloc_pkglist(DEPTREE);
 
-		XSTRDUP(pdp->name, pkgname);
+		pdp->name = xstrdup(pkgname);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
 
 		/* pkgname is not already recorded */
 		if (!pkg_in_impact(impacthead, pkgname)) {
 			/* passing pkgname as depname */
-			XSTRDUP(pdp->depend, pkgname);
+			pdp->depend = xstrdup(pkgname);
 
 			/* reset pkgkeep */
 			pdp->keep = 0;

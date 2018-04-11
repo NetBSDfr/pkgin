@@ -84,6 +84,8 @@
 #include <nbcompat/util.h>
 #endif
 
+#include "external/lib.h"
+
 #ifndef HN_AUTOSCALE
 #include "external/humanize_number.h"
 #endif
@@ -93,12 +95,6 @@
 #else
 #define MAXLEN 2048
 #endif
-#define MIDLEN 256
-#define SMLLEN 32
-#define D_WARN 5
-#define D_INFO 10
-#define T_FALSE 0
-#define T_TRUE 1
 #define STR_FORWARD 0
 #define STR_BACKWARD 1
 
@@ -112,38 +108,6 @@
 	do {				\
 		close(fd);		\
 		pthread_exit(NULL);	\
-	} while (/* CONSTCOND */ 0)
-
-#define XMALLOC(elm, size)					\
-	do {							\
-		elm = malloc(size);				\
-		if (elm == NULL)				\
-			err(1, "can't allocate memory\n");	\
-		memset(elm, 0, size);				\
-	} while (/* CONSTCOND */ 0)
-
-#define XSTRDUP(dest, src)						\
-	do {								\
-		if (src == NULL)					\
-			dest = NULL;					\
-		else {							\
-			dest = strdup(src);				\
-			if (dest == NULL)				\
-				err(1, "can't strdup %s\n", src);	\
-		}							\
-	} while (/* CONSTCOND */ 0)
-
-#define XREALLOC(elm, size)						\
-	do {								\
-		void *telm;						\
-		if (elm == NULL)					\
-			XMALLOC(elm, size);				\
-		else {							\
-			telm = realloc(elm, size);			\
-			if (telm == NULL)				\
-				err(1, "can't allocate memory\n");	\
-			elm = telm;					\
-		}							\
 	} while (/* CONSTCOND */ 0)
 
 #define DSTSRC_CHK(dst, src)			\
@@ -169,26 +133,12 @@
 		strcat(dst, src);	\
 	} while (/* CONSTCOND */ 0)
 
-#define XSTRMEMCAT(dst, src, size)	\
-	do {				\
-		XREALLOC(dst, size);	\
-		XSTRCAT(dst, src);	\
-	} while (/* CONSTCOND */ 0)
-
 #define XFREE(elm)		   	\
 	do {				\
 		if (elm != NULL) {	\
 			free(elm);	\
 			elm = NULL;	\
 		}			\
-	} while (/* CONSTCOND */ 0)
-
-#define XSNPRINTF(dst, size, fmt...) 			\
-	do {						\
-		char *pdst;				\
-		pdst = safe_snprintf(size, fmt);	\
-		XFREE(dst);				\
-		dst = pdst;				\
 	} while (/* CONSTCOND */ 0)
 
 #define KVPRINTF(k, v)				\

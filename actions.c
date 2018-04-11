@@ -339,7 +339,7 @@ action_list(char *flatlist, char *str)
 
 	if (flatlist == NULL) {
 		newsize = strlen(str) + 2;
-		XMALLOC(newlist, newsize * sizeof(char));
+		newlist = xmalloc(newsize * sizeof(char));
 		snprintf(newlist, newsize, "\n%s", str);
 	} else {
 		if (str == NULL)
@@ -615,7 +615,7 @@ pkgin_remove(char **pkgargs)
 			rc = EXIT_FAILURE;
 			continue;
 		}
-		XSTRDUP(ppkg, pkgname);
+		ppkg = xstrdup(pkgname);
 		trunc_str(ppkg, '-', STR_BACKWARD);
 
 		/* record full reverse dependency list for package */
@@ -652,7 +652,7 @@ pkgin_remove(char **pkgargs)
 		else
 			pdp->level = 0;
 
-		XSTRDUP(pdp->name, pdp->depend);
+		pdp->name = xstrdup(pdp->depend);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
 
 		SLIST_INSERT_HEAD(pdphead, pdp, next);
@@ -699,7 +699,7 @@ narrow_match(Pkglist *opkg)
 	char	*best_match;
 
 	/* for now, best match is old package itself */
-	XSTRDUP(best_match, opkg->full);
+	best_match = xstrdup(opkg->full);
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
 		/* not the same pkgname, next */
@@ -721,7 +721,7 @@ narrow_match(Pkglist *opkg)
 		/* second package is greater */
 		if (version_check(best_match, pkglist->full) == 2) {
 			XFREE(best_match);
-			XSTRDUP(best_match, pkglist->full);
+			best_match = xstrdup(pkglist->full);
 		}
 	} /* SLIST_FOREACH remoteplisthead */
 
@@ -742,7 +742,7 @@ record_upgrades(Plisthead *plisthead)
 	SLIST_FOREACH(pkglist, plisthead, next)
 		count++;
 
-	XMALLOC(pkgargs, (count + 2) * sizeof(char *));
+	pkgargs = xmalloc((count + 2) * sizeof(char *));
 
 	count = 0;
 	SLIST_FOREACH(pkglist, plisthead, next) {

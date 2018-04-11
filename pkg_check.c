@@ -196,7 +196,7 @@ pkg_has_conflicts(Pkglist *pimpact)
 			snprintf(query, BUFSIZ,
 				GET_CONFLICT_QUERY, conflicts->full);
 
-			XMALLOC(conflict_pkg, BUFSIZ * sizeof(char));
+			conflict_pkg = xmalloc(BUFSIZ * sizeof(char));
 			if (pkgindb_doquery(query,
 					pdb_get_value, conflict_pkg) == PDB_OK)
 

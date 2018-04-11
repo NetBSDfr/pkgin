@@ -182,11 +182,11 @@ colnames(void *unused, int argc, char **argv, char **colname)
 	colcount++;
 
 	cols.num = colcount;
-	XREALLOC(cols.name, colcount * sizeof(char *));
+	cols.name = xrealloc(cols.name, colcount * sizeof(char *));
 
 	for (i = 0; i < argc; i++)
 		if (argv[i] != NULL && strncmp(colname[i], "name", 4) == 0)
-			XSTRDUP(cols.name[colcount - 1], argv[i]);
+			cols.name[colcount - 1] = xstrdup(argv[i]);
 
 	return PDB_OK;
 }
@@ -245,9 +245,9 @@ add_to_slist(const char *field, const char *value)
 {
 	Insertlist	*insert;
 
-	XMALLOC(insert, sizeof(Insertlist));
-	XSTRDUP(insert->field, field);
-	XSTRDUP(insert->value, value);
+	insert = xmalloc(sizeof(Insertlist));
+	insert->field = xstrdup(field);
+	insert->value = xstrdup(value);
 
 	SLIST_INSERT_HEAD(&inserthead, insert, next);
 }
@@ -429,7 +429,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 	 * the buffer back to the beginning each time.
 	 */
 	buflen = 32768;
-	XMALLOC(buf, buflen + 1);
+	buf = xmalloc(buflen + 1);
 
 	/* record columns names to cols */
 	snprintf(buf, buflen, "PRAGMA table_info(%s);",
@@ -464,7 +464,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 		if (strstr(pi, "\n\n") == NULL) {
 			offset = buflen;
 			buflen *= 2;
-			XREALLOC(buf, buflen + 1);
+			buf = xrealloc(buf, buflen + 1);
 			continue;
 		}
 
@@ -721,15 +721,16 @@ split_repos(void)
 	int	repocount;
 	char	*p;
 
-	XSTRDUP(env_repos, getenv("PKG_REPOS"));
-
-	if (env_repos == NULL)
+	if ((p = getenv("PKG_REPOS")) != NULL) {
+		env_repos = xstrdup(p);
+	} else {
 		if ((env_repos = read_repos()) == NULL)
 			errx(EXIT_FAILURE, MSG_MISSING_PKG_REPOS);
+	}
 
 	repocount = 2; /* 1st elm + NULL */
 
-	XMALLOC(pkg_repos, repocount * sizeof(char *));
+	pkg_repos = xmalloc(repocount * sizeof(char *));
 	*pkg_repos = env_repos;
 
 	p = env_repos;
@@ -738,7 +739,7 @@ split_repos(void)
 		*p = '\0';
 		p++;
 
-		XREALLOC(pkg_repos, ++repocount * sizeof(char *));
+		pkg_repos = xrealloc(pkg_repos, ++repocount * sizeof(char *));
 		pkg_repos[repocount - 2] = p;
 	}
 

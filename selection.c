@@ -71,7 +71,7 @@ import_keep(uint8_t do_inst, const char *import_file)
 
 			if ((pkgindb_doquery(query,
 					pdb_get_value, fullpkgname)) == PDB_OK)
-				XSTRDUP(match, fullpkgname);
+				match = xstrdup(fullpkgname);
 			else
 				match = NULL;
 		} else
@@ -82,7 +82,7 @@ import_keep(uint8_t do_inst, const char *import_file)
 			continue;
 		}
 		/* 1st element + NULL */
-		XREALLOC(pkglist, (list_size + 2) * sizeof(char *));
+		pkglist = xrealloc(pkglist, (list_size + 2) * sizeof(char *));
 		pkglist[list_size] = match;
 		pkglist[++list_size] = NULL;
 	}

@@ -79,7 +79,7 @@ unique_pkg(const char *pkgname, const char *dest)
 	}
 
 	if (best_match != NULL)
-		XSTRDUP(u_pkg, best_match->full);
+		u_pkg = xstrdup(best_match->full);
 	free_pkglist(&plist->P_Plisthead, LIST);
 	free(plist);
 
@@ -141,7 +141,7 @@ find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
 
 	/* check for package existence */
 	SLIST_FOREACH(pkglist, plisthead, next) {
-		XSTRDUP(tmppkg, pkglist->full);
+		tmppkg = xstrdup(pkglist->full);
 
 		if (!exact) {
 			/*
@@ -159,7 +159,7 @@ find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
 			strncmp(tmppkg, pkgarg, tmplen) == 0) {
 			XFREE(tmppkg);
 
-			XSTRDUP(pkgname, pkglist->full);
+			pkgname = xstrdup(pkglist->full);
 			return pkgname;
 		}
 		XFREE(tmppkg);
@@ -256,7 +256,7 @@ get_pkgname_from_depend(char *depend)
 
 	/* 1. worse case, {foo>=1.0,bar-[0-9]*} */
 	if (*depend == '{') {
-		XSTRDUP(pkgname, depend + 1);
+		pkgname = xstrdup(depend + 1);
 		tmp = strrchr(pkgname, '}');
 		if (tmp != NULL)
 			*tmp = '\0'; /* pkgname == "foo,bar" */
@@ -265,7 +265,7 @@ get_pkgname_from_depend(char *depend)
 		while ((tmp = strchr(pkgname, ',')) != NULL)
 			*tmp = '\0'; /* pkgname == foo-[0-9]* or whatever */
 	} else /* we should now have a "normal" pattern */
-		XSTRDUP(pkgname, depend);
+		pkgname = xstrdup(depend);
 
 	/* 2. classic case, foo-[<>{?*\[] */
 	clear_pattern(pkgname);
@@ -284,10 +284,10 @@ glob_to_pkgarg(char **globpkg, int *rc)
 	Pkglist		*plist;
 
 	for (i = 0, count = 0; globpkg[i] != NULL; i++, count++) {
-		XREALLOC(pkgargs, (count + 2) * sizeof(char *));
+		pkgargs = xrealloc(pkgargs, (count + 2) * sizeof(char *));
 
 		if (strpbrk(globpkg[i], GLOBCHARS) == NULL)
-			XSTRDUP(pkgargs[count], globpkg[i]);
+			pkgargs[count] = xstrdup(globpkg[i]);
 		else {
 			if ((plist = map_pkg_to_dep(&r_plisthead,
 					globpkg[i])) == NULL) {
@@ -295,7 +295,7 @@ glob_to_pkgarg(char **globpkg, int *rc)
 				count--;
 				*rc = EXIT_FAILURE;
 			} else
-				XSTRDUP(pkgargs[count], plist->full);
+				pkgargs[count] = xstrdup(plist->full);
 		}
 	}
 

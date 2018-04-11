@@ -58,22 +58,22 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 	 * rec_pkglist is used for convenience for REQUIRES / PROVIDES
 	 * otherwise contains FULLPKGNAME
 	 */
-	XSTRDUP(plist->full, argv[0]);
+	plist->full = xstrdup(argv[0]);
 
 	for (i = 1; i < argc; i++) {
 		if (argv[i] == NULL)
 			continue;
 
 		if (strcmp(colname[i], "PKGNAME") == 0)
-			XSTRDUP(plist->name, argv[i]);
+			plist->name = xstrdup(argv[i]);
 		if (strcmp(colname[i], "PKGVERS") == 0)
-			XSTRDUP(plist->version, argv[i]);
+			plist->version = xstrdup(argv[i]);
 		if (strcmp(colname[i], "COMMENT") == 0)
-			XSTRDUP(plist->comment, argv[i]);
+			plist->comment = xstrdup(argv[i]);
 		if (strcmp(colname[i], "PKGPATH") == 0)
-			XSTRDUP(plist->pkgpath, argv[i]);
+			plist->pkgpath = xstrdup(argv[i]);
 		if (strcmp(colname[i], "CATEGORIES") == 0)
-			XSTRDUP(plist->category, argv[i]);
+			plist->category = xstrdup(argv[i]);
 		if (strcmp(colname[i], "FILE_SIZE") == 0)
 			plist->file_size = strtol(argv[i], (char **)NULL, 10);
 		if (strcmp(colname[i], "SIZE_PKG") == 0)
@@ -114,7 +114,7 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 		}
 
 	deptree = malloc_pkglist(DEPTREE);
-	XSTRDUP(deptree->depend, DEPS_FULLPKG);
+	deptree->depend = xstrdup(DEPS_FULLPKG);
 
 	/* unresolved pkgname because of complex dependency glob */
 	if (non_trivial_glob(DEPS_FULLPKG)) {
@@ -126,13 +126,13 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 
 		/* map corresponding pkgname */
 		if ((pkg_map = map_pkg_to_dep(plisthead, deptree->depend)) != NULL)
-			XSTRDUP(deptree->name, pkg_map->name);
+			deptree->name = xstrdup(pkg_map->name);
 		else
 			/* some dependencies just don't match anything */
-			XSTRDUP(deptree->name, DEPS_PKGNAME);
+			deptree->name = xstrdup(DEPS_PKGNAME);
 	} else
 		/* case handled by get_pkgname_from_depend() */
-		XSTRDUP(deptree->name, DEPS_PKGNAME);
+		deptree->name = xstrdup(DEPS_PKGNAME);
 
 	deptree->computed = 0;
 	deptree->level = 0;

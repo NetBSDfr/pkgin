@@ -65,7 +65,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 			continue;
 
 		/* depname received from deptreehead is in package format */
-		XSTRDUP(depname, pdp->depend);
+		depname = xstrdup(pdp->depend);
 
 		trunc_str(depname, '-', STR_BACKWARD);
 
@@ -142,7 +142,7 @@ upgrade_dep_deepness(Plisthead *impacthead)
 		pimpact->level = 1;
 
 		/* depname received from impact is in full package format */
-		XSTRDUP(pkgname, pimpact->full);
+		pkgname = xstrdup(pimpact->full);
 
 		trunc_str(pkgname, '-', STR_BACKWARD);
 
@@ -198,7 +198,7 @@ order_upgrade_remove(Plisthead *impacthead)
 
 				pdp = malloc_pkglist(DEPTREE);
 
-				XSTRDUP(pdp->depend, pimpact->old);
+				pdp->depend = xstrdup(pimpact->old);
 				pdp->name = NULL; /* safety */
 				/* XXX: use the "computed" value to record
 				 * action type. Ugly.
@@ -252,7 +252,7 @@ order_install(Plisthead *impacthead)
 				pdp = malloc_pkglist(DEPTREE);
 
 				pdp->computed = pimpact->action; /* XXX: ugly*/
-				XSTRDUP(pdp->depend, pimpact->full);
+				pdp->depend = xstrdup(pimpact->full);
 				pdp->name = NULL;
 				pdp->level = pimpact->level;
 				/* record package size for download check */

@@ -162,7 +162,7 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 
 	if (depquery == LOCAL_REVERSE_DEPS) {
 		plisthead = &l_plisthead;
-		XSTRDUP(pkgname, pkgarg);
+		pkgname = xstrdup(pkgarg);
 	} else {
 		plisthead = &r_plisthead;
 		pkgname = unique_pkg(pkgarg, REMOTE_PKG);

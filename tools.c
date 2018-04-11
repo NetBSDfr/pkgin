@@ -77,7 +77,7 @@ splitstr(char *str, const char *sep)
 
 	/* size = number of separators + 1 member + NULL */
 	size += 2;
-	XMALLOC(split, size * sizeof(char *));
+	split = xmalloc(size * sizeof(char *));
 
 	i = 0;
 	for (p = str; p != NULL;)
@@ -85,7 +85,7 @@ splitstr(char *str, const char *sep)
 			if (*tmp != '\0') {
 				while (*tmp == ' ' || *tmp == '\t')
 					tmp++;
-				XSTRDUP(split[i], tmp);
+				split[i] = xstrdup(tmp);
 				i++;
 			}
 		}
@@ -130,7 +130,7 @@ safe_snprintf(int size, const char *fmt, ...)
 	char *p;
 	va_list ap;
 
-	XMALLOC(p, size * sizeof(char));
+	p = xmalloc(size * sizeof(char));
 	va_start(ap, fmt);
 	(void) vsnprintf(p, size, fmt, ap);
 	va_end(ap);
@@ -186,7 +186,7 @@ exec_list(const char *cmd, const char *match)
 		if (match == NULL || strstr(buf, match) != NULL) {
 			size += (strlen(buf) + 1) * sizeof(char);
 
-			XREALLOC(rawlist,  size);
+			rawlist = xrealloc(rawlist,  size);
 			strlcat(rawlist, buf, size);
 		}
 	}
@@ -207,9 +207,9 @@ is_listed(const char **list, const char *item)
 	if (list != NULL)
 		for (; *list != NULL; list++)
 			if (strcmp(item, *list) == 0)
-				return(T_TRUE);
+				return(TRUE);
 
-	return(T_FALSE);
+	return(FALSE);
 }
 
 void
@@ -240,7 +240,7 @@ getosarch(void)
 	if (uname(&un) < 0)
 		return NULL;
 
-	XSTRDUP(ret, un.machine);
+	ret = xstrdup(un.machine);
 
 	return ret;
 }
@@ -259,7 +259,7 @@ getosrelease(void)
 #ifdef _MINIX
 	asprintf(&ret, "%s.%s", un.release, un.version);
 #else
-	XSTRDUP(ret, un.release);
+	ret = xstrdup(un.release);
 #endif
 
 	for (p = ret; isdigit((int)*p) || *p == '.'; p++);
@@ -297,7 +297,7 @@ strreplace(char *str, const char *from, const char *to)
 	}
 	buf[i] = '\0';
 
-	XSTRDUP(ret, buf);
+	ret = xstrdup(buf);
 	return(ret);
 }
 
