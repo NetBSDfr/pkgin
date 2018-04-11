@@ -35,8 +35,9 @@ Preflist **preflist;
 void
 load_preferred()
 {
-	int		size = 0, pkglen;
 	FILE		*fp;
+	size_t		pkglen;
+	int		size = 0;
 	char		buf[BUFSIZ], *p;
 	const char	*cmp = "=<>";
 

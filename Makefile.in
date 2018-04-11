@@ -60,10 +60,14 @@ PKGIN_DBDIR!=	pwd
 PKGIN_DBDIR=	${VARBASE}/db/pkgin
 .endif
 
-.if ${OPSYS} == "NetBSD"
-WARNS=		2
-CPPFLAGS+=	-DNETBSD
-.endif
+WARNS?=		6
+COPTS.actions.c+=	-Wno-format-nonliteral
+COPTS.autoremove.c+=	-Wno-format-nonliteral
+COPTS.depends.c+=	-Wno-format-nonliteral
+COPTS.pkg_check.c+=	-Wno-format-nonliteral
+COPTS.pkgindb.c+=	-Wno-format-nonliteral
+COPTS.pkglist.c+=	-Wno-format-nonliteral
+COPTS.selection.c+=	-Wno-format-nonliteral
 
 CPPFLAGS+=	@CPPFLAGS@
 CPPFLAGS+=	-g
