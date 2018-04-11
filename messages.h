@@ -31,7 +31,6 @@
  */
 
 /* main.c */
-#define MSG_MISSING_CMD "missing command"
 #define MSG_MISSING_PKGNAME "missing package name"
 #define MSG_MISSING_FILENAME "missing file name"
 #define MSG_FULLDEPTREE "full dependency tree for %s\n"
@@ -42,9 +41,6 @@
 #define MSG_PKG_ARGS_UNKEEP "specify at least one package to unkeep"
 #define MSG_MISSING_SRCH "missing search string"
 #define MSG_MISSING_CATEGORY "missing category"
-
-#define MSG_USAGE "Usage: %s [-cdfFhlnPtvVy] command [package ...]\n"
-#define MSG_CMDS_SHORTCUTS "\nCommands and shortcuts:\n"
 
 #define MSG_CHROOT_FAILED "Unable to chroot"
 #define MSG_CHDIR_FAILED "Unable to chroot"
@@ -111,7 +107,6 @@
 /* autoremove.c */
 #define MSG_AUTOREMOVE_WARNING "\
 in order to remove packages from the autoremove list, flag those with the `keep' action.\n"
-#define MSG_NO_PKGIN_PKGS "no packages have been installed with %s"
 #define MSG_ALL_KEEP_PKGS "all packages are marked as \"keepable\"\n."
 #define MSG_AUTOREMOVE_PKGS "%d packages to be autoremoved: %s\n"
 #define MSG_MARK_PKG_KEEP "%s is marked as non-autoremovable\n"

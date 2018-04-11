@@ -34,7 +34,7 @@
 #include "cmd.h"
 #include "external/lib.h"
 
-static void	usage(void);
+static void	usage(int);
 static int	find_cmd(const char *);
 static void	missing_param(int, int, const char *);
 static void	ginto(void);
@@ -52,10 +52,7 @@ main(int argc, char *argv[])
 	int 		ch, i, rc = EXIT_SUCCESS;
 	const char	*chrootpath = NULL;
 
-	setprogname(argv[0]);
-
-	if (argc < 2 || *argv[1] == 'h')
-		usage();
+	setprogname("pkgin");
 
 	/* Default to not doing \r printouts if we don't send to a tty */
 	parsable = !isatty(fileno(stdout));
@@ -77,12 +74,12 @@ main(int argc, char *argv[])
 			noflag = 1;
 			break;
 		case 'v':
-			printf("%s %s (using %s)\n",
-				getprogname(), PKGIN_VERSION, pdb_version());
+			printf("pkgin %s (using %s)\n",
+			    PKGIN_VERSION, pdb_version());
 			exit(EXIT_SUCCESS);
 			/* NOTREACHED */
 		case 'h':
-			usage();
+			usage(EXIT_SUCCESS);
 			/* NOTREACHED */
 		case 'l':
 			lslimit = optarg[0];
@@ -108,22 +105,16 @@ main(int argc, char *argv[])
 			pflag = 1;
 			break;
 		default:
-			usage();
+			usage(EXIT_FAILURE);
 			/* NOTREACHED */
 		}
 	}
 	argc -= optind;
 	argv += optind;
 
-	if (argc < 1) {
-		fprintf(stderr, "%s\n", MSG_MISSING_CMD);
-		usage();
-		/* NOTREACHED */
-	}
-
 	/* check we were given a valid command */
-	if ((ch = find_cmd(argv[0])) == -1) {
-		usage();
+	if (argc < 1 || (ch = find_cmd(argv[0])) == -1) {
+		usage(EXIT_FAILURE);
 		/* NOTREACHED */
 	}
 
@@ -284,7 +275,7 @@ main(int argc, char *argv[])
                 pkgindb_stats();
                 break;
 	default:
-		usage();
+		usage(EXIT_FAILURE);
 		/* NOTREACHED */
 	}
 
@@ -326,20 +317,22 @@ find_cmd(const char *arg)
 }
 
 static void
-usage()
+usage(int status)
 {
 	int i;
 
-	(void)fprintf(stderr, MSG_USAGE, getprogname());
+	fprintf((status) ? stderr : stdout,
+	    "Usage: pkgin [-cdfFhlnPtvVy] command [package ...]\n\n"
+	    "Commands and shortcuts:\n");
 
-	printf(MSG_CMDS_SHORTCUTS);
-
-	for (i = 0; cmd[i].name != NULL; i++)
+	for (i = 0; cmd[i].name != NULL; i++) {
 		if (cmd[i].cmdtype != PKG_GINTO_CMD)
-			printf("%-19s (%-4s) -  %s\n",
-				cmd[i].name, cmd[i].shortcut, cmd[i].descr);
+			fprintf((status) ? stderr : stdout,
+			    "%-19s (%-4s) - %s\n",
+			    cmd[i].name, cmd[i].shortcut, cmd[i].descr);
+	}
 
-	exit(EXIT_FAILURE);
+	exit(status);
 }
 
 static void

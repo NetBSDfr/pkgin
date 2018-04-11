@@ -52,7 +52,7 @@ pkgin_autoremove()
 	 * KEEP_LOCAL_PKGS returns full packages names
 	 */
 	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
-		errx(EXIT_FAILURE, MSG_NO_PKGIN_PKGS, getprogname());
+		errx(EXIT_FAILURE, "no packages have been marked as keepable");
 
 	keephead = init_head();
 
