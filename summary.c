@@ -133,7 +133,11 @@ fetch_summary(char *cur_repo)
 	if ((a = archive_read_new()) == NULL)
 		errx(EXIT_FAILURE, "Cannot initialise archive");
 
+#if ARCHIVE_VERSION_NUMBER < 3000000
+	if (archive_read_support_compression_all(a) != ARCHIVE_OK ||
+#else
 	if (archive_read_support_filter_all(a) != ARCHIVE_OK ||
+#endif
 	    archive_read_support_format_raw(a) != ARCHIVE_OK ||
 	    archive_read_open(a, sum, sum_start, sum_read, sum_close) != ARCHIVE_OK)
 		errx(EXIT_FAILURE, "Cannot open pkg_summary: %s",
@@ -517,7 +521,11 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 		    archive_error_string(a));
 	}
 
+#if ARCHIVE_VERSION_NUMBER < 3000000
+	archive_read_finish(a);
+#else
 	archive_read_free(a);
+#endif
 }
 
 static void
