@@ -97,14 +97,6 @@ pdb_version(void)
 	return "SQLite "SQLITE_VERSION;
 }
 
-static void
-pdb_err(const char *errmsg)
-{
-	warn("%s: %s", errmsg, sqlite3_errmsg(pdb));
-	sqlite3_close(pdb);
-	exit(EXIT_FAILURE);
-}
-
 /*
  * unused: optional parameter given as 4th argument of sqlite3_exec
  * argc  : row number
@@ -184,68 +176,59 @@ pkgindb_close()
 	sqlite3_close(pdb);
 }
 
-uint8_t
-upgrade_database()
+/*
+ * Configure the pkgin database.  Returns 0 if opening an existing compatible
+ * database, or 1 if the database needs to be created or recreated (in the case
+ * of a schema upgrade).  Any other error is fatal.
+ */
+int
+pkgindb_open(void)
 {
-	if (pkgindb_doquery(COMPAT_CHECK, NULL, NULL) != PDB_OK) {
-#ifdef notyet
-		/*
-		 * COMPAT_CHECK query leads to an error for an
-		 * incompatible database
-		 */
-		printf(MSG_DATABASE_NOT_COMPAT);
-		if (!check_yesno(DEFAULT_YES))
-			exit(EXIT_FAILURE);
-#endif
-
-		pkgindb_reset();
-
-		return 1;
-	}
-
-	return 0;
-}
-
-void
-pkgindb_init()
-{
-	int i;
-	char buf[BUFSIZ];
+	int create, i, oflags;
+	char buf[128];
 
 	/*
-	 * Do not exit if pkgin_sqllog is not writable.
-	 * Permit users to do list-operations
+	 * Determine if we need to create a new database or can load an
+	 * existing one.  The SQLITE_OPEN_READWRITE flag does not require that
+	 * write privileges are available, if they are not then the database
+	 * will be opened read-only, allowing normal users to perform queries.
 	 */
+recreate:
+	create = 0;
+	oflags = SQLITE_OPEN_READWRITE;
+	if (access(pkgin_sqldb, F_OK) < 0) {
+		create = 1;
+		oflags |= SQLITE_OPEN_CREATE;
+	}
 
-	if (sqlite3_open(pkgin_sqldb, &pdb) != SQLITE_OK)
-		pdb_err("Can't open database");
+	if (sqlite3_open_v2(pkgin_sqldb, &pdb, oflags, NULL) != SQLITE_OK)
+		err(EXIT_FAILURE, "cannot open database");
 
-	/* generic query in order to check tables existence */
-	if (pkgindb_doquery("select * from sqlite_master;",
-			NULL, NULL) != PDB_OK)
-		pdb_err("Can't access database");
+	/*
+	 * If we're creating or recreating a new database, attempt to populate
+	 * the initial schema, otherwise perform a compatibility check.  If the
+	 * compatibility check fails then we simply remove the existing database
+	 * and recreate, there is no support for online upgrades at this time.
+	 */
+	if (create) {
+		if (pkgindb_doquery(CREATE_DRYDB, NULL, NULL) != PDB_OK)
+			errx(EXIT_FAILURE, "cannot create database: %s",
+			    sqlite3_errmsg(pdb));
+	} else {
+		if (pkgindb_doquery(COMPAT_CHECK, NULL, NULL) != PDB_OK) {
+			if (unlink(pkgin_sqldb) < 0)
+				err(EXIT_FAILURE, "cannot recreate database");
+			goto recreate;
+		}
+	}
 
-	/* apply PRAGMA properties */
+	/* Apply PRAGMA properties */
 	for (i = 0; pragmaopts[i] != NULL; i++) {
-		snprintf(buf, BUFSIZ, "PRAGMA %s;", pragmaopts[i]);
+		snprintf(buf, sizeof(buf), "PRAGMA %s;", pragmaopts[i]);
 		pkgindb_doquery(buf, NULL, NULL);
 	}
 
-	pkgindb_doquery(CREATE_DRYDB, NULL, NULL);
-}
-
-/**
- * \brief destroy the database and re-create it (upgrade)
- */
-void
-pkgindb_reset()
-{
-	pkgindb_close();
-
-	if (unlink(pkgin_sqldb) < 0)
-		err(EXIT_FAILURE, MSG_DELETE_DB_FAILED, pkgin_sqldb);
-
-	pkgindb_init();
+	return create;
 }
 
 int

@@ -312,6 +312,7 @@ extern char	*pkgin_errlog;
 extern char	*pkgin_sqllog;
 void		setup_pkgin_dbdir(void);
 uint8_t		have_privs(int);
+int		pkgindb_open(void);
 
 /* preferred.c */
 void		load_preferred(void);

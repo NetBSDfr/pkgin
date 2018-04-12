@@ -130,10 +130,12 @@ main(int argc, char *argv[])
 	/* Configure pkgin database directory */
 	setup_pkgin_dbdir();
 
-	pkgindb_init();
-
-	/* check if current database fits our needs */
-	need_upgrade = upgrade_database();
+	/*
+	 * Opening the database returns 0 for a valid database schema, and 1
+	 * for a newly created or recreated database, so we use that to
+	 * determine whether an upgrade needs to be performed or not.
+	 */
+	need_upgrade = pkgindb_open();
 
 	/* update local db if pkgdb mtime has changed */
 	(void)update_db(LOCAL_SUMMARY, NULL, 1);

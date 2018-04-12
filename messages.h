@@ -121,7 +121,6 @@ in order to remove packages from the autoremove list, flag those with the `keep'
 #define MSG_COULDNT_FETCH "Could not fetch %s\n"
 #define MSG_ARCH_DONT_MATCH "\r\n/!\\ Warning /!\\ %s doesn't match your current architecture (%s)\nYou probably want to modify "PKGIN_CONF"/"REPOS_FILE".\nStill want to "
 #define MSG_COULD_NOT_GET_PKGNAME "Could not get package name from dependency: %s\n"
-#define MSG_DATABASE_NOT_COMPAT "Database needs to be updated.\n"
 
 /* impact.c */
 #define MSG_GREATER_VERSION \
@@ -146,7 +145,6 @@ please re-run %s with a package name matching one of the following:\n"
 #define MSG_NO_CATEGORIES "No categories found.\n"
 
 /* pkgindb.c */
-#define MSG_DELETE_DB_FAILED "Failed to delete database file %s\n"
 #define MSG_LOCAL_STAT_TITLE "Local package database:\n"
 #define MSG_LOCAL_PACKAGES "\tInstalled packages: %s\n"
 #define MSG_LOCAL_PKG_SIZE "\tDisk space occupied: %s\n\n"
