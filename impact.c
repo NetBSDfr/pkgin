@@ -188,10 +188,6 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	Pkglist		*pimpact, *plist, *mapplist;
 	char		remotepkg[BUFSIZ];
 
-	/* local package list is empty */
-	if (SLIST_EMPTY(&l_plisthead))
-		return 1;
-
 	/* record corresponding package on remote list*/
 	if ((mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
