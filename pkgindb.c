@@ -33,8 +33,6 @@
 #define H_BUF   6
 
 static sqlite3	*pdb;
-static char		*pdberr = NULL;
-static FILE		*sql_log_fp;
 static int              repo_counter = 0;
 
 static const char *pragmaopts[] = {
@@ -155,15 +153,22 @@ pkgindb_dovaquery(const char *fmt, ...)
 }
 
 int
-pkgindb_doquery(const char *query,
-	int (*pkgindb_callback)(void *, int, char **, char **), void *param)
+pkgindb_doquery(const char *query, int (*cb)(void *, int, char *[], char *[]),
+    void *param)
 {
-	if (sqlite3_exec(pdb, query, pkgindb_callback, param, &pdberr)
-		!= SQLITE_OK) {
-		if (sql_log_fp != NULL) {
+	FILE *fp;
+	char *pdberr;
+
+	if (sqlite3_exec(pdb, query, cb, param, &pdberr) != SQLITE_OK) {
+		/*
+		 * Don't fail if we can't open the SQL log for writing, this
+		 * permits regular users to perform query operations.
+		 */
+		if ((fp = fopen(pkgin_sqllog, "w")) != NULL) {
 			if (pdberr != NULL)
-				fprintf(sql_log_fp, "SQL error: %s\n", pdberr);
-			fprintf(sql_log_fp, "SQL query: %s\n", query);
+				fprintf(fp, "SQL error: %s\n", pdberr);
+			fprintf(fp, "SQL query: %s\n", query);
+			fclose(fp);
 		}
 		sqlite3_free(pdberr);
 
@@ -177,9 +182,6 @@ void
 pkgindb_close()
 {
 	sqlite3_close(pdb);
-
-	if (sql_log_fp != NULL)
-		fclose(sql_log_fp);
 }
 
 uint8_t
@@ -214,7 +216,6 @@ pkgindb_init()
 	 * Do not exit if pkgin_sqllog is not writable.
 	 * Permit users to do list-operations
 	 */
-	sql_log_fp = fopen(pkgin_sqllog, "w");
 
 	if (sqlite3_open(pkgin_sqldb, &pdb) != SQLITE_OK)
 		pdb_err("Can't open database");

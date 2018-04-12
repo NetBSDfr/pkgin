@@ -83,8 +83,8 @@ uint8_t		upgrade_database(void);
 void		pkgindb_init(void);
 void		pkgindb_close(void);
 int		pkgindb_dovaquery(const char *, ...);
-int		pkgindb_doquery(const char *, int (*pkgindb_callback)
-		    (void *, int, char **, char **), void *);
+int		pkgindb_doquery(const char *,
+		    int (*)(void *, int, char *[], char *[]), void *);
 int		pdb_get_value(void *, int, char **, char **);
 int		pkg_db_mtime(void);
 void		repo_record(char **);
