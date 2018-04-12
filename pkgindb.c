@@ -34,7 +34,6 @@
 
 static sqlite3	*pdb;
 static char		*pdberr = NULL;
-static int		pdbres = 0;
 static FILE		*sql_log_fp;
 static int              repo_counter = 0;
 
@@ -120,16 +119,6 @@ pdb_err(const char *errmsg)
  *
  * WARNING: callback is called on every line
  */
-static int
-pkgindb_simple_callback(void *param, int argc, char **argv, char **colname)
-{
-	pdbres = argc;
-
-	if (argv == NULL)
-		return PDB_ERR;
-
-	return PDB_OK;
-}
 
 /* sqlite callback, record a single value */
 int
@@ -196,8 +185,7 @@ pkgindb_close()
 uint8_t
 upgrade_database()
 {
-	if (pkgindb_doquery(COMPAT_CHECK,
-			pkgindb_simple_callback, NULL) == PDB_ERR) {
+	if (pkgindb_doquery(COMPAT_CHECK, NULL, NULL) != PDB_OK) {
 #ifdef notyet
 		/*
 		 * COMPAT_CHECK query leads to an error for an
@@ -233,7 +221,7 @@ pkgindb_init()
 
 	/* generic query in order to check tables existence */
 	if (pkgindb_doquery("select * from sqlite_master;",
-			pkgindb_simple_callback, NULL) != PDB_OK)
+			NULL, NULL) != PDB_OK)
 		pdb_err("Can't access database");
 
 	/* apply PRAGMA properties */
