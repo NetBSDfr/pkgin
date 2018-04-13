@@ -59,7 +59,6 @@ extern const char NOKEEP_LOCAL_PKGS[];
 extern const char KEEP_LOCAL_PKGS[];
 extern const char PKG_URL[];
 extern const char DELETE_EMPTY_ROWS[];
-extern const char UPDATE_PKGDB_MTIME[];
 extern const char EXISTS_REPO[];
 extern const char INSERT_REPO[];
 extern const char SELECT_REPO_URLS[];
@@ -72,7 +71,6 @@ extern const char UNIQUE_PKG[];
 extern const char EXPORT_KEEP_LIST[];
 extern const char GET_PKGNAME_BY_PKGPATH[];
 extern const char GET_ORPHAN_PACKAGES[];
-extern const char COMPAT_CHECK[];
 extern const char SHOW_ALL_CATEGORIES[];
 
 #define LOCAL_PKG "LOCAL_PKG"

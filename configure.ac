@@ -73,6 +73,13 @@ AC_TYPE_UINT16_T
 AC_TYPE_UINT64_T
 AC_TYPE_UINT8_T
 
+# Check for high-resolution timestamps in struct stat (from libarchive).
+AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
+AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
+AC_CHECK_MEMBERS([struct stat.st_mtime_n]) # AIX
+AC_CHECK_MEMBERS([struct stat.st_umtime]) # Tru64
+AC_CHECK_MEMBERS([struct stat.st_mtime_usec]) # Hurd
+
 AC_CHECK_PROG(SED,nbsed,nbsed,sed)
 
 dnl fix rpath for SunOS, is there a cleaner way to do this ?

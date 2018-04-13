@@ -112,6 +112,21 @@
 
 #define TRACE(fmt...) if (tracefp != NULL) fprintf(tracefp, fmt)
 
+/* Support various ways to get nanosecond resolution, or default to 0 */
+#if HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC
+#define pkgin_nanotime	st_mtimespec.tv_nsec
+#elif HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC
+#define pkgin_nanotime	st_mtim.tv_nsec
+#elif HAVE_STRUCT_STAT_ST_MTIME_N
+#define pkgin_nanotime	st_mtime_n
+#elif HAVE_STRUCT_STAT_ST_UMTIME
+#define pkgin_nanotime	st_umtime
+#elif HAVE_STRUCT_STAT_ST_MTIME_USEC
+#define pkgin_nanotime	st_mtime.usec
+#else
+#define pkgin_nanotime	0
+#endif
+
 /**
  * \struct Sumfile
  * \brief Remote pkg_summary information

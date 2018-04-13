@@ -246,7 +246,8 @@ recreate:
 			errx(EXIT_FAILURE, "cannot create database: %s",
 			    sqlite3_errmsg(pdb));
 	} else {
-		if (pkgindb_doquery(COMPAT_CHECK, NULL, NULL) != PDB_OK) {
+		if (pkgindb_doquery("SELECT PKGDB_NTIME FROM PKGDB;",
+		    NULL, NULL) != PDB_OK) {
 			if (unlink(pkgin_sqldb) < 0)
 				err(EXIT_FAILURE, "cannot recreate database");
 			goto recreate;
@@ -268,32 +269,74 @@ pkgindb_close()
 	sqlite3_close(pdb);
 }
 
-int
-pkg_db_mtime()
+static void
+pkgindb_sqlfail(void)
 {
-	struct stat	st;
-	time_t	   	db_mtime = 0;
-	char		str_mtime[20], buf[BUFSIZ];
+	pkgindb_close();
 
-	/* no pkgdb file */
+	errx(EXIT_FAILURE, "SQL query failed, see %s", pkgin_sqllog);
+}
+
+int
+pkg_db_mtime(void)
+{
+	sqlite3_stmt	*stmt;
+	struct stat	st;
+	time_t	   	db_mtime;
+	long		db_ntime;
+	int		rc;
+
+	/* No pkgdb, just return up-to-date so we can start installing. */
 	if (stat(pkgdb_get_dir(), &st) < 0)
 		return 0;
 
-	str_mtime[0] = '\0';
+	/*
+	 * Fetch only the most recent rowid.
+	 */
+	curquery = "SELECT PKGDB_MTIME, PKGDB_NTIME FROM PKGDB "
+		   "ORDER BY ROWID DESC LIMIT 1;";
 
-	pkgindb_doquery("SELECT PKGDB_MTIME FROM PKGDB;",
-		pdb_get_value, str_mtime);
+	if (sqlite3_prepare_v2(pdb, curquery, -1, &stmt, NULL) != SQLITE_OK)
+		pkgindb_sqlfail();
 
-	if (str_mtime[0] != '\0')
-		db_mtime = (time_t)strtol(str_mtime, (char **)NULL, 10);
+	rc = sqlite3_step(stmt);
 
-	/* mtime is up to date */
-	if (db_mtime == st.st_mtime)
+	if (rc == SQLITE_ROW) {
+		db_mtime = sqlite3_column_int64(stmt, 0);
+		db_ntime = sqlite3_column_int64(stmt, 1);
+	} else if (rc == SQLITE_DONE) {
+		db_mtime = 0;
+		db_ntime = 0;
+	} else {
+		/* This shouldn't happen, abort and investigate */
+		pkgindb_sqlfail();
+	}
+
+	sqlite3_finalize(stmt);
+
+	/* Databases matched pkgdb, we're up-to-date */
+	if (db_mtime == st.st_mtime && db_ntime == st.pkgin_nanotime)
 		return 0;
 
-	snprintf(buf, BUFSIZ, UPDATE_PKGDB_MTIME, (long long)st.st_mtime);
-	/* update mtime */
-	pkgindb_doquery(buf, NULL, NULL);
+	/*
+	 * Update database to current mtime and request a refresh.
+	 */
+	curquery = "INSERT INTO PKGDB (PKGDB_MTIME, PKGDB_NTIME) "
+		   "VALUES (?, ?);";
+
+	if (sqlite3_prepare_v2(pdb, curquery, -1, &stmt, NULL) != SQLITE_OK)
+		pkgindb_sqlfail();
+
+	if (sqlite3_bind_int64(stmt, 1, st.st_mtime) != SQLITE_OK)
+		pkgindb_sqlfail();
+
+	if (sqlite3_bind_int64(stmt, 2, st.pkgin_nanotime) != SQLITE_OK)
+		pkgindb_sqlfail();
+
+	if (sqlite3_step(stmt) != SQLITE_DONE)
+		pkgindb_sqlfail();
+
+	sqlite3_finalize(stmt);
 
 	return 1;
 }
