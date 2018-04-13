@@ -107,10 +107,6 @@
 #define PKG_STATS_CMD 27
 #define PKG_GINTO_CMD 255
 
-#define PKG_EQUAL '='
-#define PKG_GREATER '>'
-#define PKG_LESSER '<'
-
 #define DEFAULT_NO 0
 #define DEFAULT_YES 1
 

@@ -30,6 +30,10 @@
 #include "pkgin.h"
 #include <regex.h>
 
+#define PKG_EQUAL	'='
+#define PKG_GREATER	'>'
+#define PKG_LESSER	'<'
+
 Plisthead	r_plisthead, l_plisthead;
 int		r_plistcounter, l_plistcounter;
 
@@ -309,60 +313,46 @@ search_pkg(const char *pattern)
 	regex_t		re;
 	int		rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
-	int		matched_pkgs;
+	int		matched = 0;
 	char		sfmt[10], pfmt[10];
 
 	setfmt(&sfmt[0], &pfmt[0]);
 
-	matched_pkgs = 0;
+	if ((rc = regcomp(&re, pattern,
+	    REG_EXTENDED|REG_NOSUB|REG_ICASE)) != 0) {
+		regerror(rc, &re, eb, sizeof(eb));
+		errx(EXIT_FAILURE, "regcomp: %s: %s", pattern, eb);
+	}
 
-	if (!SLIST_EMPTY(&r_plisthead)) {
+	SLIST_FOREACH(plist, &r_plisthead, next) {
+		if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
+		    regexec(&re, plist->comment, 0, NULL, 0) == 0) {
+			matched = 1;
+			rc = pkg_is_installed(&l_plisthead, plist);
 
-		if ((rc = regcomp(&re, pattern,
-			REG_EXTENDED|REG_NOSUB|REG_ICASE)) != 0) {
-			regerror(rc, &re, eb, sizeof(eb));
-			errx(1, "regcomp: %s: %s", pattern, eb);
-		}
+			if (rc == 0)
+				is_inst = PKG_EQUAL;
+			else if (rc == 1)
+				is_inst = PKG_GREATER;
+			else if (rc == 2)
+				is_inst = PKG_LESSER;
+			else
+				is_inst = '\0';
 
-		SLIST_FOREACH(plist, &r_plisthead, next) {
-			is_inst = '\0';
-
-			if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
-				regexec(&re, plist->comment,
-					0, NULL, 0) == 0) {
-
-				matched_pkgs = 1;
-
-				if (!SLIST_EMPTY(&l_plisthead)) {
-					rc = pkg_is_installed(&l_plisthead,
-								plist);
-
-					if (rc == 0)
-						is_inst = PKG_EQUAL;
-					if (rc == 1)
-						is_inst = PKG_GREATER;
-					if (rc == 2)
-						is_inst = PKG_LESSER;
-
-				}
-
-				snprintf(outpkg, BUFSIZ, sfmt,
-						plist->full, is_inst);
-
-				printf(pfmt, outpkg, plist->comment);
-			}
-		}
-
-		regfree(&re);
-
-		if (matched_pkgs == 1)
-			printf(MSG_IS_INSTALLED_CODE);
-		else {
-			printf(MSG_NO_SEARCH_RESULTS, pattern);
-			return EXIT_FAILURE;
+			snprintf(outpkg, BUFSIZ, sfmt, plist->full, is_inst);
+			printf(pfmt, outpkg, plist->comment);
 		}
 	}
-	return EXIT_SUCCESS;
+
+	regfree(&re);
+
+	if (matched) {
+		printf(MSG_IS_INSTALLED_CODE);
+		return EXIT_SUCCESS;
+	} else {
+		printf(MSG_NO_SEARCH_RESULTS, pattern);
+		return EXIT_FAILURE;
+	}
 }
 
 void
