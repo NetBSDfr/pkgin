@@ -308,7 +308,17 @@ extern char	*pkgin_errlog;
 extern char	*pkgin_sqllog;
 void		setup_pkgin_dbdir(void);
 uint8_t		have_privs(int);
+const char *	pdb_version(void);
+int		pdb_get_value(void *, int, char **, char **);
+int		pkgindb_doquery(const char *,
+		    int (*)(void *, int, char *[], char *[]), void *);
+int		pkgindb_dovaquery(const char *, ...);
 int		pkgindb_open(void);
+void		pkgindb_close(void);
+int		pkg_db_mtime(void);
+void		repo_record(char **);
+time_t		pkg_sum_mtime(char *);
+void		pkgindb_stats(void);
 
 /* preferred.c */
 void		load_preferred(void);

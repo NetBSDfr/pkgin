@@ -43,6 +43,17 @@ static const char *pragmaopts[] = {
 	NULL
 };
 
+/*
+ * Used to keep track of the current query so that it can be used in the
+ * error log callback for diagnostics.
+ *
+ * Most database access goes through pkgindb_doquery which will set curquery
+ * to the query it has been passed, and then resets it to NULL afterwards.
+ * Any callers that perform their own database access should use curquery to
+ * store their query so that errors are logged correctly.
+ */
+static const char *curquery = NULL;
+
 char *pkgin_dbdir;
 char *pkgin_sqldb;
 char *pkgin_cache;
@@ -125,6 +136,53 @@ pdb_get_value(void *param, int argc, char **argv, char **colname)
 	return PDB_ERR;
 }
 
+/*
+ * Record an error to the SQL log, optionally logging the query that caused
+ * the failure.  Any errors opening the log for writing are ignored so that
+ * regular users can issue queries.
+ */
+static void
+pkgindb_sqlerr_cb(void *arg, int errcode, const char *errmsg)
+{
+	FILE *fp;
+	struct tm tm;
+	time_t now;
+	char curtime[64];
+	char **query = (char **)arg;
+
+	now = time(NULL);
+	tm = *(localtime(&now));
+	strftime(curtime, sizeof(curtime), "%Y-%m-%d %H:%M:%S %Z", &tm);
+
+	if ((fp = fopen(pkgin_sqllog, "a")) != NULL) {
+		fprintf(fp, "SQL error at %s\n", curtime);
+		fprintf(fp, "   errmsg: %s\n", errmsg);
+		if (*query)
+			fprintf(fp, "    query: %s\n", *query);
+		fclose(fp);
+	}
+}
+
+int
+pkgindb_doquery(const char *query, int (*cb)(void *, int, char *[], char *[]),
+    void *param)
+{
+	int rv;
+
+	/*
+	 * Save the current query for the error logging callback, then reset
+	 * to NULL after the query has completed to avoid leaking into the
+	 * error log of callers that use the sqlite3_exec interface directly.
+	 */
+	curquery = query;
+
+	rv = sqlite3_exec(pdb, query, cb, param, NULL);
+
+	curquery = NULL;
+
+	return (rv == SQLITE_OK) ? PDB_OK : PDB_ERR;
+}
+
 int
 pkgindb_dovaquery(const char *fmt, ...)
 {
@@ -144,38 +202,6 @@ pkgindb_dovaquery(const char *fmt, ...)
 	return rv;
 }
 
-int
-pkgindb_doquery(const char *query, int (*cb)(void *, int, char *[], char *[]),
-    void *param)
-{
-	FILE *fp;
-	char *pdberr;
-
-	if (sqlite3_exec(pdb, query, cb, param, &pdberr) != SQLITE_OK) {
-		/*
-		 * Don't fail if we can't open the SQL log for writing, this
-		 * permits regular users to perform query operations.
-		 */
-		if ((fp = fopen(pkgin_sqllog, "w")) != NULL) {
-			if (pdberr != NULL)
-				fprintf(fp, "SQL error: %s\n", pdberr);
-			fprintf(fp, "SQL query: %s\n", query);
-			fclose(fp);
-		}
-		sqlite3_free(pdberr);
-
-		return PDB_ERR;
-	}
-
-	return PDB_OK;
-}
-
-void
-pkgindb_close()
-{
-	sqlite3_close(pdb);
-}
-
 /*
  * Configure the pkgin database.  Returns 0 if opening an existing compatible
  * database, or 1 if the database needs to be created or recreated (in the case
@@ -186,6 +212,11 @@ pkgindb_open(void)
 {
 	int create, i, oflags;
 	char buf[128];
+
+	/*
+	 * Configure our sqlite error log callback function.
+	 */
+	sqlite3_config(SQLITE_CONFIG_LOG, pkgindb_sqlerr_cb, &curquery);
 
 	/*
 	 * Determine if we need to create a new database or can load an
@@ -229,6 +260,12 @@ recreate:
 	}
 
 	return create;
+}
+
+void
+pkgindb_close()
+{
+	sqlite3_close(pdb);
 }
 
 int

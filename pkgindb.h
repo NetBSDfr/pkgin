@@ -78,17 +78,6 @@ extern const char SHOW_ALL_CATEGORIES[];
 #define LOCAL_PKG "LOCAL_PKG"
 #define REMOTE_PKG "REMOTE_PKG"
 
-const char	*pdb_version(void);
-void		pkgindb_close(void);
-int		pkgindb_dovaquery(const char *, ...);
-int		pkgindb_doquery(const char *,
-		    int (*)(void *, int, char *[], char *[]), void *);
-int		pdb_get_value(void *, int, char **, char **);
-int		pkg_db_mtime(void);
-void		repo_record(char **);
-time_t		pkg_sum_mtime(char *);
-void            pkgindb_stats(void);
-
 #define PDB_OK 0
 #define PDB_ERR -1
 
