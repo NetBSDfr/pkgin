@@ -756,7 +756,7 @@ record_upgrades(Plisthead *plisthead)
 }
 
 int
-pkgin_upgrade(int uptype)
+pkgin_upgrade(int uptype, int do_inst)
 {
 	Plistnumbered	*keeplisthead;
 	Plisthead	*localplisthead;
@@ -781,7 +781,7 @@ pkgin_upgrade(int uptype)
 
 	pkgargs = record_upgrades(localplisthead);
 
-	rc = pkgin_install(pkgargs, DO_INST);
+	rc = pkgin_install(pkgargs, do_inst);
 	/*
 	 * full upgrade, we need to record keep-packages
 	 * in order to restore them

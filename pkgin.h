@@ -251,7 +251,7 @@ void		do_pkg_remove(Plisthead *);
 int		pkgin_remove(char **);
 int		pkgin_install(char **, uint8_t);
 char		*action_list(char *, char *);
-int		pkgin_upgrade(int);
+int		pkgin_upgrade(int, int);
 char		*read_preferred(char *);
 /* order.c */
 Plisthead	*order_remove(Plisthead *);

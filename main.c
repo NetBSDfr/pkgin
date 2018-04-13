@@ -195,10 +195,10 @@ main(int argc, char *argv[])
 		rc = pkgin_install(&argv[1], do_inst);
 		break;
 	case PKG_UPGRD_CMD: /* upgrade keep-packages */
-		rc = pkgin_upgrade(UPGRADE_KEEP);
+		rc = pkgin_upgrade(UPGRADE_KEEP, do_inst);
 		break;
 	case PKG_FUPGRD_CMD: /* upgrade everything installed */
-		rc = pkgin_upgrade(UPGRADE_ALL);
+		rc = pkgin_upgrade(UPGRADE_ALL, do_inst);
 		break;
 	case PKG_REMV_CMD: /* remove packages and reverse dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_RM);
