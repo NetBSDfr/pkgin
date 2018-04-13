@@ -262,7 +262,7 @@ main(int argc, char *argv[])
 		break;
 	case PKG_SHPCAT_CMD: /* show package's category */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_pkg_category(argv[1]);
+		rc = show_pkg_category(argv[1]);
 		break;
 	case PKG_SHALLCAT_CMD: /* show all categories */
 		show_all_categories();

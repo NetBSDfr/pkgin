@@ -361,19 +361,33 @@ show_category(char *category)
 	Pkglist	   	*plist;
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
+		if (plist->category == NULL)
+			continue;
 		if (strcmp(plist->category, category) == 0)
 			printf("%-20s %s\n", plist->full, plist->comment);
 	}
 }
 
-void
+int
 show_pkg_category(char *pkgname)
 {
 	Pkglist	   	*plist;
+	int		matched = 0;
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
-		if (strcmp(plist->name, pkgname) == 0)
+		if (strcmp(plist->name, pkgname) == 0) {
+			matched = 1;
+			if (plist->category == NULL)
+				continue;
 			printf("%-12s - %s\n", plist->category, plist->full);
+		}
+	}
+
+	if (matched)
+		return EXIT_SUCCESS;
+	else {
+		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgname);
+		return EXIT_FAILURE;
 	}
 }
 

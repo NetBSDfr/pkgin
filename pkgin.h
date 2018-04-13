@@ -244,7 +244,7 @@ int		pkg_is_installed(Plisthead *, Pkglist *);
 void		list_pkgs(const char *, int);
 int		search_pkg(const char *);
 void		show_category(char *);
-void		show_pkg_category(char *);
+int		show_pkg_category(char *);
 void		show_all_categories(void);
 /* actions.c */
 void		do_pkg_remove(Plisthead *);
