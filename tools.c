@@ -121,20 +121,6 @@ trunc_str(char *str, char limit, int direction)
 	}
 }
 
-char *
-safe_snprintf(int size, const char *fmt, ...)
-{
-	char *p;
-	va_list ap;
-
-	p = xmalloc(size * sizeof(char));
-	va_start(ap, fmt);
-	(void) vsnprintf(p, size, fmt, ap);
-	va_end(ap);
-
-	return p;
-}
-
 int
 safe_strcmp(const char *s1, const char *s2)
 {
@@ -143,26 +129,6 @@ safe_strcmp(const char *s1, const char *s2)
 	if (s2 == NULL)
 		return 1;
 	return strcmp(s1, s2);
-}
-
-__inline int
-max(int a, int b)
-{
-        return (a > b ? a : b);
-}
-__inline int
-min(int a, int b)
-{
-        return (a < b ? a : b);
-}
-
-int
-listlen(const char **list)
-{
-	int i;
-
-	for (i = 0; list[i] != NULL; i++);
-	return(i);
 }
 
 /* execute a command and receive result on a char ** */
@@ -196,17 +162,6 @@ exec_list(const char *cmd, const char *match)
 	XFREE(rawlist);
 
 	return(res);
-}
-
-uint8_t
-is_listed(const char **list, const char *item)
-{
-	if (list != NULL)
-		for (; *list != NULL; list++)
-			if (strcmp(item, *list) == 0)
-				return(TRUE);
-
-	return(FALSE);
 }
 
 void
