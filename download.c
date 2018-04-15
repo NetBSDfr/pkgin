@@ -197,14 +197,14 @@ download_pkg(char *pkg_url, FILE *fp)
 	while (written < st.size) {
 		if ((fetched = fetchIO_read(f, buf, sizeof(buf))) == 0)
 			break;
-		if (fetched == -1 && errno == EINTR)
+		if (fetched < 0 && errno == EINTR)
 			continue;
-		if (fetched == -1)
+		if (fetched < 0)
 			errx(EXIT_FAILURE, "fetch failure: %s",
 			    fetchLastErrString);
 
 		statsize += fetched;
-		size = fetched;
+		size = (size_t)fetched;
 
 		for (ptr = buf; size > 0; ptr += wrote, size -= wrote) {
 			if ((wrote = fwrite(ptr, 1, size, fp)) < size) {
@@ -213,7 +213,7 @@ download_pkg(char *pkg_url, FILE *fp)
 				else
 					break;
 			}
-			written += wrote;
+			written += (ssize_t)wrote;
 		}
 	}
 

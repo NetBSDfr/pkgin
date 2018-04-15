@@ -61,6 +61,7 @@ PKGIN_DBDIR=	${VARBASE}/db/pkgin
 .endif
 
 WARNS?=		6
+# These should all be fixed at some point
 COPTS.actions.c+=	-Wno-format-nonliteral
 COPTS.autoremove.c+=	-Wno-format-nonliteral
 COPTS.depends.c+=	-Wno-format-nonliteral
@@ -68,6 +69,11 @@ COPTS.pkg_check.c+=	-Wno-format-nonliteral
 COPTS.pkgindb.c+=	-Wno-format-nonliteral
 COPTS.pkglist.c+=	-Wno-format-nonliteral
 COPTS.selection.c+=	-Wno-format-nonliteral
+# These are all in external code, leave alone to ease syncing.
+COPTS.dewey.c+=		-Wno-sign-conversion
+COPTS.opattern.c+=	-Wno-sign-conversion
+COPTS.progressmeter.c+=	-Wno-conversion -Wno-sign-compare -Wno-sign-conversion
+COPTS.var.c+=		-Wno-sign-conversion
 
 CPPFLAGS+=	@CPPFLAGS@
 CPPFLAGS+=	-g

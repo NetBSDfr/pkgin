@@ -71,11 +71,11 @@ fs_room(const char *dir)
 	if (statvfs(dir, &fsbuf) < 0)
 		err(EXIT_FAILURE, "Can't statvfs() `%s'", dir);
 
-	return (int64_t)fsbuf.f_bavail * (int64_t)fsbuf.f_frsize;
+	return fsbuf.f_bavail * fsbuf.f_frsize;
 }
 
 void
-clean_cache()
+clean_cache(void)
 {
 	DIR		*dp;
 	struct dirent	*ep;
@@ -96,11 +96,11 @@ clean_cache()
 }
 
 char *
-read_repos()
+read_repos(void)
 {
 	FILE	*fp;
 	char	*tmp, *b, *repos = NULL, buf[BUFSIZ];
-	int     curlen = 0, repolen = 0;
+	size_t	curlen = 0, repolen = 0;
 	const struct VarParam	*vp;
 
 	if ((fp = fopen(PKGIN_CONF"/"REPOS_FILE, "r")) == NULL)

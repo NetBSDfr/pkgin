@@ -44,8 +44,8 @@ FILE  		*tracefp = NULL;
 int
 main(int argc, char *argv[])
 {
-	uint8_t		need_upgrade, need_refresh;
-	uint8_t		do_inst = DO_INST; /* by default, do install packages */
+	int		need_upgrade, need_refresh;
+	int		do_inst = DO_INST; /* by default, do install packages */
 	int 		ch, i, rc = EXIT_SUCCESS;
 	const char	*chrootpath = NULL;
 
@@ -335,7 +335,7 @@ usage(int status)
 }
 
 static void
-ginto()
+ginto(void)
 {
 	printf("* 2 oz gin\n* 5 oz tonic water\n* 1 lime wedge\n");
 }

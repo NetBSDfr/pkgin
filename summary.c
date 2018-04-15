@@ -148,7 +148,7 @@ fetch_summary(char *cur_repo)
 }
 
 static void
-freecols()
+freecols(void)
 {
 	int i;
 
@@ -159,7 +159,7 @@ freecols()
 }
 
 static void
-free_insertlist()
+free_insertlist(void)
 {
 	Insertlist *pi;
 
@@ -183,7 +183,7 @@ colnames(void *unused, int argc, char **argv, char **colname)
 	colcount++;
 
 	cols.num = colcount;
-	cols.name = xrealloc(cols.name, colcount * sizeof(char *));
+	cols.name = xrealloc(cols.name, (size_t)colcount * sizeof(char *));
 
 	for (i = 0; i < argc; i++)
 		if (argv[i] != NULL && strncmp(colname[i], "name", 4) == 0)
@@ -455,7 +455,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 			break;
 
 		pi = buf;
-		buf[r + offset] = '\0';
+		buf[(size_t)r + offset] = '\0';
 
 		/*
 		 * Highly unlikely, but if we can't fit a single pkg_info entry
@@ -723,7 +723,7 @@ update_db(int which, char **pkgkeep, int verbose)
 void
 split_repos(void)
 {
-	int	repocount;
+	size_t	repocount;
 	char	*p;
 
 	if ((p = getenv("PKG_REPOS")) != NULL) {
@@ -781,7 +781,7 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 }
 
 int
-chk_repo_list()
+chk_repo_list(void)
 {
 	pkgindb_doquery(SELECT_REPO_URLS, cmp_repo_list, NULL);
 

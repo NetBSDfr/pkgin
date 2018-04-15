@@ -132,7 +132,7 @@ free_pkglist(Plisthead **plisthead, uint8_t type)
 }
 
 void
-init_global_pkglists()
+init_global_pkglists(void)
 {
 	Plistnumbered plist;
 
@@ -163,7 +163,7 @@ free_global_pkglist(Plisthead *plisthead)
 }
 
 void
-free_global_pkglists()
+free_global_pkglists(void)
 {
 	free_global_pkglist(&l_plisthead);
 	free_global_pkglist(&r_plisthead);

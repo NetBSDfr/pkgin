@@ -331,7 +331,7 @@ do_pkg_install(Plisthead *installhead)
 char *
 action_list(char *flatlist, char *str)
 {
-	int	newsize;
+	size_t	newsize;
 	char	*newlist = NULL;
 
 	if (flatlist == NULL) {
@@ -354,13 +354,13 @@ action_list(char *flatlist, char *str)
 #define H_BUF 6
 
 int
-pkgin_install(char **opkgargs, uint8_t do_inst)
+pkgin_install(char **opkgargs, int do_inst)
 {
 	int		installnum = 0, upgradenum = 0, removenum = 0;
 	int		rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
-	uint64_t	file_size = 0, free_space;
-	int64_t		size_pkg = 0;
+	uint64_t	free_space;
+	int64_t		file_size = 0, size_pkg = 0;
 	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
@@ -451,14 +451,14 @@ pkgin_install(char **opkgargs, uint8_t do_inst)
 		}
 	}
 
-	(void)humanize_number(h_fsize, H_BUF, (int64_t)file_size, "",
+	(void)humanize_number(h_fsize, H_BUF, file_size, "",
 		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
 	(void)humanize_number(h_psize, H_BUF, size_pkg, "",
 		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
 
 	/* check disk space */
 	free_space = fs_room(pkgin_cache);
-	if (free_space < file_size) {
+	if (free_space < (uint64_t)file_size) {
 		(void)humanize_number(h_free, H_BUF, (int64_t)free_space, "",
 				HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
 		errx(EXIT_FAILURE, MSG_NO_CACHE_SPACE,
@@ -733,7 +733,7 @@ static char **
 record_upgrades(Plisthead *plisthead)
 {
 	Pkglist	*pkglist;
-	int	count = 0;
+	size_t	count = 0;
 	char	**pkgargs;
 
 	SLIST_FOREACH(pkglist, plisthead, next)

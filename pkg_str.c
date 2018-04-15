@@ -276,7 +276,8 @@ get_pkgname_from_depend(char *depend)
 char **
 glob_to_pkgarg(char **globpkg, int *rc)
 {
-	int			i = 0, count = 0;
+	size_t		count;
+	int		i;
 	char		**pkgargs = NULL;
 	Pkglist		*plist;
 

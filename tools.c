@@ -48,7 +48,7 @@ charcount(char *str, char c)
 __inline int
 trimcr(char *str)
 {
-	uint16_t len;
+	size_t len;
 
 	if (str == NULL)
 		return (-1);
@@ -65,7 +65,8 @@ trimcr(char *str)
 char **
 splitstr(char *str, const char *sep)
 {
-	int i, size;
+	size_t size;
+	int i;
 	char *p, *tmp, **split;
 
 	for (i = 0, size = 0; str[i] != '\0'; i++)
@@ -136,7 +137,7 @@ char **
 exec_list(const char *cmd, const char *match)
 {
 	FILE *fp;
-	int size;
+	size_t size;
 	char **res, *rawlist, buf[MAXLEN];
 
 	if ((fp = popen(cmd, "r")) == NULL)
@@ -224,7 +225,7 @@ getosrelease(void)
 char *
 strreplace(char *str, const char *from, const char *to)
 {
-	int		fromlen, tolen, i;
+	size_t	fromlen, tolen, i;
 	char	*p, *ret, buf[MAXLEN];
 
 	memset(buf, 0, MAXLEN);

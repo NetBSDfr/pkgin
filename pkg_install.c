@@ -41,7 +41,7 @@ char *pkg_info;
  * PKG_INSTALL_DIR environment variable or the default compiled-in location.
  */
 void
-setup_pkg_install()
+setup_pkg_install(void)
 {
 	FILE *fp;
 	char *line, *p;

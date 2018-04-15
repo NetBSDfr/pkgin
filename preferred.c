@@ -33,11 +33,10 @@
 Preflist **preflist;
 
 void
-load_preferred()
+load_preferred(void)
 {
 	FILE		*fp;
-	size_t		pkglen;
-	int		size = 0;
+	size_t		pkglen, size = 0;
 	char		buf[BUFSIZ], *p;
 	const char	*cmp = "=<>";
 
@@ -73,7 +72,7 @@ load_preferred()
 }
 
 void
-free_preferred()
+free_preferred(void)
 {
 	Preflist **p = preflist;
 

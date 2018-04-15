@@ -30,7 +30,7 @@
 #include "pkgin.h"
 
 void
-export_keep()
+export_keep(void)
 {
 	Plistnumbered	*plisthead;
 	Pkglist		*plist;
@@ -48,9 +48,9 @@ export_keep()
 }
 
 void
-import_keep(uint8_t do_inst, const char *import_file)
+import_keep(int do_inst, const char *import_file)
 {
-	int		list_size = 0;
+	size_t	list_size = 0;
 	char	**pkglist = NULL, *match;
 	char	input[BUFSIZ], fullpkgname[BUFSIZ], query[BUFSIZ];
 	FILE	*fp;

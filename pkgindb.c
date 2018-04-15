@@ -264,7 +264,7 @@ recreate:
 }
 
 void
-pkgindb_close()
+pkgindb_close(void)
 {
 	sqlite3_close(pdb);
 }
@@ -380,7 +380,7 @@ pkg_sum_mtime(char *repo)
 }
 
 void
-pkgindb_stats()
+pkgindb_stats(void)
 {
         int     i;
         int64_t local_size;

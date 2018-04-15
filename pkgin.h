@@ -135,7 +135,7 @@ typedef struct Sumfile {
 	fetchIO *fd;
 	struct url *url;
 	char buf[65536];
-	size_t size;
+	off_t size;
 	off_t pos;
 } Sumfile;
 
@@ -264,7 +264,7 @@ void		show_all_categories(void);
 /* actions.c */
 void		do_pkg_remove(Plisthead *);
 int		pkgin_remove(char **);
-int		pkgin_install(char **, uint8_t);
+int		pkgin_install(char **, int);
 char		*action_list(char *, char *);
 int		pkgin_upgrade(int, int);
 char		*read_preferred(char *);
@@ -297,7 +297,7 @@ int		version_check(char *, char *);
 char		**glob_to_pkgarg(char **, int *);
 /* selection.c */
 void		export_keep(void);
-void		import_keep(uint8_t, const char *);
+void		import_keep(int, const char *);
 /* pkg_check.c */
 int		pkg_met_reqs(Plisthead *);
 int		pkg_has_conflicts(Pkglist *);

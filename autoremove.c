@@ -36,7 +36,7 @@
 #include "pkgin.h"
 
 void
-pkgin_autoremove()
+pkgin_autoremove(void)
 {
 	Plistnumbered	*plisthead;
 	Plisthead	*keephead, *removehead, *orderedhead;
