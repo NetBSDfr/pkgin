@@ -382,46 +382,42 @@ pkg_sum_mtime(char *repo)
 void
 pkgindb_stats(void)
 {
-        int     i;
-        int64_t local_size;
-        int64_t remote_size;
-        char    h_local_size[H_BUF];
-        char    h_remote_size[H_BUF];
-        char    query[BUFSIZ];
+	sqlite3_stmt	*stmt;
+	int		lcount, rcount;
+	char	lsize[H_BUF], rsize[H_BUF];
 
-        struct {
-                char value[BUFSIZ];
-                const char *op;
-                const char *term;
-                const char *place;
-        } stats[] = {
-                { "", "COUNT", "PKG_ID", "LOCAL" },
-                { "", "COUNT", "PKG_ID", "REMOTE" },
-                { "", "SUM", "SIZE_PKG", "LOCAL" },
-                { "", "SUM", "FILE_SIZE", "REMOTE" },
-                { "", NULL, NULL, NULL },
-        };
+	curquery = "SELECT "
+		   " (SELECT COUNT(PKG_ID) FROM LOCAL_PKG) AS lcount, "
+		   " (SELECT SUM(SIZE_PKG) FROM LOCAL_PKG) AS lsize, "
+		   " (SELECT COUNT(PKG_ID) FROM REMOTE_PKG) AS rcount, "
+		   " (SELECT SUM(FILE_SIZE) FROM REMOTE_PKG) AS rsize;";
 
-        for (i = 0; stats[i].op != NULL; i++) {
-                snprintf(query, BUFSIZ, "SELECT %s(%s) FROM %s_PKG;",
-                        stats[i].op, stats[i].term, stats[i].place);
-                pkgindb_doquery(query, pdb_get_value, stats[i].value);
-        }
+	if (sqlite3_prepare_v2(pdb, curquery, -1, &stmt, NULL) != SQLITE_OK)
+		pkgindb_sqlfail();
 
-        local_size = strtol(stats[2].value, NULL, 10);
-        remote_size = strtol(stats[3].value, NULL, 10);
+	/* Anything other than a single row is an error */
+	if (sqlite3_step(stmt) != SQLITE_ROW)
+		pkgindb_sqlfail();
 
-        (void)humanize_number(h_local_size, H_BUF, local_size, "",
-                        HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-        (void)humanize_number(h_remote_size, H_BUF, remote_size, "",
-                        HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+	/*
+	 * Counts are simple integers.  Sizes are converted to human readable
+	 * format.
+	 */
+	lcount = sqlite3_column_int(stmt, 0);
+	humanize_number(lsize, H_BUF, sqlite3_column_int64(stmt, 1), "",
+	    HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+	rcount = sqlite3_column_int(stmt, 2);
+	humanize_number(rsize, H_BUF, sqlite3_column_int64(stmt, 3), "",
+	    HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
 
-        printf(MSG_LOCAL_STAT_TITLE
-                MSG_LOCAL_PACKAGES
-                MSG_LOCAL_PKG_SIZE
-                MSG_REMOTE_STAT_TITLE
-                MSG_REMOTE_NB_REPOS
-                MSG_REMOTE_PACKAGES
-                MSG_REMOTE_PKG_SIZE,
-                stats[0].value, h_local_size, repo_counter, stats[1].value, h_remote_size);
+	sqlite3_finalize(stmt);
+
+	printf("Local package database:\n"
+	       "\tInstalled packages: %d\n"
+	       "\tDisk space occupied: %s\n\n"
+	       "Remote package database(s):\n"
+	       "\tNumber of repositories: %d\n"
+	       "\tPackages available: %d\n"
+	       "\tTotal size of packages: %s\n",
+	       lcount, lsize, repo_counter, rcount, rsize);
 }
