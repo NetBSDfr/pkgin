@@ -62,11 +62,10 @@ static void update_progress_meter(int);
 
 static time_t start;		/* start progress */
 static time_t last_update;	/* last progress update */
-static char *file;		/* name of the file being transferred */
+static const char *file;	/* name of the file being transferred */
+static off_t start_pos;		/* initial position of transfer */
 static off_t end_pos;		/* ending position of transfer */
 static off_t cur_pos;		/* transfer position as of last refresh */
-static off_t last_pos;
-static off_t max_delta_pos = 0;
 static volatile off_t *counter;	/* progress counter */
 static long stalled;		/* how long we have been stalled */
 static int bytes_per_second;	/* current speed in bytes per second */
@@ -135,23 +134,18 @@ refresh_progress_meter(void)
 	int hours, minutes, seconds;
 	int i, len;
 	int file_len;
-	off_t delta_pos;
 
-	transferred = *counter - cur_pos;
+	transferred = *counter - (cur_pos ? cur_pos : start_pos);
 	cur_pos = *counter;
 	now = time(NULL);
 	bytes_left = end_pos - cur_pos;
-
-	delta_pos = cur_pos - last_pos;
-	if (delta_pos > max_delta_pos) 
-		max_delta_pos = delta_pos;
 
 	if (bytes_left > 0)
 		elapsed = now - last_update;
 	else {
 		elapsed = now - start;
 		/* Calculate true total speed when done */
-		transferred = end_pos;
+		transferred = end_pos - start_pos;
 		bytes_per_second = 0;
 	}
 
@@ -170,7 +164,7 @@ refresh_progress_meter(void)
 
 	/* filename */
 	buf[0] = '\0';
-	file_len = win_size - 45;
+	file_len = win_size - 35;
 	if (file_len > 0) {
 		len = snprintf(buf, file_len + 1, "\r%s", file);
 		if (len < 0)
@@ -183,12 +177,11 @@ refresh_progress_meter(void)
 	}
 
 	/* percent of transfer done */
-	if (end_pos != 0)
-		percent = ((float)cur_pos / end_pos) * 100;
-	else
+	if (end_pos == 0 || cur_pos == end_pos)
 		percent = 100;
-
-	snprintf(buf + strlen(buf), win_size - strlen(buf) - 8,
+	else
+		percent = ((float)cur_pos / end_pos) * 100;
+	snprintf(buf + strlen(buf), win_size - strlen(buf),
 	    " %3d%% ", percent);
 
 	/* amount transferred */
@@ -199,11 +192,6 @@ refresh_progress_meter(void)
 	/* bandwidth usage */
 	format_rate(buf + strlen(buf), win_size - strlen(buf),
 	    (off_t)bytes_per_second);
-	strlcat(buf, "/s ", win_size);
-
-	/* instantaneous rate */
-	format_rate(buf + strlen(buf), win_size - strlen(buf),
-	    delta_pos);
 	strlcat(buf, "/s ", win_size);
 
 	/* ETA */
@@ -243,7 +231,6 @@ refresh_progress_meter(void)
 	/* Silly workaround for -Werror=unused-result */
 	if (write(STDOUT_FILENO, buf, win_size - 1) <= 0) {}
 	last_update = now;
-	last_pos = cur_pos;
 }
 
 /*ARGSUSED*/
@@ -267,12 +254,13 @@ update_progress_meter(int ignore)
 }
 
 void
-start_progress_meter(char *f, off_t filesize, off_t *ctr)
+start_progress_meter(const char *f, off_t filesize, off_t *ctr)
 {
 	start = last_update = time(NULL);
 	file = f;
+	start_pos = *ctr;
 	end_pos = filesize;
-	last_pos = cur_pos = 0;
+	cur_pos = 0;
 	counter = ctr;
 	stalled = 0;
 	bytes_per_second = 0;
