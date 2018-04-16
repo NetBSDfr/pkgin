@@ -102,9 +102,9 @@ sum_start(struct archive *a, void *data)
 		p = (char *)sum->url->doc; /* should not happen */
 
 	if (parsable)
-		printf(MSG_DOWNLOAD_START, p);
+		printf("downloading %s", p);
 	else {
-		printf(MSG_DOWNLOADING, p);
+		printf("downloading %s:   0%%", p);
 		fflush(stdout);
 		start_progress_meter(p, sum->size, &sum->pos);
 	}
@@ -145,7 +145,7 @@ sum_close(struct archive *a, void *data)
 	Sumfile	*sum = data;
 
 	if (parsable)
-		printf(MSG_DOWNLOAD_END);
+		printf(" done.\n");
 	else
 		stop_progress_meter();
 
@@ -174,12 +174,11 @@ download_pkg(char *pkg_url, FILE *fp)
 	if ((url = fetchParseURL(pkg_url)) == NULL)
 		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
 
-	if ((f = fetchXGet(url, &st, "")) == NULL)
-		errx(EXIT_FAILURE, "%s: %s", pkg_url, fetchLastErrString);
-
-	/* Package not available */
-	if (st.size == -1)
-		return st.size;
+	if ((f = fetchXGet(url, &st, "")) == NULL) {
+		fprintf(stderr, "download error: %s %s\n", pkg_url,
+		    fetchLastErrString);
+		return -1;
+	}
 
 	if ((pkg = strrchr(pkg_url, '/')) != NULL)
 		pkg++;
@@ -187,9 +186,9 @@ download_pkg(char *pkg_url, FILE *fp)
 		pkg = (char *)pkg_url; /* should not happen */
 
 	if (parsable) {
-		printf(MSG_DOWNLOAD_START, pkg);
+		printf("downloading %s", pkg);
 	} else {
-		printf(MSG_DOWNLOADING, pkg);
+		printf("downloading %s:   0%%", pkg);
 		fflush(stdout);
 		start_progress_meter(pkg, st.size, &statsize);
 	}
@@ -199,9 +198,11 @@ download_pkg(char *pkg_url, FILE *fp)
 			break;
 		if (fetched < 0 && errno == EINTR)
 			continue;
-		if (fetched < 0)
-			errx(EXIT_FAILURE, "fetch failure: %s",
+		if (fetched < 0) {
+			fprintf(stderr, "download error: %s",
 			    fetchLastErrString);
+			return -1;
+		}
 
 		statsize += fetched;
 		size = (size_t)fetched;
@@ -218,15 +219,17 @@ download_pkg(char *pkg_url, FILE *fp)
 	}
 
 	if (parsable)
-		printf(MSG_DOWNLOAD_END);
+		printf(" done.\n");
 	else
 		stop_progress_meter();
 
 	fetchIO_close(f);
 	fetchFreeURL(url);
 
-	if (written != st.size)
+	if (written != st.size) {
+		fprintf(stderr, "download error: %s truncated\n", pkg_url);
 		return -1;
+	}
 
 	return written;
 }

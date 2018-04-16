@@ -60,10 +60,9 @@ pkg_download(Plisthead *installhead)
 	Pkglist  	*pinstall;
 	struct stat	st;
 	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
+	char		*p = NULL;
 	ssize_t		size;
 	int		rc = EXIT_SUCCESS;
-
-	printf(MSG_DOWNLOAD_PKGS);
 
 	SLIST_FOREACH(pinstall, installhead, next) {
 		snprintf(pkg_fs, BUFSIZ,
@@ -91,37 +90,72 @@ pkg_download(Plisthead *installhead)
 		strlcat(pkg_url, pinstall->depend, sizeof(pkg_url));
 		strlcat(pkg_url, PKG_EXT, sizeof(pkg_url));
 
-		/* if pkg's repo URL is file://, just symlink */
-		if (strncmp(pkg_url, SCHEME_FILE, strlen(SCHEME_FILE)) == 0) {
-			(void)unlink(pkg_fs);
-			if (symlink(&pkg_url[strlen(SCHEME_FILE) + 3],
-				pkg_fs) < 0)
-				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
+		if (strncmp(pkg_url, "file:///", 8) == 0) {
+			/*
+			 * If this package repository URL is file:// we can
+			 * just symlink rather than copying.  We do not support
+			 * file:// URLs with a host component.
+			 */
+			p = &pkg_url[7];
+			(void) unlink(pkg_fs);
+
+			if (stat(p, &st) != 0) {
+				fprintf(stderr, MSG_PKG_NOT_AVAIL,
+				    pinstall->depend);
+				rc = EXIT_FAILURE;
+				if (check_yesno(DEFAULT_NO) == ANSW_NO)
+					exit(rc);
+				pinstall->file_size = -1;
+				continue;
+			}
+
 			printf(MSG_SYMLINKING_PKG, pkg_url);
-			continue;
+			if (symlink(p, pkg_fs) < 0)
+				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
+
+			size = st.st_size;
+		} else {
+			/*
+			 * Fetch via HTTP.  download_pkg() handles printing
+			 * errors from various failure modes, so we handle
+			 * cleanup only.
+			 */
+			umask(DEF_UMASK);
+			if ((fp = fopen(pkg_fs, "w")) == NULL)
+				err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
+
+			if ((size = download_pkg(pkg_url, fp)) == -1) {
+				(void) fclose(fp);
+				(void) unlink(pkg_fs);
+				rc = EXIT_FAILURE;
+
+				if (check_yesno(DEFAULT_NO) == ANSW_NO)
+					exit(rc);
+
+				pinstall->file_size = -1;
+				continue;
+			}
+
+			(void) fclose(fp);
 		}
 
-		umask(DEF_UMASK);
-		if ((fp = fopen(pkg_fs, "w")) == NULL)
-			err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
-
-		if ((size = download_pkg(pkg_url, fp)) == -1) {
-			fprintf(stderr, MSG_PKG_NOT_AVAIL, pinstall->depend);
+		/*
+		 * download_pkg() already checked that we received the size
+		 * specified by the server, this checks that it matches what
+		 * is recorded by pkg_summary.
+		 */
+		if (size != pinstall->file_size) {
+			(void) unlink(pkg_fs);
 			rc = EXIT_FAILURE;
 
-			if (!check_yesno(DEFAULT_NO))
-				errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL,
-				pinstall->depend);
+			(void) fprintf(stderr, "download error: %s size"
+			    " does not match pkg_summary\n", pinstall->depend);
+
+			if (check_yesno(DEFAULT_NO) == ANSW_NO)
+				exit(rc);
 
 			pinstall->file_size = -1;
-			fclose(fp);
 			continue;
-		}
-
-		fclose(fp);
-		if (size != pinstall->file_size) {
-			(void)unlink(pkg_fs);
-			errx(EXIT_FAILURE, "download mismatch: %s", pkg_fs);
 		}
 	} /* download loop */
 
@@ -549,7 +583,31 @@ pkgin_install(char **opkgargs, int do_inst)
 		if (pkg_download(installhead) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
 
-		if (do_inst) {
+		/*
+		 * Recalculate package counts to account for any download
+		 * failures.
+		 */
+		SLIST_FOREACH(pimpact, installhead, next) {
+			if (pimpact->file_size != -1)
+				continue;
+
+			switch (pimpact->action) {
+			case TOUPGRADE:
+				upgradenum--;
+				installnum--;
+				break;
+
+			case TOINSTALL:
+				installnum--;
+				break;
+
+			case TOREMOVE:
+				removenum--;
+				break;
+			}
+		}
+
+		if (do_inst && installnum > 0) {
 			/* real install, not a simple download
 			 *
 			 * if there was upgrades, first remove
