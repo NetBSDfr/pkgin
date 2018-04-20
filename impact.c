@@ -136,7 +136,7 @@ break_depends(Plisthead *impacthead)
 			 * situation. If it does, that means that the reverse
 			 * dependency we're analyzing has no direct dependency.
 			 * Such a situation could occur if the reverse
-			 * dependency is not on the repository anymore, leading
+			 * dependency is not in the repository anymore, leading
 			 * to no information regarding this package.
 			 * So we will check if local package dependencies are
 			 * satisfied by our newly upgraded packages.
@@ -356,7 +356,7 @@ pkg_impact(char **pkgargs, int *rc)
 		 * from unique_pkg, full package format.
 		 */
 		if ((pkgname = unique_pkg(*ppkgargs, REMOTE_PKG)) == NULL) {
-			/* package is not available on the repository */
+			/* package is not available in the repository */
 			*rc = EXIT_FAILURE;
 			continue;
 		}

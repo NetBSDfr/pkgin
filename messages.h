@@ -128,7 +128,7 @@ in order to remove packages from the autoremove list, flag those with the `keep'
 #define MSG_MORE_THAN_ONE_VER \
 	"there's more than one version available for this package.\n\
 please re-run %s with a package name matching one of the following:\n"
-#define MSG_PKG_NOT_AVAIL "%s is not available on the repository\n"
+#define MSG_PKG_NOT_AVAIL "%s is not available in the repository\n"
 #define MSG_PKG_IS_PREFERRED "\rnot choosing %s, %s is preferred\n"
 #define MSG_PKG_NOT_INSTALLABLE "\r\n%s is not installable\n"
 #define MSG_BROKEN_DEP "%s has no dependency in pkg_summary(5), while it's a reverse dependency for %s (missing package in repository ?). Default behaviour is to remove %s. "
