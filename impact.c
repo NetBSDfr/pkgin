@@ -345,6 +345,9 @@ pkg_impact(char **pkgargs, int *rc)
 
 	istty = isatty(fileno(stdout));
 
+	if (!istty)
+		printf("calculating dependencies...");
+
 	/* retreive impact list for all packages listed in the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
 
@@ -360,17 +363,14 @@ pkg_impact(char **pkgargs, int *rc)
 
 		TRACE("[+]-impact for %s\n", pkgname);
 
-#ifndef DEBUG
 		if (istty) {
 			tmpicon = *icon++;
-			printf(MSG_CALCULATING_DEPS" %c", tmpicon);
+			printf("\rcalculating dependencies...%c", tmpicon);
 			fflush(stdout);
 			if (*icon == '\0')
 				icon = icon - strlen(ICON_WAIT);
 		}
-#else
-		printf(MSG_CALCULATING_DEPS, pkgname);
-#endif
+
 		pdphead = init_head();
 		/* dependencies discovery */
 		full_dep_tree(pkgname, DIRECT_DEPS, pdphead);
@@ -432,9 +432,10 @@ pkg_impact(char **pkgargs, int *rc)
 
 	} /* for (ppkgargs) */
 
-#ifndef DEBUG
-	printf(MSG_CALCULATING_DEPS" done.\n");
-#endif
+	if (istty)
+		printf("\rcalculating dependencies...done.\n");
+	else
+		printf("done.\n");
 
 impactend:
 
