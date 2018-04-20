@@ -418,12 +418,6 @@ pkgin_install(char **opkgargs, int do_inst)
 	if (!have_privs(privsreqd))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
-	/*
-	 * Perform an explicit summary update to avoid download mismatches
-	 * if the repository has been recently updated.
-	 */
-	(void)update_db(REMOTE_SUMMARY, NULL, 0);
-
 	/* full impact list */
 	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);

@@ -137,8 +137,12 @@ main(int argc, char *argv[])
 	 */
 	need_upgrade = pkgindb_open();
 
-	/* update local db if pkgdb mtime has changed */
-	(void)update_db(LOCAL_SUMMARY, NULL, 1);
+	/*
+	 * Check for updates to the local pkgdb and refresh the local database
+	 * if necessary.  Ignore any returned errors so that unprivileged users
+	 * can perform query operations.
+	 */
+	(void) update_db(LOCAL_SUMMARY, NULL, 1);
 
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
@@ -147,11 +151,21 @@ main(int argc, char *argv[])
 	need_refresh = chk_repo_list();
 
 	/*
-	 * upgrade remote database if pkgin version changed and not compatible,
-	 * or if empty database, or if repository list changed.
+	 * Upgrade the remote database if the database schema has changed, if
+	 * the database is empty, or if the repository list has changed.
 	 */
-	if (need_upgrade || need_refresh)
-		(void)update_db(REMOTE_SUMMARY, NULL, 0);
+	if (need_upgrade || need_refresh) {
+		(void) update_db(REMOTE_SUMMARY, NULL, 1);
+	/*
+	 * If we're performing any operations that fetch remote packages, make
+	 * sure the remote databases are up-to-date to avoid mismatches.  These
+	 * are privileged operations so exit if the update cannot be performed.
+	 */
+	} else if (ch == PKG_INST_CMD || ch == PKG_UPGRD_CMD ||
+	    ch == PKG_FUPGRD_CMD) {
+		if (update_db(REMOTE_SUMMARY, NULL, 0) == EXIT_FAILURE)
+			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
+	}
 
 	/* load preferred file */
 	load_preferred();
