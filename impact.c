@@ -460,6 +460,23 @@ impactend:
 			if (pimpact->action == TOUPGRADE &&
 				tmpimpact->action == TOREMOVE)
 				tmpimpact->action = DONOTHING;
+
+			/*
+			 * A package has been added multiple times with the
+			 * same action but via different dependency matches.
+			 * This will cause double counting, so we need to mark
+			 * one of them as DONOTHING.  As it currently doesn't
+			 * matter which dependency caused the action, choose to
+			 * mark the latter for now.
+			 */
+			if (pimpact->action == tmpimpact->action &&
+			    strcmp(pimpact->depend, tmpimpact->depend) != 0) {
+				TRACE("Duplicate action %d for %s:"
+				    " removing depends '%s', keeping '%s'\n",
+				    pimpact->action, pimpact->name,
+				    tmpimpact->depend, pimpact->depend);
+				tmpimpact->action = DONOTHING;
+			}
 		}
 	}
 
