@@ -122,16 +122,6 @@ trunc_str(char *str, char limit, int direction)
 	}
 }
 
-int
-safe_strcmp(const char *s1, const char *s2)
-{
-	if (s1 == NULL)
-		return -1;
-	if (s2 == NULL)
-		return 1;
-	return strcmp(s1, s2);
-}
-
 /* execute a command and receive result on a char ** */
 char **
 exec_list(const char *cmd, const char *match)

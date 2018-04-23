@@ -752,19 +752,25 @@ narrow_match(Pkglist *opkg)
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
 		/* not the same pkgname, next */
-		if (safe_strcmp(opkg->name, pkglist->name) != 0)
+		if (!pkgstr_identical(opkg->name, pkglist->name))
 			continue;
-		/* some bad packages have their PKG_PATH set to NULL */
-		if (opkg->pkgpath != NULL && pkglist->pkgpath != NULL)
-			/*
-			 * if PKGPATH does not match, do not try to update
-			 * (mysql 5.1/5.5)
-			 */
-			if (strcmp(opkg->pkgpath, pkglist->pkgpath) != 0)
-				continue;
+
+		/*
+		 * Do not propose an upgrade if the PKGPATH does not match,
+		 * otherwise users who have requested a specific version of a
+		 * package for which there are usually multiple versions
+		 * available (e.g. nodejs or mysql) would always have it
+		 * replaced by the latest version.
+		 *
+		 * Note that this comparison does allow both PKGPATH values
+		 * to be NULL, for example with local self-built packages, in
+		 * which case we permit an upgrade.
+		 */
+		if (!pkgstr_identical(opkg->pkgpath, pkglist->pkgpath))
+			continue;
 
 		/* same package version, next */
-		if (safe_strcmp(opkg->full, pkglist->full) == 0)
+		if (pkgstr_identical(opkg->full, pkglist->full))
 			continue;
 
 		/* second package is greater */

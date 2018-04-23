@@ -305,3 +305,25 @@ glob_to_pkgarg(char **globpkg, int *rc)
 
 	return pkgargs;
 }
+
+/*
+ * Compare string values between two packages.  Often in pkgin the comparison
+ * in question allows both to be NULL, for example with pkg_summary fields
+ * that are optional, so this function returns true if both are NULL.
+ *
+ * This also acts as a safe wrapper for strcmp().
+ */
+int
+pkgstr_identical(const char *p1, const char *p2)
+{
+	if (p1 == NULL && p2 == NULL)
+		return 1;
+
+	if (p1 == NULL || p2 == NULL)
+		return 0;
+
+	if (strcmp(p1, p2) == 0)
+		return 1;
+
+	return 0;
+}

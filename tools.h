@@ -164,7 +164,6 @@ extern void free_list(char **);
 extern char **exec_list(const char *, const char *);
 extern void do_log(const char *, const char *, ...);
 extern void trunc_str(char *, char, int);
-extern int safe_strcmp(const char *s1, const char *s2);
 extern char *strreplace(char *, const char *, const char *);
 extern char *getosarch(void);
 extern char *getosrelease(void);
