@@ -197,6 +197,7 @@ order_upgrade_remove(Plisthead *impacthead)
 
 				pdp->depend = xstrdup(pimpact->old);
 				pdp->name = NULL; /* safety */
+				pdp->build_date = xstrdup(pimpact->build_date);
 				/* XXX: use the "computed" value to record
 				 * action type. Ugly.
 				 */
@@ -253,6 +254,7 @@ order_install(Plisthead *impacthead)
 				pdp->computed = pimpact->action; /* XXX: ugly*/
 				pdp->depend = xstrdup(pimpact->full);
 				pdp->name = NULL;
+				pdp->build_date = xstrdup(pimpact->build_date);
 				pdp->level = pimpact->level;
 				/* record package size for download check */
 				pdp->download = pimpact->download;

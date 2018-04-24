@@ -184,7 +184,7 @@ break_depends(Plisthead *impacthead)
 static int
 deps_impact(Plisthead *impacthead, Pkglist *pdp)
 {
-	int		toupgrade;
+	int		toupgrade = DONOTHING;
 	Pkglist		*pimpact, *plist, *mapplist;
 	char		remotepkg[BUFSIZ];
 
@@ -207,6 +207,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	pimpact->old = NULL;
 	pimpact->full = NULL;
 	pimpact->name = xstrdup(mapplist->name);
+	pimpact->build_date = xstrdup(mapplist->build_date);
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
@@ -218,16 +219,21 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 
 			TRACE("  > found %s\n", pdp->name);
 
-			/* default action when local package match */
-			toupgrade = TOUPGRADE;
+			/*
+			 * Figure out if this is an upgrade or a refresh.
+			 */
+			if (pkg_match(pdp->depend, plist->full) == 0)
+				toupgrade = TOUPGRADE;
+			else if (!pkgstr_identical(plist->build_date,
+			    mapplist->build_date))
+				toupgrade = TOUPGRADE;
 
 			/*
 			 * installed version does not match dep requirement
 			 * OR force reinstall, pkgkeep being use to inform -F
 			 * was given
 			 */
-			if (!pkg_match(pdp->depend, plist->full) ||
-				pdp->keep < 0) {
+			if (toupgrade != DONOTHING || pdp->keep < 0) {
 
 				TRACE("   ! didn't match (or force reinstall)\n");
 				/*

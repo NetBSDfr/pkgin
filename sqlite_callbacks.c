@@ -65,6 +65,8 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 			plist->name = xstrdup(argv[i]);
 		if (strcmp(colname[i], "PKGVERS") == 0)
 			plist->version = xstrdup(argv[i]);
+		if (strcmp(colname[i], "BUILD_DATE") == 0)
+			plist->build_date = xstrdup(argv[i]);
 		if (strcmp(colname[i], "COMMENT") == 0)
 			plist->comment = xstrdup(argv[i]);
 		if (strcmp(colname[i], "PKGPATH") == 0)

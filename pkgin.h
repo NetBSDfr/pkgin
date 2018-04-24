@@ -177,6 +177,7 @@ typedef struct Pkglist {
 	char *name; /*!< package name, foo */
 	char *old; /*!< old package if any */
 	char *version; /*<! package version, 1.0 */
+	char *build_date; /*<! BUILD_DATE timestamp */
 	char *depend;	/*!< dewey or glob form for forward (direct)
 			 * dependencies:
 			 * foo>=1.0

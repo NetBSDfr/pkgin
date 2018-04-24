@@ -380,16 +380,19 @@ action_list(char *flatlist, char *str)
 int
 pkgin_install(char **opkgargs, int do_inst)
 {
+	FILE		*fp;
 	int		installnum = 0, upgradenum = 0, removenum = 0;
 	int		rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
 	int64_t		file_size = 0, size_pkg = 0;
+	size_t		len;
+	ssize_t		llen;
 	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
 	Plisthead	*removehead = NULL, *installhead = NULL;
-	char		**pkgargs;
+	char		**pkgargs, *p;
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		*unmet_reqs = NULL;
 	char		pkgpath[BUFSIZ], pkgrepo[BUFSIZ], query[BUFSIZ];
@@ -457,6 +460,28 @@ pkgin_install(char **opkgargs, int do_inst)
 		    pimpact->full, PKG_EXT);
 		if (stat(pkgpath, &st) < 0 || st.st_size != pimpact->file_size)
 			pimpact->download = 1;
+		else {
+			/*
+			 * If the cached package has the correct size, we must
+			 * verify that the BUILD_DATE has not changed, in case
+			 * the sizes happen to be identical.
+			 */
+			p = xasprintf("%s -Q BUILD_DATE %s", pkg_info, pkgpath);
+
+			if ((fp = popen(p, "r")) == NULL)
+				err(EXIT_FAILURE, "Cannot execute '%s'", p);
+			(void) free(p);
+
+			for (p = NULL, len = 0;
+			     (llen = getline(&p, &len, fp)) > 0;
+			     (void) free(p), p = NULL, len = 0) {
+				if (p[llen - 1] == '\n')
+					p[llen - 1] = '\0';
+				if (!pkgstr_identical(p, pimpact->build_date))
+					pimpact->download = 1;
+			}
+			(void) pclose(fp);
+		}
 
 		/*
 		 * Don't account for download size if using a file:// repo.
@@ -742,16 +767,15 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
-/* 
- * find closest match for packages to be upgraded 
- * if we have mysql-5.1.10 installed prefer mysql-5.1.20 over
- * mysql-5.5.20 when upgrading
+/*
+ * Find best match for a package to be upgraded.
  */
 static char *
 narrow_match(Pkglist *opkg)
 {
 	Pkglist	*pkglist;
 	char	*best_match;
+	int	refresh = 0;
 
 	/* for now, best match is old package itself */
 	best_match = xstrdup(opkg->full);
@@ -775,9 +799,17 @@ narrow_match(Pkglist *opkg)
 		if (!pkgstr_identical(opkg->pkgpath, pkglist->pkgpath))
 			continue;
 
-		/* same package version, next */
-		if (pkgstr_identical(opkg->full, pkglist->full))
+		/*
+		 * If the package version is identical, check if the BUILD_DATE
+		 * has changed.  If it has, we need to refresh the package as
+		 * it has been rebuilt, possibly against newer dependencies.
+		 */
+		if (pkgstr_identical(opkg->full, pkglist->full)) {
+			if (!pkgstr_identical(opkg->build_date,
+			    pkglist->build_date))
+				refresh = 1;
 			continue;
+		}
 
 		/* second package is greater */
 		if (version_check(best_match, pkglist->full) == 2) {
@@ -787,7 +819,7 @@ narrow_match(Pkglist *opkg)
 	} /* SLIST_FOREACH remoteplisthead */
 
 	/* there was no upgrade candidate */
-	if (strcmp(best_match, opkg->full) == 0)
+	if (strcmp(best_match, opkg->full) == 0 && !refresh)
 		XFREE(best_match);
 
 	return best_match;
