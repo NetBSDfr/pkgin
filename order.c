@@ -201,6 +201,8 @@ order_upgrade_remove(Plisthead *impacthead)
 				 * action type. Ugly.
 				 */
 				pdp->computed = pimpact->action;
+				pdp->download = pimpact->download;
+				pdp->pkgurl = xstrdup(pimpact->pkgurl);
 				/* informative only */
 				pdp->level = pimpact->level;
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
@@ -253,6 +255,8 @@ order_install(Plisthead *impacthead)
 				pdp->name = NULL;
 				pdp->level = pimpact->level;
 				/* record package size for download check */
+				pdp->download = pimpact->download;
+				pdp->pkgurl = xstrdup(pimpact->pkgurl);
 				pdp->file_size = pimpact->file_size;
 				pdp->old = pimpact->old;
 				/* check for pkg_install upgrade */

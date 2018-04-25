@@ -61,6 +61,8 @@ malloc_pkglist(uint8_t type)
 	pkglist->old_size_pkg = -1;
 	pkglist->file_size = 0;
 	pkglist->level = 0;
+	pkglist->download = 0;
+	pkglist->pkgurl = NULL;
 
 	switch (type) {
 	case LIST:

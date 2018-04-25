@@ -59,45 +59,36 @@ pkg_download(Plisthead *installhead)
 	FILE		*fp;
 	Pkglist  	*pinstall;
 	struct stat	st;
-	char		pkg_fs[BUFSIZ], pkg_url[BUFSIZ], query[BUFSIZ];
+	char		pkg_fs[BUFSIZ];
 	char		*p = NULL;
 	ssize_t		size;
 	int		rc = EXIT_SUCCESS;
 
 	SLIST_FOREACH(pinstall, installhead, next) {
-		snprintf(pkg_fs, BUFSIZ,
-			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
-
-		/* pkg_info -X -a produces pkg_summary with empty FILE_SIZE,
-		 * people could spend some time blaming on pkgin before finding
-		 * what's really going on.
+		/*
+		 * pkgin_install() should have already marked whether this
+		 * package requires downloading or not.
 		 */
-		if (pinstall->file_size == 0)
-			printf(MSG_EMPTY_FILE_SIZE, pinstall->depend);
-
-		/* already fully downloaded */
-		if (stat(pkg_fs, &st) == 0 && 
-			st.st_size == pinstall->file_size &&
-			pinstall->file_size != 0 )
+		if (!pinstall->download)
 			continue;
 
-		snprintf(query, BUFSIZ, PKG_URL, pinstall->depend);
-		/* retrieve repository for package  */
-		if (pkgindb_doquery(query, pdb_get_value, pkg_url) != 0)
-			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pinstall->depend);
+		/*
+		 * We don't (yet) support resume so start by explicitly
+		 * removing any existing file.  pkgin_install() has already
+		 * checked to see if it's valid, and we know it is not.
+		 */
+		(void) snprintf(pkg_fs, BUFSIZ, "%s/%s%s", pkgin_cache,
+		    pinstall->depend, PKG_EXT);
+		(void) unlink(pkg_fs);
+		(void) umask(DEF_UMASK);
 
-		strlcat(pkg_url, "/", sizeof(pkg_url));
-		strlcat(pkg_url, pinstall->depend, sizeof(pkg_url));
-		strlcat(pkg_url, PKG_EXT, sizeof(pkg_url));
-
-		if (strncmp(pkg_url, "file:///", 8) == 0) {
+		if (strncmp(pinstall->pkgurl, "file:///", 8) == 0) {
 			/*
 			 * If this package repository URL is file:// we can
 			 * just symlink rather than copying.  We do not support
 			 * file:// URLs with a host component.
 			 */
-			p = &pkg_url[7];
-			(void) unlink(pkg_fs);
+			p = &pinstall->pkgurl[7];
 
 			if (stat(p, &st) != 0) {
 				fprintf(stderr, MSG_PKG_NOT_AVAIL,
@@ -109,7 +100,7 @@ pkg_download(Plisthead *installhead)
 				continue;
 			}
 
-			printf(MSG_SYMLINKING_PKG, pkg_url);
+			printf(MSG_SYMLINKING_PKG, pinstall->pkgurl);
 			if (symlink(p, pkg_fs) < 0)
 				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
 
@@ -120,11 +111,10 @@ pkg_download(Plisthead *installhead)
 			 * errors from various failure modes, so we handle
 			 * cleanup only.
 			 */
-			umask(DEF_UMASK);
 			if ((fp = fopen(pkg_fs, "w")) == NULL)
 				err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
 
-			if ((size = download_pkg(pkg_url, fp)) == -1) {
+			if ((size = download_pkg(pinstall->pkgurl, fp)) == -1) {
 				(void) fclose(fp);
 				(void) unlink(pkg_fs);
 				rc = EXIT_FAILURE;
@@ -402,7 +392,7 @@ pkgin_install(char **opkgargs, int do_inst)
 	char		**pkgargs;
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
 	char		*unmet_reqs = NULL;
-	char		pkgpath[BUFSIZ], pkgurl[BUFSIZ], query[BUFSIZ];
+	char		pkgpath[BUFSIZ], pkgrepo[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
 	struct		stat st;
 
@@ -440,23 +430,39 @@ pkgin_install(char **opkgargs, int do_inst)
 			if (!check_yesno(DEFAULT_NO))
 				goto installend;
 
-		snprintf(pkgpath, BUFSIZ, "%s/%s%s",
-			pkgin_cache, pimpact->full, PKG_EXT);
-
-		snprintf(query, BUFSIZ, PKG_URL, pimpact->full);
-		/* retrieve repository for package  */
-		if (pkgindb_doquery(query, pdb_get_value, pkgurl) != 0)
-			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pimpact->full);
+		/* XXX: this should be moved higher up, pdb_rec_list assert? */
+		if (pimpact->file_size <= 0) {
+			(void) fprintf(stderr, MSG_EMPTY_FILE_SIZE,
+			    pimpact->depend);
+			continue;
+		}
 
 		/*
-		 * if package is not already downloaded or size mismatch,
-		 * d/l it
+		 * Retrieve the correct repository for the package and save it,
+		 * this is used later by pkg_download().
 		 */
-		if ((stat(pkgpath, &st) < 0 ||
-			st.st_size != pimpact->file_size) &&
-			/* don't update file_size if repo is file:// */
-			strncmp(pkgurl, SCHEME_FILE, strlen(SCHEME_FILE)) != 0)
-				file_size += pimpact->file_size;
+		(void) snprintf(query, BUFSIZ, PKG_URL, pimpact->full);
+		if (pkgindb_doquery(query, pdb_get_value, pkgrepo) != 0)
+			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pimpact->full);
+
+		pimpact->pkgurl = xasprintf("%s/%s%s", pkgrepo, pimpact->full,
+		    PKG_EXT);
+
+		/*
+		 * If the binary package has not already been downloaded, or
+		 * its size does not match pkg_summary, then mark it to be
+		 * downloaded.
+		 */
+		(void) snprintf(pkgpath, BUFSIZ, "%s/%s%s", pkgin_cache,
+		    pimpact->full, PKG_EXT);
+		if (stat(pkgpath, &st) < 0 || st.st_size != pimpact->file_size)
+			pimpact->download = 1;
+
+		/*
+		 * Don't account for download size if using a file:// repo.
+		 */
+		if (pimpact->download && strncmp(pkgrepo, "file:///", 8) != 0)
+			file_size += pimpact->file_size;
 
 		if (pimpact->old_size_pkg > 0)
 			pimpact->size_pkg -= pimpact->old_size_pkg;
