@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([pkgin], [0.9.4.99], [imil@NetBSD.org])
+AC_INIT([pkgin], [0.10.0], [https://github.com/joyent/pkgin/issues])
 AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
 
