@@ -336,7 +336,7 @@ do_pkg_install(Plisthead *installhead)
 		if (pinstall->old != NULL && access(preserve, F_OK) != -1)
 			/* set temporary force flags */
 			/* append verbosity if requested */
-			pflags = verb_flag("-ffu");
+			pflags = verb_flag("-ffU");
 		else
 			/* every other package */
 			pflags = verb_flag("-D");
