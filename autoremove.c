@@ -237,25 +237,3 @@ pkg_keep(int type, char **pkgargs)
 			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
 	} /* for (pkeep) */
 }
-
-int
-pkg_is_kept(Pkglist *pkgkeep)
-{
-	Plistnumbered	*plisthead;
-	Pkglist		*pkglist;
-	int		ret = 0;
-
-	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
-		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
-
-	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next) {
-		if (strcmp(pkgkeep->name, pkglist->name) == 0) {
-			ret = 1;
-			break;
-		}
-	}
-
-	free_pkglist(&plisthead->P_Plisthead, LIST);
-	free(plisthead);
-	return ret;
-}

@@ -283,7 +283,6 @@ Plisthead	*pkg_impact(char **, int *);
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);
 void		show_pkg_nokeep(void);
-int			pkg_is_kept(Pkglist *);
 void		pkg_keep(int, char **);
 /* fsops.c */
 int		fs_has_room(const char *, int64_t);
