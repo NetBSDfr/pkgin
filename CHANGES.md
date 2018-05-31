@@ -1,3 +1,8 @@
+## Version 0.10.1 (2018-06-01)
+
+ * Fix `BUILD_DATE` refresh support for preserved packages.
+ * Improve provides/requires output to avoid confusion for new users.
+
 ## Version 0.10.0 (2018-05-17)
 
  * Add `BUILD_DATE` support, packages are now upgraded if the `BUILD_DATE`
