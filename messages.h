@@ -147,5 +147,5 @@ please re-run %s with a package name matching one of the following:\n"
 #define MSG_EMPTY_IMPORT_LIST "Empty import list."
 
 /* pkg_check.c */
-#define MSG_NO_PROV_REQ "Nothing %s by %s.\n"
-#define MSG_FILES_PROV_REQ "Files %s by %s:\n"
+#define MSG_NO_PROV_REQ "No shared libraries %s by %s.\n"
+#define MSG_FILES_PROV_REQ "Shared libraries %s by %s:\n"
