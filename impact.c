@@ -207,7 +207,14 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	pimpact->old = NULL;
 	pimpact->full = NULL;
 	pimpact->name = xstrdup(mapplist->name);
-	pimpact->build_date = xstrdup(mapplist->build_date);
+
+	/*
+	 * BUILD_DATE may not necessarily be set.  This can happen if for any
+	 * reason the pkgsrc metadata wasn't generated correctly (this has been
+	 * observed in the wild), or simply if a package was built manually.
+	 */
+	pimpact->build_date =
+	    (mapplist->build_date) ? xstrdup(mapplist->build_date) : NULL;
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
