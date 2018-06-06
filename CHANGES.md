@@ -1,3 +1,8 @@
+## Version 0.10.2 (2018-06-06)
+
+ * Fix -f flag when used with install.
+ * Handle empty `BUILD_DATE` correctly.
+
 ## Version 0.10.1 (2018-06-01)
 
  * Fix `BUILD_DATE` refresh support for preserved packages.

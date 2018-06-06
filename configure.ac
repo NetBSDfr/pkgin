@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([pkgin], [0.10.1], [https://github.com/joyent/pkgin/issues])
+AC_INIT([pkgin], [0.10.2], [https://github.com/joyent/pkgin/issues])
 AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
 
