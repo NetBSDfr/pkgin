@@ -36,7 +36,7 @@ static int	find_cmd(const char *);
 static void	missing_param(int, int, const char *);
 static void	ginto(void);
 
-uint8_t		yesflag = 0, noflag = 0, force_update = 0, force_reinstall = 0;
+uint8_t		yesflag = 0, noflag = 0, force_reinstall = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0, pflag = 0;
 char		lslimit = '\0';
 FILE  		*tracefp = NULL;
@@ -47,6 +47,7 @@ main(int argc, char *argv[])
 	int		need_upgrade, need_refresh;
 	int		do_inst = DO_INST; /* by default, do install packages */
 	int 		ch, i, rc = EXIT_SUCCESS;
+	int		force_update = 0;
 	const char	*chrootpath = NULL;
 
 	setprogname("pkgin");
@@ -147,12 +148,17 @@ main(int argc, char *argv[])
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
 
-	/* check repository consistency between repo list and recorded repos */
-	need_refresh = chk_repo_list();
+	/*
+	 * Check repository consistency between repository list and recorded
+	 * repositories.  The force_update argument here is ugly, but needs to
+	 * be done this way until force_fetch is removed as a global variable.
+	 */
+	need_refresh = chk_repo_list(force_update);
 
 	/*
 	 * Upgrade the remote database if the database schema has changed, if
-	 * the database is empty, or if the repository list has changed.
+	 * the database is empty, if the repository list has changed, or if we
+	 * have explicitly requested a refresh.
 	 */
 	if (need_upgrade || need_refresh) {
 		(void) update_db(REMOTE_SUMMARY, NULL, 1);

@@ -107,7 +107,7 @@ fetch_summary(char *cur_repo)
 	char	buf[BUFSIZ];
 
 	for (i = 0; sumexts[i] != NULL; i++) { /* try all extensions */
-		if (!force_fetch && !force_update)
+		if (!force_fetch)
 			sum_mtime = pkg_sum_mtime(cur_repo);
 		else
 			sum_mtime = 0; /* 0 sumtime == force reload */
@@ -641,8 +641,7 @@ pdb_clean_remote(void *param, int argc, char **argv, char **colname)
 	for (i = 0; repos[i] != NULL; i++) {
 		repolen = strlen(repos[i]);
 		if (repolen == strlen(argv[0]) &&
-			strncmp(repos[i], argv[0], repolen) == 0 &&
-					!force_update)
+		    strncmp(repos[i], argv[0], repolen) == 0)
 		   	return PDB_OK;
 	}
 	/* did not find argv[0] (db repository) in pkg_repos */
@@ -781,9 +780,12 @@ cmp_repo_list(void *param, int argc, char **argv, char **colname)
 }
 
 int
-chk_repo_list(void)
+chk_repo_list(int force)
 {
 	pkgindb_doquery(SELECT_REPO_URLS, cmp_repo_list, NULL);
+
+	if (force)
+		force_fetch = 1;
 
 	return force_fetch;
 }

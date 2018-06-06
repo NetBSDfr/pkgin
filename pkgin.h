@@ -217,7 +217,6 @@ typedef struct Preflist {
 	char		*glob;
 } Preflist;
 
-extern uint8_t 		force_update;
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
@@ -243,7 +242,7 @@ ssize_t		download_pkg(char *, FILE *);
 /* summary.c */
 int		update_db(int, char **, int);
 void		split_repos(void);
-int		chk_repo_list(void);
+int		chk_repo_list(int);
 /* sqlite_callbacks.c */
 int		pdb_rec_list(void *, int, char **, char **);
 int		pdb_rec_depends(void *, int, char **, char **);
