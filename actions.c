@@ -100,9 +100,9 @@ pkg_download(Plisthead *installhead)
 				continue;
 			}
 
-			printf(MSG_SYMLINKING_PKG, pinstall->pkgurl);
 			if (symlink(p, pkg_fs) < 0)
-				errx(EXIT_FAILURE, MSG_SYMLINK_FAILED, pkg_fs);
+				errx(EXIT_FAILURE,
+				    "Failed to create symlink %s", pkg_fs);
 
 			size = st.st_size;
 		} else {
@@ -300,8 +300,6 @@ do_pkg_install(Plisthead *installhead)
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
-
-	printf(MSG_INSTALL_PKG);
 
 	SLIST_FOREACH(pinstall, installhead, next) {
 
@@ -545,10 +543,6 @@ pkgin_install(char **opkgargs, int do_inst)
 			if (premove->computed == TOUPGRADE) {
 				toupgrade = action_list(toupgrade,
 						premove->depend);
-#ifdef DEBUG
-				printf("package: %s - level: %d\n",
-					premove->depend, premove->level);
-#endif
 			}
 		}
 		printf(MSG_PKGS_TO_UPGRADE, upgradenum, toupgrade);
@@ -559,11 +553,6 @@ pkgin_install(char **opkgargs, int do_inst)
 				if (premove->computed == TOREMOVE) {
 					toremove = action_list(toremove,
 							premove->depend);
-#ifdef DEBUG
-					printf("package: %s - level: %d\n",
-						premove->depend,
-						premove->level);
-#endif
 				}
 			}
 			/*
@@ -576,8 +565,7 @@ pkgin_install(char **opkgargs, int do_inst)
 			}
 		}
 
-	} else if (do_inst)
-		printf(MSG_NOTHING_TO_UPGRADE);
+	}
 
 	if (installnum > 0) {
 		/* record ordered install list */
@@ -585,10 +573,6 @@ pkgin_install(char **opkgargs, int do_inst)
 
 		SLIST_FOREACH(pinstall, installhead, next) {
 			toinstall = action_list(toinstall, pinstall->depend);
-#ifdef DEBUG
-			printf("package: %s - level: %d\n",
-				pinstall->depend, pinstall->level);
-#endif
 		}
 
 		if (do_inst)
@@ -661,7 +645,7 @@ pkgin_install(char **opkgargs, int do_inst)
 		}
 
 	} else
-		printf(MSG_NOTHING_TO_INSTALL);
+		printf(MSG_NOTHING_TO_DO);
 
 installend:
 

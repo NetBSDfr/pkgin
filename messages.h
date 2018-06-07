@@ -52,10 +52,7 @@
 #define MSG_REMOVING "removing %s...\n"
 #define MSG_DOWNLOAD_PKGS "downloading packages...\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"
-#define MSG_SYMLINK_FAILED "failed to create symlink %s"
-#define MSG_SYMLINKING_PKG "symlinking %s...\n"
 #define MSG_ERR_OPEN "error opening %s"
-#define MSG_INSTALL_PKG "installing packages...\n"
 #define MSG_INSTALLING "installing %s...\n"
 #define MSG_REQT_NOT_PRESENT \
 	"%s, needed by %s is not present in this system.\n"
@@ -69,12 +66,10 @@
 #define MSG_NO_INSTALL_SPACE "%s does not have enough space for installation (%s required but only %s are available)\n"
 #define MSG_PKGS_TO_UPGRADE "%d packages to be upgraded:\n%s\n"
 #define MSG_PKGS_TO_REMOVE "%d packages to be removed: \n%s\n"
-#define MSG_NOTHING_TO_UPGRADE "nothing to upgrade.\n"
 #define MSG_PKGS_TO_DOWNLOAD "%d packages to be downloaded (%s to download):\n%s\n"
 #define MSG_PKGS_TO_INSTALL \
 	"%d packages to be installed (%s to download, %s to install):\n%s\n"
 #define MSG_RM_UPGRADE_PKGS "removing packages to be upgraded...\n"
-#define MSG_NOTHING_TO_INSTALL "nothing to install.\n"
 #define MSG_EMPTY_LOCAL_PKGLIST "empty local package list."
 #define MSG_PKG_NOT_INSTALLED "no such installed package %s\n"
 #define MSG_PKGS_TO_DELETE "%d packages to delete: \n%s\n"
