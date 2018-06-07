@@ -428,6 +428,15 @@ pkgin_install(char **opkgargs, int do_inst)
 	/* browse impact tree */
 	SLIST_FOREACH(pimpact, impacthead, next) {
 
+		/*
+		 * Packages being removed need no special handling, account
+		 * for them and move to the next package.
+		 */
+		if (pimpact->action == TOREMOVE) {
+			removenum++;
+			continue;
+		}
+
 		/* check for conflicts */
 		if (pkg_has_conflicts(pimpact))
 			if (!check_yesno(DEFAULT_NO))
@@ -499,13 +508,8 @@ pkgin_install(char **opkgargs, int do_inst)
 			upgradenum++;
 			installnum++;
 			break;
-
 		case TOINSTALL:
 			installnum++;
-			break;
-
-		case TOREMOVE:
-			removenum++;
 			break;
 		}
 	}

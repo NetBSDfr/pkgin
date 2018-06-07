@@ -204,7 +204,8 @@ order_upgrade_remove(Plisthead *impacthead)
 				 */
 				pdp->computed = pimpact->action;
 				pdp->download = pimpact->download;
-				pdp->pkgurl = xstrdup(pimpact->pkgurl);
+				if (pimpact->action != TOREMOVE)
+					pdp->pkgurl = xstrdup(pimpact->pkgurl);
 				/* informative only */
 				pdp->level = pimpact->level;
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
