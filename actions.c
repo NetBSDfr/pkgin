@@ -61,7 +61,7 @@ pkg_download(Plisthead *installhead)
 	struct stat	st;
 	char		pkg_fs[BUFSIZ];
 	char		*p = NULL;
-	ssize_t		size;
+	off_t		size;
 	int		rc = EXIT_SUCCESS;
 
 	SLIST_FOREACH(pinstall, installhead, next) {

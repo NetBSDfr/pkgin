@@ -309,7 +309,7 @@ pkg_db_mtime(void)
 
 	if (rc == SQLITE_ROW) {
 		db_mtime = sqlite3_column_int64(stmt, 0);
-		db_ntime = sqlite3_column_int64(stmt, 1);
+		db_ntime = (long)sqlite3_column_int64(stmt, 1);
 	} else if (rc == SQLITE_DONE) {
 		db_mtime = 0;
 		db_ntime = 0;

@@ -159,13 +159,13 @@ sum_close(struct archive *a, void *data)
 /*
  * Download a package to the local cache.
  */
-ssize_t
+off_t
 download_pkg(char *pkg_url, FILE *fp)
 {
 	struct url_stat st;
 	size_t size, wrote;
-	ssize_t fetched, written = 0;
-	off_t statsize = 0;
+	ssize_t fetched;
+	off_t statsize = 0, written = 0;
 	struct url *url;
 	fetchIO *f = NULL;
 	char buf[4096];
@@ -214,7 +214,7 @@ download_pkg(char *pkg_url, FILE *fp)
 				else
 					break;
 			}
-			written += (ssize_t)wrote;
+			written += (off_t)wrote;
 		}
 	}
 
