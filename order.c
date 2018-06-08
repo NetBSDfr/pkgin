@@ -159,7 +159,6 @@ upgrade_dep_deepness(Plisthead *impacthead)
 	}
 }
 
-uint8_t pi_upgrade = 0;
 /**
  * \fn order_upgrade_remove
  *
@@ -300,8 +299,7 @@ order_install(Plisthead *impacthead)
 				trunc_str(tmpcheck, '-', STR_BACKWARD);
 				/* match on pkg_install */
 				if (pi_dp == NULL &&
-					strcmp(tmpcheck, PKG_INSTALL) == 0) {
-					pi_upgrade = 1;
+				    strcmp(tmpcheck, PKG_INSTALL) == 0) {
 					/* backup pdp for future insertion */
 					pi_dp = pdp;
 				} else					
@@ -312,7 +310,7 @@ order_install(Plisthead *impacthead)
 	} /* for i < maxlevel */
 
 	/* pkg_install is to be upgraded, make it first */
-	if (pi_upgrade && pi_dp != NULL)
+	if (pi_dp != NULL)
 		SLIST_INSERT_HEAD(ordtreehead, pi_dp, next);
 
 	return ordtreehead;

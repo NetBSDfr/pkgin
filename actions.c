@@ -293,16 +293,13 @@ do_pkg_install(Plisthead *installhead)
 {
 	int		rc = EXIT_SUCCESS;
 	Pkglist		*pinstall;
-	char		pkgpath[BUFSIZ], preserve[BUFSIZ];
-#ifndef DEBUG
-	char		*pflags;
-#endif
+	char		pkgpath[BUFSIZ];
+	char		*pflags = verb_flag("-DU");
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
 
 	SLIST_FOREACH(pinstall, installhead, next) {
-
 		/* file not available in the repository */
 		if (pinstall->file_size == -1)
 			continue;
@@ -311,38 +308,12 @@ do_pkg_install(Plisthead *installhead)
 		snprintf(pkgpath, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
-#ifndef DEBUG
 		if (!verbosity)
 			log_tag(MSG_INSTALLING, pinstall->depend);
-#endif
-		/* there was a previous version, record +PRESERVE path */
-		if (pinstall->old != NULL)
-			snprintf(preserve, BUFSIZ, "%s/%s/%s",
-				pkgdb_get_dir(), pinstall->old, PRESERVE_FNAME);
-
-		/* are we upgrading pkg_install ? */
-		if (pi_upgrade) { /* set in order.c */
-			/* 1st item on the list, reset the flag */
-			pi_upgrade = 0;
-			printf(MSG_UPGRADE_PKG_INSTALL, PKG_INSTALL);
-			if (!check_yesno(DEFAULT_YES))
-				continue;
-		}
-
-#ifndef DEBUG
-		/* is the package marked as +PRESERVE ? */
-		if (pinstall->old != NULL && access(preserve, F_OK) != -1)
-			/* set temporary force flags */
-			/* append verbosity if requested */
-			pflags = verb_flag("-ffU");
-		else
-			/* every other package */
-			pflags = verb_flag("-D");
 
 		if (fexec(pkg_add, pflags, pkgpath, NULL) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
-#endif
-	} /* installation loop */
+	}
 
 	close_pi_log();
 
@@ -390,10 +361,10 @@ pkgin_install(char **opkgargs, int do_inst)
 	Pkglist		*premove, *pinstall;
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
-	Plisthead	*removehead = NULL, *installhead = NULL;
+	Plisthead	*upgradehead = NULL, *installhead = NULL;
 	Plisthead	*downloadhead = NULL;
 	char		**pkgargs, *p;
-	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
+	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*todownload = NULL;
 	char		*unmet_reqs = NULL;
 	char		pkgpath[BUFSIZ], pkgrepo[BUFSIZ], query[BUFSIZ];
@@ -558,10 +529,9 @@ pkgin_install(char **opkgargs, int do_inst)
 	}
 
 	if (do_inst && upgradenum > 0) {
-		/* record ordered remove list before upgrade */
-		removehead = order_upgrade_remove(impacthead);
+		upgradehead = order_upgrade_remove(impacthead);
 
-		SLIST_FOREACH(premove, removehead, next) {
+		SLIST_FOREACH(premove, upgradehead, next) {
 			if (premove->computed == TOUPGRADE) {
 				toupgrade = action_list(toupgrade,
 						premove->depend);
@@ -569,24 +539,6 @@ pkgin_install(char **opkgargs, int do_inst)
 		}
 		printf(MSG_PKGS_TO_UPGRADE, upgradenum, toupgrade);
 		printf("\n");
-
-		if (removenum > 0) {
-			SLIST_FOREACH(premove, removehead, next) {
-				if (premove->computed == TOREMOVE) {
-					toremove = action_list(toremove,
-							premove->depend);
-				}
-			}
-			/*
-			 * some packages may have been marked as TOREMOVE, then 
-			 * discovered as TOUPGRADE
-			 */
-			if (toremove != NULL) {
-				printf(MSG_PKGS_TO_REMOVE, removenum, toremove);
-				printf("\n");
-			}
-		}
-
 	}
 
 	if (installnum > 0) {
@@ -612,7 +564,7 @@ pkgin_install(char **opkgargs, int do_inst)
 			exit(rc);
 
 		/*
-		 * before erasing anything, download packages
+		 * Before doing anything, download packages.
 		 * If there was an error while downloading, record it
 		 */
 		if (downloadnum > 0) {
@@ -637,25 +589,11 @@ pkgin_install(char **opkgargs, int do_inst)
 			case TOINSTALL:
 				installnum--;
 				break;
-
-			case TOREMOVE:
-				removenum--;
-				break;
 			}
 		}
 
 		if (do_inst && installnum > 0) {
-			/* real install, not a simple download
-			 *
-			 * if there was upgrades, first remove
-			 * old packages
-			 */
-			if (upgradenum > 0) {
-				printf(MSG_RM_UPGRADE_PKGS);
-				do_pkg_remove(removehead);
-			}
 			/*
-			 * then pass ordered install list
 			 * If there was an error while installing,
 			 * record it
 			 */
@@ -675,10 +613,9 @@ installend:
 
 	XFREE(toinstall);
 	XFREE(toupgrade);
-	XFREE(toremove);
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead, IMPACT);
-	free_pkglist(&removehead, DEPTREE);
+	free_pkglist(&upgradehead, DEPTREE);
 	free_pkglist(&installhead, DEPTREE);
 	free_list(pkgargs);
 

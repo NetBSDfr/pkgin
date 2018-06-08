@@ -220,7 +220,6 @@ typedef struct Preflist {
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
-extern uint8_t		pi_upgrade; /* pkg_install upgrade */
 extern uint8_t		parsable;
 extern uint8_t		pflag;
 extern int		r_plistcounter;
