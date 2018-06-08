@@ -135,6 +135,7 @@ order_download(Plisthead *impacthead)
 		if (pkg_in_impact(ordtreehead, pimpact->full))
 			continue;
 		if (pimpact->action != TOINSTALL &&
+		    pimpact->action != TOREFRESH &&
 		    pimpact->action != TOUPGRADE)
 			continue;
 		pdp = malloc_pkglist();

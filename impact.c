@@ -233,7 +233,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				toupgrade = TOUPGRADE;
 			else if (!pkgstr_identical(plist->build_date,
 			    mapplist->build_date))
-				toupgrade = TOUPGRADE;
+				toupgrade = TOREFRESH;
 
 			/*
 			 * installed version does not match dep requirement
@@ -459,19 +459,19 @@ impactend:
 	/* check for depedencies breakage (php-4 -> php-5) */
 	break_depends(impacthead);
 
-	/*
-	 * a package has been placed in both TOUPGRADE and TOREMOVE impact
-	 * lists; this occurs when an upgrade will break some package's
-	 * dependency, thus removing it, then reinstalling it. Simply
-	 * mark the TOREMOVE action as DONOTHING.
-	 */
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		SLIST_FOREACH(tmpimpact, impacthead, next) {
 			if (strcmp(pimpact->name, tmpimpact->name) != 0)
 				continue;
 
+			/*
+			 * If a package has been initially marked as remove or
+			 * refresh but then later is required for upgrade, mark
+			 * the original as do nothing.
+			 */
 			if (pimpact->action == TOUPGRADE &&
-				tmpimpact->action == TOREMOVE)
+			    (tmpimpact->action == TOREMOVE ||
+			     tmpimpact->action == TOREFRESH))
 				tmpimpact->action = DONOTHING;
 
 			/*

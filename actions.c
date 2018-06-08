@@ -297,14 +297,12 @@ do_pkg_install(Plisthead *installhead, int op)
 	const char	*pmsg;
 	char		*pflags = verb_flag("-DU");
 
-	switch (op) {
-	case TOUPGRADE:
+	if (op == TOREFRESH)
+		pmsg = "refreshing %s...\n";
+	else if (op == TOUPGRADE)
 		pmsg = "upgrading %s...\n";
-		break;
-	case TOINSTALL:
+	else
 		pmsg = "installing %s...\n";
-		break;
-	}
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
@@ -361,7 +359,7 @@ pkgin_install(char **opkgargs, int do_inst)
 {
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0, removenum = 0;
-	int		downloadnum = 0;
+	int		refreshnum = 0, downloadnum = 0;
 	int		rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
@@ -372,10 +370,10 @@ pkgin_install(char **opkgargs, int do_inst)
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
 	Plisthead	*upgradehead = NULL, *installhead = NULL;
-	Plisthead	*downloadhead = NULL;
+	Plisthead	*refreshhead = NULL, *downloadhead = NULL;
 	char		**pkgargs, *p;
 	char		*toinstall = NULL, *toupgrade = NULL;
-	char		*todownload = NULL;
+	char		*torefresh = NULL, *todownload = NULL;
 	char		*unmet_reqs = NULL;
 	char		pkgpath[BUFSIZ], pkgrepo[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
@@ -489,6 +487,9 @@ pkgin_install(char **opkgargs, int do_inst)
 		size_pkg += pimpact->size_pkg;
 
 		switch (pimpact->action) {
+		case TOREFRESH:
+			refreshnum++;
+			break;
 		case TOUPGRADE:
 			upgradenum++;
 			break;
@@ -535,6 +536,11 @@ pkgin_install(char **opkgargs, int do_inst)
 		todownload = action_list(todownload, pimpact->depend);
 	}
 
+	refreshhead = order_install(impacthead, TOREFRESH);
+	SLIST_FOREACH(pkg, refreshhead, next) {
+		torefresh = action_list(torefresh, pkg->depend);
+	}
+
 	upgradehead = order_install(impacthead, TOUPGRADE);
 	SLIST_FOREACH(pkg, upgradehead, next) {
 		toupgrade = action_list(toupgrade, pkg->depend);
@@ -548,22 +554,31 @@ pkgin_install(char **opkgargs, int do_inst)
 	printf("\n");
 
 	if (do_inst) {
-		if (upgradenum > 0) {
-			printf(MSG_PKGS_TO_UPGRADE, upgradenum, toupgrade);
-			printf("\n");
-		}
-		if (installnum > 0) {
-			printf(MSG_PKGS_TO_INSTALL, installnum, h_fsize, h_psize,
-					toinstall);
-			printf("\n");
-		}
+		if (refreshnum > 0)
+			printf("%d package%s to refresh:\n%s\n\n", refreshnum,
+			    (refreshnum == 1) ? "" : "s", torefresh);
+
+		if (upgradenum > 0)
+			printf("%d package%s to upgrade:\n%s\n\n", upgradenum,
+			    (upgradenum == 1) ? "" : "s", toupgrade);
+
+		if (installnum > 0)
+			printf("%d package%s to install:\n%s\n\n", installnum,
+			    (installnum == 1) ? "" : "s", toinstall);
+
+		printf("%d to refresh, %d to upgrade, %d to install\n",
+		    refreshnum, upgradenum, installnum);
+		printf("%s to download, %s to install\n", h_fsize, h_psize);
 	} else {
-		printf(MSG_PKGS_TO_DOWNLOAD, downloadnum, h_fsize, todownload);
-		printf("\n");
+		printf("%d package%s to download:\n%s\n", downloadnum,
+		    (downloadnum == 1) ? "" : "s", todownload);
 	}
 
 	if (unmet_reqs != NULL)/* there were unmet requirements */
 		printf(MSG_REQT_MISSING, unmet_reqs);
+
+	if (!noflag)
+		printf("\n");
 
 	if (check_yesno(DEFAULT_YES) == ANSW_NO)
 		exit(rc);
@@ -583,10 +598,12 @@ pkgin_install(char **opkgargs, int do_inst)
 				continue;
 
 			switch (pimpact->action) {
+			case TOREFRESH:
+				refreshnum--;
+				break;
 			case TOUPGRADE:
 				upgradenum--;
 				break;
-
 			case TOINSTALL:
 				installnum--;
 				break;
@@ -597,6 +614,10 @@ pkgin_install(char **opkgargs, int do_inst)
 	/*
 	 * At this point we're performing installs.  Do them in order.
 	 */
+	if (refreshnum > 0) {
+		if (do_pkg_install(refreshhead, TOREFRESH) == EXIT_FAILURE)
+			rc = EXIT_FAILURE;
+	}
 	if (upgradenum > 0) {
 		if (do_pkg_install(upgradehead, TOUPGRADE) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;

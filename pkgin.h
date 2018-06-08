@@ -62,6 +62,7 @@
 #define TOUPGRADE 1
 #define TOREMOVE 2
 #define UNMET_REQ 3
+#define TOREFRESH 4
 
 #define KEEP 1
 #define UNKEEP 0

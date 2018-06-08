@@ -63,11 +63,6 @@
 #define MSG_REQT_MISSING "the following packages have unmet requirements: %s\n\n"
 #define MSG_NO_CACHE_SPACE "%s does not have enough space for download, (%s required but only %s are available)\n"
 #define MSG_NO_INSTALL_SPACE "%s does not have enough space for installation (%s required but only %s are available)\n"
-#define MSG_PKGS_TO_UPGRADE "%d packages to be upgraded:\n%s\n"
-#define MSG_PKGS_TO_REMOVE "%d packages to be removed: \n%s\n"
-#define MSG_PKGS_TO_DOWNLOAD "%d packages to be downloaded (%s to download):\n%s\n"
-#define MSG_PKGS_TO_INSTALL \
-	"%d packages to be installed (%s to download, %s to install):\n%s\n"
 #define MSG_RM_UPGRADE_PKGS "removing packages to be upgraded...\n"
 #define MSG_EMPTY_LOCAL_PKGLIST "empty local package list."
 #define MSG_PKG_NOT_INSTALLED "no such installed package %s\n"
