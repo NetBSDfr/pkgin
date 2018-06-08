@@ -28,7 +28,15 @@
  */
 
 #include "pkgin.h"
+#include <sys/ioctl.h>
 #include <time.h>
+#include <unistd.h>
+
+#if defined(HAVE_SYS_TERMIOS_H) && !defined(__FreeBSD__)
+#include <sys/termios.h>
+#elif HAVE_TERMIOS_H
+#include <termios.h>
+#endif
 
 #ifndef LOCALBASE
 #define LOCALBASE "/usr/pkg" /* see DISCLAIMER below */
@@ -329,25 +337,56 @@ do_pkg_install(Plisthead *installhead, int op)
 }
 
 /* build the output line */
+#define DEFAULT_WINSIZE	80
+#define MAX_WINSIZE	512
 char *
 action_list(char *flatlist, char *str)
 {
-	size_t	newsize;
-	char	*newlist = NULL;
+	struct winsize	winsize;
+	size_t		curlen, cols = 0;
+	char		*endl, *newlist = NULL;
 
+	/* XXX: avoid duplicate in progressmeter.c */
+	/* this is called for every package so no point handling sigwinch */
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize) != -1 &&
+			winsize.ws_col != 0) {
+		if (winsize.ws_col > MAX_WINSIZE)
+			cols = MAX_WINSIZE;
+		else
+			cols = winsize.ws_col;
+	} else
+		cols = DEFAULT_WINSIZE;
+
+	/*
+	 * If the user requested -n then we print a package per line, otherwise
+	 * we try to fit them indented into the current line length.
+	 */
 	if (flatlist == NULL) {
-		newsize = strlen(str) + 2;
-		newlist = xmalloc(newsize * sizeof(char));
-		snprintf(newlist, newsize, "\n%s", str);
-	} else {
-		if (str == NULL)
-			return flatlist;
-
-		newsize = strlen(str) + strlen(flatlist) + 2;
-		newlist = realloc(flatlist, newsize * sizeof(char));
-		strlcat(newlist, noflag ? "\n" : " ", newsize);
-		strlcat(newlist, str, newsize);
+		flatlist = xasprintf("%s%s", noflag ? "\n" : "  ", str);
+		return flatlist;
 	}
+
+	if (str == NULL)
+		return flatlist;
+
+	/*
+	 * No need to calculate line length if -n was requested.
+	 */
+	if (noflag) {
+		newlist = xasprintf("%s\n%s", flatlist, str);
+		return newlist;
+	}
+
+	endl = strrchr(flatlist, '\n');
+	if (endl)
+		curlen = strlen(endl);
+	else
+		curlen = strlen(flatlist);
+
+	if ((curlen + strlen(str)) >= cols)
+		newlist = xasprintf("%s\n  %s", flatlist, str);
+	else
+		newlist = xasprintf("%s %s", flatlist, str);
 
 	return newlist;
 }
