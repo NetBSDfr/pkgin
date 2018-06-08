@@ -1,3 +1,14 @@
+## Version 0.11.0 (2018-06-08)
+
+ * Fix build on NetBSD/evbarm.
+ * Skip download checks for packages that are being removed, prevents
+   erroneous "empty FILE\_SIZE" failures.
+ * Perform in-place upgrades using `pkg_add -DU` rather than removing
+   and reinstalling.  Should be faster and less error-prone.
+ * Output formatting improvements.  Installs are now split between
+   refresh, upgrade, and install, with package lists formatted to be
+   easier to read.
+
 ## Version 0.10.2 (2018-06-06)
 
  * Fix -f flag when used with install.
