@@ -216,6 +216,37 @@ order_upgrade_remove(Plisthead *impacthead)
 	return ordtreehead;
 }
 
+/*
+ * Simple download order.  In the future it would be nice to sort this
+ * alphabetically for prettier output.
+ */
+Plisthead *
+order_download(Plisthead *impacthead)
+{
+	Plisthead	*ordtreehead;
+	Pkglist		*pimpact, *pdp;
+
+	ordtreehead = init_head();
+
+	SLIST_FOREACH(pimpact, impacthead, next) {
+		if (!pimpact->download)
+			continue;
+		if (pkg_in_impact(ordtreehead, pimpact->full))
+			continue;
+		if (pimpact->action != TOINSTALL &&
+		    pimpact->action != TOUPGRADE)
+			continue;
+		pdp = malloc_pkglist(DEPTREE);
+		pdp->depend = xstrdup(pimpact->full);
+		pdp->download = pimpact->download;
+		pdp->pkgurl = xstrdup(pimpact->pkgurl);
+		pdp->file_size = pimpact->file_size;
+		SLIST_INSERT_HEAD(ordtreehead, pdp, next);
+	}
+
+	return ordtreehead;
+}
+
 /**
  * \fn order_install
  *

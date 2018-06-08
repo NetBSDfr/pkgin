@@ -380,6 +380,7 @@ pkgin_install(char **opkgargs, int do_inst)
 {
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0, removenum = 0;
+	int		downloadnum = 0;
 	int		rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
@@ -390,8 +391,10 @@ pkgin_install(char **opkgargs, int do_inst)
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
 	Plisthead	*removehead = NULL, *installhead = NULL;
+	Plisthead	*downloadhead = NULL;
 	char		**pkgargs, *p;
 	char		*toinstall = NULL, *toupgrade = NULL, *toremove = NULL;
+	char		*todownload = NULL;
 	char		*unmet_reqs = NULL;
 	char		pkgpath[BUFSIZ], pkgrepo[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
@@ -493,8 +496,11 @@ pkgin_install(char **opkgargs, int do_inst)
 		/*
 		 * Don't account for download size if using a file:// repo.
 		 */
-		if (pimpact->download && strncmp(pkgrepo, "file:///", 8) != 0)
-			file_size += pimpact->file_size;
+		if (pimpact->download) {
+			downloadnum++;
+			if (strncmp(pkgrepo, "file:///", 8) != 0)
+				file_size += pimpact->file_size;
+		}
 
 		if (pimpact->old_size_pkg > 0)
 			pimpact->size_pkg -= pimpact->old_size_pkg;
@@ -533,7 +539,23 @@ pkgin_install(char **opkgargs, int do_inst)
 			LOCALBASE, h_psize, h_free);
 	}
 
+	/*
+	 * Nothing to install or download, exit early.
+	 */
+	if (!do_inst && downloadnum == 0) {
+		printf(MSG_NOTHING_TO_DO);
+		return rc;
+	}
+
 	printf("\n");
+
+	/*
+	 * Order package lists according to action.
+	 */
+	downloadhead = order_download(impacthead);
+	SLIST_FOREACH(pimpact, downloadhead, next) {
+		todownload = action_list(todownload, pimpact->depend);
+	}
 
 	if (do_inst && upgradenum > 0) {
 		/* record ordered remove list before upgrade */
@@ -593,14 +615,16 @@ pkgin_install(char **opkgargs, int do_inst)
 		 * before erasing anything, download packages
 		 * If there was an error while downloading, record it
 		 */
-		if (pkg_download(installhead) == EXIT_FAILURE)
-			rc = EXIT_FAILURE;
+		if (downloadnum > 0) {
+			if (pkg_download(downloadhead) == EXIT_FAILURE)
+				rc = EXIT_FAILURE;
+		}
 
 		/*
 		 * Recalculate package counts to account for any download
 		 * failures.
 		 */
-		SLIST_FOREACH(pimpact, installhead, next) {
+		SLIST_FOREACH(pimpact, downloadhead, next) {
 			if (pimpact->file_size != -1)
 				continue;
 
