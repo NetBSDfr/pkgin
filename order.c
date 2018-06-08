@@ -117,104 +117,6 @@ order_remove(Plisthead *deptreehead)
 	return ordtreehead;
 }
 
-/* find dependency deepness for upgrade and record it to pimpact->level */
-static void
-upgrade_dep_deepness(Plisthead *impacthead)
-{
-	char		*pkgname;
-	Pkglist		*pimpact;
-	Plisthead	*lvldeptree;
-
-	/* get higher recursion level */
-	SLIST_FOREACH(pimpact, impacthead, next) {
-		if (pimpact->level == -1) { /* unique package, just return */
-			pimpact->level = 0;
-			return;
-		}
-
-		/* only deal with TOUPGRADE and TOREMOVE */
-		if (pimpact->action == TOINSTALL)
-			continue;
-
-		pimpact->level = 1;
-
-		/* depname received from impact is in full package format */
-		pkgname = xstrdup(pimpact->full);
-
-		trunc_str(pkgname, '-', STR_BACKWARD);
-
-		lvldeptree = init_head();
-		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, lvldeptree);
-
-		if (!SLIST_EMPTY(lvldeptree))
-		    	pimpact->level = SLIST_FIRST(lvldeptree)->level + 1;
-
-#if 0
-		printf("%s (%s) -> %d\n",
-			pimpact->full, pkgname, pimpact->level);
-#endif
-
-		XFREE(pkgname);
-		free_pkglist(&lvldeptree, DEPTREE);
-	}
-}
-
-/**
- * \fn order_upgrade_remove
- *
- * \brief order the remove-for-upgrade list according to dependency level
- */
-Plisthead *
-order_upgrade_remove(Plisthead *impacthead)
-{
-	Plisthead	*ordtreehead;
-	Pkglist		*pimpact, *pdp;
-	int		i, maxlevel = 0;
-
-	upgrade_dep_deepness(impacthead);
-
-	/* record higher dependency level on impact upgrade list */
-	SLIST_FOREACH(pimpact, impacthead, next)
-		if ((pimpact->action == TOUPGRADE ||
-			pimpact->action == TOREMOVE) &&
-			pimpact->level > maxlevel)
-
-			maxlevel = pimpact->level;
-
-	ordtreehead = init_head();
-
-	for (i = maxlevel; i >= 0; i--)
-		SLIST_FOREACH(pimpact, impacthead, next) {
-			if ((pimpact->action == TOUPGRADE ||
-				pimpact->action == TOREMOVE) &&
-				pimpact->level == i) {
-
-				if (pkg_in_impact(ordtreehead, pimpact->old))
-					continue;
-
-				pdp = malloc_pkglist(DEPTREE);
-
-				pdp->depend = xstrdup(pimpact->old);
-				pdp->name = NULL; /* safety */
-				pdp->build_date = (pimpact->build_date)
-				    ? xstrdup(pimpact->build_date) : NULL;
-				/* XXX: use the "computed" value to record
-				 * action type. Ugly.
-				 */
-				pdp->computed = pimpact->action;
-				pdp->download = pimpact->download;
-				if (pimpact->action != TOREMOVE)
-					pdp->pkgurl = xstrdup(pimpact->pkgurl);
-				/* informative only */
-				pdp->level = pimpact->level;
-				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
-
-			} /* action == TOUPGRADE || TOREMOVE */
-		} /* for maxlevel */
-
-	return ordtreehead;
-}
-
 /*
  * Simple download order.  In the future it would be nice to sort this
  * alphabetically for prettier output.
@@ -256,7 +158,7 @@ order_download(Plisthead *impacthead)
  * package already installed"
  */
 Plisthead *
-order_install(Plisthead *impacthead)
+order_install(Plisthead *impacthead, int op)
 {
 	Plisthead	*ordtreehead;
 	Pkglist		*pimpact, *pdp, *pi_dp = NULL;
@@ -265,9 +167,7 @@ order_install(Plisthead *impacthead)
 
 	/* record higher dependency level on impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
-		if ((pimpact->action == TOUPGRADE ||
-			pimpact->action == TOINSTALL) &&
-			pimpact->level > maxlevel)
+		if (pimpact->action == op && pimpact->level > maxlevel)
 			maxlevel = pimpact->level;
 	}
 
@@ -275,9 +175,7 @@ order_install(Plisthead *impacthead)
 
 	for (i = 0; i <= maxlevel; i++) {
 		SLIST_FOREACH(pimpact, impacthead, next) {
-			if ((pimpact->action == TOUPGRADE ||
-				pimpact->action == TOINSTALL) &&
-				pimpact->level == i) {
+			if (pimpact->action == op && pimpact->level == i) {
 
 				if (pkg_in_impact(ordtreehead, pimpact->full))
 					continue;

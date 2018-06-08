@@ -53,7 +53,6 @@
 #define MSG_DOWNLOAD_PKGS "downloading packages...\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"
 #define MSG_ERR_OPEN "error opening %s"
-#define MSG_INSTALLING "installing %s...\n"
 #define MSG_REQT_NOT_PRESENT \
 	"%s, needed by %s is not present in this system.\n"
 #define MSG_REQT_NOT_PRESENT_DEPS \

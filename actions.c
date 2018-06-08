@@ -289,12 +289,22 @@ do_pkg_remove(Plisthead *removehead)
  * i.e. apache 1.3
  */
 static int
-do_pkg_install(Plisthead *installhead)
+do_pkg_install(Plisthead *installhead, int op)
 {
 	int		rc = EXIT_SUCCESS;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ];
+	const char	*pmsg;
 	char		*pflags = verb_flag("-DU");
+
+	switch (op) {
+	case TOUPGRADE:
+		pmsg = "upgrading %s...\n";
+		break;
+	case TOINSTALL:
+		pmsg = "installing %s...\n";
+		break;
+	}
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
@@ -304,12 +314,12 @@ do_pkg_install(Plisthead *installhead)
 		if (pinstall->file_size == -1)
 			continue;
 
-		printf(MSG_INSTALLING, pinstall->depend);
+		printf(pmsg, pinstall->depend);
 		snprintf(pkgpath, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
 		if (!verbosity)
-			log_tag(MSG_INSTALLING, pinstall->depend);
+			log_tag(pmsg, pinstall->depend);
 
 		if (fexec(pkg_add, pflags, pkgpath, NULL) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
@@ -358,7 +368,7 @@ pkgin_install(char **opkgargs, int do_inst)
 	int64_t		file_size = 0, size_pkg = 0;
 	size_t		len;
 	ssize_t		llen;
-	Pkglist		*premove, *pinstall;
+	Pkglist		*pkg;
 	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
 	Plisthead	*upgradehead = NULL, *installhead = NULL;
@@ -481,7 +491,6 @@ pkgin_install(char **opkgargs, int do_inst)
 		switch (pimpact->action) {
 		case TOUPGRADE:
 			upgradenum++;
-			installnum++;
 			break;
 		case TOINSTALL:
 			installnum++;
@@ -518,64 +527,57 @@ pkgin_install(char **opkgargs, int do_inst)
 		return rc;
 	}
 
-	printf("\n");
-
 	/*
-	 * Order package lists according to action.
+	 * Separate package lists according to action.
 	 */
 	downloadhead = order_download(impacthead);
 	SLIST_FOREACH(pimpact, downloadhead, next) {
 		todownload = action_list(todownload, pimpact->depend);
 	}
 
-	if (do_inst && upgradenum > 0) {
-		upgradehead = order_upgrade_remove(impacthead);
+	upgradehead = order_install(impacthead, TOUPGRADE);
+	SLIST_FOREACH(pkg, upgradehead, next) {
+		toupgrade = action_list(toupgrade, pkg->depend);
+	}
 
-		SLIST_FOREACH(premove, upgradehead, next) {
-			if (premove->computed == TOUPGRADE) {
-				toupgrade = action_list(toupgrade,
-						premove->depend);
-			}
+	installhead = order_install(impacthead, TOINSTALL);
+	SLIST_FOREACH(pkg, installhead, next) {
+		toinstall = action_list(toinstall, pkg->depend);
+	}
+
+	printf("\n");
+
+	if (do_inst) {
+		if (upgradenum > 0) {
+			printf(MSG_PKGS_TO_UPGRADE, upgradenum, toupgrade);
+			printf("\n");
 		}
-		printf(MSG_PKGS_TO_UPGRADE, upgradenum, toupgrade);
+		if (installnum > 0) {
+			printf(MSG_PKGS_TO_INSTALL, installnum, h_fsize, h_psize,
+					toinstall);
+			printf("\n");
+		}
+	} else {
+		printf(MSG_PKGS_TO_DOWNLOAD, downloadnum, h_fsize, todownload);
 		printf("\n");
 	}
 
-	if (installnum > 0) {
-		/* record ordered install list */
-		installhead = order_install(impacthead);
+	if (unmet_reqs != NULL)/* there were unmet requirements */
+		printf(MSG_REQT_MISSING, unmet_reqs);
 
-		SLIST_FOREACH(pinstall, installhead, next) {
-			toinstall = action_list(toinstall, pinstall->depend);
-		}
+	if (check_yesno(DEFAULT_YES) == ANSW_NO)
+		exit(rc);
 
-		if (do_inst)
-			printf(MSG_PKGS_TO_INSTALL, installnum, h_fsize, h_psize,
-					toinstall);
-		else
-			printf(MSG_PKGS_TO_DOWNLOAD, installnum, h_fsize, toinstall);
+	/*
+	 * First fetch all required packages.  If we're only doing downloads
+	 * then we're done, otherwise recalculate to account for failures.
+	 */
+	if (downloadnum > 0) {
+		if (pkg_download(downloadhead) == EXIT_FAILURE)
+			rc = EXIT_FAILURE;
+		if (!do_inst)
+			goto installend;
 
-		printf("\n");
-
-		if (unmet_reqs != NULL)/* there were unmet requirements */
-			printf(MSG_REQT_MISSING, unmet_reqs);
-
-		if (check_yesno(DEFAULT_YES) == ANSW_NO)
-			exit(rc);
-
-		/*
-		 * Before doing anything, download packages.
-		 * If there was an error while downloading, record it
-		 */
-		if (downloadnum > 0) {
-			if (pkg_download(downloadhead) == EXIT_FAILURE)
-				rc = EXIT_FAILURE;
-		}
-
-		/*
-		 * Recalculate package counts to account for any download
-		 * failures.
-		 */
 		SLIST_FOREACH(pimpact, downloadhead, next) {
 			if (pimpact->file_size != -1)
 				continue;
@@ -583,7 +585,6 @@ pkgin_install(char **opkgargs, int do_inst)
 			switch (pimpact->action) {
 			case TOUPGRADE:
 				upgradenum--;
-				installnum--;
 				break;
 
 			case TOINSTALL:
@@ -591,23 +592,23 @@ pkgin_install(char **opkgargs, int do_inst)
 				break;
 			}
 		}
+	}
 
-		if (do_inst && installnum > 0) {
-			/*
-			 * If there was an error while installing,
-			 * record it
-			 */
-			if (do_pkg_install(installhead) == EXIT_FAILURE)
-				rc = EXIT_FAILURE;
+	/*
+	 * At this point we're performing installs.  Do them in order.
+	 */
+	if (upgradenum > 0) {
+		if (do_pkg_install(upgradehead, TOUPGRADE) == EXIT_FAILURE)
+			rc = EXIT_FAILURE;
+	}
+	if (installnum > 0) {
+		if (do_pkg_install(installhead, TOINSTALL) == EXIT_FAILURE)
+			rc = EXIT_FAILURE;
+	}
 
-			/* pure install, not called by pkgin_upgrade */
-			if (upgrade_type == UPGRADE_NONE)
-				(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
-
-		}
-
-	} else
-		printf(MSG_NOTHING_TO_DO);
+	/* pure install, not called by pkgin_upgrade */
+	if (upgrade_type == UPGRADE_NONE)
+		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
 
 installend:
 
