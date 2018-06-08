@@ -49,7 +49,7 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 	if (argv[0] == NULL)
 		return PDB_ERR;
 
-	plist = malloc_pkglist(LIST);
+	plist = malloc_pkglist();
 
 	/*
 	 * rec_pkglist is used for convenience for REQUIRES / PROVIDES
@@ -112,7 +112,7 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 			return PDB_OK;
 		}
 
-	deptree = malloc_pkglist(DEPTREE);
+	deptree = malloc_pkglist();
 	deptree->depend = xstrdup(DEPS_FULLPKG);
 
 	/* unresolved pkgname because of complex dependency glob */
@@ -133,7 +133,6 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 		/* case handled by get_pkgname_from_depend() */
 		deptree->name = xstrdup(DEPS_PKGNAME);
 
-	deptree->computed = 0;
 	deptree->level = 0;
 	/* used in LOCAL_REVERSE_DEPS / autoremove.c */
 	if (argc > 2 && PKG_KEEP != NULL)

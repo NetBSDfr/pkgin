@@ -140,24 +140,6 @@ typedef struct Sumfile {
 } Sumfile;
 
 /**
- * \struct Deptree
- * \brief Package dependency tree
- */
-typedef struct Deptree {
-	int	computed; /*!< recursion memory */
-	int	keep; /*!< autoremovable package ? */
-} Deptree;
-
-/**
- * \struct Impact
- * \brief Impact list
- */
-typedef struct Pkgimpact {
-	int	action; /*!< TOINSTALL or TOUPGRADE */
-	char	*old; /*!< package to upgrade: perl-5.8 */
-} Impact;
-
-/**
  * \struct Pkglist
  *
  * \brief Master structure for all types of package lists (SLIST)
@@ -186,24 +168,12 @@ typedef struct Pkglist {
 			 */
 	char *category; /*!< package category */
 	char *pkgpath; /*!< pkgsrc pkgpath */
-	union {
-		char		*comment; /*!< package list comment */
-		Deptree		deptree; /*<! dependency tree informations */
-		Impact		impact; /*<! impact list informations */
-	} p_un;
+	char *comment; /*!< package list comment */
+	int	keep; /*!< autoremovable package ? */
+	int	action; /*!< TOINSTALL or TOUPGRADE */
 
 	SLIST_ENTRY(Pkglist) next;
 } Pkglist;
-
-#define comment  	p_un.comment
-#define computed	p_un.deptree.computed
-#define keep		p_un.deptree.keep
-#define old		p_un.impact.old
-#define action   	p_un.impact.action
-
-#define LIST		0
-#define DEPTREE		1
-#define IMPACT		2
 
 typedef SLIST_HEAD(, Pkglist) Plisthead;
 typedef struct Plistnumbered {
@@ -252,9 +222,9 @@ void 		full_dep_tree(const char *, const char *, Plisthead *);
 /* pkglist.c */
 void		init_global_pkglists(void);
 void		free_global_pkglists(void);
-Pkglist		*malloc_pkglist(uint8_t);
-void		free_pkglist_entry(Pkglist **, uint8_t);
-void		free_pkglist(Plisthead **, uint8_t);
+Pkglist		*malloc_pkglist(void);
+void		free_pkglist_entry(Pkglist **);
+void		free_pkglist(Plisthead **);
 Plisthead	*init_head(void);
 Plistnumbered	*rec_pkglist(const char *, ...);
 int		pkg_is_installed(Plisthead *, Pkglist *);

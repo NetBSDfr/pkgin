@@ -73,7 +73,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 		    	pdp->level = SLIST_FIRST(lvldeptree)->level + 1;
 
 		XFREE(depname);
-		free_pkglist(&lvldeptree, DEPTREE);
+		free_pkglist(&lvldeptree);
 
 #if 0
 		printf("%s -> %d\n", pdp->depend, pdp->level);
@@ -235,7 +235,8 @@ order_download(Plisthead *impacthead)
 		if (pimpact->action != TOINSTALL &&
 		    pimpact->action != TOUPGRADE)
 			continue;
-		pdp = malloc_pkglist(DEPTREE);
+		pdp = malloc_pkglist();
+		pdp->action = pimpact->action;
 		pdp->depend = xstrdup(pimpact->full);
 		pdp->download = pimpact->download;
 		pdp->pkgurl = xstrdup(pimpact->pkgurl);
@@ -281,9 +282,9 @@ order_install(Plisthead *impacthead)
 				if (pkg_in_impact(ordtreehead, pimpact->full))
 					continue;
 
-				pdp = malloc_pkglist(DEPTREE);
+				pdp = malloc_pkglist();
 
-				pdp->computed = pimpact->action; /* XXX: ugly*/
+				pdp->action = pimpact->action;
 				pdp->depend = xstrdup(pimpact->full);
 				pdp->name = NULL;
 				pdp->build_date = (pimpact->build_date)
@@ -293,7 +294,8 @@ order_install(Plisthead *impacthead)
 				pdp->download = pimpact->download;
 				pdp->pkgurl = xstrdup(pimpact->pkgurl);
 				pdp->file_size = pimpact->file_size;
-				pdp->old = pimpact->old;
+				if (pimpact->old)
+					pdp->old = xstrdup(pimpact->old);
 				/* check for pkg_install upgrade */
 				strcpy(tmpcheck, pimpact->full);
 				trunc_str(tmpcheck, '-', STR_BACKWARD);

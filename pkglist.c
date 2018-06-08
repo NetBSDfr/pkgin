@@ -45,14 +45,13 @@ static void setfmt(char *, char *);
  * \brief Pkglist allocation for all types of lists
  */
 Pkglist *
-malloc_pkglist(uint8_t type)
+malloc_pkglist(void)
 {
 	Pkglist *pkglist;
 
 	pkglist = xmalloc(sizeof(Pkglist));
 
 	/*!< Init all the things! (http://knowyourmeme.com/memes/x-all-the-y) */
-	pkglist->type = type;
 	pkglist->full = NULL;
 	pkglist->name = NULL;
 	pkglist->version = NULL;
@@ -64,22 +63,12 @@ malloc_pkglist(uint8_t type)
 	pkglist->level = 0;
 	pkglist->download = 0;
 	pkglist->pkgurl = NULL;
-
-	switch (type) {
-	case LIST:
-		pkglist->comment = NULL;
-		pkglist->category = NULL;
-		pkglist->pkgpath = NULL;
-		break;
-	case DEPTREE:
-		pkglist->computed = 0;
-		pkglist->keep = 0;
-		break;
-	case IMPACT:
-		pkglist->action = DONOTHING;
-		pkglist->old = NULL;
-		break;
-	}
+	pkglist->comment = NULL;
+	pkglist->category = NULL;
+	pkglist->pkgpath = NULL;
+	pkglist->keep = 0;
+	pkglist->action = DONOTHING;
+	pkglist->old = NULL;
 
 	return pkglist;
 }
@@ -90,21 +79,16 @@ malloc_pkglist(uint8_t type)
  * \brief free a Pkglist single entry
  */
 void
-free_pkglist_entry(Pkglist **plist, uint8_t type)
+free_pkglist_entry(Pkglist **plist)
 {
 	XFREE((*plist)->full);
 	XFREE((*plist)->name);
 	XFREE((*plist)->version);
 	XFREE((*plist)->depend);
-	switch (type) {
-	case LIST:
-		XFREE((*plist)->comment);
-		XFREE((*plist)->category);
-		XFREE((*plist)->pkgpath);
-		break;
-	case IMPACT:
-		XFREE((*plist)->old);
-	}
+	XFREE((*plist)->comment);
+	XFREE((*plist)->category);
+	XFREE((*plist)->pkgpath);
+	XFREE((*plist)->old);
 	XFREE(*plist);
 
 	plist = NULL;
@@ -116,7 +100,7 @@ free_pkglist_entry(Pkglist **plist, uint8_t type)
  * \brief Free all types of package list
  */
 void
-free_pkglist(Plisthead **plisthead, uint8_t type)
+free_pkglist(Plisthead **plisthead)
 {
 	Pkglist *plist;
 
@@ -127,7 +111,7 @@ free_pkglist(Plisthead **plisthead, uint8_t type)
 		plist = SLIST_FIRST(*plisthead);
 		SLIST_REMOVE_HEAD(*plisthead, next);
 
-		free_pkglist_entry(&plist, type);
+		free_pkglist_entry(&plist);
 	}
 	XFREE(*plisthead);
 
@@ -161,7 +145,7 @@ free_global_pkglist(Plisthead *plisthead)
 		plist = SLIST_FIRST(plisthead);
 		SLIST_REMOVE_HEAD(plisthead, next);
 
-		free_pkglist_entry(&plist, LIST);
+		free_pkglist_entry(&plist);
 	}
 }
 
@@ -305,7 +289,7 @@ list_pkgs(const char *pkgquery, int lstype)
 	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
 		printf(pfmt, plist->full, plist->comment);
 
-	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
 }
 
@@ -408,6 +392,6 @@ show_all_categories(void)
 	SLIST_FOREACH(plist, cathead->P_Plisthead, next)
 		printf("%s\n", plist->full);
 
-	free_pkglist(&cathead->P_Plisthead, LIST);
+	free_pkglist(&cathead->P_Plisthead);
 	free(cathead);
 }

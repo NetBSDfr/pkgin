@@ -57,12 +57,12 @@ pkgin_autoremove(void)
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
 		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, keephead);
 
-	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
 
 	/* record all unkeep / automatic packages */
 	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
-		free_pkglist(&keephead, DEPTREE);
+		free_pkglist(&keephead);
 
 		printf(MSG_ALL_KEEP_PKGS);
 		return;
@@ -87,7 +87,7 @@ pkgin_autoremove(void)
 			continue;
 
 		/* package was not found, insert it on removelist */
-		premove = malloc_pkglist(DEPTREE);
+		premove = malloc_pkglist();
 
 		premove->depend = xstrdup(pkglist->full);
 
@@ -96,8 +96,8 @@ pkgin_autoremove(void)
 		removenb++;
 	} /* SLIST_FOREACH plisthead */
 
-	free_pkglist(&keephead, DEPTREE);
-	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free_pkglist(&keephead);
+	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
 
 	if (!removenb) {
@@ -107,7 +107,7 @@ pkgin_autoremove(void)
 
 	orderedhead = order_remove(removehead);
 
-	free_pkglist(&removehead, DEPTREE);
+	free_pkglist(&removehead);
 
 	if (!SLIST_EMPTY(orderedhead)) {
 		SLIST_FOREACH(premove, orderedhead, next)
@@ -128,7 +128,7 @@ pkgin_autoremove(void)
 	}
 
 	XFREE(toremove);
-	free_pkglist(&orderedhead, DEPTREE);
+	free_pkglist(&orderedhead);
 }
 
 void
@@ -147,7 +147,7 @@ show_pkg_keep(void)
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
 		printf(MSG_MARK_PKG_KEEP, pkglist->full);
 
-	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
 }
 
@@ -167,7 +167,7 @@ show_pkg_nokeep(void)
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
 		printf(MSG_MARK_PKG_NOKEEP, pkglist->full);
 
-	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
 }
 

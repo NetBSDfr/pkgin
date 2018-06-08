@@ -142,7 +142,7 @@ break_depends(Plisthead *impacthead)
 			 * satisfied by our newly upgraded packages.
 			 */
 			if (SLIST_EMPTY(fdphead)) {
-				free_pkglist(&fdphead, DEPTREE);
+				free_pkglist(&fdphead);
 				fdphead = init_head();
 				full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, fdphead);
 			}
@@ -158,13 +158,13 @@ break_depends(Plisthead *impacthead)
 				}
 			}
 
-			free_pkglist(&fdphead, DEPTREE);
+			free_pkglist(&fdphead);
 
 			if (!dep_break)
 				continue;
 
 			/* dependency break, insert rdp in remove-list */
-			rmimpact = malloc_pkglist(IMPACT);
+			rmimpact = malloc_pkglist();
 			rmimpact->depend = xstrdup(rdp->depend);
 			rmimpact->name = xstrdup(rpkg);
 			rmimpact->full = xstrdup(rdp->depend);
@@ -174,7 +174,7 @@ break_depends(Plisthead *impacthead)
 
 			SLIST_INSERT_HEAD(impacthead, rmimpact, next);
 		}
-		free_pkglist(&rdphead, DEPTREE);
+		free_pkglist(&rdphead);
 	}
 }
 
@@ -199,7 +199,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	/* create initial impact entry with a DONOTHING status, permitting
 	 * to check if this dependency has already been recorded
 	 */
-	pimpact = malloc_pkglist(IMPACT);
+	pimpact = malloc_pkglist();
 
 	pimpact->depend = xstrdup(pdp->depend);
 
@@ -402,16 +402,16 @@ pkg_impact(char **pkgargs, int *rc)
 				 * proceed?
 				 */
 				if (!check_yesno(DEFAULT_NO)) {
-					free_pkglist(&impacthead, IMPACT);
+					free_pkglist(&impacthead);
 					/* avoid free's repetition */
 					goto impactend;
 				}
 			}
 		} /* SLIST_FOREACH deps */
-		free_pkglist(&pdphead, DEPTREE);
+		free_pkglist(&pdphead);
 
 		/* finally, insert package itself */
-		pdp = malloc_pkglist(DEPTREE);
+		pdp = malloc_pkglist();
 
 		pdp->name = xstrdup(pkgname);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
@@ -454,7 +454,7 @@ impactend:
 
 	TRACE("[<]-leaving impact\n");
 
-	free_pkglist(&pdphead, DEPTREE);
+	free_pkglist(&pdphead);
 
 	/* check for depedencies breakage (php-4 -> php-5) */
 	break_depends(impacthead);
@@ -499,13 +499,13 @@ impactend:
 
 			SLIST_REMOVE(impacthead, pimpact, Pkglist, next);
 
-			free_pkglist_entry(&pimpact, IMPACT);
+			free_pkglist_entry(&pimpact);
 		}
 	} /* SLIST_FOREACH_MUTABLE impacthead */
 
 	/* no more impact, empty list */
 	if (SLIST_EMPTY(impacthead))
-		free_pkglist(&impacthead, IMPACT);
+		free_pkglist(&impacthead);
 
 	return impacthead;
 }

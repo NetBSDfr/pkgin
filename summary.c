@@ -591,7 +591,7 @@ update_localdb(char **pkgkeep)
 		SLIST_FOREACH(pkglist, keeplisthead->P_Plisthead, next) {
 			pkgindb_dovaquery(KEEP_PKG, pkglist->name);
 		}
-		free_pkglist(&keeplisthead->P_Plisthead, LIST);
+		free_pkglist(&keeplisthead->P_Plisthead);
 		free(keeplisthead);
 
 		/*
@@ -606,7 +606,7 @@ update_localdb(char **pkgkeep)
 				handle_manually_installed(pkglist, pkgkeep);
 			}
 
-			free_pkglist(&nokeeplisthead->P_Plisthead, LIST);
+			free_pkglist(&nokeeplisthead->P_Plisthead);
 			free(nokeeplisthead);
 		}
 	} else { /* empty keep list */

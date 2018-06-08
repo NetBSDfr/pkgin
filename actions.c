@@ -614,9 +614,9 @@ installend:
 	XFREE(toinstall);
 	XFREE(toupgrade);
 	XFREE(unmet_reqs);
-	free_pkglist(&impacthead, IMPACT);
-	free_pkglist(&upgradehead, DEPTREE);
-	free_pkglist(&installhead, DEPTREE);
+	free_pkglist(&impacthead);
+	free_pkglist(&upgradehead);
+	free_pkglist(&installhead);
 	free_list(pkgargs);
 
 	return rc;
@@ -668,7 +668,7 @@ pkgin_remove(char **pkgargs)
 		}
 
 		/* add package itself */
-		pdp = malloc_pkglist(DEPTREE);
+		pdp = malloc_pkglist();
 
 		pdp->depend = pkgname;
 
@@ -708,8 +708,8 @@ pkgin_remove(char **pkgargs)
 	} else
 		printf(MSG_NO_PKGS_TO_DELETE);
 
-	free_pkglist(&removehead, DEPTREE);
-	free_pkglist(&pdphead, DEPTREE);
+	free_pkglist(&removehead);
+	free_pkglist(&pdphead);
 
 	XFREE(todelete);
 
@@ -841,7 +841,7 @@ pkgin_upgrade(int uptype, int do_inst)
 
 	free_list(pkgargs);
 
-	free_pkglist(&keeplisthead->P_Plisthead, LIST);
+	free_pkglist(&keeplisthead->P_Plisthead);
 	free(keeplisthead);
 
 	return rc;

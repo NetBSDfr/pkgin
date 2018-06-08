@@ -43,7 +43,7 @@ export_keep(void)
 	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
 		printf("%s\n", plist->full);
 
-	free_pkglist(&plisthead->P_Plisthead, LIST);
+	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
 }
 

@@ -133,7 +133,7 @@ pkg_met_reqs(Plisthead *impacthead)
 							break;
 						} /* match */
 					}
-					free_pkglist(&r_provideshead->P_Plisthead, LIST);
+					free_pkglist(&r_provideshead->P_Plisthead);
 					free(r_provideshead);
 
 					if (foundreq)
@@ -160,12 +160,12 @@ pkg_met_reqs(Plisthead *impacthead)
 			}
 #endif
 		} /* SLIST_FOREACH requires */
-		free_pkglist(&requireshead->P_Plisthead, LIST);
+		free_pkglist(&requireshead->P_Plisthead);
 		free(requireshead);
 	} /* 1st impact SLIST_FOREACH */
 
 #ifdef CHECK_PROVIDES
-	free_pkglist(&l_provideshead->P_Plisthead, LIST);
+	free_pkglist(&l_provideshead->P_Plisthead);
 	free(l_provideshead);
 #endif
 
@@ -206,7 +206,7 @@ pkg_has_conflicts(Pkglist *pimpact)
 		} /* match conflict */
 	} /* SLIST_FOREACH conflicts */
 
-	free_pkglist(&conflictshead->P_Plisthead, LIST);
+	free_pkglist(&conflictshead->P_Plisthead);
 	free(conflictshead);
 
 	return has_conflicts;

@@ -77,7 +77,7 @@ unique_pkg(const char *pkgname, const char *dest)
 
 	if (best_match != NULL)
 		u_pkg = xstrdup(best_match->full);
-	free_pkglist(&plist->P_Plisthead, LIST);
+	free_pkglist(&plist->P_Plisthead);
 	free(plist);
 
 	/* chosen package has no installation candidate */
