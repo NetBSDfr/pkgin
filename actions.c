@@ -611,6 +611,7 @@ pkgin_install(char **opkgargs, int do_inst)
 	} else {
 		printf("%d package%s to download:\n%s\n", downloadnum,
 		    (downloadnum == 1) ? "" : "s", todownload);
+		printf("%s to download\n", h_fsize);
 	}
 
 	if (unmet_reqs != NULL)/* there were unmet requirements */
