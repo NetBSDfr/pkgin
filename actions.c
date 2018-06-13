@@ -45,7 +45,7 @@
 static int	upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
 FILE		*err_fp = NULL;
-long int	rm_filepos = -1, in_filepos = -1;
+long int	rm_filepos = -1;
 char		pkgtools_flags[5];
 
 #ifndef DEBUG
@@ -249,6 +249,8 @@ close_pi_log(void)
 		if (warn_count > 0 || err_count > 0)
 			printf(MSG_PKG_INSTALL_LOGGING_TO, pkgin_errlog);
 	}
+
+	warn_count = err_count = said = 0;
 }
 
 /* package removal */
@@ -765,8 +767,6 @@ pkgin_remove(char **pkgargs)
 
 			(void)update_db(LOCAL_SUMMARY, NULL, 1);
 		}
-
-		analyse_pkglog(rm_filepos);
 	} else
 		printf(MSG_NO_PKGS_TO_DELETE);
 
