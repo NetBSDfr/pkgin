@@ -241,21 +241,20 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 			 * was given
 			 */
 			if (toupgrade != DONOTHING || pdp->keep < 0) {
-
 				TRACE("   ! didn't match (or force reinstall)\n");
-				/*
-				 * local pkgname didn't match deps, remote pkg
-				 * has a lesser version than local package.
-				 */
-				if (version_check(plist->full,
-					remotepkg) == 1) {
-					/*
-					 * proposing a downgrade is definitely
-					 * not useful, not sure what I want to
-					 * do with this...
-					 */
-					toupgrade = DONOTHING;
 
+				/*
+				 * Ignore proposed downgrades, unless it was
+				 * specifically requested by "pkgin install .."
+				 * where level will be 0.
+				 *
+				 * XXX: at some point count these as a specific
+				 * TODOWNGRADE action or something, saying it's
+				 * an upgrade is a bit confusing for users.
+				 */
+				if (pdp->level > 0 &&
+				    version_check(plist->full, remotepkg) == 1) {
+					toupgrade = DONOTHING;
 					return 1;
 				}
 
