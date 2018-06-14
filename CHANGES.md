@@ -1,3 +1,9 @@
+## Version 0.11.1 (2018-06-14)
+
+ * Permit the user to install an older package version.
+ * Ensure warning and error counters are reset for each phase.
+ * Print total download size when using -d.
+
 ## Version 0.11.0 (2018-06-08)
 
  * Fix build on NetBSD/evbarm.
