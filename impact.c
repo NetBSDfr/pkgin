@@ -231,8 +231,14 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 			 */
 			if (pkg_match(pdp->depend, plist->full) == 0)
 				toupgrade = TOUPGRADE;
-			else if (!pkgstr_identical(plist->build_date,
-			    mapplist->build_date))
+			/*
+			 * Only consider a package for refresh if it has an
+			 * identical PKGPATH.
+			 */
+			else if (pkgstr_identical(plist->pkgpath,
+						  mapplist->pkgpath) &&
+				 !pkgstr_identical(plist->build_date,
+						   mapplist->build_date))
 				toupgrade = TOREFRESH;
 
 			/*
