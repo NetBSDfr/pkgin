@@ -29,11 +29,12 @@
 
 #include "pkgin.h"
 
-void
+int
 show_pkg_info(char flag, char *pkgname)
 {
-	int		i;
-	char	cmd[BUFSIZ], *fullpkgname, **prepos, **out_cmd = NULL;
+	FILE	*fp;
+	int	rv = 0;
+	char	buf[MAXLEN], cmd[BUFSIZ], *fullpkgname, **prepos;
 
 	if ((fullpkgname = unique_pkg(pkgname, REMOTE_PKG)) == NULL)
 		errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL, pkgname);	
@@ -43,16 +44,21 @@ show_pkg_info(char flag, char *pkgname)
 		snprintf(cmd, BUFSIZ, "%s -%c %s/%s%s",
 		    pkg_info, flag, *prepos, fullpkgname, PKG_EXT);
 
-		if ((out_cmd = exec_list(cmd, NULL)) == NULL)
-			continue;
+	        if ((fp = popen(cmd, "r")) == NULL)
+			return 1;
 
-		for (i = 0; out_cmd[i] != NULL; i++)	
-			printf("%s\n", out_cmd[i]);
+		/*
+		 * Historically pkgin skipped blank lines, so we preserve
+		 * that behaviour for now.
+		 */
+		while (fgets(buf, MAXLEN, fp) != NULL) {
+			if (buf[0] != '\n')
+				printf("%s", buf);
+		}
 
-		free_list(out_cmd);
+		if (pclose(fp) != 0)
+			rv = 1;
 	}
 
-	XFREE(fullpkgname);
-
-	return;
+	return rv;
 }

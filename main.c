@@ -266,15 +266,15 @@ main(int argc, char *argv[])
 		break;
 	case PKG_SHPKGCONT_CMD: /* show remote package content */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_pkg_info('L', argv[1]); /* pkg_info flag */
+		rc = show_pkg_info('L', argv[1]); /* pkg_info flag */
 		break;
 	case PKG_SHPKGDESC_CMD: /* show remote package DESCR */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_pkg_info('d', argv[1]); /* pkg_info flag */
+		rc = show_pkg_info('d', argv[1]); /* pkg_info flag */
 		break;
 	case PKG_SHPKGBDEFS_CMD: /* show remote package build definitions */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_pkg_info('B', argv[1]); /* pkg_info flag */
+		rc = show_pkg_info('B', argv[1]); /* pkg_info flag */
 		break;
 	case PKG_SHCAT_CMD: /* show packages belonging to a category */
 		missing_param(argc, 2, MSG_MISSING_CATEGORY);

@@ -159,9 +159,7 @@ extern uint8_t noflag;
 
 extern int charcount(char *, char);
 extern int trimcr(char *);
-extern char **splitstr(char *, const char *);
 extern void free_list(char **);
-extern char **exec_list(const char *, const char *);
 extern void do_log(const char *, const char *, ...);
 extern void trunc_str(char *, char, int);
 extern char *strreplace(char *, const char *, const char *);

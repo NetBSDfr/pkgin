@@ -62,37 +62,6 @@ trimcr(char *str)
 	return (0);
 }
 
-char **
-splitstr(char *str, const char *sep)
-{
-	size_t size;
-	int i;
-	char *p, *tmp, **split;
-
-	for (i = 0, size = 0; str[i] != '\0'; i++)
-		if (str[i] == *sep)
-			size++;
-
-	/* size = number of separators + 1 member + NULL */
-	size += 2;
-	split = xmalloc(size * sizeof(char *));
-
-	i = 0;
-	for (p = str; p != NULL;)
-		while ((tmp = strsep(&p, sep)) != NULL) {
-			if (*tmp != '\0') {
-				while (*tmp == ' ' || *tmp == '\t')
-					tmp++;
-				split[i] = xstrdup(tmp);
-				i++;
-			}
-		}
-
-	split[i] = NULL;
-
-	return(split);
-}
-
 void
 free_list(char **list)
 {
@@ -120,39 +89,6 @@ trunc_str(char *str, char limit, int direction)
 			*p = '\0';
 		break;
 	}
-}
-
-/* execute a command and receive result on a char ** */
-char **
-exec_list(const char *cmd, const char *match)
-{
-	FILE *fp;
-	size_t size;
-	char **res, *rawlist, buf[MAXLEN];
-
-	if ((fp = popen(cmd, "r")) == NULL)
-		return(NULL);
-
-	rawlist = NULL;
-	size = 0;
-
-	while (fgets(buf, MAXLEN, fp) != NULL) {
-		if (match == NULL || strstr(buf, match) != NULL) {
-			size += (strlen(buf) + 1) * sizeof(char);
-
-			rawlist = xrealloc(rawlist,  size);
-			strlcat(rawlist, buf, size);
-		}
-	}
-	pclose(fp);
-
-	if (rawlist == NULL)
-		return(NULL);
-
-	res = splitstr(rawlist, "\n");
-	XFREE(rawlist);
-
-	return(res);
 }
 
 void

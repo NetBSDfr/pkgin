@@ -276,7 +276,7 @@ int		pkg_met_reqs(Plisthead *);
 int		pkg_has_conflicts(Pkglist *);
 void		show_prov_req(const char *, const char *);
 /* pkg_infos.c */
-void		show_pkg_info(char, char *);
+int		show_pkg_info(char, char *);
 
 /* pkg_install.c */
 extern char	*pkg_install_dir;
