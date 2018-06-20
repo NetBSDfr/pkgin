@@ -1,3 +1,9 @@
+## Version 0.11.2 (2018-06-20)
+
+ * Fix a couple of issues with `PKGPATH` handling in import and upgrade.
+ * Fix an occasional memory corruption issue with commands that call
+   pkg\_info for output.
+
 ## Version 0.11.1 (2018-06-14)
 
  * Permit the user to install an older package version.
