@@ -92,7 +92,7 @@
 
 /* autoremove.c */
 #define MSG_ALL_KEEP_PKGS "all packages are marked as \"keepable\"\n."
-#define MSG_AUTOREMOVE_PKGS "%d packages to be autoremoved: %s\n"
+#define MSG_AUTOREMOVE_PKGS "%d packages to be autoremoved:\n%s\n"
 #define MSG_MARK_PKG_KEEP "%s is marked as non-autoremovable\n"
 #define MSG_MARK_PKG_NOKEEP "%s is marked as autoremovable\n"
 #define MSG_MARKING_PKG_KEEP "marking %s as non auto-removable\n"

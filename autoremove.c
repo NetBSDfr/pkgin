@@ -114,7 +114,8 @@ pkgin_autoremove(void)
 			toremove = action_list(toremove, premove->depend);
 
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
-
+		if (!noflag)
+			printf("\n");
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(orderedhead);
 

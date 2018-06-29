@@ -364,7 +364,7 @@ action_list(char *flatlist, char *str)
 	 * we try to fit them indented into the current line length.
 	 */
 	if (flatlist == NULL) {
-		flatlist = xasprintf("%s%s", noflag ? "\n" : "  ", str);
+		flatlist = xasprintf("%s%s", noflag ? "" : "  ", str);
 		return flatlist;
 	}
 
@@ -761,7 +761,8 @@ pkgin_remove(char **pkgargs)
 
 	if (todelete != NULL) {
 		printf(MSG_PKGS_TO_DELETE, deletenum, todelete);
-		printf("\n");
+		if (!noflag)
+			printf("\n");
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(removehead);
 
