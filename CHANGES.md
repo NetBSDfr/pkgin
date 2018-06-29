@@ -1,3 +1,8 @@
+## Version 0.11.3 (2018-06-29)
+
+ * Allow -y flag to work with autoremove.
+ * Improve -n flag and autoremove output formatting.
+
 ## Version 0.11.2 (2018-06-20)
 
  * Fix a couple of issues with `PKGPATH` handling in import and upgrade.
