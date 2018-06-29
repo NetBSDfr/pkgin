@@ -113,8 +113,6 @@ pkgin_autoremove(void)
 		SLIST_FOREACH(premove, orderedhead, next)
 			toremove = action_list(toremove, premove->depend);
 
-		if (noflag == 0)
-			printf(MSG_AUTOREMOVE_WARNING);
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
 
 		if (check_yesno(DEFAULT_YES)) {
