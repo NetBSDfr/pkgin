@@ -1,3 +1,9 @@
+## Version 0.11.4 (2018-07-03)
+
+ * Fix dependency matching to correctly consider DEPENDS rather than simply
+   attempting to pull in the highest version.  Resolves issues with installing
+   packages depending on samba and their conflicts against tdb and talloc.
+
 ## Version 0.11.3 (2018-06-29)
 
  * Allow -y flag to work with autoremove.
