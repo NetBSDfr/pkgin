@@ -37,9 +37,10 @@
 void
 full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 {
-	Pkglist		*pdp;
-	int			level;
-	char		query[BUFSIZ] = "";
+	Pkglist		*pdp, *dep;
+	Plistnumbered	*dephead;
+	int		level;
+	char		query[BUFSIZ];
 
 	query[0] = '\0';
 	if (depquery == DIRECT_DEPS) {
@@ -95,7 +96,35 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 				break;
 			/* set all this range to the current level */
 			pdp->level = level;
-			snprintf(query, BUFSIZ, depquery, pdp->name);
+
+			/*
+			 * If we're searching remote dependencies we need
+			 * to ensure that, when there are multiple versions
+			 * available, the one we pick matches DEPENDS.
+			 *
+			 * Process them in order and pick the highest version
+			 * that matches the dependency requirement.
+			 */
+			if (depquery == DIRECT_DEPS) {
+				snprintf(query, BUFSIZ,
+				    "SELECT FULLPKGNAME FROM REMOTE_PKG "
+				    "WHERE PKGNAME = '%s' "
+				    "ORDER BY FULLPKGNAME DESC;", pdp->name);
+				if ((dephead = rec_pkglist(query)) == NULL)
+					continue;
+				SLIST_FOREACH(dep, dephead->P_Plisthead, next) {
+					snprintf(query, BUFSIZ,
+					    EXACT_DIRECT_DEPS, dep->full);
+					if (pkg_match(pdp->depend, dep->full))
+						break;
+				}
+				free_pkglist(&dephead->P_Plisthead);
+				free(dephead);
+			} else {
+				/* LOCAL_REVERSE_DEPS */
+				snprintf(query, BUFSIZ, depquery, pdp->name);
+			}
+
 			/*
 			 * record pdp->name's direct dependencies in head
 			 * with level = 0
