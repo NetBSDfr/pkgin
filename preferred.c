@@ -30,42 +30,45 @@
 
 #include "pkgin.h"
 
-Preflist **preflist;
+static Preflisthead prefhead;
 
 void
 load_preferred(void)
 {
 	FILE		*fp;
-	size_t		pkglen, size = 0;
-	char		buf[BUFSIZ], *p;
+	Preflist	*pref;
+	size_t		len = 0;
+	ssize_t		llen;
+	char		*line = NULL, *p;
 	const char	*cmp = "=<>";
-
-	preflist = NULL;
 
 	if ((fp = fopen(PKGIN_CONF"/"PREF_FILE, "r")) == NULL)
 		return;
 
-	preflist = xmalloc(sizeof(Preflist *));
+	SLIST_INIT(&prefhead);
 
-	while (!feof(fp)) {
-		if (fgets(buf, BUFSIZ, fp) == NULL ||
-				buf[0] == '\n' || buf[0] == '#')
+	while ((llen = getline(&line, &len, fp)) > 0) {
+		if (line[0] == '\n' || line[0] == '#')
 			continue;
 
-		trimcr(&buf[0]);
+		if ((p = strpbrk(line, cmp)) == NULL)
+			continue;
 
-		preflist[size] = xmalloc(sizeof(Preflist));
-		preflist[size]->glob = xstrdup(buf);
-		preflist[size]->pkg = xstrdup(buf);
-		preflist[size]->vers = NULL;
-		if ((p = strpbrk(preflist[size]->pkg, cmp)) != NULL)
-			trunc_str(preflist[size]->pkg, *p, STR_FORWARD);
-		pkglen = strlen(preflist[size]->pkg);
-		if (pkglen < strlen(preflist[size]->glob))
-			preflist[size]->vers = preflist[size]->glob + pkglen;
+		trimcr(line);
 
-		preflist = xrealloc(preflist, (++size + 1) * sizeof(Preflist *));
-		preflist[size] = NULL;
+		/*
+		 * The preferred.conf syntax for equality uses "=" to separate
+		 * the package name and version (e.g. "foo=1.*").  This needs
+		 * to be converted to the "foo-1.*" form for pkg_match().
+		 */
+		if (*p == '=')
+			*p = '-';
+
+		pref = xmalloc(sizeof(Preflist));
+		pref->glob = xstrdup(line);
+		*p = '\0';
+		pref->pkg = xstrdup(line);
+		SLIST_INSERT_HEAD(&prefhead, pref, next);
 	}
 
 	fclose(fp);
@@ -74,37 +77,30 @@ load_preferred(void)
 void
 free_preferred(void)
 {
-	Preflist **p = preflist;
+	Preflist *pref;
 
-	for (p = preflist; p != NULL && *p != NULL; p++) {
-		XFREE((*p)->pkg);
-		XFREE((*p)->glob);
-		XFREE(*p);
+	while (!SLIST_EMPTY(&prefhead)) {
+		pref = SLIST_FIRST(&prefhead);
+		SLIST_REMOVE_HEAD(&prefhead, next);
+		free(pref->pkg);
+		free(pref->glob);
+		free(pref);
 	}
-	XFREE(preflist);
 }
 
-char *
+static char *
 is_preferred(char *fullpkg)
 {
-	int	i;
-	char	pkg[BUFSIZ];
-
-	if (preflist == NULL)
-		return NULL;
+	Preflist *pref;
+	char pkg[BUFSIZ];
 
 	XSTRCPY(pkg, fullpkg);
 	trunc_str(pkg, '-', STR_BACKWARD);
 
-	for (i = 0; preflist[i] != NULL; i++)
-		if (strcmp(preflist[i]->pkg, pkg) == 0) {
-			/* equality is handled by strcmp in pkg_match */
-			if (	preflist[i]->vers != NULL &&
-				preflist[i]->vers[0] == '=')
-				preflist[i]->vers[0] = '-';
-
-			return preflist[i]->glob;
-		}
+	SLIST_FOREACH(pref, &prefhead, next) {
+		if (strcmp(pref->pkg, pkg) == 0)
+			return pref->glob;
+	}
 
 	return NULL;
 }

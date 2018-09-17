@@ -184,9 +184,10 @@ typedef struct Plistnumbered {
 
 typedef struct Preflist {
 	char		*pkg;
-	char		*vers;
 	char		*glob;
+	SLIST_ENTRY(Preflist) next;
 } Preflist;
+typedef SLIST_HEAD(, Preflist) Preflisthead;
 
 extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
@@ -201,7 +202,6 @@ extern char  		lslimit;
 extern Plisthead	r_plisthead;
 extern Plisthead	l_plisthead;
 extern FILE		*tracefp;
-extern Preflist		**preflist;
 
 /* download.c*/
 Sumfile		*sum_open(char *, time_t *);
@@ -311,7 +311,6 @@ void		pkgindb_stats(void);
 /* preferred.c */
 void		load_preferred(void);
 void		free_preferred(void);
-char		*is_preferred(char *);
 uint8_t		chk_preferred(char *);
 
 #endif
