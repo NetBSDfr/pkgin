@@ -45,7 +45,10 @@ charcount(char *str, char c)
 	return count;
 }
 
-__inline int
+/*
+ * Remove trailing \n or \r\n, returning length of resulting string.
+ */
+int
 trimcr(char *str)
 {
 	size_t len;
@@ -55,11 +58,13 @@ trimcr(char *str)
 
 	len = strlen(str);
 
-	while (len--)
-		if ((str[len] == '\r') || (str[len] == '\n'))
-			str[len] = '\0';
+	if (str[len - 1] == '\n')
+		str[--len] = '\0';
 
-	return (0);
+	if (str[len - 1] == '\r')
+		str[--len] = '\0';
+
+	return (len);
 }
 
 void
