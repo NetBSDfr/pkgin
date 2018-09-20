@@ -259,6 +259,7 @@ uint64_t	fs_room(const char *);
 void		clean_cache(void);
 char		*read_repos(void);
 /* pkg_str.c */
+int		find_preferred_pkg(const char *, char **);
 char	   	*unique_pkg(const char *, const char *);
 Pkglist		*map_pkg_to_dep(Plisthead *, char *);
 uint8_t		non_trivial_glob(char *);
@@ -311,6 +312,6 @@ void		pkgindb_stats(void);
 /* preferred.c */
 void		load_preferred(void);
 void		free_preferred(void);
-uint8_t		chk_preferred(char *);
+uint8_t		chk_preferred(char *, char **);
 
 #endif

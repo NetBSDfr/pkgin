@@ -346,7 +346,7 @@ pkg_impact(char **pkgargs, int *rc)
 	Plisthead	*impacthead, *pdphead = NULL;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
 	char		**ppkgargs, *pkgname;
-	int		istty;
+	int		istty, rv;
 #ifndef DEBUG
 	char		tmpicon;
 #endif
@@ -369,12 +369,11 @@ pkg_impact(char **pkgargs, int *rc)
 	/* retreive impact list for all packages listed in the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
 
-		/* check if this is a multiple-version package (apache, ...)
-		 * and that the wanted package actually exists. Get pkgname
-		 * from unique_pkg, full package format.
-		 */
-		if ((pkgname = unique_pkg(*ppkgargs, REMOTE_PKG)) == NULL) {
-			/* package is not available in the repository */
+		if ((rv = find_preferred_pkg(*ppkgargs, &pkgname)) != 0) {
+			if (pkgname == NULL)
+				fprintf(stderr, MSG_PKG_NOT_AVAIL, *ppkgargs);
+			else
+				fprintf(stderr, MSG_PKG_NOT_PREFERRED, *ppkgargs, pkgname);
 			*rc = EXIT_FAILURE;
 			continue;
 		}

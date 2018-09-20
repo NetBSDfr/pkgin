@@ -105,18 +105,27 @@ is_preferred(char *fullpkg)
 	return NULL;
 }
 
+/*
+ * Given a full package name in "pkg" (e.g. "foo-1.0"), look for any
+ * corresponding entries for "foo" in preferred.conf and if so check that
+ * any version requirements are satisfied.
+ *
+ * Return 0 if either there are no matches or the requirement is satisfied,
+ * otherwise return 1.  If there is a match it is stored in *matchp.
+ */
 uint8_t
-chk_preferred(char *match)
+chk_preferred(char *pkg, char **matchp)
 {
 	char *pref;
 
-	if ((pref = is_preferred(match)) != NULL && !pkg_match(pref, match)) {
-			/*
-			 * package is listed in preferred.conf but the
-			 * version doesn't match requirement
-			 */
-		printf(MSG_PKG_IS_PREFERRED, match, pref);
-		return 1;
+	if ((pref = is_preferred(pkg)) == NULL) {
+		/* No matches for pkg in preferred.conf */
+		*matchp = NULL;
+		return 0;
 	}
-	return 0;
+
+	if (*matchp == NULL)
+		*matchp = xstrdup(pref);
+
+	return (pkg_match(pref, pkg) == 0) ? 1 : 0;
 }
