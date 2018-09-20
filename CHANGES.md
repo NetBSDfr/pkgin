@@ -1,3 +1,7 @@
+## Version 0.11.6 (2018-09-20)
+
+ * Fix -Werror=conversion build issue.
+
 ## Version 0.11.5 (2018-09-20)
 
  * Fix crash when preferred.conf exists but is empty.
