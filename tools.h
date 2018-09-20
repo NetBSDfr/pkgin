@@ -158,7 +158,7 @@ extern uint8_t yesflag;
 extern uint8_t noflag;
 
 extern int charcount(char *, char);
-extern int trimcr(char *);
+extern size_t trimcr(char *);
 extern void free_list(char **);
 extern void do_log(const char *, const char *, ...);
 extern void trunc_str(char *, char, int);

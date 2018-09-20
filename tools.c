@@ -48,13 +48,13 @@ charcount(char *str, char c)
 /*
  * Remove trailing \n or \r\n, returning length of resulting string.
  */
-int
+size_t
 trimcr(char *str)
 {
 	size_t len;
 
 	if (str == NULL)
-		return (-1);
+		return (0);
 
 	len = strlen(str);
 

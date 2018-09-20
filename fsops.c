@@ -139,10 +139,7 @@ read_repos(void)
 			}
 		}
 
-		if (trimcr(buf) < 0) /* strip newline */
-			continue;
-	
-		curlen = strlen(buf) + 2; /* ' ' + '\0' */
+		curlen = trimcr(buf) + 2; /* ' ' + '\0' */
 		repolen += curlen;
 
 		repos = xrealloc(repos, repolen * sizeof(char));
