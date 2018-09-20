@@ -1,3 +1,11 @@
+## Version 0.11.5 (2018-09-20)
+
+ * Fix crash when preferred.conf exists but is empty.
+ * Improve preferred.conf handling.
+ * Fix package not available message when attempting to install a non-existent
+   package.
+ * Small performance improvement in newline handling.
+
 ## Version 0.11.4 (2018-07-03)
 
  * Fix dependency matching to correctly consider DEPENDS rather than simply
