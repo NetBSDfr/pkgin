@@ -160,7 +160,7 @@ When using the `-l` flag along with the list command, the following status flag 
     This file contains a list of repository URIs that pkgin will use. It may contain macros `$arch` to define the machine hardware platform and `$osrelease` to define the release version for the operating system (as reported by uname(3)).
 
   * _/usr/pkg/etc/pkgin/preferred.conf_:
-    This files contains a list of preferences regarding packages to be installed or upgraded. Each line defines a package preference taking the form of a simple glob(3).
+    This file contains a list of preferences regarding packages to be installed or upgraded. Each line defines a package preference taking the form of a simple glob(3).
 
     Example:
 
@@ -176,7 +176,7 @@ When using the `-l` flag along with the list command, the following status flag 
     This directory contains the packages downloaded by `pkgin`. It is safe to empty it regularily using `pkgin clean` or simply `rm -rf /var/db/pkgin/cache`.
 
   * _/var/db/pkgin/pkgin.db_:
-    _pkgin.db_ is the main `pkgin` `SQLite` database. This format have been chosen in order to parse, query, match and order packages using the `SQL` language thus making packages list manipulation a lot easier.
+    _pkgin.db_ is the main `pkgin` `SQLite` database. This format has been chosen in order to parse, query, match and order packages using the `SQL` language thus making packages list manipulation a lot easier.
 
   * _/var/db/pkgin/pkg_install-err.log_:
     This file contains errors and warnings given by pkg_add(1) and pkg_delete(1), which are the tools called by `pkgin` to manipulate packages themselves.
