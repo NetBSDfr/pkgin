@@ -1,3 +1,10 @@
+## Version 0.11.7 (2019-03-07)
+
+ * Switch back to NetBSDfr/pkgin as the upstream repository.
+ * Improve database safety.
+ * Fix clang -Wmissing-noreturn and -Wformat-nonliteral warnings.
+ * Fix some typos in the manual page.
+
 ## Version 0.11.6 (2018-09-20)
 
  * Fix -Werror=conversion build issue.
