@@ -38,8 +38,7 @@ static int              repo_counter = 0;
 static const char *pragmaopts[] = {
 	"locking_mode = EXCLUSIVE",
 	"empty_result_callbacks = 1",
-	"synchronous = OFF",
-	"journal_mode = MEMORY",
+	"synchronous = EXTRA",
 	NULL
 };
 
