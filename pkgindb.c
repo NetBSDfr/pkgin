@@ -275,6 +275,7 @@ pkgindb_close(void)
 	sqlite3_close(pdb);
 }
 
+__attribute__((noreturn))
 static void
 pkgindb_sqlfail(void)
 {

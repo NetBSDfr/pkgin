@@ -335,6 +335,7 @@ find_cmd(const char *arg)
 	return -1;
 }
 
+__attribute__((noreturn))
 static void
 usage(int status)
 {

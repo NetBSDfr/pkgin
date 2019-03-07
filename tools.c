@@ -96,6 +96,7 @@ trunc_str(char *str, char limit, int direction)
 	}
 }
 
+__attribute__((__format__ (__printf__, 2, 3)))
 void
 do_log(const char *path, const char *fmt, ...)
 {
