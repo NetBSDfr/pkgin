@@ -1,3 +1,8 @@
+## Version 0.11.8 (2019-05-20)
+
+ * Improve SQL strictness, avoiding issues where excessive writes to the SQL
+   error log caused by changes in SQLite 3.27.0 would swamp regular operations.
+
 ## Version 0.11.7 (2019-03-07)
 
  * Switch back to NetBSDfr/pkgin as the upstream repository.
