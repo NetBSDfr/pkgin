@@ -210,7 +210,7 @@ prepare_insert(int pkgid, struct Summary sum)
 
 	/* insert fields */
 	SLIST_FOREACH(pi, &inserthead, next) {
-		snprintf(tmpbuf, sizeof(tmpbuf), ",\"%s\"", pi->field);
+		snprintf(tmpbuf, sizeof(tmpbuf), ",%s", pi->field);
 		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
 			goto err;
 	}
@@ -221,7 +221,7 @@ prepare_insert(int pkgid, struct Summary sum)
 
 	/* insert values */
 	SLIST_FOREACH(pi, &inserthead, next) {
-		snprintf(tmpbuf, sizeof(tmpbuf), ",\"%s\"", pi->value);
+		snprintf(tmpbuf, sizeof(tmpbuf), ",'%s'", pi->value);
 		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
 			goto err;
 	}
@@ -261,7 +261,7 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 {
 	static uint8_t	check_machine_arch = 1;
 	int		i;
-	char		*val, *v, *pkg, buf[BUFSIZ];
+	char		*val, *v, *p, *pkg, buf[BUFSIZ], *tmp;
 
 	if ((val = strchr(line, '=')) == NULL)
 		errx(EXIT_FAILURE, "Invalid pkg_info entry: %s", line);
@@ -336,14 +336,25 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 		snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
 
 		if (strncmp(buf, line, strlen(buf)) == 0) {
+			tmp = NULL;
 			/*
-			 * Avoid double quotes in our query by using
-			 * the MySQL-compatible "`" instead.
+			 * Convert single quotes to SQLite compatible ''.
 			 */
-			if (strchr(val, '"') != NULL)
-				for (v = val; *v != '\0'; v++)
-					if (*v == '"')
-						*v = '`';
+			if (strchr(val, '\'') != NULL) {
+				for (v = p = val; *v != '\0'; v++) {
+					if (*v != '\'')
+						continue;
+
+					*v = '\0';
+					if (tmp)
+						tmp = xasprintf("%s%s''", tmp, p);
+					else
+						tmp = xasprintf("%s''", p);
+					p = v + 1;
+				}
+				tmp = xasprintf("%s%s", tmp, p);
+				val = tmp;
+			}
 
 			/* Split PKGNAME into parts */
 			if (strncmp(cols.name[i], "PKGNAME", 7) == 0) {
@@ -364,6 +375,7 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 			} else
 				add_to_slist(cols.name[i], val);
 
+			free(tmp);
 			break;
 		}
 	}

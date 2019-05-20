@@ -375,7 +375,7 @@ pkg_sum_mtime(char *repo)
 	str_mtime[0] = '\0';
 
 	snprintf(query, BUFSIZ,
-		"SELECT REPO_MTIME FROM REPOS WHERE REPO_URL GLOB \'%s*\';",
+		"SELECT REPO_MTIME FROM REPOS WHERE REPO_URL GLOB '%s*';",
 		repo);
 	pkgindb_doquery(query, pdb_get_value, str_mtime);
 
