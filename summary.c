@@ -76,7 +76,7 @@ typedef struct Insertlist {
 
 SLIST_HEAD(, Insertlist) inserthead;
 
-static struct archive	*fetch_summary(char *url);
+static struct archive	*fetch_summary(char *, time_t *);
 static void		freecols(void);
 static void		free_insertlist(void);
 static void		insert_local_summary(FILE *);
@@ -97,35 +97,32 @@ static const char *const sumexts[] = { "xz", "bz2", "gz", NULL };
  * Open a remote summary and return an open libarchive handler to it.
  */
 static struct archive *
-fetch_summary(char *cur_repo)
+fetch_summary(char *cur_repo, time_t *repo_mtime)
 {
 	struct	archive *a;
 	struct	archive_entry *ae;
 	Sumfile	*sum = NULL;
-	time_t	sum_mtime;
 	int	i;
 	char	buf[BUFSIZ];
 
 	for (i = 0; sumexts[i] != NULL; i++) { /* try all extensions */
 		if (!force_fetch)
-			sum_mtime = pkg_sum_mtime(cur_repo);
+			*repo_mtime = pkg_sum_mtime(cur_repo);
 		else
-			sum_mtime = 0; /* 0 sumtime == force reload */
+			*repo_mtime = 0; /* 0 sumtime == force reload */
 
 		snprintf(buf, BUFSIZ, "%s/%s.%s",
 				cur_repo, PKG_SUMMARY, sumexts[i]);
 
-		if ((sum = sum_open(buf, &sum_mtime)) != NULL)
+		if ((sum = sum_open(buf, repo_mtime)) != NULL)
 			break; /* pkg_summary found and not up-to-date */
 
-		if (sum_mtime < 0) /* pkg_summary found, but up-to-date */
+		if (*repo_mtime < 0) /* pkg_summary found, but up-to-date */
 			return NULL;
 	}
 
 	if (sum == NULL)
 		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf);
-
-	pkgindb_dovaquery(UPDATE_REPO_MTIME, (long long)sum_mtime, cur_repo);
 
 	if ((a = archive_read_new()) == NULL)
 		errx(EXIT_FAILURE, "Cannot initialise archive");
@@ -571,11 +568,12 @@ static void
 update_localdb(char **pkgkeep)
 {
 	FILE		*pinfo;
+	struct stat	st;
 	Plistnumbered	*keeplisthead, *nokeeplisthead;
 	Pkglist		*pkglist;
 
 	/* has the pkgdb (pkgsrc) changed ? if not, continue */
-	if (!pkg_db_mtime())
+	if (!pkg_db_mtime(&st))
 		return;
 
 	/* record the keep list */
@@ -592,6 +590,7 @@ update_localdb(char **pkgkeep)
 
 	/* insert the summary to the database */
 	insert_local_summary(pinfo);
+	pkg_db_update_mtime(&st);
 	pclose(pinfo);
 
 	/* re-read local packages list as it may have changed */
@@ -673,6 +672,7 @@ static void
 update_remotedb(int verbose)
 {
 	struct archive	*a;
+	time_t		repo_mtime;
 	char		**prepos;
 	uint8_t		cleaned = 0;
 
@@ -683,7 +683,7 @@ update_remotedb(int verbose)
 			printf(MSG_PROCESSING_REMOTE_SUMMARY, *prepos);
 
 		/* load remote pkg_summary */
-		if ((a = fetch_summary(*prepos)) == NULL) {
+		if ((a = fetch_summary(*prepos, &repo_mtime)) == NULL) {
 			if (verbose)
 				printf(MSG_DB_IS_UP_TO_DATE, *prepos);
 			continue;
@@ -701,8 +701,12 @@ update_remotedb(int verbose)
 
 		/* delete remote* associated to this repository */
 		delete_remote_tbl(sumsw[REMOTE_SUMMARY], *prepos);
+
 		/* update remote* table for this repository */
 		insert_remote_summary(a, *prepos);
+
+		/* mark repository as being updated with new mtime */
+		pkgindb_dovaquery(UPDATE_REPO_MTIME, (long long)repo_mtime, *prepos);
 	}
 
 	/* remove empty rows (duplicates) */

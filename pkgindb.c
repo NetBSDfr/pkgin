@@ -284,16 +284,15 @@ pkgindb_sqlfail(void)
 }
 
 int
-pkg_db_mtime(void)
+pkg_db_mtime(struct stat *st)
 {
 	sqlite3_stmt	*stmt;
-	struct stat	st;
 	time_t	   	db_mtime;
 	long		db_ntime;
 	int		rc;
 
 	/* No pkgdb, just return up-to-date so we can start installing. */
-	if (stat(pkgdb_get_dir(), &st) < 0)
+	if (stat(pkgdb_get_dir(), st) < 0)
 		return 0;
 
 	/*
@@ -321,30 +320,37 @@ pkg_db_mtime(void)
 	sqlite3_finalize(stmt);
 
 	/* Databases matched pkgdb, we're up-to-date */
-	if (db_mtime == st.st_mtime && db_ntime == st.pkgin_nanotime)
+	if (db_mtime == st->st_mtime && db_ntime == st->pkgin_nanotime)
 		return 0;
 
-	/*
-	 * Update database to current mtime and request a refresh.
-	 */
+	/* We're not up to date, request a refresh. */
+	return 1;
+}
+
+/*
+ * Update database to current mtime after insertion.
+ */
+void
+pkg_db_update_mtime(struct stat *st)
+{
+	sqlite3_stmt *stmt;
+
 	curquery = "INSERT INTO PKGDB (PKGDB_MTIME, PKGDB_NTIME) "
 		   "VALUES (?, ?);";
 
 	if (sqlite3_prepare_v2(pdb, curquery, -1, &stmt, NULL) != SQLITE_OK)
 		pkgindb_sqlfail();
 
-	if (sqlite3_bind_int64(stmt, 1, st.st_mtime) != SQLITE_OK)
+	if (sqlite3_bind_int64(stmt, 1, st->st_mtime) != SQLITE_OK)
 		pkgindb_sqlfail();
 
-	if (sqlite3_bind_int64(stmt, 2, st.pkgin_nanotime) != SQLITE_OK)
+	if (sqlite3_bind_int64(stmt, 2, st->pkgin_nanotime) != SQLITE_OK)
 		pkgindb_sqlfail();
 
 	if (sqlite3_step(stmt) != SQLITE_DONE)
 		pkgindb_sqlfail();
 
 	sqlite3_finalize(stmt);
-
-	return 1;
 }
 
 void

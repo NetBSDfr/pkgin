@@ -304,7 +304,8 @@ int		pkgindb_doquery(const char *,
 int		pkgindb_dovaquery(const char *, ...);
 int		pkgindb_open(void);
 void		pkgindb_close(void);
-int		pkg_db_mtime(void);
+int		pkg_db_mtime(struct stat *);
+void		pkg_db_update_mtime(struct stat *);
 void		repo_record(char **);
 time_t		pkg_sum_mtime(char *);
 void		pkgindb_stats(void);
