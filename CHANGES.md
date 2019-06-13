@@ -1,3 +1,8 @@
+## Version 0.12.0 (2019-06-13)
+
+ * Fix ordering of database updates, ensuring modification times are only
+   updated once the new data is committed.
+
 ## Version 0.11.8 (2019-05-20)
 
  * Improve SQL strictness, avoiding issues where excessive writes to the SQL
