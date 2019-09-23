@@ -573,7 +573,7 @@ update_localdb(char **pkgkeep)
 	Pkglist		*pkglist;
 
 	/* has the pkgdb (pkgsrc) changed ? if not, continue */
-	if (!pkg_db_mtime(&st))
+	if (!pkg_db_mtime(&st) && !force_fetch)
 		return;
 
 	/* record the keep list */
