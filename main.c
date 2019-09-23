@@ -328,7 +328,7 @@ find_cmd(const char *arg)
 
 	for (i = 0; cmd[i].name != NULL; i++) {
 		if (strncmp(arg, cmd[i].name, strlen(cmd[i].name)) == 0 ||
-			strncmp(arg, cmd[i].shortcut, strlen(cmd[i].name)) == 0)
+		    strncmp(arg, cmd[i].shortcut, strlen(cmd[i].name)) == 0)
 			return cmd[i].cmdtype;
 	}
 
