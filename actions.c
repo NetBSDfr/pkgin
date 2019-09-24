@@ -42,7 +42,7 @@
 #define LOCALBASE "/usr/pkg" /* see DISCLAIMER below */
 #endif
 
-static int	upgrade_type = UPGRADE_NONE, warn_count = 0, err_count = 0;
+static int	warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
 FILE		*err_fp = NULL;
 long int	rm_filepos = -1;
@@ -396,7 +396,7 @@ action_list(char *flatlist, char *str)
 #define H_BUF 6
 
 int
-pkgin_install(char **opkgargs, int do_inst)
+pkgin_install(char **opkgargs, int do_inst, int upgrade)
 {
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0, removenum = 0;
@@ -670,7 +670,7 @@ pkgin_install(char **opkgargs, int do_inst)
 	}
 
 	/* pure install, not called by pkgin_upgrade */
-	if (upgrade_type == UPGRADE_NONE)
+	if (!upgrade)
 		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
 
 installend:
@@ -864,41 +864,30 @@ record_upgrades(Plisthead *plisthead)
 }
 
 int
-pkgin_upgrade(int uptype, int do_inst)
+pkgin_upgrade(int do_inst)
 {
 	Plistnumbered	*keeplisthead;
 	Plisthead	*localplisthead;
 	char		**pkgargs;
 	int		rc;
 
-	/* used for pkgin_install not to update database, this is done below */
-	upgrade_type = uptype;
-
 	/* record keepable packages */
 	if ((keeplisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
 		errx(EXIT_FAILURE, MSG_EMPTY_KEEP_LIST);
 
 	/* upgrade all packages, not only keepables */
-	if (uptype == UPGRADE_ALL) {
-		if (SLIST_EMPTY(&l_plisthead))
-			errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
-		localplisthead = &l_plisthead;
-	} else
-		/* upgrade only keepables packages */
-		localplisthead = keeplisthead->P_Plisthead;
+	if (SLIST_EMPTY(&l_plisthead))
+		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
+	localplisthead = &l_plisthead;
 
 	pkgargs = record_upgrades(localplisthead);
 
-	rc = pkgin_install(pkgargs, do_inst);
-	/*
-	 * full upgrade, we need to record keep-packages
-	 * in order to restore them
-	 */
-	if (uptype == UPGRADE_ALL) {
-		free_list(pkgargs);
-		/* record keep list */
-		pkgargs = record_upgrades(keeplisthead->P_Plisthead);
-	}
+	rc = pkgin_install(pkgargs, do_inst, 1);
+
+	free_list(pkgargs);
+
+	/* record keep list */
+	pkgargs = record_upgrades(keeplisthead->P_Plisthead);
 
 	(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
 

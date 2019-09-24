@@ -88,7 +88,7 @@ import_keep(int do_inst, const char *import_file)
 	if (pkglist == NULL)
 		errx(EXIT_FAILURE, MSG_EMPTY_IMPORT_LIST);
 
-	pkgin_install(pkglist, do_inst);
+	pkgin_install(pkglist, do_inst, 0);
 
 	free_list(pkglist);
 }

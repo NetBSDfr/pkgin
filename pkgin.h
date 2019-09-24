@@ -67,10 +67,6 @@
 #define KEEP 1
 #define UNKEEP 0
 
-#define UPGRADE_KEEP 0
-#define UPGRADE_ALL 1
-#define UPGRADE_NONE -1
-
 #define DO_INST 1
 #define DONT_INST 0
 
@@ -237,9 +233,9 @@ void		show_all_categories(void);
 /* actions.c */
 void		do_pkg_remove(Plisthead *);
 int		pkgin_remove(char **);
-int		pkgin_install(char **, int);
+int		pkgin_install(char **, int, int);
 char		*action_list(char *, char *);
-int		pkgin_upgrade(int, int);
+int		pkgin_upgrade(int);
 char		*read_preferred(char *);
 /* order.c */
 Plisthead	*order_remove(Plisthead *);

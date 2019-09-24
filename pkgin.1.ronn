@@ -66,8 +66,8 @@ The `pkgin` utility provides several commands:
   * `export`:
     Export the list of non-autoremovable packages to stdout (one category/package by line)
 
-  * `full-upgrade`:
-    Upgrade all packages to their newer versions present in the repository.
+  * `upgrade`:
+    Upgrade all packages to the newest versions available in the repository.
 
   * `import` <file>:
     Import a list of packages to be installed from file (one category/package by line)
@@ -132,9 +132,6 @@ The `pkgin` utility provides several commands:
 
   * `update`:
     Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list). This is done automatically when pkgin is first used, when the system package database has been modified. or when pkgin is upgraded to a new database version.
-
-  * `upgrade`:
-    Upgrade keepable packages to their newer versions present in the repository. If the installed dependencies match the listed needed dependencies, don't upgrade them. For a complete packages upgrade, `full-upgrade` shall be used.
 
 ## STATUS FLAGS
 
@@ -235,6 +232,8 @@ pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
 
   * Emile `iMil` Heitor:
     Initial work and ongoing development.
+  * Jonathan Perkin:
+    Primary maintainer 0.9.0 onwards.
 
 ## CONTRIBUTORS
 
@@ -260,8 +259,6 @@ pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
     Testing and refinements.
   * Youri `yrmt` Mouton:
     OSX testing and patches
-  * Jonathan Perkin:
-    Performance improvements and patches.
 
 ## BUGS
 

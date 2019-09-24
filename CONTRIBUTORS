@@ -1,4 +1,5 @@
 Emile "iMil" Heitor <imil@gcu.info> - main developer
+Jonathan Perkin <jperkin@joyent.com> - primary maintainer 0.9.0 onwards
 Claude "zatmania" Charpentier <zatmania@gotofreedom.org> - SQL
 Guillaume "GuiGui2" Lasmayous <guigui2@guigui2.net> - tests and manpage
 Jeremy C. Reed <reed@reedmedia.net> - intensive tests and feedbacks
@@ -12,4 +13,3 @@ Gautam B.T. <gautam.bt@gmail.com> - MINIX port
 Thomas Adam <thomas@xteddy.org> - patches
 Sylvain "solevis" Mora <sylvain.mora@gmail.com> - padawan
 Nicolas Thauvin <nico@orgrim.net> - intensive tests + patches
-Jonathan Perkin <jperkin@joyent.com> - performance improvements + patches

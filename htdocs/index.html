@@ -132,11 +132,8 @@ $ cvs -z3 -d:pserver:anonymous@cvs.pkgin.net:/cvsroot/pkgin co -P pkgin</pre>
 			<p>Mark a package as "non-keepable":</p>
 			<pre class="programlisting"># pkgin unkeep foo</pre>
 
-			<p>Upgrade keepable packages to their newer versions present in the repository. If the installed dependencies match the listed needed dependencies, don't upgrade them:</p>
+			<p>Upgrade all packages to the newest versions available in the repository:</p>
 			<pre class="programlisting"># pkgin upgrade</pre>
-
-			<p>Upgrade all packages to their newer versions present in the repository:</p>
-			<pre class="programlisting"># pkgin full-upgrade</pre>
 
 			<p>Delete downloaded packages from the cache directory:</p>
 			<pre class="programlisting"># pkgin clean</pre>

@@ -212,13 +212,16 @@ main(int argc, char *argv[])
 		break;
 	case PKG_INST_CMD: /* install a package and its dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_INST);
-		rc = pkgin_install(&argv[1], do_inst);
+		rc = pkgin_install(&argv[1], do_inst, 0);
 		break;
-	case PKG_UPGRD_CMD: /* upgrade keep-packages */
-		rc = pkgin_upgrade(UPGRADE_KEEP, do_inst);
-		break;
-	case PKG_FUPGRD_CMD: /* upgrade everything installed */
-		rc = pkgin_upgrade(UPGRADE_ALL, do_inst);
+	/*
+	 * Historically there was a distinction between "upgrade" (only upgrade
+	 * "keep" packages) and "full-upgrade" (all packages), but there's no
+	 * real reasons for the former, especially with refresh support.
+	 */
+	case PKG_UPGRD_CMD:
+	case PKG_FUPGRD_CMD:
+		rc = pkgin_upgrade(do_inst);
 		break;
 	case PKG_REMV_CMD: /* remove packages and reverse dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_RM);
