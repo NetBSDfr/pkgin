@@ -75,7 +75,7 @@ The `pkgin` utility provides several commands:
   * `install` <package|glob> ...:
     Performs installation or upgrade of package. If more than one packages are specified on the command-line, all will be installed (or upgraded). Instead of a package name, a glob can be specified in order to install specific versions.
 
-    Exemple:
+    Example:
 
     pkgin in 'mysql-server>5.1<5.6'  
 
