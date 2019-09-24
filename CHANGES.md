@@ -1,3 +1,13 @@
+## Version 0.13.0 (2019-09-24)
+
+ * "pkgin upgrade" now upgrades all packages instead of only keep packages, and
+   essentially replaces "pkgin full-upgrade".  Selective upgrades have always
+   been risky and provide no benefit, especially in light of refresh support.
+   "pkgin full-upgrade" is retained for compatibility but marked as deprecated.
+ * Refresh the local package repository when a forced update is requested, so
+   that a failed update can be repaired easily.
+ * Switch NetBSD default repository from ftp.netbsd.org to cdn.netbsd.org.
+
 ## Version 0.12.0 (2019-06-13)
 
  * Fix ordering of database updates, ensuring modification times are only
