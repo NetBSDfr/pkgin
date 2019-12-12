@@ -494,8 +494,10 @@ impactend:
 			 */
 			if (pimpact->action == TOUPGRADE &&
 			    (tmpimpact->action == TOREMOVE ||
-			     tmpimpact->action == TOREFRESH))
+			     tmpimpact->action == TOREFRESH)) {
 				tmpimpact->action = DONOTHING;
+				continue;
+			}
 
 			/*
 			 * A package has been added multiple times with the
