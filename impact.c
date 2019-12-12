@@ -185,8 +185,13 @@ static int
 deps_impact(Plisthead *impacthead, Pkglist *pdp)
 {
 	int		toupgrade = DONOTHING;
-	Pkglist		*pimpact, *plist, *mapplist;
+	Plisthead	*revdeps;
+	Pkglist		*revdep, *pimpact, *plist, *mapplist;
 	char		remotepkg[BUFSIZ];
+
+	/* Skip if a package has already been considered. */
+	if (pkg_in_impact(impacthead, pdp->depend))
+		return 1;
 
 	/* record corresponding package on remote list*/
 	if ((mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend)) == NULL)
@@ -271,20 +276,34 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				 * list
 				 */
 				pimpact->old = xstrdup(plist->full);
-
 				pimpact->action = toupgrade;
-
 				pimpact->full = xstrdup(remotepkg);
-				/* record package dependency deepness */
 				pimpact->level = pdp->level;
-				/* record binary package size */
 				pimpact->file_size = mapplist->file_size;
-				/* record installed package size */
 				pimpact->size_pkg = mapplist->size_pkg;
-				/* record old package size */
 				pimpact->old_size_pkg = plist->size_pkg;
 
-			} /* !pkg_match */
+				/*
+				 * For any package that is upgraded, we need to
+				 * consider its direct reverse dependencies, as
+				 * they will need to be refreshed for any shared
+				 * library bumps etc.
+				 *
+				 * This is primarily for install operations that
+				 * result in an upgrade, as an upgrade operation
+				 * will already consider every package.
+				 */
+				if (toupgrade == TOUPGRADE) {
+					revdeps = init_head();
+					full_dep_tree(pdp->name, LOCAL_REVERSE_DEPS, revdeps);
+					SLIST_FOREACH(revdep, revdeps, next) {
+						if (revdep->level > 1)
+							continue;
+						if (!pkg_in_impact(impacthead, revdep->name))
+							deps_impact(impacthead, revdep);
+					}
+				}
+			}
 
 			TRACE("  > %s matched %s\n", plist->full, pdp->depend);
 
