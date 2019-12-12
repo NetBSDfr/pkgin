@@ -1,3 +1,9 @@
+## Version 0.14.0 (2019-12-12)
+
+ * Ensure reverse dependencies are considered when a "pkgin install" triggers
+   an upgrade of a local package, avoiding potentially nasty bugs.
+ * Minor performance improvement.
+
 ## Version 0.13.0 (2019-09-24)
 
  * "pkgin upgrade" now upgrades all packages instead of only keep packages, and
