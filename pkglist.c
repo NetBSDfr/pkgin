@@ -313,6 +313,7 @@ search_pkg(const char *pattern)
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
 		if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
+		    regexec(&re, plist->full, 0, NULL, 0) == 0 ||
 		    regexec(&re, plist->comment, 0, NULL, 0) == 0) {
 			matched = 1;
 			rc = pkg_is_installed(&l_plisthead, plist);
