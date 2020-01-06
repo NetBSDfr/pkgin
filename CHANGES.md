@@ -1,3 +1,7 @@
+## Version 0.15.0 (2020-01-06)
+
+ * Also match full package names when searching (Erik van Nooijen).
+
 ## Version 0.14.0 (2019-12-12)
 
  * Ensure reverse dependencies are considered when a "pkgin install" triggers
