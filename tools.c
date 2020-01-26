@@ -205,6 +205,7 @@ check_yesno(uint8_t default_answer)
 		printf(MSG_PROCEED_YES);
 	else
 		printf(MSG_PROCEED_NO);
+	fflush(stdout);
 
 	c = tolower(getchar());
 	
