@@ -1,7 +1,7 @@
 .\" generated with Ronn/v0.7.3
 .\" http://github.com/rtomayko/ronn/tree/0.7.3
 .
-.TH "PKGIN" "1" "August 2015" "" ""
+.TH "PKGIN" "1" "April 2020" "" ""
 .
 .SH "NAME"
 \fBpkgin\fR \- A tool to manage pkgsrc binary packages\.
@@ -87,8 +87,8 @@ Delete downloaded packages from the cache directory\.
 Export the list of non\-autoremovable packages to stdout (one category/package by line)
 .
 .TP
-\fBfull\-upgrade\fR
-Upgrade all packages to their newer versions present in the repository\.
+\fBupgrade\fR
+Upgrade all packages to the newest versions available in the repository\.
 .
 .TP
 \fBimport\fR \fIfile\fR
@@ -99,7 +99,7 @@ Import a list of packages to be installed from file (one category/package by lin
 Performs installation or upgrade of package\. If more than one packages are specified on the command\-line, all will be installed (or upgraded)\. Instead of a package name, a glob can be specified in order to install specific versions\.
 .
 .IP
-Exemple:
+Example:
 .
 .IP
 pkgin in \'mysql\-server>5\.1<5\.6\'
@@ -174,11 +174,7 @@ Marks package as "auto\-removable"\. If no other package depends on it, it will 
 .
 .TP
 \fBupdate\fR
-Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list)\. This is done automatically when pkgin is first used, when the system package database has been modified\. or when pkgin is upgraded to a new database version\.
-.
-.TP
-\fBupgrade\fR
-Upgrade keepable packages to their newer versions present in the repository\. If the installed dependencies match the listed needed dependencies, don\'t upgrade them\. For a complete packages upgrade, \fBfull\-upgrade\fR shall be used\.
+Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list)\. This is done automatically when pkgin is first used, when the system package database has been modified, or when pkgin is upgraded to a new database version\.
 .
 .SH "STATUS FLAGS"
 When using the \fB\-l\fR flag along with the list command, the following status flag must be set:
@@ -206,7 +202,7 @@ This file contains a list of repository URIs that pkgin will use\. It may contai
 .
 .TP
 \fI/usr/pkg/etc/pkgin/preferred\.conf\fR
-This files contains a list of preferences regarding packages to be installed or upgraded\. Each line defines a package preference taking the form of a simple glob(3)\.
+This file contains a list of preferences regarding packages to be installed or upgraded\. Each line defines a package preference taking the form of a simple glob(3)\.
 .
 .IP
 Example:
@@ -230,7 +226,7 @@ This directory contains the packages downloaded by \fBpkgin\fR\. It is safe to e
 .
 .TP
 \fI/var/db/pkgin/pkgin\.db\fR
-\fIpkgin\.db\fR is the main \fBpkgin\fR \fBSQLite\fR database\. This format have been chosen in order to parse, query, match and order packages using the \fBSQL\fR language thus making packages list manipulation a lot easier\.
+\fIpkgin\.db\fR is the main \fBpkgin\fR \fBSQLite\fR database\. This format has been chosen in order to parse, query, match and order packages using the \fBSQL\fR language thus making packages list manipulation a lot easier\.
 .
 .TP
 \fI/var/db/pkgin/pkg_install\-err\.log\fR
@@ -296,6 +292,10 @@ pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
 Emile \fBiMil\fR Heitor
 Initial work and ongoing development\.
 .
+.TP
+Jonathan Perkin
+Primary maintainer 0\.9\.0 onwards\.
+.
 .SH "CONTRIBUTORS"
 .
 .TP
@@ -341,10 +341,6 @@ Testing and refinements\.
 .TP
 Youri \fByrmt\fR Mouton
 OSX testing and patches
-.
-.TP
-Jonathan Perkin
-Performance improvements and patches\.
 .
 .SH "BUGS"
 We\'re hunting them\.

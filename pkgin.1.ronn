@@ -131,7 +131,7 @@ The `pkgin` utility provides several commands:
     Marks package as "auto-removable". If no other package depends on it, it will be removed when using the autoremove modifier. It is equivalent to an `automatic` package in pkgsrc(7) terminology.
 
   * `update`:
-    Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list). This is done automatically when pkgin is first used, when the system package database has been modified. or when pkgin is upgraded to a new database version.
+    Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list). This is done automatically when pkgin is first used, when the system package database has been modified, or when pkgin is upgraded to a new database version.
 
 ## STATUS FLAGS
 
