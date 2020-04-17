@@ -75,7 +75,6 @@
 #define MSG_PKG_INSTALL_LOGGING_TO "pkg_install error log can be found in %s\n"
 #define MSG_EMPTY_FILE_SIZE "warning: package %s has an empty FILE_SIZE on repository.\n"
 #define MSG_NOT_REMOVING "not removing %s...\n"
-#define MSG_UPGRADE_PKG_INSTALL "about to upgrade %s, "
 #define MSG_ERR_INSTALLING_PKG "/!\\ there was an error while installing %s, please check %s\n"
 #define MSG_ERR_REMOVING_PKG "/!\\ there was an error while removing %s, please check %s\n"
 #define MSG_WARNS_ERRS "pkg_install warnings: %d, errors: %d\n"
