@@ -45,12 +45,10 @@
 #define MSG_MISSING_PKG_REPOS \
 	PKGIN_CONF"/"REPOS_FILE" has no repositories or does not exist.\nNo PKG_REPOS variable to fallback to."
 #define MSG_CANT_OPEN_WRITE "Couldn't open %s for writing.\n"
-#define MSG_PKG_INSTALL_NOT_PRESENT "pkg_install package is not installed."
 #define MSG_DONT_HAVE_RIGHTS "You don't have enough rights for this operation."
 
 /* actions.c */
 #define MSG_REMOVING "removing %s...\n"
-#define MSG_DOWNLOAD_PKGS "downloading packages...\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"
 #define MSG_ERR_OPEN "error opening %s"
 #define MSG_REQT_NOT_PRESENT \
@@ -63,7 +61,6 @@
 #define MSG_REQT_MISSING "the following packages have unmet requirements: %s\n\n"
 #define MSG_NO_CACHE_SPACE "%s does not have enough space for download, (%s required but only %s are available)\n"
 #define MSG_NO_INSTALL_SPACE "%s does not have enough space for installation (%s required but only %s are available)\n"
-#define MSG_RM_UPGRADE_PKGS "removing packages to be upgraded...\n"
 #define MSG_EMPTY_LOCAL_PKGLIST "empty local package list."
 #define MSG_PKG_NOT_INSTALLED "no such installed package %s\n"
 #define MSG_PKGS_TO_DELETE "%d packages to delete: \n%s\n"
@@ -71,23 +68,13 @@
 #define MSG_EMPTY_KEEP_LIST "empty non-autoremovable package list"
 #define MSG_EMPTY_NOKEEP_LIST "empty autoremovable package list"
 #define MSG_EMPTY_AVAIL_PKGLIST "empty available packages list"
-#define MSG_UPGRADE_NEED_REMOVE "this upgrade needs package removal\n"
 #define MSG_PKG_INSTALL_LOGGING_TO "pkg_install error log can be found in %s\n"
 #define MSG_EMPTY_FILE_SIZE "warning: package %s has an empty FILE_SIZE on repository.\n"
 #define MSG_NOT_REMOVING "not removing %s...\n"
-#define MSG_ERR_INSTALLING_PKG "/!\\ there was an error while installing %s, please check %s\n"
-#define MSG_ERR_REMOVING_PKG "/!\\ there was an error while removing %s, please check %s\n"
 #define MSG_WARNS_ERRS "pkg_install warnings: %d, errors: %d\n"
-#define MSG_USER_ABORT "user aborted.\n"
 
 /* depends.c */
 #define MSG_DIRECT_DEPS_FOR "direct dependencies for %s\n"
-
-/* download.c */
-#define MSG_DOWNLOADING "downloading %s:   0%%"
-#define MSG_DOWNLOADING_PCT "\rdownloading %s: %8s %3d%%"
-#define MSG_DOWNLOAD_START "downloading %s"
-#define MSG_DOWNLOAD_END " done.\n"
 
 /* autoremove.c */
 #define MSG_ALL_KEEP_PKGS "all packages are marked as \"keepable\"\n."
@@ -109,14 +96,8 @@
 #define MSG_COULD_NOT_GET_PKGNAME "Could not get package name from dependency: %s\n"
 
 /* impact.c */
-#define MSG_GREATER_VERSION \
-	"warning: installed package %s has a greater version than %s (to be installed)\n"
-#define MSG_MORE_THAN_ONE_VER \
-	"there's more than one version available for this package.\n\
-please re-run %s with a package name matching one of the following:\n"
 #define MSG_PKG_NOT_AVAIL "%s is not available in the repository\n"
 #define MSG_PKG_NOT_PREFERRED "No %s package available that satisfies preferred match %s\n"
-#define MSG_BROKEN_DEP "%s has no dependency in pkg_summary(5), while it's a reverse dependency for %s (missing package in repository ?). Default behaviour is to remove %s. "
 
 /* pkglist.c */
 #define MSG_IS_INSTALLED_CODE "\n=: package is installed and up-to-date\n<: package is installed but newer version is available\n>: installed package has a greater version than available package\n"
