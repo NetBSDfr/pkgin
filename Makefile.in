@@ -60,7 +60,14 @@ PKGIN_DBDIR!=	pwd
 PKGIN_DBDIR=	${VARBASE}/db/pkgin
 .endif
 
-WARNS?=		6
+#
+# It is impossible to keep up with the constantly changing definitions of
+# WARNS, especially when they differ between architectures as well as NetBSD
+# vs bootstrap-mk-files, so the only reasonable option is to turn them off by
+# default and leave users to enable for development if they so wish.
+#
+WARNS?=		0
+
 # These should all be fixed at some point
 COPTS.actions.c+=	-Wno-format-nonliteral
 COPTS.autoremove.c+=	-Wno-format-nonliteral
@@ -69,6 +76,7 @@ COPTS.pkg_check.c+=	-Wno-format-nonliteral
 COPTS.pkgindb.c+=	-Wno-format-nonliteral
 COPTS.pkglist.c+=	-Wno-format-nonliteral
 COPTS.selection.c+=	-Wno-format-nonliteral
+
 # These are all in external code, leave alone to ease syncing.
 COPTS.dewey.c+=		-Wno-sign-conversion
 COPTS.opattern.c+=	-Wno-sign-conversion
