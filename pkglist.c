@@ -39,6 +39,17 @@ int		r_plistcounter, l_plistcounter;
 
 static void setfmt(char *, char *);
 
+/*
+ * Small structure for sorting package results.
+ */
+struct pkg_sort {
+	char *full;
+	char *name;
+	char *version;
+	char *comment;
+	char flag;
+};
+
 /**
  * \fn malloc_pkglist
  *
@@ -293,14 +304,42 @@ list_pkgs(const char *pkgquery, int lstype)
 	free(plisthead);
 }
 
+/*
+ * Sort a list of packages first by package name (alphabetically) and then by
+ * version (highest first).
+ */
+static int
+pkg_sort_cmp(const void *a, const void *b)
+{
+	const struct pkg_sort p1 = *(const struct pkg_sort *)a;
+	const struct pkg_sort p2 = *(const struct pkg_sort *)b;
+
+	/*
+	 * First compare name, if they are the same then fall through to
+	 * a version comparison.
+	 */
+	if (strcmp(p1.name, p2.name) > 0)
+		return 1;
+	else if (strcmp(p1.name, p2.name) < 0)
+		return -1;
+
+	if (dewey_cmp(p1.version, DEWEY_LT, p2.version))
+		return 1;
+	else if (dewey_cmp(p1.version, DEWEY_GT, p2.version))
+		return -1;
+
+	return 0;
+}
+
 int
 search_pkg(const char *pattern)
 {
 	Pkglist	   	*plist;
+	struct pkg_sort	*psort;
 	regex_t		re;
 	int		rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
-	int		matched = 0;
+	int		matched = 0, pcount = 0;
 	char		sfmt[10], pfmt[10];
 
 	setfmt(&sfmt[0], &pfmt[0]);
@@ -310,6 +349,8 @@ search_pkg(const char *pattern)
 		regerror(rc, &re, eb, sizeof(eb));
 		errx(EXIT_FAILURE, "regcomp: %s: %s", pattern, eb);
 	}
+
+	psort = xmalloc(sizeof(struct pkg_sort));
 
 	SLIST_FOREACH(plist, &r_plisthead, next) {
 		if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
@@ -327,10 +368,26 @@ search_pkg(const char *pattern)
 			else
 				is_inst = '\0';
 
-			snprintf(outpkg, BUFSIZ, sfmt, plist->full, is_inst);
-			printf(pfmt, outpkg, plist->comment);
+			psort = xrealloc(psort, (pcount + 1) * sizeof(*psort));
+			psort[pcount].full = xstrdup(plist->full);
+			psort[pcount].name = xstrdup(plist->name);
+			psort[pcount].version = xstrdup(plist->version);
+			psort[pcount].comment = xstrdup(plist->comment);
+			psort[pcount++].flag = is_inst;
 		}
 	}
+
+	qsort(psort, pcount, sizeof(struct pkg_sort), pkg_sort_cmp);
+
+	for (int i = 0; i < pcount; i++) {
+		snprintf(outpkg, BUFSIZ, sfmt, psort[i].full, psort[i].flag);
+		printf(pfmt, outpkg, psort[i].comment);
+
+		XFREE(psort[i].name);
+		XFREE(psort[i].comment);
+	}
+
+	XFREE(psort);
 
 	regfree(&re);
 
