@@ -1,3 +1,14 @@
+## Version 0.16.0 (2020-04-27)
+
+ * Rebuild `+REQUIRED_BY` files after each pkgdb modification, ensuring
+   consistency and avoiding "Can't open +CONTENTS of ..." errors during
+   subsequent upgrades.
+ * Improved output sorting.
+ * Turn off WARNS.
+ * Minor cleanups.
+ * Documentation fixes.
+ * Flush yes/no prompt before reading response (Michael Forney).
+
 ## Version 0.15.0 (2020-01-06)
 
  * Also match full package names when searching (Erik van Nooijen).
