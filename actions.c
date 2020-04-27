@@ -669,6 +669,17 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 			rc = EXIT_FAILURE;
 	}
 
+	/*
+	 * Recalculate +REQUIRED_BY entries after all installs have finished,
+	 * as things can get out of sync when using pkg_add -DU, leading to the
+	 * dreaded "Can't open +CONTENTS of depending package..." errors when
+	 * upgrading next time.
+	 */
+	open_pi_log();
+	if (fexec(pkg_admin, "rebuild-tree", NULL) != EXIT_SUCCESS)
+		rc = EXIT_FAILURE;
+	close_pi_log();
+
 	/* pure install, not called by pkgin_upgrade */
 	if (!upgrade)
 		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
@@ -765,6 +776,16 @@ pkgin_remove(char **pkgargs)
 			printf("\n");
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(removehead);
+
+			/*
+			 * Recalculate +REQUIRED_BY entries in case anything
+			 * has been unable to update correctly.
+			 */
+			open_pi_log();
+			if (fexec(pkg_admin, "rebuild-tree", NULL)
+			    != EXIT_SUCCESS)
+				rc = EXIT_FAILURE;
+			close_pi_log();
 
 			(void)update_db(LOCAL_SUMMARY, NULL, 1);
 		}
