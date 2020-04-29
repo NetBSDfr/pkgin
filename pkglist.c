@@ -337,7 +337,7 @@ search_pkg(const char *pattern)
 	Pkglist	   	*plist;
 	struct pkg_sort	*psort;
 	regex_t		re;
-	int		rc;
+	int		i, rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
 	int		matched = 0, pcount = 0;
 	char		sfmt[10], pfmt[10];
@@ -379,7 +379,7 @@ search_pkg(const char *pattern)
 
 	qsort(psort, pcount, sizeof(struct pkg_sort), pkg_sort_cmp);
 
-	for (int i = 0; i < pcount; i++) {
+	for (i = 0; i < pcount; i++) {
 		snprintf(outpkg, BUFSIZ, sfmt, psort[i].full, psort[i].flag);
 		printf(pfmt, outpkg, psort[i].comment);
 
