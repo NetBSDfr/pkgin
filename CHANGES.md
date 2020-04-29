@@ -1,3 +1,11 @@
+## Version 0.16.1 (2020-04-29)
+
+ * Don't attempt to update the keep list if we're only downloading packages.
+ * Avoid C99isms for now, fixes CentOS 6 build.
+ * Ignore "pkg\_admin rebuild-tree" output, removes spurious "Done." messages
+   from output.
+ * Some minor internal refactoring.
+
 ## Version 0.16.0 (2020-04-27)
 
  * Rebuild `+REQUIRED_BY` files after each pkgdb modification, ensuring
