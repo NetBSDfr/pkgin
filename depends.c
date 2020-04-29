@@ -144,7 +144,7 @@ int
 show_direct_depends(const char *pkgarg)
 {
 	char		*pkgname, query[BUFSIZ];
-	Pkglist		*pdp, *mapplist;
+	Pkglist		*pdp, *rpkg;
 	Plisthead	*deptreehead;
 
 	if (SLIST_EMPTY(&r_plisthead)) {
@@ -165,10 +165,9 @@ show_direct_depends(const char *pkgarg)
 		printf(MSG_DIRECT_DEPS_FOR, pkgname);
 		SLIST_FOREACH(pdp, deptreehead, next) {
 			if (package_version && 
-				(mapplist = map_pkg_to_dep(&r_plisthead,
-							   pdp->depend))
-				!= NULL)
-				printf("\t%s\n", mapplist->full);
+			    (rpkg = map_pkg_to_dep(&r_plisthead, pdp->depend))
+			     != NULL)
+				printf("\t%s\n", rpkg->full);
 			else
 				printf("\t%s\n", pdp->depend);
 		}
@@ -182,7 +181,7 @@ show_direct_depends(const char *pkgarg)
 int
 show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 {
-	Pkglist		*pdp, *mapplist;
+	Pkglist		*pdp, *rpkg;
 	Plisthead	*deptreehead, *plisthead;
 	char		*pkgname = NULL;
 
@@ -209,9 +208,8 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 
 	SLIST_FOREACH(pdp, deptreehead, next) {
 		if (package_version && 
-			(mapplist = map_pkg_to_dep(plisthead,
-						   pdp->depend)) != NULL)
-			printf("\t%s\n", mapplist->full);
+		    (rpkg = map_pkg_to_dep(plisthead, pdp->depend)) != NULL)
+			printf("\t%s\n", rpkg->full);
 		else
 			printf("\t%s\n", pdp->depend);
 	}

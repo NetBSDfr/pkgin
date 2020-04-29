@@ -186,7 +186,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 {
 	int		toupgrade = DONOTHING;
 	Plisthead	*revdeps;
-	Pkglist		*revdep, *pimpact, *plist, *mapplist;
+	Pkglist		*revdep, *pimpact, *lpkg, *rpkg;
 	char		remotepkg[BUFSIZ];
 
 	/* Skip if a package has already been considered. */
@@ -194,10 +194,10 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		return 1;
 
 	/* record corresponding package on remote list*/
-	if ((mapplist = map_pkg_to_dep(&r_plisthead, pdp->depend)) == NULL)
+	if ((rpkg = map_pkg_to_dep(&r_plisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
 
-	XSTRCPY(remotepkg, mapplist->full);
+	XSTRCPY(remotepkg, rpkg->full);
 
 	TRACE(" |-matching %s over installed packages\n", remotepkg);
 
@@ -211,7 +211,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	pimpact->action = DONOTHING;
 	pimpact->old = NULL;
 	pimpact->full = NULL;
-	pimpact->name = xstrdup(mapplist->name);
+	pimpact->name = xstrdup(rpkg->name);
 
 	/*
 	 * BUILD_DATE may not necessarily be set.  This can happen if for any
@@ -219,29 +219,29 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 	 * observed in the wild), or simply if a package was built manually.
 	 */
 	pimpact->build_date =
-	    (mapplist->build_date) ? xstrdup(mapplist->build_date) : NULL;
+	    (rpkg->build_date) ? xstrdup(rpkg->build_date) : NULL;
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
 	/* parse local packages to see if depedency is installed*/
-	SLIST_FOREACH(plist, &l_plisthead, next) {
+	SLIST_FOREACH(lpkg, &l_plisthead, next) {
 
 		/* match, package is installed */
-		if (strcmp(plist->name, pdp->name) == 0) {
+		if (strcmp(lpkg->name, pdp->name) == 0) {
 
 			TRACE("  > found %s\n", pdp->name);
 
 			/*
 			 * Figure out if this is an upgrade or a refresh.
 			 */
-			if (pkg_match(pdp->depend, plist->full) == 0)
+			if (pkg_match(pdp->depend, lpkg->full) == 0)
 				toupgrade = TOUPGRADE;
 			/*
 			 * Only consider a package for refresh if it has an
 			 * identical PKGPATH.
 			 */
-			else if (pkgstrcmp(plist->pkgpath, mapplist->pkgpath) == 0
-			      && pkgstrcmp(plist->build_date, mapplist->build_date))
+			else if (pkgstrcmp(lpkg->pkgpath, rpkg->pkgpath) == 0
+			     && pkgstrcmp(lpkg->build_date, rpkg->build_date))
 				toupgrade = TOREFRESH;
 
 			/*
@@ -262,24 +262,24 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				 * an upgrade is a bit confusing for users.
 				 */
 				if (pdp->level > 0 &&
-				    version_check(plist->full, remotepkg) == 1) {
+				    version_check(lpkg->full, remotepkg) == 1) {
 					toupgrade = DONOTHING;
 					return 1;
 				}
 
-				TRACE("   * upgrade with %s\n", plist->full);
+				TRACE("   * upgrade with %s\n", lpkg->full);
 				/*
 				 * insert as an upgrade
 				 * oldpkg is used when building removal order
 				 * list
 				 */
-				pimpact->old = xstrdup(plist->full);
+				pimpact->old = xstrdup(lpkg->full);
 				pimpact->action = toupgrade;
 				pimpact->full = xstrdup(remotepkg);
 				pimpact->level = pdp->level;
-				pimpact->file_size = mapplist->file_size;
-				pimpact->size_pkg = mapplist->size_pkg;
-				pimpact->old_size_pkg = plist->size_pkg;
+				pimpact->file_size = rpkg->file_size;
+				pimpact->size_pkg = rpkg->size_pkg;
+				pimpact->old_size_pkg = lpkg->size_pkg;
 
 				/*
 				 * For any package that is upgraded, we need to
@@ -303,7 +303,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				}
 			}
 
-			TRACE("  > %s matched %s\n", plist->full, pdp->depend);
+			TRACE("  > %s matched %s\n", lpkg->full, pdp->depend);
 
 			return 1;
 		} /* if installed package match */
@@ -313,13 +313,13 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		 * dependency, i.e. libflashsupport-pulse, ghostscript-esp...
 		 * would probably lead to conflict if recorded, pass.
 		 */
-		if (pkg_match(pdp->depend, plist->full)) {
+		if (pkg_match(pdp->depend, lpkg->full)) {
 			TRACE(" > local package %s matched with %s\n",
-				plist->full, pdp->depend);
+				lpkg->full, pdp->depend);
 			return 1;
 		}
 
-	} /* SLIST_FOREACH plist */
+	}
 
 	if (!dep_present(impacthead, pdp->name)) {
 		TRACE(" > recording %s as to install\n", remotepkg);
@@ -331,8 +331,8 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		/* record package dependency deepness */
 		pimpact->level = pdp->level;
 
-		pimpact->file_size = mapplist->file_size;
-		pimpact->size_pkg = mapplist->size_pkg;
+		pimpact->file_size = rpkg->file_size;
+		pimpact->size_pkg = rpkg->size_pkg;
 	}
 
 	return 1;
