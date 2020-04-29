@@ -241,9 +241,9 @@ open_pi_log(void)
 }
 
 static void
-close_pi_log(void)
+close_pi_log(int output)
 {
-	if (!verbosity) {
+	if (!verbosity && output) {
 		analyse_pkglog(rm_filepos);
 		printf(MSG_WARNS_ERRS, warn_count, err_count);
 		if (warn_count > 0 || err_count > 0)
@@ -251,6 +251,32 @@ close_pi_log(void)
 	}
 
 	warn_count = err_count = said = 0;
+}
+
+/*
+ * Execute "pkg_admin rebuild-tree" to rebuild +REQUIRED_BY files after any
+ * operation that changes the installed packages.
+ */
+static int
+rebuild_required_by(void)
+{
+	int rv;
+	char *cmd;
+
+	/*
+	 * Redirect stdout as it prints an annoying "Done." message that we
+	 * don't want mixed into our output, however we retain stderr as there
+	 * may be warnings about invalid dependencies that we want logged.
+	 */
+	cmd = xasprintf("%s rebuild-tree >/dev/null", pkg_admin);
+
+	open_pi_log();
+	rv = system(cmd);
+	close_pi_log(0);
+
+	free(cmd);
+
+	return rv;
 }
 
 /* package removal */
@@ -287,7 +313,7 @@ do_pkg_remove(Plisthead *removehead)
 #endif
 	}
 
-	close_pi_log();
+	close_pi_log(1);
 }
 
 /**
@@ -333,7 +359,7 @@ do_pkg_install(Plisthead *installhead, int op)
 			rc = EXIT_FAILURE;
 	}
 
-	close_pi_log();
+	close_pi_log(1);
 
 	return rc;
 }
@@ -653,6 +679,9 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		}
 	}
 
+	if (refreshnum + upgradenum + installnum == 0)
+		goto installend;
+
 	/*
 	 * At this point we're performing installs.  Do them in order.
 	 */
@@ -675,10 +704,8 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	 * dreaded "Can't open +CONTENTS of depending package..." errors when
 	 * upgrading next time.
 	 */
-	open_pi_log();
-	if (fexec(pkg_admin, "rebuild-tree", NULL) != EXIT_SUCCESS)
+	if (rebuild_required_by() != EXIT_SUCCESS)
 		rc = EXIT_FAILURE;
-	close_pi_log();
 
 	/* pure install, not called by pkgin_upgrade */
 	if (!upgrade)
@@ -781,11 +808,8 @@ pkgin_remove(char **pkgargs)
 			 * Recalculate +REQUIRED_BY entries in case anything
 			 * has been unable to update correctly.
 			 */
-			open_pi_log();
-			if (fexec(pkg_admin, "rebuild-tree", NULL)
-			    != EXIT_SUCCESS)
+			if (rebuild_required_by() != EXIT_SUCCESS)
 				rc = EXIT_FAILURE;
-			close_pi_log();
 
 			(void)update_db(LOCAL_SUMMARY, NULL, 1);
 		}
