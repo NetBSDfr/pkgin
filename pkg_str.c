@@ -359,16 +359,15 @@ glob_to_pkgarg(char **globpkg, int *rc)
  * This also acts as a safe wrapper for strcmp().
  */
 int
-pkgstr_identical(const char *p1, const char *p2)
+pkgstrcmp(const char *p1, const char *p2)
 {
 	if (p1 == NULL && p2 == NULL)
-		return 1;
-
-	if (p1 == NULL || p2 == NULL)
 		return 0;
 
-	if (strcmp(p1, p2) == 0)
+	if (p1 == NULL)
+		return -1;
+	else if (p2 == NULL)
 		return 1;
 
-	return 0;
+	return (strcmp(p1, p2));
 }

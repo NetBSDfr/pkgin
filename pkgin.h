@@ -264,7 +264,7 @@ int		exact_pkgfmt(const char *);
 char		*find_exact_pkg(Plisthead *, const char *);
 int		version_check(char *, char *);
 char		**glob_to_pkgarg(char **, int *);
-int		pkgstr_identical(const char *, const char *);
+int		pkgstrcmp(const char *, const char *);
 /* selection.c */
 void		export_keep(void);
 void		import_keep(int, const char *);

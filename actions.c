@@ -507,7 +507,7 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 			     (void) free(p), p = NULL, len = 0) {
 				if (p[llen - 1] == '\n')
 					p[llen - 1] = '\0';
-				if (!pkgstr_identical(p, pimpact->build_date))
+				if (pkgstrcmp(p, pimpact->build_date))
 					pimpact->download = 1;
 			}
 			(void) pclose(fp);
@@ -815,7 +815,7 @@ narrow_match(Pkglist *opkg)
 
 	SLIST_FOREACH(pkglist, &r_plisthead, next) {
 		/* not the same pkgname, next */
-		if (!pkgstr_identical(opkg->name, pkglist->name))
+		if (pkgstrcmp(opkg->name, pkglist->name))
 			continue;
 
 		/*
@@ -829,7 +829,7 @@ narrow_match(Pkglist *opkg)
 		 * to be NULL, for example with local self-built packages, in
 		 * which case we permit an upgrade.
 		 */
-		if (!pkgstr_identical(opkg->pkgpath, pkglist->pkgpath))
+		if (pkgstrcmp(opkg->pkgpath, pkglist->pkgpath))
 			continue;
 
 		/*
@@ -837,9 +837,8 @@ narrow_match(Pkglist *opkg)
 		 * has changed.  If it has, we need to refresh the package as
 		 * it has been rebuilt, possibly against newer dependencies.
 		 */
-		if (pkgstr_identical(opkg->full, pkglist->full)) {
-			if (!pkgstr_identical(opkg->build_date,
-			    pkglist->build_date))
+		if (pkgstrcmp(opkg->full, pkglist->full) == 0) {
+			if (pkgstrcmp(opkg->build_date, pkglist->build_date))
 				refresh = 1;
 			continue;
 		}
