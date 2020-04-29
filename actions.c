@@ -930,12 +930,12 @@ pkgin_upgrade(int do_inst)
 
 	free_list(pkgargs);
 
-	/* record keep list */
-	pkgargs = record_upgrades(keeplisthead->P_Plisthead);
-
-	(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
-
-	free_list(pkgargs);
+	/* Record keep list */
+	if (do_inst) {
+		pkgargs = record_upgrades(keeplisthead->P_Plisthead);
+		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
+		free_list(pkgargs);
+	}
 
 	free_pkglist(&keeplisthead->P_Plisthead);
 	free(keeplisthead);
