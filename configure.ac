@@ -30,7 +30,7 @@ AC_ARG_WITH(pkginstall,
 	,
 )
 
-AC_CHECK_FUNCS([dup2 getcwd localeconv memmove memset mkdir putenv regcomp rmdir setenv strcasecmp strchr strcspn strdup strncasecmp strpbrk strrchr strstr strtol freopen tcgetpgrp])
+AC_CHECK_FUNCS([dup2 getcwd localeconv memmove memset mkdir putenv regcomp rmdir setenv strcasecmp strchr strcspn strdup strncasecmp strpbrk strrchr strstr strtol freopen tcgetpgrp strsep])
 
 AC_CHECK_FUNC([pthread_create],,
 	AC_CHECK_LIB(pthread, pthread_create,,
