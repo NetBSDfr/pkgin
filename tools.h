@@ -95,18 +95,6 @@
 #define STR_FORWARD 0
 #define STR_BACKWARD 1
 
-#define R_READ(fd, buf, len)		\
-	if (read(fd, buf, len) < 0) {	\
-		warn("read()");		\
-		pthread_exit(NULL);	\
-	}
-
-#define R_CLOSE(fd)			\
-	do {				\
-		close(fd);		\
-		pthread_exit(NULL);	\
-	} while (/* CONSTCOND */ 0)
-
 #define DSTSRC_CHK(dst, src)			\
 	if (dst == NULL) {			\
 		warn("NULL destination");	\
