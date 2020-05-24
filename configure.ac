@@ -27,8 +27,6 @@ AC_ARG_WITH(pkginstall,
 	,
 )
 
-AC_CHECK_FUNCS([dup2 getcwd localeconv memmove memset mkdir putenv regcomp rmdir setenv strcasecmp strchr strcspn strdup strncasecmp strpbrk strrchr strstr strtol freopen tcgetpgrp])
-
 # check for humanize_number
 AC_CHECK_FUNC([humanize_number],,
 	# in DragonFly humanize_number is in libutil
@@ -58,15 +56,6 @@ AC_CHECK_HEADERS([err.h sys/queue.h])
 AC_CHECK_HEADERS([nbcompat.h nbcompat/string.h])
 AC_CHECK_HEADERS([util.h bsd/libutil.h libutil.h])
 AC_CHECK_HEADERS([sys/termios.h termios.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_TYPE_INT64_T
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT64_T
-AC_TYPE_UINT8_T
 
 # Check for high-resolution timestamps in struct stat (from libarchive).
 AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])

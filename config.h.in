@@ -3,17 +3,8 @@
 /* Define to 1 if you have the <bsd/libutil.h> header file. */
 #undef HAVE_BSD_LIBUTIL_H
 
-/* Define to 1 if you have the `dup2' function. */
-#undef HAVE_DUP2
-
 /* Define to 1 if you have the <err.h> header file. */
 #undef HAVE_ERR_H
-
-/* Define to 1 if you have the `freopen' function. */
-#undef HAVE_FREOPEN
-
-/* Define to 1 if you have the `getcwd' function. */
-#undef HAVE_GETCWD
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -21,20 +12,8 @@
 /* Define to 1 if you have the <libutil.h> header file. */
 #undef HAVE_LIBUTIL_H
 
-/* Define to 1 if you have the `localeconv' function. */
-#undef HAVE_LOCALECONV
-
-/* Define to 1 if you have the `memmove' function. */
-#undef HAVE_MEMMOVE
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
-
-/* Define to 1 if you have the `memset' function. */
-#undef HAVE_MEMSET
-
-/* Define to 1 if you have the `mkdir' function. */
-#undef HAVE_MKDIR
 
 /* Define to 1 if you have the <nbcompat.h> header file. */
 #undef HAVE_NBCOMPAT_H
@@ -42,56 +21,17 @@
 /* Define to 1 if you have the <nbcompat/string.h> header file. */
 #undef HAVE_NBCOMPAT_STRING_H
 
-/* Define to 1 if you have the `putenv' function. */
-#undef HAVE_PUTENV
-
-/* Define to 1 if you have the `regcomp' function. */
-#undef HAVE_REGCOMP
-
-/* Define to 1 if you have the `rmdir' function. */
-#undef HAVE_RMDIR
-
-/* Define to 1 if you have the `setenv' function. */
-#undef HAVE_SETENV
-
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
-/* Define to 1 if you have the `strcasecmp' function. */
-#undef HAVE_STRCASECMP
-
-/* Define to 1 if you have the `strchr' function. */
-#undef HAVE_STRCHR
-
-/* Define to 1 if you have the `strcspn' function. */
-#undef HAVE_STRCSPN
-
-/* Define to 1 if you have the `strdup' function. */
-#undef HAVE_STRDUP
-
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
-
-/* Define to 1 if you have the `strncasecmp' function. */
-#undef HAVE_STRNCASECMP
-
-/* Define to 1 if you have the `strpbrk' function. */
-#undef HAVE_STRPBRK
-
-/* Define to 1 if you have the `strrchr' function. */
-#undef HAVE_STRRCHR
-
-/* Define to 1 if you have the `strstr' function. */
-#undef HAVE_STRSTR
-
-/* Define to 1 if you have the `strtol' function. */
-#undef HAVE_STRTOL
 
 /* Define to 1 if `st_mtimespec.tv_nsec' is a member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC
@@ -119,9 +59,6 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
-
-/* Define to 1 if you have the `tcgetpgrp' function. */
-#undef HAVE_TCGETPGRP
 
 /* Define to 1 if you have the <termios.h> header file. */
 #undef HAVE_TERMIOS_H
@@ -152,38 +89,3 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Define for Solaris 2.5.1 so the uint64_t typedef from <sys/synch.h>,
-   <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
-   #define below would cause a syntax error. */
-#undef _UINT64_T
-
-/* Define for Solaris 2.5.1 so the uint8_t typedef from <sys/synch.h>,
-   <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
-   #define below would cause a syntax error. */
-#undef _UINT8_T
-
-/* Define to the type of a signed integer type of width exactly 64 bits if
-   such a type exists and the standard includes do not define it. */
-#undef int64_t
-
-/* Define to `int' if <sys/types.h> does not define. */
-#undef pid_t
-
-/* Define to `unsigned int' if <sys/types.h> does not define. */
-#undef size_t
-
-/* Define to `int' if <sys/types.h> does not define. */
-#undef ssize_t
-
-/* Define to the type of an unsigned integer type of width exactly 16 bits if
-   such a type exists and the standard includes do not define it. */
-#undef uint16_t
-
-/* Define to the type of an unsigned integer type of width exactly 64 bits if
-   such a type exists and the standard includes do not define it. */
-#undef uint64_t
-
-/* Define to the type of an unsigned integer type of width exactly 8 bits if
-   such a type exists and the standard includes do not define it. */
-#undef uint8_t
