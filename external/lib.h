@@ -30,6 +30,13 @@
 
 #include "config.h"
 
+#if HAVE_NBCOMPAT_H
+#include <nbcompat.h>
+#else
+#include <err.h>
+#include <sys/queue.h>
+#endif
+
 #include <assert.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -44,18 +51,6 @@
 
 #include <sys/stat.h>
 #include <sys/wait.h>
-
-#if HAVE_ERR_H
-#include <err.h>
-#endif
-
-#if HAVE_NBCOMPAT_H
-#include <nbcompat.h>
-#endif
-
-#if HAVE_SYS_QUEUE_H
-#include <sys/queue.h>
-#endif
 
 /* Macros */
 #ifndef __UNCONST

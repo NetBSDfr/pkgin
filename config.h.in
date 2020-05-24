@@ -3,9 +3,6 @@
 /* Define to 1 if you have the <bsd/libutil.h> header file. */
 #undef HAVE_BSD_LIBUTIL_H
 
-/* Define to 1 if you have the <err.h> header file. */
-#undef HAVE_ERR_H
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -14,12 +11,6 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
-
-/* Define to 1 if you have the <nbcompat.h> header file. */
-#undef HAVE_NBCOMPAT_H
-
-/* Define to 1 if you have the <nbcompat/string.h> header file. */
-#undef HAVE_NBCOMPAT_STRING_H
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -47,9 +38,6 @@
 
 /* Define to 1 if `st_umtime' is a member of `struct stat'. */
 #undef HAVE_STRUCT_STAT_ST_UMTIME
-
-/* Define to 1 if you have the <sys/queue.h> header file. */
-#undef HAVE_SYS_QUEUE_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H

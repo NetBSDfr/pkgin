@@ -43,8 +43,6 @@ AC_CHECK_FUNC([humanize_number],,
 		[SRCS="humanize_number.c $SRCS"]
 	)]
 )
-AC_CHECK_HEADERS([err.h sys/queue.h])
-AC_CHECK_HEADERS([nbcompat.h nbcompat/string.h])
 AC_CHECK_HEADERS([util.h bsd/libutil.h libutil.h])
 AC_CHECK_HEADERS([sys/termios.h termios.h])
 #
@@ -54,9 +52,6 @@ AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 AC_SEARCH_LIBS([fetchGetURL], [fetch],,
 	[AC_MSG_ERROR(libfetch not found.)],
-)
-AC_CHECK_LIB([nbcompat], [strlcpy],
-	[LIBS="$LIBS -lnbcompat"]
 )
 
 AC_SUBST(SRCS)

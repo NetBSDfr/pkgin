@@ -30,10 +30,12 @@
 #ifndef _PKGIN_H
 #define _PKGIN_H
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif
-#if HAVE_SYS_QUEUE_H
+
+#ifdef HAVE_NBCOMPAT_H
+#include <nbcompat.h>
+#else
+#include <err.h>
 #include <sys/queue.h>
 #endif
 

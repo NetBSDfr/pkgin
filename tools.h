@@ -32,14 +32,11 @@
 
 #include "config.h"
 
-#if HAVE_NBCOMPAT_H
-#include <nbcompat.h>
-#endif
-
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 #include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -47,24 +44,12 @@
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
-#if HAVE_NBCOMPAT_STRING_H /* strsep() */
-#include <nbcompat/string.h>
-#else
-#include <string.h>
-#endif
-
-#if HAVE_ERR_H
-#include <err.h>
-#endif
-
 #if defined(HAVE_BSD_LIBUTIL_H)
 #include <bsd/libutil.h>
 #elif defined(HAVE_LIBUTIL_H)
 #include <libutil.h>
 #elif defined(HAVE_UTIL_H)
 #include <util.h>
-#else
-#include <nbcompat/util.h>
 #endif
 
 #include "external/lib.h"

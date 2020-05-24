@@ -31,7 +31,6 @@
  * Import pkg_summary to SQLite database
  */
 
-#include "tools.h"
 #include "pkgin.h"
 
 static const struct Summary {
