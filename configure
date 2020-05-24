@@ -625,11 +625,11 @@ ac_includes_default="\
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
 SED
+SRCS
 EGREP
 GREP
 CPP
 PKGTOOLS
-SRCS
 INSTALL_DATA
 INSTALL_SCRIPT
 INSTALL_PROGRAM
@@ -3096,13 +3096,21 @@ if test "${with_pkginstall+set}" = set; then :
 fi
 
 
-# check for humanize_number
+
+#
+# There is no real merit in testing for lots of different library functions and
+# headers if they're essential anyway.  It's unlikely we will want to support
+# esoteric environments.
+#
+# The only functions we test for are those that are non-portable, and for which
+# we provide compat functions for environments where they are not available.
+#
 
 ac_fn_c_check_func "$LINENO" "humanize_number" "ac_cv_func_humanize_number"
 if test "x$ac_cv_func_humanize_number" = xyes; then :
 
 else
-  # in DragonFly humanize_number is in libutil
+  # May also be in libutil
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing humanize_number" >&5
 $as_echo_n "checking for library containing humanize_number... " >&6; }
 if ${ac_cv_search_humanize_number+:} false; then :
@@ -3166,226 +3174,6 @@ fi
 
 fi
 
-
-
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing socket" >&5
-$as_echo_n "checking for library containing socket... " >&6; }
-if ${ac_cv_search_socket+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char socket ();
-int
-main ()
-{
-return socket ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' socket; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_search_socket=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_socket+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_socket+:} false; then :
-
-else
-  ac_cv_search_socket=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_socket" >&5
-$as_echo "$ac_cv_search_socket" >&6; }
-ac_res=$ac_cv_search_socket
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-
-fi
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing inet_addr" >&5
-$as_echo_n "checking for library containing inet_addr... " >&6; }
-if ${ac_cv_search_inet_addr+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char inet_addr ();
-int
-main ()
-{
-return inet_addr ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' nsl; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_search_inet_addr=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_inet_addr+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_inet_addr+:} false; then :
-
-else
-  ac_cv_search_inet_addr=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_inet_addr" >&5
-$as_echo "$ac_cv_search_inet_addr" >&6; }
-ac_res=$ac_cv_search_inet_addr
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-
-fi
-
-
-# check for libnbcompat
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for strlcpy in -lnbcompat" >&5
-$as_echo_n "checking for strlcpy in -lnbcompat... " >&6; }
-if ${ac_cv_lib_nbcompat_strlcpy+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lnbcompat  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char strlcpy ();
-int
-main ()
-{
-return strlcpy ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_lib_nbcompat_strlcpy=yes
-else
-  ac_cv_lib_nbcompat_strlcpy=no
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nbcompat_strlcpy" >&5
-$as_echo "$ac_cv_lib_nbcompat_strlcpy" >&6; }
-if test "x$ac_cv_lib_nbcompat_strlcpy" = xyes; then :
-  LIBS="$LIBS -lnbcompat"
-
-fi
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing fetchGetURL" >&5
-$as_echo_n "checking for library containing fetchGetURL... " >&6; }
-if ${ac_cv_search_fetchGetURL+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char fetchGetURL ();
-int
-main ()
-{
-return fetchGetURL ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' fetch; do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_c_try_link "$LINENO"; then :
-  ac_cv_search_fetchGetURL=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext \
-    conftest$ac_exeext
-  if ${ac_cv_search_fetchGetURL+:} false; then :
-  break
-fi
-done
-if ${ac_cv_search_fetchGetURL+:} false; then :
-
-else
-  ac_cv_search_fetchGetURL=no
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_fetchGetURL" >&5
-$as_echo "$ac_cv_search_fetchGetURL" >&6; }
-ac_res=$ac_cv_search_fetchGetURL
-if test "$ac_res" != no; then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-
-else
-  as_fn_error $? "libfetch not found." "$LINENO" 5
-fi
-
-
-# Checks for header files.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -3835,8 +3623,226 @@ fi
 
 done
 
+#
+# Tests for library functions that may exist outside of libc.
+#
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing socket" >&5
+$as_echo_n "checking for library containing socket... " >&6; }
+if ${ac_cv_search_socket+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char socket ();
+int
+main ()
+{
+return socket ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' socket; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_socket=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_socket+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_socket+:} false; then :
+
+else
+  ac_cv_search_socket=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_socket" >&5
+$as_echo "$ac_cv_search_socket" >&6; }
+ac_res=$ac_cv_search_socket
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing inet_addr" >&5
+$as_echo_n "checking for library containing inet_addr... " >&6; }
+if ${ac_cv_search_inet_addr+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char inet_addr ();
+int
+main ()
+{
+return inet_addr ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' nsl; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_inet_addr=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_inet_addr+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_inet_addr+:} false; then :
+
+else
+  ac_cv_search_inet_addr=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_inet_addr" >&5
+$as_echo "$ac_cv_search_inet_addr" >&6; }
+ac_res=$ac_cv_search_inet_addr
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing fetchGetURL" >&5
+$as_echo_n "checking for library containing fetchGetURL... " >&6; }
+if ${ac_cv_search_fetchGetURL+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char fetchGetURL ();
+int
+main ()
+{
+return fetchGetURL ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in '' fetch; do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_search_fetchGetURL=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext
+  if ${ac_cv_search_fetchGetURL+:} false; then :
+  break
+fi
+done
+if ${ac_cv_search_fetchGetURL+:} false; then :
+
+else
+  ac_cv_search_fetchGetURL=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_fetchGetURL" >&5
+$as_echo "$ac_cv_search_fetchGetURL" >&6; }
+ac_res=$ac_cv_search_fetchGetURL
+if test "$ac_res" != no; then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+
+else
+  as_fn_error $? "libfetch not found." "$LINENO" 5
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for strlcpy in -lnbcompat" >&5
+$as_echo_n "checking for strlcpy in -lnbcompat... " >&6; }
+if ${ac_cv_lib_nbcompat_strlcpy+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lnbcompat  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char strlcpy ();
+int
+main ()
+{
+return strlcpy ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_nbcompat_strlcpy=yes
+else
+  ac_cv_lib_nbcompat_strlcpy=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_nbcompat_strlcpy" >&5
+$as_echo "$ac_cv_lib_nbcompat_strlcpy" >&6; }
+if test "x$ac_cv_lib_nbcompat_strlcpy" = xyes; then :
+  LIBS="$LIBS -lnbcompat"
+
+fi
+
+
+
+
+#
 # Check for high-resolution timestamps in struct stat (from libarchive).
+#
 ac_fn_c_check_member "$LINENO" "struct stat" "st_mtimespec.tv_nsec" "ac_cv_member_struct_stat_st_mtimespec_tv_nsec" "$ac_includes_default"
 if test "x$ac_cv_member_struct_stat_st_mtimespec_tv_nsec" = xyes; then :
 

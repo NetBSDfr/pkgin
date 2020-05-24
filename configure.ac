@@ -26,38 +26,44 @@ AC_ARG_WITH(pkginstall,
 	[PKGTOOLS="$withval"],
 	,
 )
+AC_SUBST(PKGTOOLS)
 
-# check for humanize_number
+#
+# There is no real merit in testing for lots of different library functions and
+# headers if they're essential anyway.  It's unlikely we will want to support
+# esoteric environments.
+#
+# The only functions we test for are those that are non-portable, and for which
+# we provide compat functions for environments where they are not available.
+#
 AC_CHECK_FUNC([humanize_number],,
-	# in DragonFly humanize_number is in libutil
+	# May also be in libutil
 	[AC_SEARCH_LIBS([humanize_number], [util],,
 		# don't have it, include humanize_number.c to SRCS
 		[SRCS="humanize_number.c $SRCS"]
 	)]
 )
-
-AC_SUBST(SRCS)
-AC_SUBST(PKGTOOLS)
-
-AC_SEARCH_LIBS([socket], [socket])
-AC_SEARCH_LIBS([inet_addr], [nsl])
-
-# check for libnbcompat
-AC_CHECK_LIB([nbcompat], [strlcpy],
-	[LIBS="$LIBS -lnbcompat"]
-)
-
-AC_SEARCH_LIBS([fetchGetURL], [fetch],,
-	[AC_MSG_ERROR(libfetch not found.)],
-)
-
-# Checks for header files.
 AC_CHECK_HEADERS([err.h sys/queue.h])
 AC_CHECK_HEADERS([nbcompat.h nbcompat/string.h])
 AC_CHECK_HEADERS([util.h bsd/libutil.h libutil.h])
 AC_CHECK_HEADERS([sys/termios.h termios.h])
+#
+# Tests for library functions that may exist outside of libc.
+#
+AC_SEARCH_LIBS([socket], [socket])
+AC_SEARCH_LIBS([inet_addr], [nsl])
+AC_SEARCH_LIBS([fetchGetURL], [fetch],,
+	[AC_MSG_ERROR(libfetch not found.)],
+)
+AC_CHECK_LIB([nbcompat], [strlcpy],
+	[LIBS="$LIBS -lnbcompat"]
+)
 
+AC_SUBST(SRCS)
+
+#
 # Check for high-resolution timestamps in struct stat (from libarchive).
+#
 AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtime_n]) # AIX
