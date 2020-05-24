@@ -98,8 +98,7 @@ CPPFLAGS+=	-I. -I${LOCALBASE}/include
 
 LDFLAGS+=	@LDFLAGS@
 
-LDADD+=		-L${LOCALBASE}/lib @RPATH@,${LOCALBASE}/lib	\
-		-lbz2 -lz -larchive @LIBS@
+LDADD+=		-L${LOCALBASE}/lib -lbz2 -lz -larchive @LIBS@
 LDADD+=		-lsqlite3
 
 CLEANFILES+=	${DPSRCS}

@@ -3,9 +3,6 @@ AC_INIT([pkgin], [0.16.1], [https://github.com/NetBSDfr/pkgin/issues])
 AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
 
-AC_CANONICAL_HOST
-AC_GNU_SOURCE
-
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
@@ -79,17 +76,6 @@ AC_CHECK_MEMBERS([struct stat.st_umtime]) # Tru64
 AC_CHECK_MEMBERS([struct stat.st_mtime_usec]) # Hurd
 
 AC_CHECK_PROG(SED,nbsed,nbsed,sed)
-
-dnl fix rpath for SunOS, is there a cleaner way to do this ?
-case $host_os in
-	sunos* | solaris*)
-		RPATH="-Wl,-R"
-		;;
-	*)
-		RPATH="-Wl,-rpath"
-		;;
-esac
-AC_SUBST(RPATH)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
