@@ -28,22 +28,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-#if HAVE_NBCOMPAT_H
-#include <nbcompat.h>
-#endif
-
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#include "defs.h"
+#include "lib.h"
 #include "dewey.h"
+
+#ifndef MIN
+#define MIN(a,b)	(((a) < (b)) ? (a) : (b))
+#endif
+
+#ifndef MAX
+#define MAX(a,b)	(((a) > (b)) ? (a) : (b))
+#endif
 
 #define PKG_PATTERN_MAX 1024
 

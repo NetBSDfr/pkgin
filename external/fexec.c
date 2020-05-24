@@ -29,36 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-#if HAVE_NBCOMPAT_H
-#include <nbcompat.h>
-#endif
-#if HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif
-#if HAVE_SYS_WAIT_H
-#include <sys/wait.h>
-#endif
-
-#if HAVE_ERR_H
-#include <err.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_STDARG_H
-#include <stdarg.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
 #include "lib.h"
 
 static int	vfcexec(const char *, int, const char *, va_list);

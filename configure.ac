@@ -57,7 +57,10 @@ AC_SEARCH_LIBS([fetchGetURL], [fetch],,
 )
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h inttypes.h limits.h locale.h netdb.h stdint.h stdlib.h string.h sys/file.h sys/param.h sys/statvfs.h sys/time.h unistd.h sys/queue.h ctype.h stdio.h assert.h err.h stdarg.h sys/wait.h errno.h dirent.h regex.h sys/poll.h sys/signal.h signal.h termcap.h fnmatch.h sys/utsname.h nbcompat.h nbcompat/string.h util.h bsd/libutil.h libutil.h sys/termios.h termios.h sys/cdefs.h])
+AC_CHECK_HEADERS([err.h sys/queue.h])
+AC_CHECK_HEADERS([nbcompat.h nbcompat/string.h])
+AC_CHECK_HEADERS([util.h bsd/libutil.h libutil.h])
+AC_CHECK_HEADERS([sys/termios.h termios.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_INT64_T

@@ -32,29 +32,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-#if HAVE_NBCOMPAT_H
-#include <nbcompat.h>
-#endif
-#if HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif
-
-#if HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#if HAVE_ERR_H
-#include <err.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-
 #include "lib.h"
 
 static const char *var_cmp(const char *, size_t, const char *, size_t);

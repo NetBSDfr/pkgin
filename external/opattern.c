@@ -1,15 +1,5 @@
 /* NetBSD: opattern.c,v 1.6 2012/01/28 12:33:05 joerg Exp */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-#if HAVE_NBCOMPAT_H
-#include <nbcompat.h>
-#endif
-#if HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif
-
 /*
  * FreeBSD install - a package for the installation and maintainance
  * of non-core utilities.
@@ -30,20 +20,8 @@
  *
  */
 
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_ERR_H
-#include <err.h>
-#endif
-#if HAVE_FNMATCH_H
-#include <fnmatch.h>
-#endif
 #include "lib.h"
 #include "dewey.h"
-
-/* pull in definitions and macros for resizing arrays as we go */
-#include "defs.h"
 
 /*
  * Perform alternate match on "pkg" against "pattern",

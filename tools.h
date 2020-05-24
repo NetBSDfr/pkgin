@@ -30,47 +30,33 @@
 #ifndef _TOOLS_H
 #define _TOOLS_H
 
-#if HAVE_CONFIG_H
 #include "config.h"
-#endif
+
 #if HAVE_NBCOMPAT_H
 #include <nbcompat.h>
 #endif
-#if HAVE_STDIO_H
+
+#include <ctype.h>
 #include <stdio.h>
-#endif
-#if HAVE_STDARG_H
 #include <stdarg.h>
-#endif
-#if HAVE_STDINT_H
 #include <stdint.h>
-#endif
-#if HAVE_LIMITS_H
 #include <limits.h>
-#endif
-#if HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#if HAVE_STDLIB_H
 #include <stdlib.h>
-#endif
+
+#include <sys/stat.h>
+#include <sys/utsname.h>
+
 #if HAVE_NBCOMPAT_STRING_H /* strsep() */
 #include <nbcompat/string.h>
-#elif HAVE_STRING_H
+#else
 #include <string.h>
 #endif
-#if HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
+
 #if HAVE_ERR_H
 #include <err.h>
 #endif
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_SYS_UTSNAME_H
-#include <sys/utsname.h>
-#endif
+
 #if defined(HAVE_BSD_LIBUTIL_H)
 #include <bsd/libutil.h>
 #elif defined(HAVE_LIBUTIL_H)

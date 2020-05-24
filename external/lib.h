@@ -28,42 +28,33 @@
 #ifndef _INST_LIB_LIB_H_
 #define _INST_LIB_LIB_H_
 
-#if HAVE_CONFIG_H
 #include "config.h"
+
+#include <assert.h>
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <fnmatch.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <sys/stat.h>
+#include <sys/wait.h>
+
+#if HAVE_ERR_H
+#include <err.h>
 #endif
+
 #if HAVE_NBCOMPAT_H
 #include <nbcompat.h>
 #endif
-#if HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
-#if HAVE_SYS_FILE_H
-#include <sys/file.h>
-#endif
+
 #if HAVE_SYS_QUEUE_H
 #include <sys/queue.h>
-#endif
-
-#if HAVE_CTYPE_H
-#include <ctype.h>
-#endif
-#if HAVE_DIRENT_H
-#include <dirent.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STDARG_H
-#include <stdarg.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_UNISTD_H
-#include <unistd.h>
 #endif
 
 /* Macros */

@@ -32,37 +32,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if HAVE_CONFIG_H
-#include "config.h"
-#endif
-#if HAVE_NBCOMPAT_H
-#include <nbcompat.h>
-#endif
-#if HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif
-
-#if HAVE_ASSERT_H
-#include <assert.h>
-#endif
-#if HAVE_ERR_H
-#include <err.h>
-#endif
-#if HAVE_ERRNO_H
-#include <errno.h>
-#endif
-#if HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
 #include "lib.h"
 
 Boolean
