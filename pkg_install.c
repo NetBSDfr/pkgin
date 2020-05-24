@@ -51,7 +51,7 @@ setup_pkg_install(void)
 	if ((p = getenv("PKG_INSTALL_DIR")) != NULL)
 		pkg_install_dir = xstrdup(p);
 	else
-		pkg_install_dir = xstrdup(PKGTOOLS);
+		pkg_install_dir = xstrdup(PKG_INSTALL_DIR);
 
 	pkg_add = xasprintf("%s/pkg_add", pkg_install_dir);
 	pkg_admin = xasprintf("%s/pkg_admin", pkg_install_dir);

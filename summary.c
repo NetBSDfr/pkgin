@@ -268,10 +268,9 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	 * Check MACHINE_ARCH of the package matches the local machine.
 	 */
 	if (check_machine_arch && strncmp(line, "MACHINE_ARCH=", 13) == 0) {
-		if (strncmp(CHECK_MACHINE_ARCH, val,
-		    strlen(CHECK_MACHINE_ARCH))) {
+		if (strncmp(MACHINE_ARCH, val, strlen(MACHINE_ARCH))) {
 			alarm(0); /* Stop the progress meter */
-			printf(MSG_ARCH_DONT_MATCH, val, CHECK_MACHINE_ARCH);
+			printf(MSG_ARCH_DONT_MATCH, val, MACHINE_ARCH);
 			if (!check_yesno(DEFAULT_NO))
 				exit(EXIT_FAILURE);
 			check_machine_arch = 0;
@@ -582,7 +581,7 @@ update_localdb(char **pkgkeep)
 
 	printf(MSG_READING_LOCAL_SUMMARY);
 	/* generate summary locally */
-	if ((pinfo = popen(PKGTOOLS "/pkg_info -Xa", "r")) == NULL)
+	if ((pinfo = popen(PKG_INSTALL_DIR "/pkg_info -Xa", "r")) == NULL)
 		errx(EXIT_FAILURE, "Couldn't run pkg_info");
 
 	printf(MSG_PROCESSING_LOCAL_SUMMARY);

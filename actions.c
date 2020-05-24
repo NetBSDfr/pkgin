@@ -38,10 +38,6 @@
 #include <termios.h>
 #endif
 
-#ifndef LOCALBASE
-#define LOCALBASE "/usr/pkg" /* see DISCLAIMER below */
-#endif
-
 static int	warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
 FILE		*err_fp = NULL;
@@ -579,12 +575,12 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		errx(EXIT_FAILURE, MSG_NO_CACHE_SPACE,
 			pkgin_cache, h_fsize, h_free);
 	}
-	free_space = fs_room(LOCALBASE);
+	free_space = fs_room(PREFIX);
 	if (size_pkg > 0 && free_space < (uint64_t)size_pkg) {
 		(void)humanize_number(h_free, H_BUF, (int64_t)free_space, "",
 				HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-		errx(EXIT_FAILURE, MSG_NO_INSTALL_SPACE,
-			LOCALBASE, h_psize, h_free);
+		errx(EXIT_FAILURE, MSG_NO_INSTALL_SPACE, PREFIX, h_psize,
+		    h_free);
 	}
 
 	/*

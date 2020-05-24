@@ -61,8 +61,8 @@ pkg_met_reqs(Plisthead *impacthead)
 #endif
 
 			/* for performance sake, first check basesys */
-			if ((strncmp(requires->full, LOCALBASE,
-				    strlen(LOCALBASE) - 1)) != 0) {
+			if ((strncmp(requires->full, PREFIX,
+				    strlen(PREFIX) - 1)) != 0) {
 				if (stat(requires->full, &sb) < 0) {
 					printf(MSG_REQT_NOT_PRESENT,
 						requires->full, pimpact->full);
@@ -149,8 +149,7 @@ pkg_met_reqs(Plisthead *impacthead)
 			 * have unmet REQUIRES. This is a known bug that makes
 			 * the PROVIDES untrustable and some packages
 			 * uninstallable. foundreq is forced to 1 for now for
-			 * every REQUIRES matching LOCALBASE, which is hardcoded
-			 * to "/usr/pkg"
+			 * every REQUIRES matching PREFIX.
 			 */
 			if (!foundreq) {
 				printf(MSG_REQT_NOT_PRESENT_DEPS,
