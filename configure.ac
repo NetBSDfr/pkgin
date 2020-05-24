@@ -30,10 +30,10 @@ AC_ARG_WITH(pkginstall,
 # check for humanize_number
 AC_CHECK_FUNC([humanize_number],,
 	# in DragonFly humanize_number is in libutil
-	AC_SEARCH_LIBS([humanize_number], [util],,
+	[AC_SEARCH_LIBS([humanize_number], [util],,
 		# don't have it, include humanize_number.c to SRCS
 		[SRCS="humanize_number.c $SRCS"]
-	)
+	)]
 )
 
 AC_SUBST(SRCS)
