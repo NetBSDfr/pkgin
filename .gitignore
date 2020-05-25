@@ -1,7 +1,16 @@
+*.o
+.deps
 Makefile
+aclocal.m4
+autom4te.cache
 config.h
+config.h.in~
 config.log
 config.status
+external/.deps
+external/.dirstamp
 pkgin
+pkgin.1
+pkgin.1.html
 pkgindb_create.h
-*.o
+stamp-h1
