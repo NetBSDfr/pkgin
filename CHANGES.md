@@ -1,3 +1,12 @@
+## Version 20.5.0 (2020-05-25)
+
+ * Switch to automake and overhaul mandatory configure options.
+ * Remove unused code and pointless configure tests, cleaning up includes
+   and headers where appropriate.
+ * New version number scheme (yy.m.x).  The previous scheme had no relevance,
+   this one at least gives users some clue about how up-to-date their version
+   is.
+
 ## Version 0.16.1 (2020-04-29)
 
  * Don't attempt to update the keep list if we're only downloading packages.
