@@ -69,7 +69,8 @@ man1_MANS=		pkgin.1
 nodist_pkgin_SOURCES=	pkgin.1
 pkgin.1: pkgin.1.in
 	@sed -e 's,/var/db/pkgin,$(PKGIN_DBDIR),g' \
-	     -e 's,/usr/pkg/etc,$(sysconfdir),g' $^ >$@
+	     -e 's,/usr/pkg/etc,$(sysconfdir),g' pkgin.1.in >$@
+
 #
 # Generated sources.
 #
