@@ -32,11 +32,15 @@
 
 #include "config.h"
 
+/*
+ * Include our copy of queue.h before nbcompat pulls in its version.
+ */
+#include "external/queue.h"
+
 #ifdef HAVE_NBCOMPAT_H
 #include <nbcompat.h>
 #else
 #include <err.h>
-#include <sys/queue.h>
 #endif
 
 #include <archive.h>

@@ -100,13 +100,6 @@
 #define KVPRINTF(k, v)				\
 	printf("key: %s, val: %s\n", k, v);	\
 
-#ifndef SLIST_FOREACH_MUTABLE /* from DragonFlyBSD */
-#define SLIST_FOREACH_MUTABLE(var, head, field, tvar)		\
-	for ((var) = SLIST_FIRST((head));			\
-	    (var) && ((tvar) = SLIST_NEXT((var), field), 1);	\
-		 (var) = (tvar))
-#endif
-
 #define ANSW_NO 0
 #define ANSW_YES 1
 #define MSG_PROCEED_YES "proceed ? [Y/n] "

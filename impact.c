@@ -517,14 +517,14 @@ impactend:
 	}
 
 	/* remove DONOTHING entries */
-	SLIST_FOREACH_MUTABLE(pimpact, impacthead, next, tmpimpact) {
+	SLIST_FOREACH_SAFE(pimpact, impacthead, next, tmpimpact) {
 		if (pimpact->action == DONOTHING) {
 
 			SLIST_REMOVE(impacthead, pimpact, Pkglist, next);
 
 			free_pkglist_entry(&pimpact);
 		}
-	} /* SLIST_FOREACH_MUTABLE impacthead */
+	}
 
 	/* no more impact, empty list */
 	if (SLIST_EMPTY(impacthead))
