@@ -1,3 +1,7 @@
+## Version 20.5.1 (2020-05-25)
+
+ * Improve make portability.
+
 ## Version 20.5.0 (2020-05-25)
 
  * Switch to automake and overhaul mandatory configure options.
