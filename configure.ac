@@ -12,6 +12,15 @@ AC_PROG_CC
 AC_PROG_INSTALL
 
 #
+# Enable some useful compiler warnings if running in maintainer mode.  Note
+# that maintainer mode is explicitly disabled in the pkgsrc build to avoid
+# user failures (the bug reports are nice, the user experience is not).
+#
+AS_IF([test "x$USE_MAINTAINER_MODE" = "xyes"],
+      CFLAGS="$CFLAGS -Werror -Wall -Wextra -Wunused -Wno-unused-parameter"
+)
+
+#
 # --with-dbdir=/path/to/pkgin/db
 #
 AC_ARG_WITH([dbdir],
