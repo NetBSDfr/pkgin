@@ -442,6 +442,11 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
 	struct		stat st;
 
+	if (SLIST_EMPTY(&r_plisthead)) {
+		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
+		return EXIT_FAILURE;
+	}
+
 	/* transform command line globs into pkgnames */
 	if ((pkgargs = glob_to_pkgarg(opkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);

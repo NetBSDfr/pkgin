@@ -368,12 +368,6 @@ pkg_impact(char **pkgargs, int *rc)
 	char		tmpicon;
 #endif
 
-	if (SLIST_EMPTY(&r_plisthead)) {
-		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
-		*rc = EXIT_FAILURE;
-		return NULL;
-	}
-
 	TRACE("[>]-entering impact\n");
 
 	impacthead = init_head();
