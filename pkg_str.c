@@ -330,16 +330,12 @@ glob_to_pkgarg(char **globpkg, int *rc)
 	for (i = 0, count = 0; globpkg[i] != NULL; i++, count++) {
 		pkgargs = xrealloc(pkgargs, (count + 2) * sizeof(char *));
 
-		if (strpbrk(globpkg[i], GLOBCHARS) == NULL)
-			pkgargs[count] = xstrdup(globpkg[i]);
-		else {
-			if ((plist = find_pkg_match(&r_plisthead,
-					globpkg[i])) == NULL) {
-				fprintf(stderr, MSG_PKG_NOT_AVAIL, globpkg[i]);
-				count--;
-				*rc = EXIT_FAILURE;
-			} else
-				pkgargs[count] = xstrdup(plist->full);
+		if ((plist = find_pkg_match(&r_plisthead, globpkg[i]))) {
+			pkgargs[count] = xstrdup(plist->full);
+		} else {
+			fprintf(stderr, MSG_PKG_NOT_AVAIL, globpkg[i]);
+			count--;
+			*rc = EXIT_FAILURE;
 		}
 	}
 
