@@ -124,7 +124,7 @@ pdb_rec_depends(void *param, int argc, char **argv, char **colname)
 			plisthead = &r_plisthead;
 
 		/* map corresponding pkgname */
-		if ((pkg_map = map_pkg_to_dep(plisthead, deptree->depend)) != NULL)
+		if ((pkg_map = find_pkg_match(plisthead, deptree->depend)) != NULL)
 			deptree->name = xstrdup(pkg_map->name);
 		else
 			/* some dependencies just don't match anything */

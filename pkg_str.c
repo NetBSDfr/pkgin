@@ -133,19 +133,20 @@ unique_pkg(const char *pkgname, const char *dest)
 	return u_pkg;
 }
 
-/* return a pkgname corresponding to a dependency */
+/*
+ * Return first matching SLIST entry in package list, or NULL if no match.
+ */
 Pkglist *
-map_pkg_to_dep(Plisthead *plisthead, char *depname)
+find_pkg_match(Plisthead *plisthead, char *match)
 {
 	Pkglist	*plist;
 
-	SLIST_FOREACH(plist, plisthead, next)
-		if (pkg_match(depname, plist->full)) {
-#ifdef DEBUG
-			printf("match ! %s -> %s\n", depname, plist->full);
-#endif
+	SLIST_FOREACH(plist, plisthead, next) {
+		if (pkg_match(match, plist->full)) {
+			TRACE("Matched %s with %s\n", match, plist->full);
 			return plist;
 		}
+	}
 
 	return NULL;
 }
@@ -332,7 +333,7 @@ glob_to_pkgarg(char **globpkg, int *rc)
 		if (strpbrk(globpkg[i], GLOBCHARS) == NULL)
 			pkgargs[count] = xstrdup(globpkg[i]);
 		else {
-			if ((plist = map_pkg_to_dep(&r_plisthead,
+			if ((plist = find_pkg_match(&r_plisthead,
 					globpkg[i])) == NULL) {
 				fprintf(stderr, MSG_PKG_NOT_AVAIL, globpkg[i]);
 				count--;

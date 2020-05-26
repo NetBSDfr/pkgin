@@ -165,7 +165,7 @@ show_direct_depends(const char *pkgarg)
 		printf(MSG_DIRECT_DEPS_FOR, pkgname);
 		SLIST_FOREACH(pdp, deptreehead, next) {
 			if (package_version && 
-			    (rpkg = map_pkg_to_dep(&r_plisthead, pdp->depend))
+			    (rpkg = find_pkg_match(&r_plisthead, pdp->depend))
 			     != NULL)
 				printf("\t%s\n", rpkg->full);
 			else
@@ -208,7 +208,7 @@ show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
 
 	SLIST_FOREACH(pdp, deptreehead, next) {
 		if (package_version && 
-		    (rpkg = map_pkg_to_dep(plisthead, pdp->depend)) != NULL)
+		    (rpkg = find_pkg_match(plisthead, pdp->depend)) != NULL)
 			printf("\t%s\n", rpkg->full);
 		else
 			printf("\t%s\n", pdp->depend);

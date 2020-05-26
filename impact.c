@@ -194,7 +194,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		return 1;
 
 	/* record corresponding package on remote list*/
-	if ((rpkg = map_pkg_to_dep(&r_plisthead, pdp->depend)) == NULL)
+	if ((rpkg = find_pkg_match(&r_plisthead, pdp->depend)) == NULL)
 		return 1; /* no corresponding package in list */
 
 	XSTRCPY(remotepkg, rpkg->full);
