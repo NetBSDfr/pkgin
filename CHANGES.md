@@ -1,3 +1,13 @@
+## Version 20.7.0 (2020-07-13)
+
+ * Order package installs correctly.
+ * Switch to mdoc(7) manual page, converted by wizd(8).
+ * Remove -F (force reinstall) flag.
+ * Enable compiler warnings in maintainer mode.
+ * Match candidate packages correctly, avoiding issues with packages that
+   include "-[0-9]" in their package names.
+ * Various internal cleanups.
+
 ## Version 20.5.1 (2020-05-25)
 
  * Improve make portability.
