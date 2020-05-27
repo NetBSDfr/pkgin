@@ -912,7 +912,6 @@ int
 pkgin_upgrade(int do_inst)
 {
 	Plistnumbered	*keeplisthead;
-	Plisthead	*localplisthead;
 	char		**pkgargs;
 	int		rc;
 
@@ -923,9 +922,8 @@ pkgin_upgrade(int do_inst)
 	/* upgrade all packages, not only keepables */
 	if (SLIST_EMPTY(&l_plisthead))
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
-	localplisthead = &l_plisthead;
 
-	pkgargs = record_upgrades(localplisthead);
+	pkgargs = record_upgrades(&l_plisthead);
 
 	rc = pkgin_install(pkgargs, do_inst, 1);
 
