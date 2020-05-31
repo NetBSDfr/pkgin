@@ -22,9 +22,6 @@ The following command line arguments are supported:
   * `-f`:
     Force database update
 
-  * `-F`:
-    Force package reinstall
-
   * `-h`:
     Displays help for the command
 

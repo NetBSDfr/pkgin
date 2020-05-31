@@ -191,7 +191,6 @@ typedef struct Preflist {
 } Preflist;
 typedef SLIST_HEAD(, Preflist) Preflisthead;
 
-extern uint8_t 		force_reinstall;
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
 extern uint8_t		parsable;

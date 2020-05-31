@@ -244,13 +244,9 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 			     && pkgstrcmp(lpkg->build_date, rpkg->build_date))
 				toupgrade = TOREFRESH;
 
-			/*
-			 * installed version does not match dep requirement
-			 * OR force reinstall, pkgkeep being use to inform -F
-			 * was given
-			 */
-			if (toupgrade != DONOTHING || pdp->keep < 0) {
-				TRACE("   ! didn't match (or force reinstall)\n");
+			/* installed version does not match dep requirement */
+			if (toupgrade != DONOTHING) {
+				TRACE("   ! didn't match\n");
 
 				/*
 				 * Ignore proposed downgrades, unless it was
@@ -433,23 +429,8 @@ pkg_impact(char **pkgargs, int *rc)
 
 		/* pkgname is not already recorded */
 		if (!pkg_in_impact(impacthead, pkgname)) {
-			/* passing pkgname as depname */
 			pdp->depend = xstrdup(pkgname);
-
-			/* reset pkgkeep */
-			pdp->keep = 0;
-
-			if (force_reinstall)
-				/*
-				 * use pkgkeep field to inform deps_impact
-				 * the package has to be reinstalled. It is NOT
-				 * the normal use for the pkgkeep field, it is
-				 * just used as a temporary field
-				 */
-				pdp->keep = -1;
-
 			deps_impact(impacthead, pdp);
-
 			XFREE(pdp->depend);
 		}
 

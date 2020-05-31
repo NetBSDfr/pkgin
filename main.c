@@ -36,7 +36,7 @@ static int	find_cmd(const char *);
 static void	missing_param(int, int, const char *);
 static void	ginto(void);
 
-uint8_t		yesflag = 0, noflag = 0, force_reinstall = 0;
+uint8_t		yesflag = 0, noflag = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0, pflag = 0;
 char		lslimit = '\0';
 FILE  		*tracefp = NULL;
@@ -61,7 +61,7 @@ main(int argc, char *argv[])
 			force_update = 1;
 			break;
 		case 'F':
-			force_reinstall = 1;
+			/* Previously "force reinstall", now ignored. */
 			break;
 		case 'y':
 			yesflag = 1;
@@ -344,7 +344,7 @@ usage(int status)
 	int i;
 
 	fprintf((status) ? stderr : stdout,
-	    "Usage: pkgin [-cdfFhlnPtvVy] command [package ...]\n\n"
+	    "Usage: pkgin [-cdfhlnPtvVy] command [package ...]\n\n"
 	    "Commands and shortcuts:\n");
 
 	for (i = 0; cmd[i].name != NULL; i++) {
