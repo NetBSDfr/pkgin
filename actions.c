@@ -430,7 +430,6 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	size_t		len;
 	ssize_t		llen;
 	Pkglist		*pkg;
-	Pkglist		*pimpact;
 	Plisthead	*impacthead; /* impact head */
 	Plisthead	*upgradehead = NULL, *installhead = NULL;
 	Plisthead	*refreshhead = NULL, *downloadhead = NULL;
@@ -468,32 +467,32 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 
 	/* check for required files */
 	if (!pkg_met_reqs(impacthead))
-		SLIST_FOREACH(pimpact, impacthead, next)
-			if (pimpact->action == UNMET_REQ)
+		SLIST_FOREACH(pkg, impacthead, next)
+			if (pkg->action == UNMET_REQ)
 				unmet_reqs =
-					action_list(unmet_reqs, pimpact->full);
+					action_list(unmet_reqs, pkg->full);
 
 	/* browse impact tree */
-	SLIST_FOREACH(pimpact, impacthead, next) {
+	SLIST_FOREACH(pkg, impacthead, next) {
 
 		/*
 		 * Packages being removed need no special handling, account
 		 * for them and move to the next package.
 		 */
-		if (pimpact->action == TOREMOVE) {
+		if (pkg->action == TOREMOVE) {
 			removenum++;
 			continue;
 		}
 
 		/* check for conflicts */
-		if (pkg_has_conflicts(pimpact))
+		if (pkg_has_conflicts(pkg))
 			if (!check_yesno(DEFAULT_NO))
 				goto installend;
 
 		/* XXX: this should be moved higher up, pdb_rec_list assert? */
-		if (pimpact->file_size <= 0) {
+		if (pkg->file_size <= 0) {
 			(void) fprintf(stderr, MSG_EMPTY_FILE_SIZE,
-			    pimpact->depend);
+			    pkg->depend);
 			continue;
 		}
 
@@ -501,11 +500,11 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		 * Retrieve the correct repository for the package and save it,
 		 * this is used later by pkg_download().
 		 */
-		(void) snprintf(query, BUFSIZ, PKG_URL, pimpact->full);
+		(void) snprintf(query, BUFSIZ, PKG_URL, pkg->full);
 		if (pkgindb_doquery(query, pdb_get_value, pkgrepo) != 0)
-			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pimpact->full);
+			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pkg->full);
 
-		pimpact->pkgurl = xasprintf("%s/%s%s", pkgrepo, pimpact->full,
+		pkg->pkgurl = xasprintf("%s/%s%s", pkgrepo, pkg->full,
 		    PKG_EXT);
 
 		/*
@@ -514,9 +513,9 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		 * downloaded.
 		 */
 		(void) snprintf(pkgpath, BUFSIZ, "%s/%s%s", pkgin_cache,
-		    pimpact->full, PKG_EXT);
-		if (stat(pkgpath, &st) < 0 || st.st_size != pimpact->file_size)
-			pimpact->download = 1;
+		    pkg->full, PKG_EXT);
+		if (stat(pkgpath, &st) < 0 || st.st_size != pkg->file_size)
+			pkg->download = 1;
 		else {
 			/*
 			 * If the cached package has the correct size, we must
@@ -534,8 +533,8 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 			     (void) free(p), p = NULL, len = 0) {
 				if (p[llen - 1] == '\n')
 					p[llen - 1] = '\0';
-				if (pkgstrcmp(p, pimpact->build_date))
-					pimpact->download = 1;
+				if (pkgstrcmp(p, pkg->build_date))
+					pkg->download = 1;
 			}
 			(void) pclose(fp);
 		}
@@ -543,18 +542,18 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		/*
 		 * Don't account for download size if using a file:// repo.
 		 */
-		if (pimpact->download) {
+		if (pkg->download) {
 			downloadnum++;
 			if (strncmp(pkgrepo, "file:///", 8) != 0)
-				file_size += pimpact->file_size;
+				file_size += pkg->file_size;
 		}
 
-		if (pimpact->old_size_pkg > 0)
-			pimpact->size_pkg -= pimpact->old_size_pkg;
+		if (pkg->old_size_pkg > 0)
+			pkg->size_pkg -= pkg->old_size_pkg;
 
-		size_pkg += pimpact->size_pkg;
+		size_pkg += pkg->size_pkg;
 
-		switch (pimpact->action) {
+		switch (pkg->action) {
 		case TOREFRESH:
 			refreshnum++;
 			break;
@@ -600,8 +599,8 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	 * Separate package lists according to action.
 	 */
 	downloadhead = order_download(impacthead);
-	SLIST_FOREACH(pimpact, downloadhead, next) {
-		todownload = action_list(todownload, pimpact->depend);
+	SLIST_FOREACH(pkg, downloadhead, next) {
+		todownload = action_list(todownload, pkg->depend);
 	}
 
 	refreshhead = order_install(impacthead, TOREFRESH);
@@ -662,11 +661,11 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		if (!do_inst)
 			goto installend;
 
-		SLIST_FOREACH(pimpact, downloadhead, next) {
-			if (pimpact->file_size != -1)
+		SLIST_FOREACH(pkg, downloadhead, next) {
+			if (pkg->file_size != -1)
 				continue;
 
-			switch (pimpact->action) {
+			switch (pkg->action) {
 			case TOREFRESH:
 				refreshnum--;
 				break;
