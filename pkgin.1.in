@@ -1,342 +1,330 @@
-.\" generated with Ronn/v0.7.3
-.\" http://github.com/rtomayko/ronn/tree/0.7.3
-.
-.TH "PKGIN" "1" "May 2020" "" ""
-.
-.SH "NAME"
-\fBpkgin\fR \- A tool to manage pkgsrc binary packages\.
-.
-.SH "SYNOPSIS"
-\fBpkgin\fR [\fB\-dfFhpPvVyn\fR] [\fB\-l\fR \fIlimit_chars\fR] [\fB\-c\fR \fIchroot_path\fR] [\fB\-t\fR \fIlog_file\fR] \fIcommand\fR [package \.\.\.]
-.
-.SH "DESCRIPTION"
-The pkgin command is aimed at being an \fBapt\fR / \fByum\fR like tool for managing pkgsrc(7) binary packages\. It relies on pkg_summary(5) for installation, removal and upgrade of packages and associated dependencies, using a remote repository\.
-.
-.SH "OPTIONS"
+.Dd July 1, 2020
+.Dt PKGIN 1
+.Os
+.Sh NAME
+.Nm pkgin
+.Nd pkgsrc binary package manager
+.Sh SYNOPSIS
+.Nm
+.Op Fl dfhnPpVvy
+.Op Fl c Ar chroot_path
+.Op Fl l Ar limit_chars
+.Op Fl t Ar log_file
+.Cm command
+.Op Ar package Ar
+.Sh DESCRIPTION
+.Nm
+is a package manager for binary package sets that have been produced by
+.Xr pkgsrc 7 .
+.Pp
+By parsing
+.Xr pkg_summary 5
+files stored within each configured repository, it supports
+installing, upgrading, removing, and querying available packages.
+.Sh OPTIONS
 The following command line arguments are supported:
-.
-.TP
-\fB\-c\fR chroot_path
-Enable chrooting pkgin in the given repository
-.
-.TP
-\fB\-d\fR
+.Bl -tag -width 15n -offset 6n
+.It Fl c Ar chroot_path
+Enable chrooting
+.Nm
+in the given repository
+.It Fl d
 Download only
-.
-.TP
-\fB\-f\fR
+.It Fl f
 Force database update
-.
-.TP
-\fB\-h\fR
+.It Fl h
 Displays help for the command
-.
-.TP
-\fB\-l\fR \fIlimit_chars\fR
-Only include the packages with the specified \fISTATUS FLAGS\fR
-.
-.TP
-\fB\-n\fR
-Assumes "no" as default answer and print results of actions to be taken line per line
-.
-.TP
-\fB\-p\fR
-Displays results in a parsable format
-.
-.TP
-\fB\-P\fR
+.It Fl l Ar limit_chars
+Only include the packages with the specified
+.Dv STATUS FLAGS
+.It Fl n
+Assumes
+.Dq no
+as default answer and print results of actions to be taken line per line
+.It Fl P
 Displays packages versions instead of globs (sd, sfd, srd)
-.
-.TP
-\fB\-t\fR log_file
+.It Fl p
+Displays results in a parsable format
+.It Fl t Ar log_file
 Logs package browsing (dependencies and impact) to a given log file
-.
-.TP
-\fB\-v\fR
-Displays pkgin version
-.
-.TP
-\fB\-V\fR
+.It Fl V
 Be verbose when (un)installing
-.
-.TP
-\fB\-y\fR
-Assumes "yes" as default answer, except for autoremove
-.
-.P
-The \fBpkgin\fR utility provides several commands:
-.
-.TP
-\fBautoremove\fR
-Automatically removes orphan dependencies\. When used with the \fB\-n\fR flag, it can be used to show packages that are possibly not necessary\.
-.
-.TP
-\fBavail\fR
-Lists all packages available in the repository\.
-.
-.TP
-\fBclean\fR
-Delete downloaded packages from the cache directory\.
-.
-.TP
-\fBexport\fR
-Export the list of non\-autoremovable packages to stdout (one category/package by line)
-.
-.TP
-\fBupgrade\fR
-Upgrade all packages to the newest versions available in the repository\.
-.
-.TP
-\fBimport\fR \fIfile\fR
-Import a list of packages to be installed from file (one category/package by line)
-.
-.TP
-\fBinstall\fR \fIpackage|glob\fR \.\.\.
-Performs installation or upgrade of package\. If more than one packages are specified on the command\-line, all will be installed (or upgraded)\. Instead of a package name, a glob can be specified in order to install specific versions\.
-.
-.IP
+.It Fl v
+Displays
+.Nm
+version
+.It Fl y
+Assumes
+.Dq yes
+as default answer, except for autoremove
+.El
+.Pp
+The
+.Nm
+utility provides several commands:
+.Bl -tag -width 12n
+.It Cm autoremove
+Automatically removes orphan dependencies.
+When used with the
+.Fl n
+flag, it can be used to show packages that are possibly not necessary.
+.It Cm avail
+Lists all packages available in the repository.
+.It Cm clean
+Delete downloaded packages from the cache directory.
+.It Cm export
+Export the list of non-autoremovable packages to stdout (one
+category/package by line).
+.It Cm import Ar file
+Import a list of packages to be installed from file (one
+category/package by line)
+.It Cm install Ar package Ns | Ns Ar glob Ar
+Performs installation or upgrade of package.
+If more than one packages are specified on the command-line, all will
+be installed (or upgraded).
+Instead of a package name, a glob can be specified in order to install
+specific versions.
+.Pp
 Example:
-.
-.IP
-pkgin in \'mysql\-server>5\.1<5\.6\'
-.
-.TP
-\fBkeep\fR \fIpackage\fR \.\.\.
-Marks package as "non auto\-removable"\. A \fBkeep\fR\-able package is equivalent to a non\-automatic package in pkgsrc(7) terminology\.
-.
-.TP
-\fBlist\fR
-Lists all packages installed locally on a system\. If the l modifier is added to this command, show only packages matching the status flag\.
-.
-.TP
-\fBpkg\-content\fR \fIpackage\fR
-Show remote package content\.
-.
-.TP
-\fBpkg\-descr\fR \fIpackage\fR
-Show remote package long\-description\.
-.
-.TP
-\fBpkg\-build\-defs\fR \fIpackage\fR
-Show remote package build definitions\.
-.
-.TP
-\fBprovides\fR \fIpackage\fR
-Shows what a package provides to others
-.
-.TP
-\fBremove\fR \fIpackage\fR \.\.\.
-Removes package as well as all packages depending on it\. When more than one package are specified, they will all be uninstalled\. By default, it will prompt you to confirm before package removals\.
-.
-.TP
-\fBrequires\fR \fIpackage\fR
-Shows what a package requires from others packages\.
-.
-.TP
-\fBsearch\fR \fIpattern\fR
-Performs a regular expression search for a pattern in the repository\.
-.
-.TP
-\fBshow\-deps\fR
-Displays all direct dependencies
-.
-.TP
-\fBshow\-full\-deps\fR \fIpackage\fR
-Displays all direct dependencies recursively
-.
-.TP
-\fBshow\-rev\-deps\fR \fIpackage\fR
-Displays all reverse direct dependencies for package\. If more than one package is specified, pkgin will show recursively reverse direct dependencies for all packages on the command\-line\.
-.
-.TP
-\fBshow\-category\fR \fIcategory\fR
-Show packages belonging to category\.
-.
-.TP
-\fBshow\-pkg\-category\fR \fIpackage\fR
-Show package category\.
-.
-.TP
-\fBshow\-keep\fR
-Display "non auto\-removable" packages\.
-.
-.TP
-\fBshow\-no\-keep\fR
-Display "auto\-removable" packages\.
-.
-.TP
-\fBunkeep\fR \fIpackage\fR \.\.\.
-Marks package as "auto\-removable"\. If no other package depends on it, it will be removed when using the autoremove modifier\. It is equivalent to an \fBautomatic\fR package in pkgsrc(7) terminology\.
-.
-.TP
-\fBupdate\fR
-Creates and populates the initial database of locally installed packages and available packages (from the remote pkg_summary(5) list)\. This is done automatically when pkgin is first used, when the system package database has been modified, or when pkgin is upgraded to a new database version\.
-.
-.SH "STATUS FLAGS"
-When using the \fB\-l\fR flag along with the list command, the following status flag must be set:
-.
-.TP
-\fB=\fR
-The installed version of the package is current\.
-.
-.TP
-\fB<\fR
-The installed version of the package is older than the current version\.
-.
-.TP
-\fB>\fR
-The installed version of the package is newer than the current version\.
-.
-.SH "ENVIRONMENT"
-\fBPKG_REPOS\fR The \fBPKG_REPOS\fR environment variable can be pointed to a suitable repository or a list of space separated repositories in order to override </usr/pkg/etc/pkgin/repositories\.conf>
-.
-.SH "FILES"
-.
-.TP
-\fI/usr/pkg/etc/pkgin/repositories\.conf\fR
-This file contains a list of repository URIs that pkgin will use\. It may contain macros \fB$arch\fR to define the machine hardware platform and \fB$osrelease\fR to define the release version for the operating system (as reported by uname(3))\.
-.
-.TP
-\fI/usr/pkg/etc/pkgin/preferred\.conf\fR
-This file contains a list of preferences regarding packages to be installed or upgraded\. Each line defines a package preference taking the form of a simple glob(3)\.
-.
-.IP
-Example:
-.
-.IP
-mysql\-server<5\.6
-.
-.br
-php>=5\.4
-.
-.br
-autoconf=2\.69\.*
-.
-.TP
-\fI/var/db/pkgin\fR
-This directory contains component needed by \fBpkgin\fR at run time\. This directory can be completely emptied if \fBpkgin\fR\'s database gets corrupted, \fBpkgin\fR will rebuild its database based on \fBpkg_install\fR\'s \fBPKG_DB\fR next time it is called\.
-.
-.TP
-\fI/var/db/pkgin/cache\fR
-This directory contains the packages downloaded by \fBpkgin\fR\. It is safe to empty it regularily using \fBpkgin clean\fR or simply \fBrm \-rf /var/db/pkgin/cache\fR\.
-.
-.TP
-\fI/var/db/pkgin/pkgin\.db\fR
-\fIpkgin\.db\fR is the main \fBpkgin\fR \fBSQLite\fR database\. This format has been chosen in order to parse, query, match and order packages using the \fBSQL\fR language thus making packages list manipulation a lot easier\.
-.
-.TP
-\fI/var/db/pkgin/pkg_install\-err\.log\fR
-This file contains errors and warnings given by pkg_add(1) and pkg_delete(1), which are the tools called by \fBpkgin\fR to manipulate packages themselves\.
-.
-.TP
-\fI/var/db/pkgin/sql\.log\fR
-This file contains \fBSQL\fR errors that might have occurred on a \fBSQLite\fR query\. Mainly for debugging purposes\.
-.
-.SH "EXAMPLES"
-.
-.nf
-
+.Dl pkgin install 'mysql-server>=5.6<5.7'
+.It Cm keep Ar package Ar
+Marks package as "non auto-removable".
+A
+.Pf Cm keep No -able
+package is equivalent to a non-automatic package in
+.Xr pkgsrc 7
+terminology.
+.Ic list
+Lists all packages installed locally on a system.
+If the
+.Fl l
+modifier is added to this command, show only packages matching the
+status flag.
+.It Cm pkg-build-defs Ar package
+Show remote package build definitions.
+.It Cm pkg-content Ar package
+Show remote package content.
+.It Cm pkg-descr Ar package
+Show remote package long-description.
+.It Cm provides Ar package
+Shows what a package provides to others.
+.It Cm remove Ar package Ar
+Removes package as well as all packages depending on it.
+When more than one package are specified, they will all be
+uninstalled.
+By default, it will prompt you to confirm before package removals.
+.It Cm requires Ar package
+Shows what a package requires from other packages.
+.It Cm search Ar pattern
+Performs a regular expression search for the pattern
+.Ar pattern
+in the repository.
+.It Cm show-deps Ar package
+Displays all direct dependencies.
+.It Cm show-full-deps Ar package
+Displays all direct dependencies recursively.
+.It Cm show-rev-deps Ar package
+Displays all reverse direct dependencies for package.
+If more than one package is specified,
+.Nm
+will show recursively reverse direct dependencies for all packages on
+the command-line.
+.It Cm show-category Ar category
+Show packages belonging to
+.Ar category .
+.It Cm show-pkg-category Ar package
+Show package category.
+.It Cm show-keep
+Display
+.Dq non auto-removable
+packages.
+.It Cm show-no-keep
+Display
+.Dq auto-removable
+packages.
+.It Cm unkeep Ar package Ar
+Marks package as
+.Dq auto-removable .
+If no other package depends on it, it will be removed when using the
+.Cm autoremove
+modifier.
+It is equivalent to an
+.Dv automatic
+package in
+.Xr pkgsrc 7
+terminology.
+.It Cm update
+Creates and populates the initial database of locally installed
+packages and available packages (from the remote
+.Xr pkg_summary 5
+list).
+This is done automatically when
+.Nm
+is first used, when the system package database has been modified, or
+when
+.Nm
+is upgraded to a new database version.
+.It Cm upgrade
+Upgrade all packages to the newest versions available in the
+repository.
+.El
+.Sh STATUS FLAGS
+When using the
+.Fl l
+flag along with the list command, the following status flag must be set:
+.Bl -tag -width 2n
+.It \&=
+The installed version of the package is current.
+.It \&<
+The installed version of the package is older than the current
+version.
+.It \&>
+The installed version of the package is newer than the current version.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width 10n
+.It Ev PKG_REPOS
+The
+.Ev PKG_REPOS
+environment variable can be pointed to a suitable repository or a list
+of space separated repositories in order to override
+.Pa /usr/pkg/etc/pkgin/repositories.conf .
+.El
+.Sh FILES
+.Bl -tag -width 12n
+.It Pa /usr/pkg/etc/pkgin/repositories.conf
+This file contains a list of repository URIs that
+.Nm
+will use.
+It may contain macros
+.Dv $arch
+to define the machine hardware platform and
+.Dv $osrelease
+to define the release version for the operating system (as reported by
+.Xr uname 1 ) .
+.It Pa /usr/pkg/etc/pkgin/preferred.conf
+This file contains a list of preferences regarding packages to be
+installed or upgraded.
+Each line defines a package preference taking the form of a simple
+.Xr glob 3 ,
+such as:
+.Pp
+.Dl autoconf=2.69.*
+.Dl mysql-server<5.6
+.Dl php>=5.4
+.It Pa /var/db/pkgin
+This directory contains the individual files and
+directories used by
+.Nm
+listed below.
+.It Pa /var/db/pkgin/cache
+This directory contains the packages downloaded by
+.Nm .
+It is safe to empty it if necessary by running:
+.Pp
+.Dl # pkgin clean
+.It Pa /var/db/pkgin/pkgin.db
+This is the main
+.Nm pkgin
+sqlite database.
+This format has been chosen in order to parse, query, match and order
+packages using the SQL language thus making packages list manipulation
+a lot easier.
+.It Pa /var/db/pkgin/pkg_install-err.log
+This file contains errors and warnings given by
+.Xr pkg_add 1
+and
+.Xr pkg_delete 1 ,
+which are the tools called by
+.Nm
+to manipulate packages themselves.
+.It Pa /var/db/pkgin/sql.log
+This file contains SQL errors that might have occurred on a sqlite
+query.
+Mainly for debugging purposes.
+.El
+.Sh EXAMPLES
 Setup the initial database:
-
-# echo ftp://ftp\.fr\.netbsd\.org/pub/pkgsrc/packages/NetBSD/i386/5\.0/All > /usr/pkg/etc/pkgin/repositories\.conf
-# pkgin update
-processing local summary\.\.\.
-updating database: 100%
-downloading pkg_summary\.bz2: 100%
-processing remote summary (ftp://ftp\.fr\.netbsd\.org/pub/pkgsrc/packages/NetBSD/i386/5\.0/All)\.\.\.
-updating database: 100%
-
+.Pp
+.Dl # vi /usr/pkg/etc/pkgin/repositories.conf
+.Dl https://cdn.netbsd.org/pub/pkgsrc/packages/NetBSD/$arch/9.0/All
+.Pp
+.Dl # pkgin update
+.Pp
 Listing all packages available in the repository:
-
-# pkgin avail | more
-[\.\.\.]
-autoconf\-2\.63        Generates automatic source code configuration scripts
-aumix\-gtk\-2\.8nb3     Set mix levels (ncurses and GTK+ 2\.0 interfaces)
-aumix\-2\.8nb7         Set mix levels (ncurses interface only)
-august\-0\.63b         Simple Tk\-based HTML editor
-audacity\-1\.2\.6nb3    Audio editor
-[\.\.\.]
-
+.Pp
+.Dl # pkgin avail
+.Pp
+Search for specific packages:
+.Pp
+.Dl # pkgin search '^abook|lbdb|mutt|xlhtml'
+.Dl abook-0.6.1          Text-based addressbook program
+.Dl lbdb-0.48.1nb1       The little brother's database
+.Dl mutt-1.14.5 =        Text-based MIME mail client with PGP & S/MIME support
+.Dl xlhtml-0.5nb2        Microsoft xls/ppt to HTML converter
+.Pp
+.Dl # pkgin search '^php-'
+.Dl php-7.4.7            PHP Hypertext Preprocessor version 7.4
+.Dl php-7.3.19           PHP Hypertext Preprocessor version 7.3
+.Dl php-7.2.31nb1        PHP Hypertext Preprocessor version 7.2
+.Dl php-5.6.40nb3        PHP Hypertext Preprocessor version 5.6
+.Dl php-mode-1.13.1      PHP editing mode for Emacs
+.Pp
 Install packages and their dependencies:
-
-# pkgin install links eterm
-nothing to upgrade\.
-11 packages to be installed: tiff\-3\.8\.2nb4 png\-1\.2\.35 libungif\-4\.1\.4nb1 libltdl\-1\.5\.26 jpeg\-6bnb4 pcre\-7\.8 perl\-5\.10\.0nb5 libast\-0\.6\.1nb3 imlib2\-1\.4\.2nb1 links\-2\.2nb1 eterm\-0\.9\.4nb1 (25M to download, 64M to install)
-proceed ? [y/N]
-
+.Pp
+.Dl # pkgin install abook lbdb mutt xlhtml
+.Pp
+.Dl # pkgin install 'php>=7.3<7.4'
+.Pp
+Upgrade all packages:
+.Pp
+.Dl # pkgin upgrade
+.Pp
 Remove packages and their reverse dependencies:
-
-# pkgin remove links eterm
-2 packages to delete: links\-2\.2nb1 eterm\-0\.9\.4nb1
-proceed ? [y/N]
-
-Remove orphan dependencies:
-
-# pkgin autoremove
-in order to remove packages from the autoremove list, flag those with the \-k modifier\.
-9 packages to be autoremoved: libast\-0\.6\.1nb3 pcre\-7\.8 imlib2\-1\.4\.2nb1 tiff\-3\.8\.2nb4 png\-1\.2\.35 libungif\-4\.1\.4nb1 libltdl\-1\.5\.26 perl\-5\.10\.0nb5 jpeg\-6bnb4
-proceed ? [y/N]
-.
-.fi
-.
-.SH "SEE ALSO"
-pkg_add(1), pkg_info(1), pkg_summary(5), pkgsrc(7)
-.
-.SH "AUTHORS"
-.
-.TP
-Emile \fBiMil\fR Heitor
-Initial work and ongoing development\.
-.
-.TP
-Jonathan Perkin
-Primary maintainer 0\.9\.0 onwards\.
-.
-.SH "CONTRIBUTORS"
-.
-.TP
-Jeremy C\. Reed
-Testing and refinements\.
-.
-.TP
-Arnaud Ysmal
+.Pp
+.Dl # pkgin remove mutt
+.Pp
+Remove orphaned dependencies:
+.Pp
+.Dl # pkgin autoremove
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_info 1 ,
+.Xr pkg_summary 5 ,
+.Xr pkgsrc 7
+.Sh AUTHORS
+.Bl -tag -width 25n
+.It Emile Ao iMil Ac Heitor
+Initial work and ongoing development.
+.It Jonathan Perkin
+Primary maintainer 0.9.0 onwards.
+.El
+.Sh CONTRIBUTORS
+.Bl -tag -width 25n
+.It Jeremy C. Reed
+Testing and refinements.
+.It Arnaud Ysmal
 Tests and patches
-.
-.TP
-Claude Charpentier
-SQLite schema, and SQL queries debugging\.
-.
-.TP
-Guillaume Lasmayous
+.It Claude Charpentier
+SQLite schema, and SQL queries debugging.
+.It Guillaume Lasmayous
 Man page
-.
-.TP
-Antonio Huete Jimenez
-DragonFly port
-.
-.TP
-Min Sik Kim
+.It Antonio Huete Jimenez
+.Dx
+port
+.It Min Sik Kim
 Darwin port
-.
-.TP
-Filip Hajny
+.It Filip Hajny
 SunOS port
-.
-.TP
-Baptiste Daroussin
-FreeBSD port and patches
-.
-.TP
-Gautam B\.T\.
+.It Baptiste Daroussin
+.Fx
+port and patches
+.It Gautam B.T.
 MINIX port
-.
-.TP
-Thomas \fBwiz\fR Klausner
-Testing and refinements\.
-.
-.TP
-Youri \fByrmt\fR Mouton
+.It Thomas Ao wiz Ac Klausner
+Testing and refinements.
+.It Youri Ao yrmt Ac Mouton
 OSX testing and patches
-.
-.SH "BUGS"
-We\'re hunting them\.
+.El
+.Sh BUGS
+We're hunting them.
