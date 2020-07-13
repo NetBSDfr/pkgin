@@ -203,6 +203,7 @@ log_tag(const char *fmt, ...)
 
 	(void)strftime(now_date, DATELEN, "%b %d %H:%M:%S", &tim);
 
+	printf("%s", log_action);
 	fprintf(err_fp, "---%s: %s", now_date, log_action);
 	fflush(err_fp);
 	
@@ -288,9 +289,7 @@ do_pkg_remove(Plisthead *removehead)
 			continue;
 		}
 
-		printf(MSG_REMOVING, premove->depend);
-		if (!verbosity)
-			log_tag(MSG_REMOVING, premove->depend);
+		log_tag(MSG_REMOVING, premove->depend);
 		if (fexec(pkg_delete, verb_flag("-f"), premove->depend, NULL)
 			!= EXIT_SUCCESS)
 			err_count++;
@@ -308,20 +307,12 @@ do_pkg_remove(Plisthead *removehead)
  * i.e. apache 1.3
  */
 static int
-do_pkg_install(Plisthead *installhead, int op)
+do_pkg_install(Plisthead *installhead)
 {
 	int		rc = EXIT_SUCCESS;
 	Pkglist		*pinstall;
 	char		pkgpath[BUFSIZ];
-	const char	*pmsg;
 	char		*pflags = verb_flag("-DU");
-
-	if (op == TOREFRESH)
-		pmsg = "refreshing %s...\n";
-	else if (op == TOUPGRADE)
-		pmsg = "upgrading %s...\n";
-	else
-		pmsg = "installing %s...\n";
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
@@ -331,12 +322,20 @@ do_pkg_install(Plisthead *installhead, int op)
 		if (pinstall->file_size == -1)
 			continue;
 
-		printf(pmsg, pinstall->depend);
 		snprintf(pkgpath, BUFSIZ,
 			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
 
-		if (!verbosity)
-			log_tag(pmsg, pinstall->depend);
+		switch (pinstall->action) {
+		case TOREFRESH:
+			log_tag("refreshing %s...\n", pinstall->depend);
+			break;
+		case TOUPGRADE:
+			log_tag("upgrading %s...\n", pinstall->depend);
+			break;
+		case TOINSTALL:
+			log_tag("installing %s...\n", pinstall->depend);
+			break;
+		}
 
 		if (fexec(pkg_add, pflags, pkgpath, NULL) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
@@ -417,9 +416,7 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	size_t		len;
 	ssize_t		llen;
 	Pkglist		*pkg;
-	Plisthead	*impacthead; /* impact head */
-	Plisthead	*upgradehead = NULL, *installhead = NULL;
-	Plisthead	*refreshhead = NULL, *downloadhead = NULL;
+	Plisthead	*impacthead, *downloadhead, *installhead;
 	char		**pkgargs, *p;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
@@ -590,19 +587,19 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		todownload = action_list(todownload, pkg->depend);
 	}
 
-	refreshhead = order_install(impacthead, TOREFRESH);
-	SLIST_FOREACH(pkg, refreshhead, next) {
-		torefresh = action_list(torefresh, pkg->depend);
-	}
-
-	upgradehead = order_install(impacthead, TOUPGRADE);
-	SLIST_FOREACH(pkg, upgradehead, next) {
-		toupgrade = action_list(toupgrade, pkg->depend);
-	}
-
-	installhead = order_install(impacthead, TOINSTALL);
+	installhead = order_install(impacthead);
 	SLIST_FOREACH(pkg, installhead, next) {
-		toinstall = action_list(toinstall, pkg->depend);
+		switch (pkg->action) {
+		case TOREFRESH:
+			torefresh = action_list(torefresh, pkg->depend);
+			break;
+		case TOUPGRADE:
+			toupgrade = action_list(toupgrade, pkg->depend);
+			break;
+		case TOINSTALL:
+			toinstall = action_list(toinstall, pkg->depend);
+			break;
+		}
 	}
 
 	printf("\n");
@@ -670,20 +667,10 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		goto installend;
 
 	/*
-	 * At this point we're performing installs.  Do them in order.
+	 * At this point we're performing installs.
 	 */
-	if (refreshnum > 0) {
-		if (do_pkg_install(refreshhead, TOREFRESH) == EXIT_FAILURE)
-			rc = EXIT_FAILURE;
-	}
-	if (upgradenum > 0) {
-		if (do_pkg_install(upgradehead, TOUPGRADE) == EXIT_FAILURE)
-			rc = EXIT_FAILURE;
-	}
-	if (installnum > 0) {
-		if (do_pkg_install(installhead, TOINSTALL) == EXIT_FAILURE)
-			rc = EXIT_FAILURE;
-	}
+	if (do_pkg_install(installhead) == EXIT_FAILURE)
+		rc = EXIT_FAILURE;
 
 	/*
 	 * Recalculate +REQUIRED_BY entries after all installs have finished,
@@ -704,7 +691,7 @@ installend:
 	XFREE(toupgrade);
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead);
-	free_pkglist(&upgradehead);
+	free_pkglist(&downloadhead);
 	free_pkglist(&installhead);
 	free_list(pkgargs);
 

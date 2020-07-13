@@ -245,7 +245,7 @@ char		*read_preferred(char *);
 /* order.c */
 Plisthead	*order_remove(Plisthead *);
 Plisthead	*order_download(Plisthead *);
-Plisthead	*order_install(Plisthead *, int);
+Plisthead	*order_install(Plisthead *);
 /* impact.c */
 uint8_t		pkg_in_impact(Plisthead *, char *);
 Plisthead	*pkg_impact(char **, int *);

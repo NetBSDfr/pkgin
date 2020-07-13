@@ -147,69 +147,78 @@ order_download(Plisthead *impacthead)
 	return ordtreehead;
 }
 
-/**
- * \fn order_install
- *
- * order the install list according to dependency level
- * here we only rely on basic level given by pkg_summary, the only drawback
- * is that pkg_add will install direct dependencies, giving a "failed,
- * package already installed"
+/*
+ * Order the list of packages to install based on their dependency level, so
+ * that dependencies are installed first.
  */
 Plisthead *
-order_install(Plisthead *impacthead, int op)
+order_install(Plisthead *impacthead)
 {
 	Plisthead	*ordtreehead;
 	Pkglist		*pimpact, *pdp, *pi_dp = NULL;
 	int		i, maxlevel = 0;
 	char		tmpcheck[BUFSIZ];
 
-	/* record higher dependency level on impact list */
+	/* Record highest dependency level on impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
-		if (pimpact->action == op && pimpact->level > maxlevel)
+		if (pimpact->level > maxlevel)
 			maxlevel = pimpact->level;
 	}
 
 	ordtreehead = init_head();
 
-	for (i = 0; i <= maxlevel; i++) {
+	/*
+	 * Start at the highest level (leaf packages), inserting each entry at
+	 * the head of the list, before moving down a level, resulting in core
+	 * dependencies at the head of the list and leaf packages at the end.
+	 *
+	 * pkg_install is special, and if there is an upgrade available then we
+	 * want it to be installed first so that it is used for all subsequent
+	 * package upgrades.
+	 */
+	for (i = maxlevel; i >= 0; i--) {
 		SLIST_FOREACH(pimpact, impacthead, next) {
-			if (pimpact->action == op && pimpact->level == i) {
+			if (pimpact->level != i)
+				continue;
 
-				if (pkg_in_impact(ordtreehead, pimpact->full))
-					continue;
+			pdp = malloc_pkglist();
 
-				pdp = malloc_pkglist();
+			pdp->action = pimpact->action;
+			pdp->depend = xstrdup(pimpact->full);
+			pdp->level = pimpact->level;
+			pdp->download = pimpact->download;
+			pdp->pkgurl = xstrdup(pimpact->pkgurl);
+			pdp->file_size = pimpact->file_size;
 
-				pdp->action = pimpact->action;
-				pdp->depend = xstrdup(pimpact->full);
-				pdp->name = NULL;
-				pdp->build_date = (pimpact->build_date)
-				    ? xstrdup(pimpact->build_date) : NULL;
-				pdp->level = pimpact->level;
-				/* record package size for download check */
-				pdp->download = pimpact->download;
-				pdp->pkgurl = xstrdup(pimpact->pkgurl);
-				pdp->file_size = pimpact->file_size;
-				if (pimpact->old)
-					pdp->old = xstrdup(pimpact->old);
-				/* check for pkg_install upgrade */
-				strcpy(tmpcheck, pimpact->full);
-				trunc_str(tmpcheck, '-', STR_BACKWARD);
-				/* match on pkg_install */
-				if (pi_dp == NULL &&
-				    strcmp(tmpcheck, PKG_INSTALL) == 0) {
-					/* backup pdp for future insertion */
-					pi_dp = pdp;
-				} else					
-					SLIST_INSERT_HEAD(ordtreehead,
-						pdp, next);
-			} /* action == TOINSTALL */
-		} /* SLIST_FOREACH pimpact */
-	} /* for i < maxlevel */
+			if (pimpact->build_date)
+				pdp->build_date = xstrdup(pimpact->build_date);
 
-	/* pkg_install is to be upgraded, make it first */
-	if (pi_dp != NULL)
-		SLIST_INSERT_HEAD(ordtreehead, pi_dp, next);
+			if (pimpact->old)
+				pdp->old = xstrdup(pimpact->old);
+
+			/*
+			 * Check for pkg_install, and if found, save for later
+			 * insertion at the head of this level.
+			 */
+			strcpy(tmpcheck, pimpact->full);
+			trunc_str(tmpcheck, '-', STR_BACKWARD);
+			if (!pi_dp && strcmp(tmpcheck, PKG_INSTALL) == 0) {
+				pi_dp = pdp;
+			} else {
+				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
+			}
+		}
+
+		/*
+		 * Put pkg_install at the head of this level.  It isn't
+		 * guaranteed that this is the lowest level, there are cases
+		 * where pkg_install can depend on other packages, in which
+		 * case they will be installed using the currently-installed
+		 * version first.
+		 */
+		if (pi_dp != NULL)
+			SLIST_INSERT_HEAD(ordtreehead, pi_dp, next);
+	}
 
 	return ordtreehead;
 }
