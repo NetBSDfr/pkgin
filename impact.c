@@ -353,16 +353,12 @@ pkg_in_impact(Plisthead *impacthead, char *depname)
 Plisthead *
 pkg_impact(char **pkgargs, int *rc)
 {
-#ifndef DEBUG
 	static char	*icon = __UNCONST(ICON_WAIT);
-#endif
 	Plisthead	*impacthead, *pdphead = NULL;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
 	char		**ppkgargs, *pkgname;
 	int		istty, rv;
-#ifndef DEBUG
 	char		tmpicon;
-#endif
 
 	TRACE("[>]-entering impact\n");
 

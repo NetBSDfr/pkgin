@@ -44,7 +44,6 @@ FILE		*err_fp = NULL;
 long int	rm_filepos = -1;
 char		pkgtools_flags[5];
 
-#ifndef DEBUG
 static char *
 verb_flag(const char *flags)
 {
@@ -55,7 +54,6 @@ verb_flag(const char *flags)
 
 	return pkgtools_flags;
 }
-#endif
 
 static int
 pkg_download(Plisthead *installhead)
@@ -188,7 +186,6 @@ analyse_pkglog(long int filepos)
  */
 #define DATELEN 64
 
-#ifndef DEBUG
 static void
 log_tag(const char *fmt, ...)
 {
@@ -210,7 +207,6 @@ log_tag(const char *fmt, ...)
 	fflush(err_fp);
 	
 }
-#endif
 
 static void
 open_pi_log(void)
@@ -293,13 +289,11 @@ do_pkg_remove(Plisthead *removehead)
 		}
 
 		printf(MSG_REMOVING, premove->depend);
-#ifndef DEBUG
 		if (!verbosity)
 			log_tag(MSG_REMOVING, premove->depend);
 		if (fexec(pkg_delete, verb_flag("-f"), premove->depend, NULL)
 			!= EXIT_SUCCESS)
 			err_count++;
-#endif
 	}
 
 	close_pi_log(1);
