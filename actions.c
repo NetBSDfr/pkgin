@@ -70,13 +70,6 @@ pkg_download(Plisthead *installhead)
 
 	SLIST_FOREACH(pinstall, installhead, next) {
 		/*
-		 * pkgin_install() should have already marked whether this
-		 * package requires downloading or not.
-		 */
-		if (!pinstall->download)
-			continue;
-
-		/*
 		 * We don't (yet) support resume so start by explicitly
 		 * removing any existing file.  pkgin_install() has already
 		 * checked to see if it's valid, and we know it is not.

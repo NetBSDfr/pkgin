@@ -120,6 +120,8 @@ order_remove(Plisthead *deptreehead)
 /*
  * Simple download order.  In the future it would be nice to sort this
  * alphabetically for prettier output.
+ *
+ * All we do is skip any packages not marked for download by pkgin_install().
  */
 Plisthead *
 order_download(Plisthead *impacthead)
@@ -132,12 +134,7 @@ order_download(Plisthead *impacthead)
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		if (!pimpact->download)
 			continue;
-		if (pkg_in_impact(ordtreehead, pimpact->full))
-			continue;
-		if (pimpact->action != TOINSTALL &&
-		    pimpact->action != TOREFRESH &&
-		    pimpact->action != TOUPGRADE)
-			continue;
+
 		pdp = malloc_pkglist();
 		pdp->action = pimpact->action;
 		pdp->depend = xstrdup(pimpact->full);
