@@ -57,7 +57,6 @@
 #define PKG_EXT ".tgz"
 #define PKGIN_CONF PKG_SYSCONFDIR"/pkgin"
 #define REPOS_FILE "repositories.conf"
-#define PKG_INSTALL "pkg_install"
 #define PREF_FILE "preferred.conf"
 
 #define LOCAL_SUMMARY 0

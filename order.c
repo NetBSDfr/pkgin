@@ -202,7 +202,7 @@ order_install(Plisthead *impacthead)
 			 */
 			strcpy(tmpcheck, pimpact->full);
 			trunc_str(tmpcheck, '-', STR_BACKWARD);
-			if (!pi_dp && strcmp(tmpcheck, PKG_INSTALL) == 0) {
+			if (!pi_dp && strcmp(tmpcheck, "pkg_install") == 0) {
 				pi_dp = pdp;
 			} else {
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);

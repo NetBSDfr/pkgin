@@ -284,8 +284,8 @@ do_pkg_remove(Plisthead *removehead)
 			continue;
 
 		/* pkg_install cannot be deleted */
-		if (strcmp(premove->depend, PKG_INSTALL) == 0) {
-			printf(MSG_NOT_REMOVING, PKG_INSTALL);
+		if (strcmp(premove->depend, "pkg_install") == 0) {
+			printf("not removing pkg_install...\n");
 			continue;
 		}
 
