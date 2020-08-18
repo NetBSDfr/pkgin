@@ -204,9 +204,10 @@ log_tag(const char *fmt, ...)
 	(void)strftime(now_date, DATELEN, "%b %d %H:%M:%S", &tim);
 
 	printf("%s", log_action);
-	fprintf(err_fp, "---%s: %s", now_date, log_action);
-	fflush(err_fp);
-	
+	if (!verbosity) {
+		fprintf(err_fp, "---%s: %s", now_date, log_action);
+		fflush(err_fp);
+	}
 }
 
 static void
