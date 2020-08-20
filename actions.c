@@ -417,7 +417,7 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	size_t		len;
 	ssize_t		llen;
 	Pkglist		*pkg;
-	Plisthead	*impacthead, *downloadhead, *installhead;
+	Plisthead	*impacthead, *downloadhead, *installhead = NULL;
 	char		**pkgargs, *p;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
@@ -465,6 +465,7 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		 * for them and move to the next package.
 		 */
 		if (pkg->action == TOREMOVE) {
+			printf("To remove:%s\n", pkg->full);
 			removenum++;
 			continue;
 		}
@@ -693,7 +694,12 @@ installend:
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead);
 	free_pkglist(&downloadhead);
-	free_pkglist(&installhead);
+	/*
+	 * installhead may be NULL, for example if trying to install a package
+	 * that conflicts.
+	 */
+	if (installhead != NULL)
+		free_pkglist(&installhead);
 	free_list(pkgargs);
 
 	return rc;
