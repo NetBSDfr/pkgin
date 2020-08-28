@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([pkgin], [20.7.0], [https://github.com/NetBSDfr/pkgin/issues])
+AC_INIT([pkgin], [20.8.0], [https://github.com/NetBSDfr/pkgin/issues])
 AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
 

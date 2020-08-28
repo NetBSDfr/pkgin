@@ -1,3 +1,7 @@
+## Version 20.8.0 (2020-08-28)
+
+ * Avoid segmentation faults across a few different scenarios.
+
 ## Version 20.7.0 (2020-07-13)
 
  * Order package installs correctly.
