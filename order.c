@@ -181,6 +181,14 @@ order_install(Plisthead *impacthead)
 			if (pimpact->level != i)
 				continue;
 
+			/*
+			 * XXX: This is incorrect, removals need to be handled
+			 * properly during upgrades, but is necessary for now
+			 * to avoid issues with pkgurl being set to NULL.
+			 */
+			if (pimpact->action == TOREMOVE)
+				continue;
+
 			pdp = malloc_pkglist();
 
 			pdp->action = pimpact->action;
