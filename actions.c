@@ -417,7 +417,7 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	size_t		len;
 	ssize_t		llen;
 	Pkglist		*pkg;
-	Plisthead	*impacthead, *downloadhead, *installhead = NULL;
+	Plisthead	*impacthead, *downloadhead = NULL, *installhead = NULL;
 	char		**pkgargs, *p;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
