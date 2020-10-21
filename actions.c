@@ -465,7 +465,6 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		 * for them and move to the next package.
 		 */
 		if (pkg->action == TOREMOVE) {
-			printf("To remove:%s\n", pkg->full);
 			removenum++;
 			continue;
 		}
