@@ -1,3 +1,9 @@
+## Version 20.11.0 (2020-11-02)
+
+ * Avoid segmentation fault when trying to install package conflicts.
+ * Remove default 15 second download timeout, also fixing -fno-common.
+ * Remove debugging code that snuck into the previous release.
+
 ## Version 20.8.0 (2020-08-28)
 
  * Avoid segmentation faults across a few different scenarios.
