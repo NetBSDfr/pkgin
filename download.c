@@ -30,8 +30,6 @@
 #include "pkgin.h"
 #include "external/progressmeter.h"
 
-size_t	fetch_buffer = 1024;
-
 /*
  * Open a pkg_summary and if newer than local return an open libfetch
  * connection to it.
