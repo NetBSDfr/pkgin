@@ -30,7 +30,6 @@
 #include "pkgin.h"
 #include "external/progressmeter.h"
 
-int	fetchTimeout = 15; /* wait 15 seconds before timeout */
 size_t	fetch_buffer = 1024;
 
 /*
