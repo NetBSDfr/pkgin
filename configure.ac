@@ -183,6 +183,7 @@ AC_CHECK_FUNC([humanize_number],
 )
 AC_CHECK_HEADERS([util.h bsd/libutil.h libutil.h])
 AC_CHECK_HEADERS([sys/termios.h termios.h])
+AC_CHECK_HEADERS([sys/sysctl.h])
 #
 # Tests for library functions that may exist outside of libc.
 #

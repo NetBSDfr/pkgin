@@ -120,6 +120,18 @@ getosarch(void)
 {
 	char			*ret;
 	struct utsname	un;
+#if defined(HAVE_SYS_SYSCTL_H) && defined(HW_MACHINE_ARCH)
+	char	machine_arch[32];
+	int	mib[2];
+	size_t	len;
+
+	len = sizeof(machine_arch);
+	mib[0] = CTL_HW;
+	mib[1] = HW_MACHINE_ARCH;
+
+	if (sysctl(mib, 2, machine_arch, &len, NULL, 0) != -1)
+		return xstrdup(machine_arch);
+#endif
 
 	memset(&un, 0, sizeof(un));
 	if (uname(&un) < 0)
