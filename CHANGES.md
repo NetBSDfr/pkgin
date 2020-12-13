@@ -1,3 +1,7 @@
+## Version 20.12.0 (2020-12-13)
+
+ * Return correct MACHINE\_ARCH when using $arch in repositories.conf.
+
 ## Version 20.11.0 (2020-11-02)
 
  * Avoid segmentation fault when trying to install package conflicts.
