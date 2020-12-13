@@ -118,16 +118,7 @@ do_log(const char *path, const char *fmt, ...)
 char *
 getosarch(void)
 {
-	char			*ret;
-	struct utsname	un;
-
-	memset(&un, 0, sizeof(un));
-	if (uname(&un) < 0)
-		return NULL;
-
-	ret = xstrdup(un.machine);
-
-	return ret;
+	return xstrdup(MACHINE_ARCH);
 }
 
 /* Return release numbers or NULL in case of failure */
