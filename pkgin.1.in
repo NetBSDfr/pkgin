@@ -1,4 +1,4 @@
-.Dd July 1, 2020
+.Dd December 22, 2020
 .Dt PKGIN 1
 .Os
 .Sh NAME
@@ -198,7 +198,11 @@ This file contains a list of repository URIs that
 will use.
 It may contain macros
 .Dv $arch
-to define the machine hardware platform and
+to define the machine hardware platform,
+.Dv $machine
+to define the machine cpu platform,
+.Dv $osname
+to define the operating system name, and
 .Dv $osrelease
 to define the release version for the operating system (as reported by
 .Xr uname 1 ) .
