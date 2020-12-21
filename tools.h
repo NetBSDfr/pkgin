@@ -116,6 +116,8 @@ extern void do_log(const char *, const char *, ...);
 extern void trunc_str(char *, char, int);
 extern char *strreplace(char *, const char *, const char *);
 extern char *getosarch(void);
+extern char *getosmachine(void);
+extern char *getosname(void);
 extern char *getosrelease(void);
 extern int check_yesno(uint8_t);
 

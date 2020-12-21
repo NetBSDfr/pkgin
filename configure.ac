@@ -166,6 +166,28 @@ AC_ARG_WITH([pkg-install],
 AC_SUBST(PKG_INSTALL_DIR)
 
 #
+# --with-uname-machine=UNAME_MACHINE
+#
+AC_ARG_WITH([uname-machine],
+	[AS_HELP_STRING([--with-uname-machine=MACHINE],
+		[Target UNAME_MACHINE])],
+	[UNAME_MACHINE="$withval"],
+	[AC_MSG_ERROR([--with-uname-machine is mandatory])]
+)
+AC_SUBST(UNAME_MACHINE)
+
+#
+# --with-uname-system=UNAME_SYSTEM
+#
+AC_ARG_WITH([uname-system],
+	[AS_HELP_STRING([--with-uname-system=SYSTEM],
+		[Target UNAME_SYSTEM])],
+	[UNAME_SYSTEM="$withval"],
+	[AC_MSG_ERROR([--with-uname-system is mandatory])]
+)
+AC_SUBST(UNAME_SYSTEM)
+
+#
 # There is no real merit in testing for lots of different library functions and
 # headers if they're essential anyway.  It's unlikely we will want to support
 # esoteric environments.

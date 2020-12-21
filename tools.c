@@ -114,11 +114,25 @@ do_log(const char *path, const char *fmt, ...)
 	va_end(args);
 }
 
-/* Return architecture name or NULL in case of failure */
+/* Return architecture name */
 char *
 getosarch(void)
 {
 	return xstrdup(MACHINE_ARCH);
+}
+
+/* Return machine name */
+char *
+getosmachine(void)
+{
+	return xstrdup(UNAME_MACHINE);
+}
+
+/* Return system name */
+char *
+getosname(void)
+{
+	return xstrdup(UNAME_SYSTEM);
 }
 
 /* Return release numbers or NULL in case of failure */

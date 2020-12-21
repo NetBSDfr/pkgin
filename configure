@@ -631,6 +631,8 @@ GREP
 CPP
 HAVE_HUMANIZE_NUMBER_FALSE
 HAVE_HUMANIZE_NUMBER_TRUE
+UNAME_SYSTEM
+UNAME_MACHINE
 PKG_INSTALL_DIR
 MACHINE_ARCH
 SQLITE3_LIBS
@@ -744,6 +746,8 @@ with_openssl
 with_sqlite3
 with_machine_arch
 with_pkg_install
+with_uname_machine
+with_uname_system
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1389,6 +1393,10 @@ Optional Packages:
   --with-machine-arch=ARCH
                           Target MACHINE_ARCH
   --with-pkg-install=DIR  Path to pkg_install commands (e.g. /usr/pkg/sbin)
+  --with-uname-machine=MACHINE
+                          Target UNAME_MACHINE
+  --with-uname-system=SYSTEM
+                          Target UNAME_SYSTEM
 
 Some influential environment variables:
   CC          C compiler command
@@ -4168,6 +4176,34 @@ else
 
 		as_fn_error $? "--with-pkg-install is mandatory" "$LINENO" 5
 
+
+fi
+
+
+
+#
+# --with-uname-machine=UNAME_MACHINE
+#
+
+# Check whether --with-uname-machine was given.
+if test "${with_uname_machine+set}" = set; then :
+  withval=$with_uname_machine; UNAME_MACHINE="$withval"
+else
+  as_fn_error $? "--with-uname-machine is mandatory" "$LINENO" 5
+
+fi
+
+
+
+#
+# --with-uname-system=UNAME_SYSTEM
+#
+
+# Check whether --with-uname-system was given.
+if test "${with_uname_system+set}" = set; then :
+  withval=$with_uname_system; UNAME_SYSTEM="$withval"
+else
+  as_fn_error $? "--with-uname-system is mandatory" "$LINENO" 5
 
 fi
 
