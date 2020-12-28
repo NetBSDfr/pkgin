@@ -293,35 +293,6 @@ get_pkgname_from_depend(char *depend)
 	return pkgname;
 }
 
-char **
-glob_to_pkgarg(char **globpkg, int *rc)
-{
-	size_t		count;
-	int		i;
-	char		**pkgargs = NULL;
-	Pkglist		*plist;
-
-	for (i = 0, count = 0; globpkg[i] != NULL; i++, count++) {
-		pkgargs = xrealloc(pkgargs, (count + 2) * sizeof(char *));
-
-		if ((plist = find_pkg_match(&r_plisthead, globpkg[i]))) {
-			pkgargs[count] = xstrdup(plist->full);
-		} else {
-			fprintf(stderr, MSG_PKG_NOT_AVAIL, globpkg[i]);
-			count--;
-			*rc = EXIT_FAILURE;
-		}
-	}
-
-	if (count == 0)
-		XFREE(pkgargs);
-
-	if (pkgargs != NULL)
-		pkgargs[count] = NULL;
-
-	return pkgargs;
-}
-
 /*
  * Compare string values between two packages.  Often in pkgin the comparison
  * in question allows both to be NULL, for example with pkg_summary fields
