@@ -405,7 +405,7 @@ action_list(char *flatlist, char *str)
 #define H_BUF 6
 
 int
-pkgin_install(char **opkgargs, int do_inst, int upgrade)
+pkgin_install(char **pkgargs, int do_inst, int upgrade)
 {
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0, removenum = 0;
@@ -418,7 +418,7 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	ssize_t		llen;
 	Pkglist		*pkg;
 	Plisthead	*impacthead, *downloadhead = NULL, *installhead = NULL;
-	char		**pkgargs, *p;
+	char		*p;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
 	char		*unmet_reqs = NULL;
@@ -431,12 +431,6 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 		return EXIT_FAILURE;
 	}
 
-	/* transform command line globs into pkgnames */
-	if ((pkgargs = glob_to_pkgarg(opkgargs, &rc)) == NULL) {
-		printf(MSG_NOTHING_TO_DO);
-		return rc;
-	}
-
 	if (do_inst)
 		privsreqd |= PRIVS_PKGDB;
 
@@ -446,7 +440,6 @@ pkgin_install(char **opkgargs, int do_inst, int upgrade)
 	/* full impact list */
 	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
-		free_list(pkgargs);
 		return rc;
 	}
 
@@ -699,7 +692,6 @@ installend:
 	 */
 	if (installhead != NULL)
 		free_pkglist(&installhead);
-	free_list(pkgargs);
 
 	return rc;
 }

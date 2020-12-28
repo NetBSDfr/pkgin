@@ -32,42 +32,21 @@
 #define GLOBCHARS "{<>[]?*"
 
 /*
- * Return list of potential candidates from a package match, or NULL if no
- * valid matches are found.
- */
-static Plistnumbered *
-find_remote_pkgs(const char *pkgname)
-{
-	const char *query;
-
-	query = exact_pkgfmt(pkgname) ? UNIQUE_EXACT_PKG : UNIQUE_PKG;
-
-	return rec_pkglist(query, REMOTE_PKG, pkgname);
-}
-
-/*
  * Return best candidate for a remote package, taking into consideration any
  * preferred.conf matches.
- *
- * A return value of -1 indicates no remote packages matched the request.  A
- * return value of 0 with a NULL result indicates that all remote packages
- * failed to pass the preferred.conf requirements.  Otherwise 0 is returned
- * and result contains the best available package.
  */
 int
 find_preferred_pkg(const char *pkgname, char **result)
 {
-	Plistnumbered	*plist;
 	Pkglist		*p, *pkg = NULL;
 
 	*result = NULL;
 
-	/* No matching packages available */
-	if ((plist = find_remote_pkgs(pkgname)) == NULL)
-		return -1;
-
 	/* Find best match */
-	SLIST_FOREACH(p, plist->P_Plisthead, next) {
+	SLIST_FOREACH(p, &r_plisthead, next) {
+		if (!pkg_match(pkgname, p->full))
+			continue;
+
 		/*
 		 * Check that the candidate matches any potential
 		 * preferred.conf restrictions, if not then skip.
@@ -76,9 +55,7 @@ find_preferred_pkg(const char *pkgname, char **result)
 			continue;
 
 		/* Save best match */
-		if (pkg == NULL)
-			pkg = p;
-		else if (dewey_cmp(p->version, DEWEY_GT, pkg->version))
+		if (pkg == NULL || version_check(pkg->full, p->full) == 2)
 			pkg = p;
 	}
 
@@ -88,9 +65,6 @@ find_preferred_pkg(const char *pkgname, char **result)
 			free(*result);
 		*result = xstrdup(pkg->full);
 	}
-
-	free_pkglist(&plist->P_Plisthead);
-	free(plist);
 
 	return (pkg == NULL) ? 1 : 0;
 }
