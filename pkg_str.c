@@ -36,11 +36,10 @@
  * preferred.conf matches.
  */
 int
-find_preferred_pkg(const char *pkgname, char **result)
+find_preferred_pkg(const char *pkgname, Pkglist **pkg, char **match)
 {
-	Pkglist		*p, *pkg = NULL;
-
-	*result = NULL;
+	Pkglist *p, *best = NULL;
+	char *result = NULL;
 
 	/* Find best match */
 	SLIST_FOREACH(p, &r_plisthead, next) {
@@ -48,25 +47,40 @@ find_preferred_pkg(const char *pkgname, char **result)
 			continue;
 
 		/*
+		 * Free any previous results first.  If we made it past the
+		 * pkg_match then we should get the same result back.
+		 */
+		if (result != NULL) {
+			free(result);
+			result = NULL;
+		}
+
+		/*
 		 * Check that the candidate matches any potential
 		 * preferred.conf restrictions, if not then skip.
 		 */
-		if (chk_preferred(p->full, result) != 0)
+		if (chk_preferred(p->full, &result) != 0)
 			continue;
 
 		/* Save best match */
-		if (pkg == NULL || version_check(pkg->full, p->full) == 2)
-			pkg = p;
+		if (best == NULL || version_check(best->full, p->full) == 2)
+			best = p;
 	}
 
-	if (pkg != NULL) {
-		/* In case a previous version failed the match */
-		if (*result != NULL)
-			free(*result);
-		*result = xstrdup(pkg->full);
-	}
+	/*
+	 * Save match if requested.  If there was a successful match then
+	 * return the full package name, otherwise the unsuccessful match
+	 */
+	if (match != NULL)
+		*match = best ? xstrdup(best->full) : result;
 
-	return (pkg == NULL) ? 1 : 0;
+	/*
+	 * Save pkglist entry if requested.
+	 */
+	if (pkg != NULL)
+		*pkg = best;
+
+	return (best == NULL) ? 1 : 0;
 }
 
 /**
@@ -108,21 +122,30 @@ unique_pkg(const char *pkgname, const char *dest)
 }
 
 /*
- * Return first matching SLIST entry in package list, or NULL if no match.
+ * Return best matching SLIST entry in package list, or NULL if no match.
  */
 Pkglist *
 find_pkg_match(Plisthead *plisthead, char *match)
 {
-	Pkglist	*plist;
+	Pkglist	*pkg = NULL, *p;
 
-	SLIST_FOREACH(plist, plisthead, next) {
-		if (pkg_match(match, plist->full)) {
-			TRACE("Matched %s with %s\n", match, plist->full);
-			return plist;
+	SLIST_FOREACH(p, plisthead, next) {
+		if (!pkg_match(match, p->full))
+			continue;
+
+		if (chk_preferred(p->full, NULL) != 0) {
+			printf("no chk_pref %s\n", p->full);
+			continue;
+		}
+
+		/* Save best match */
+		if (pkg == NULL || version_check(pkg->full, p->full) == 2) {
+			TRACE("Matched %s with %s\n", match, p->full);
+			pkg = p;
 		}
 	}
 
-	return NULL;
+	return pkg;
 }
 
 /* basic full package format detection */

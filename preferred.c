@@ -120,11 +120,12 @@ chk_preferred(char *pkg, char **matchp)
 
 	if ((pref = is_preferred(pkg)) == NULL) {
 		/* No matches for pkg in preferred.conf */
-		*matchp = NULL;
+		if (matchp != NULL)
+			*matchp = NULL;
 		return 0;
 	}
 
-	if (*matchp == NULL)
+	if (matchp != NULL)
 		*matchp = xstrdup(pref);
 
 	return (pkg_match(pref, pkg) == 0) ? 1 : 0;

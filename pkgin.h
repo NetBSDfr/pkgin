@@ -259,7 +259,7 @@ uint64_t	fs_room(const char *);
 void		clean_cache(void);
 char		*read_repos(void);
 /* pkg_str.c */
-int		find_preferred_pkg(const char *, char **);
+int		find_preferred_pkg(const char *, Pkglist **, char **);
 char	   	*unique_pkg(const char *, const char *);
 Pkglist		*find_pkg_match(Plisthead *, char *);
 uint8_t		non_trivial_glob(char *);

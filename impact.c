@@ -182,21 +182,29 @@ break_depends(Plisthead *impacthead)
  * loop through local packages and match for upgrades
  */
 static int
-deps_impact(Plisthead *impacthead, Pkglist *pdp)
+deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
 {
 	int		toupgrade = DONOTHING;
 	Plisthead	*revdeps;
-	Pkglist		*revdep, *pimpact, *lpkg, *rpkg;
-	char		remotepkg[BUFSIZ];
+	Pkglist		*revdep, *pimpact, *lpkg, *rpkg = NULL;
+	char		*remotepkg = NULL;
 
 	/* Skip if a package has already been considered. */
 	if (pkg_in_impact(impacthead, pdp->depend))
-		return 1;
+		return 0;
 
 	/* record corresponding package on remote list*/
-	if ((rpkg = find_pkg_match(&r_plisthead, pdp->depend)) == NULL)
-		return 1; /* no corresponding package in list */
-
+	if (find_preferred_pkg(pdp->depend, &rpkg, &remotepkg) != 0) {
+		if (output) {
+			if (remotepkg == NULL)
+				fprintf(stderr, "\n"MSG_PKG_NOT_AVAIL,
+				    pdp->depend);
+			else
+				fprintf(stderr, "\n"MSG_PKG_NOT_PREFERRED,
+				    pdp->depend, remotepkg);
+		}
+		return 1;
+	}
 	XSTRCPY(remotepkg, rpkg->full);
 
 	TRACE(" |-matching %s over installed packages\n", remotepkg);
@@ -260,7 +268,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 				if (pdp->level > 0 &&
 				    version_check(lpkg->full, remotepkg) == 1) {
 					toupgrade = DONOTHING;
-					return 1;
+					return 0;
 				}
 
 				TRACE("   * upgrade with %s\n", lpkg->full);
@@ -294,14 +302,14 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 						if (revdep->level > 1)
 							continue;
 						if (!pkg_in_impact(impacthead, revdep->name))
-							deps_impact(impacthead, revdep);
+							deps_impact(impacthead, revdep, 0);
 					}
 				}
 			}
 
 			TRACE("  > %s matched %s\n", lpkg->full, pdp->depend);
 
-			return 1;
+			return 0;
 		} /* if installed package match */
 
 		/*
@@ -312,7 +320,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		if (pkg_match(pdp->depend, lpkg->full)) {
 			TRACE(" > local package %s matched with %s\n",
 				lpkg->full, pdp->depend);
-			return 1;
+			return 0;
 		}
 
 	}
@@ -331,7 +339,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp)
 		pimpact->size_pkg = rpkg->size_pkg;
 	}
 
-	return 1;
+	return 0;
 }
 
 /**
@@ -356,7 +364,7 @@ pkg_impact(char **pkgargs, int *rc)
 	static char	*icon = __UNCONST(ICON_WAIT);
 	Plisthead	*impacthead, *pdphead = NULL;
 	Pkglist		*pimpact, *tmpimpact, *pdp;
-	char		**ppkgargs, *pkgname;
+	char		**ppkgargs, *pkgname = NULL;
 	int		istty, rv;
 	char		tmpicon;
 
@@ -372,7 +380,7 @@ pkg_impact(char **pkgargs, int *rc)
 	/* retreive impact list for all packages listed in the command line */
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
 
-		if ((rv = find_preferred_pkg(*ppkgargs, &pkgname)) != 0) {
+		if ((rv = find_preferred_pkg(*ppkgargs, NULL, &pkgname)) != 0) {
 			if (pkgname == NULL)
 				fprintf(stderr, MSG_PKG_NOT_AVAIL, *ppkgargs);
 			else
@@ -403,15 +411,17 @@ pkg_impact(char **pkgargs, int *rc)
 				continue;
 
 			/* compare needed deps with local packages */
-			if (!deps_impact(impacthead, pdp)) {
+			if (deps_impact(impacthead, pdp, 1) != 0) {
 				/*
-				 * there was a versionning mismatch,
-				 * proceed?
+				 * There was a versioning mismatch, proceed?
+				 *
+				 * XXX: Shouldn't this just bail?  Surely only
+				 * bad things will happen if we continue.
 				 */
 				if (!check_yesno(DEFAULT_NO)) {
 					free_pkglist(&impacthead);
 					/* avoid free's repetition */
-					goto impactend;
+					goto impactfail;
 				}
 			}
 		} /* SLIST_FOREACH deps */
@@ -426,7 +436,10 @@ pkg_impact(char **pkgargs, int *rc)
 		/* pkgname is not already recorded */
 		if (!pkg_in_impact(impacthead, pkgname)) {
 			pdp->depend = xstrdup(pkgname);
-			deps_impact(impacthead, pdp);
+			if (deps_impact(impacthead, pdp, 1) != 0) {
+				free_pkglist(&impacthead);
+				goto impactfail;
+			}
 			XFREE(pdp->depend);
 		}
 
@@ -441,8 +454,6 @@ pkg_impact(char **pkgargs, int *rc)
 		printf("\rcalculating dependencies...done.\n");
 	else
 		printf("done.\n");
-
-impactend:
 
 	TRACE("[<]-leaving impact\n");
 
@@ -501,5 +512,6 @@ impactend:
 	if (SLIST_EMPTY(impacthead))
 		free_pkglist(&impacthead);
 
+impactfail:
 	return impacthead;
 }
