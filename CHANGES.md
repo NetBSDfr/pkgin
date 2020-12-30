@@ -1,3 +1,9 @@
+## Version 20.12.1 (2020-12-30)
+
+ * Fix version selection of packages and dependencies for install.  Previously
+   the first returned match would win, and preferred.conf was not considered
+   for dependencies.
+
 ## Version 20.12.0 (2020-12-13)
 
  * Return correct MACHINE\_ARCH when using $arch in repositories.conf.
