@@ -142,7 +142,7 @@ show_pkg_keep(void)
 	}
 
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
-		printf(MSG_MARK_PKG_KEEP, pkglist->full);
+		printf("%-20s %s\n", pkglist->full, pkglist->comment);
 
 	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
@@ -162,7 +162,7 @@ show_pkg_nokeep(void)
 	}
 
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
-		printf(MSG_MARK_PKG_NOKEEP, pkglist->full);
+		printf("%-20s %s\n", pkglist->full, pkglist->comment);
 
 	free_pkglist(&plisthead->P_Plisthead);
 	free(plisthead);
