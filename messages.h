@@ -90,7 +90,7 @@
 #define MSG_PROCESSING_LOCAL_SUMMARY "processing local summary...\n"
 #define MSG_DB_IS_UP_TO_DATE "database for %s is up-to-date\n"
 #define MSG_PROCESSING_REMOTE_SUMMARY "processing remote summary (%s)...\n"
-#define MSG_COULDNT_FETCH "Could not fetch %s\n"
+#define MSG_COULDNT_FETCH "Could not fetch %s: %s"
 #define MSG_ARCH_DONT_MATCH "\r\n/!\\ Warning /!\\ %s doesn't match your current architecture (%s)\nYou probably want to modify "PKGIN_CONF"/"REPOS_FILE".\nStill want to "
 #define MSG_COULD_NOT_GET_PKGNAME "Could not get package name from dependency: %s\n"
 

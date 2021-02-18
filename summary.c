@@ -121,7 +121,7 @@ fetch_summary(char *cur_repo, time_t *repo_mtime)
 	}
 
 	if (sum == NULL)
-		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf);
+		errx(EXIT_FAILURE, MSG_COULDNT_FETCH, buf, fetchLastErrString);
 
 	if ((a = archive_read_new()) == NULL)
 		errx(EXIT_FAILURE, "Cannot initialise archive");
