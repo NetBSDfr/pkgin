@@ -34,6 +34,7 @@
 static void	usage(int);
 static int	find_cmd(const char *);
 static void	missing_param(int, int, const char *);
+static char	**mkpkgargs(char **);
 static void	ginto(void);
 
 uint8_t		yesflag = 0, noflag = 0;
@@ -212,7 +213,7 @@ main(int argc, char *argv[])
 		break;
 	case PKG_INST_CMD: /* install a package and its dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_INST);
-		rc = pkgin_install(&argv[1], do_inst, 0);
+		rc = pkgin_install(mkpkgargs(&argv[1]), do_inst, 0);
 		break;
 	/*
 	 * Historically there was a distinction between "upgrade" (only upgrade
@@ -335,6 +336,24 @@ find_cmd(const char *arg)
 	}
 
 	return -1;
+}
+
+/*
+ * copy const argv to a modifiable array to expand globs in
+ * pkg_impact, https://github.com/NetBSDfr/pkgin/issues/114
+ */
+static char **
+mkpkgargs(char **args)
+{
+	int i;
+	char **pkgargs;
+
+	for (i = 0; args[i] != NULL; i++); /* args number */
+	pkgargs = xmalloc(i*sizeof(char *));
+	for (i = 0; args[i] != NULL; i++) {
+		pkgargs[i] = xstrdup(args[i]);
+	}
+	return pkgargs;
 }
 
 __attribute__((noreturn))
