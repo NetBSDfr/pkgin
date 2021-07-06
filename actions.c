@@ -410,7 +410,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0, removenum = 0;
 	int		refreshnum = 0, downloadnum = 0;
-	int		rc = EXIT_SUCCESS;
+	int		i, rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
 	int64_t		file_size = 0, size_pkg = 0;
@@ -418,6 +418,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	ssize_t		llen;
 	Pkglist		*pkg;
 	Plisthead	*impacthead, *downloadhead = NULL, *installhead = NULL;
+	char		**kpkgargs;
 	char		*p;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
@@ -437,8 +438,18 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	if (!have_privs(privsreqd))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
+	/*
+	 * copy const argv to a modifiable array to expand globs in
+	 * pkg_impact, https://github.com/NetBSDfr/pkgin/issues/114
+	 * */
+	for (i = 0; pkgargs[i] != NULL; i++); /* args number */
+	kpkgargs = xmalloc(i*sizeof(char *));
+	for (i = 0; pkgargs[i] != NULL; i++) {
+		kpkgargs[i] = xstrdup(pkgargs[i]);
+	}
+
 	/* full impact list */
-	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {
+	if ((impacthead = pkg_impact(kpkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
 		return rc;
 	}
@@ -677,7 +688,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 	/* pure install, not called by pkgin_upgrade */
 	if (!upgrade)
-		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
+		(void)update_db(LOCAL_SUMMARY, kpkgargs, 1);
 
 installend:
 
@@ -686,6 +697,7 @@ installend:
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead);
 	free_pkglist(&downloadhead);
+	free_list(kpkgargs);
 	/*
 	 * installhead may be NULL, for example if trying to install a package
 	 * that conflicts.
