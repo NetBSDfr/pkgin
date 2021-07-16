@@ -349,10 +349,11 @@ mkpkgargs(char **args)
 	char **pkgargs;
 
 	for (i = 0; args[i] != NULL; i++); /* args number */
-	pkgargs = xmalloc(i*sizeof(char *));
+	pkgargs = xmalloc((i+1)*sizeof(char *));
 	for (i = 0; args[i] != NULL; i++) {
 		pkgargs[i] = xstrdup(args[i]);
 	}
+	pkgargs[i] = NULL;
 	return pkgargs;
 }
 
