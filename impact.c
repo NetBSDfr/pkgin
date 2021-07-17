@@ -391,7 +391,7 @@ pkg_impact(char **pkgargs, int *rc)
 
 		TRACE("[+]-impact for %s\n", pkgname);
 		/* copy real package name back to pkgargs */
-		*ppkgargs = xstrdup(pkgname);
+		*ppkgargs = pkgname;
 
 		if (istty) {
 			tmpicon = *icon++;
@@ -447,9 +447,6 @@ pkg_impact(char **pkgargs, int *rc)
 
 		XFREE(pdp->name);
 		XFREE(pdp);
-
-		XFREE(pkgname);
-
 	} /* for (ppkgargs) */
 
 	if (istty)

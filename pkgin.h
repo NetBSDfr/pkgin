@@ -265,7 +265,7 @@ Pkglist		*find_pkg_match(Plisthead *, char *);
 uint8_t		non_trivial_glob(char *);
 char		*get_pkgname_from_depend(char *);
 int		exact_pkgfmt(const char *);
-char		*find_exact_pkg(Plisthead *, const char *);
+char		*simple_pkg_match(Plisthead *, const char *);
 int		version_check(char *, char *);
 int		pkgstrcmp(const char *, const char *);
 /* selection.c */

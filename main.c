@@ -49,6 +49,7 @@ main(int argc, char *argv[])
 	int		do_inst = DO_INST; /* by default, do install packages */
 	int 		ch, i, rc = EXIT_SUCCESS;
 	int		force_update = 0;
+	char		**pkgargs = NULL;
 	const char	*chrootpath = NULL;
 
 	setprogname("pkgin");
@@ -213,7 +214,8 @@ main(int argc, char *argv[])
 		break;
 	case PKG_INST_CMD: /* install a package and its dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_INST);
-		rc = pkgin_install(mkpkgargs(&argv[1]), do_inst, 0);
+		pkgargs = mkpkgargs(&argv[1]);
+		rc = pkgin_install(pkgargs, do_inst, 0);
 		break;
 	/*
 	 * Historically there was a distinction between "upgrade" (only upgrade
@@ -226,7 +228,8 @@ main(int argc, char *argv[])
 		break;
 	case PKG_REMV_CMD: /* remove packages and reverse dependencies */
 		missing_param(argc, 2, MSG_PKG_ARGS_RM);
-		rc = pkgin_remove(&argv[1]);
+		pkgargs = mkpkgargs(&argv[1]);
+		rc = pkgin_remove(pkgargs);
 		break;
 	case PKG_AUTORM_CMD: /* autoremove orphan packages */
 		pkgin_autoremove();
@@ -312,6 +315,7 @@ main(int argc, char *argv[])
 	XFREE(env_repos);
 	XFREE(pkg_repos);
 	free_preferred();
+	free_list(pkgargs);
 
 	return rc;
 }
