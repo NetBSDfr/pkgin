@@ -41,6 +41,8 @@ static const struct VarParam {
 	char *(*func)(void);
 } var[] = {
 	{ "$arch", getosarch },
+	{ "$machine", getosmachine },
+	{ "$osname", getosname },
 	{ "$osrelease", getosrelease },
 	{ NULL, NULL }
 };

@@ -61,6 +61,8 @@ pkgin_CPPFLAGS+=	-DPKGIN_VERSION=\""$(VERSION)"\"
 pkgin_CPPFLAGS+=	-DPKG_INSTALL_DIR=\""$(PKG_INSTALL_DIR)"\"
 pkgin_CPPFLAGS+=	-DPKG_SYSCONFDIR=\""$(sysconfdir)"\"
 pkgin_CPPFLAGS+=	-DPREFIX=\""$(prefix)"\"
+pkgin_CPPFLAGS+=	-DUNAME_MACHINE=\""$(UNAME_MACHINE)"\"
+pkgin_CPPFLAGS+=	-DUNAME_SYSTEM=\""$(UNAME_SYSTEM)"\"
 
 #
 # Manual pages.
