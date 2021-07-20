@@ -178,7 +178,7 @@ simple_pkg_match(Plisthead *plisthead, const char *pkgarg)
 		if (!pkg_match(pkgarg, pkglist->full))
 			continue;
 
-		return pkglist->full;
+		return xstrdup(pkglist->full);
 	}
 
 
