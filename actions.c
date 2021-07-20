@@ -713,7 +713,7 @@ pkgin_remove(char **pkgargs)
 	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
 
 		if ((pkgname =
-			find_exact_pkg(&l_plisthead, *ppkgargs)) == NULL) {
+			simple_pkg_match(&l_plisthead, *ppkgargs)) == NULL) {
 			printf(MSG_PKG_NOT_INSTALLED, *ppkgargs);
 			rc = EXIT_FAILURE;
 			continue;
@@ -736,10 +736,9 @@ pkgin_remove(char **pkgargs)
 			}
 		}
 
-		if (exists) {
-			XFREE(pkgname);
+		if (exists)
 			continue; /* next pkgarg */
-		}
+
 
 		/* add package itself */
 		pdp = malloc_pkglist();

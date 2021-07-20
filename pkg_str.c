@@ -169,41 +169,18 @@ exact_pkgfmt(const char *pkgname)
  * check whether or not pkgarg is a full pkgname (foo-1.0)
  */
 char *
-find_exact_pkg(Plisthead *plisthead, const char *pkgarg)
+simple_pkg_match(Plisthead *plisthead, const char *pkgarg)
 {
 	Pkglist	*pkglist;
-	char	*pkgname, *tmppkg;
-	int		exact;
-	size_t	tmplen;
-
-	/* is it a versionned package ? */
-	exact = exact_pkgfmt(pkgarg);
 
 	/* check for package existence */
 	SLIST_FOREACH(pkglist, plisthead, next) {
-		tmppkg = xstrdup(pkglist->full);
+		if (!pkg_match(pkgarg, pkglist->full))
+			continue;
 
-		if (!exact) {
-			/*
-			 * pkgarg was not in exact format, i.e. foo-bar
-			 * instead of foo-bar-1, truncate tmppkg :
-			 * foo-bar-1.0 -> foo-bar
-			 * and set len to tmppkg
-			 */
-			trunc_str(tmppkg, '-', STR_BACKWARD);
-		}
-		/* tmplen = strlen("foo-1{.vers}") */
-		tmplen = strlen(tmppkg);
-
-		if (strlen(pkgarg) == tmplen &&
-			strncmp(tmppkg, pkgarg, tmplen) == 0) {
-			XFREE(tmppkg);
-
-			pkgname = xstrdup(pkglist->full);
-			return pkgname;
-		}
-		XFREE(tmppkg);
+		return xstrdup(pkglist->full);
 	}
+
 
 	return NULL;
 }
