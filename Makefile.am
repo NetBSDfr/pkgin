@@ -69,7 +69,7 @@ man1_MANS=		pkgin.1
 nodist_pkgin_SOURCES=	pkgin.1
 pkgin.1: pkgin.1.in
 	@sed -e 's,/var/db/pkgin,$(PKGIN_DBDIR),g' \
-	     -e 's,/usr/pkg/etc,$(sysconfdir),g' pkgin.1.in >$@
+	     -e 's,/usr/pkg/etc,$(sysconfdir),g' $(srcdir)/pkgin.1.in >$@
 
 #
 # Generated sources.
@@ -78,7 +78,7 @@ nodist_pkgin_SOURCES+=	pkgindb_create.h
 pkgindb_create.h: Makefile
 	@echo "/* Automatically generated, DO NOT EDIT */" >$@
 	@echo "#define CREATE_DRYDB \" \\" >>$@
-	@sed -e 's/$$/ \\/' -e 's/\"/\\\"/g' pkgin.sql >>$@
+	@sed -e 's/$$/ \\/' -e 's/\"/\\\"/g' $(srcdir)/pkgin.sql >>$@
 	@echo '"'  >>$@
 
 BUILT_SOURCES=		$(nodist_pkgin_SOURCES)
