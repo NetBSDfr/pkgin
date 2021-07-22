@@ -1,4 +1,4 @@
-/* NetBSD: humanize_number.c,v 1.14 2008/04/28 20:22:59 martin Exp */
+/*	$NetBSD: humanize_number.c,v 1.18 2019/03/11 15:10:51 kre Exp $	*/
 
 /*
  * Copyright (c) 1997, 1998, 1999, 2002 The NetBSD Foundation, Inc.
@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+
 #include "humanize_number.h"
 
 int
@@ -42,9 +43,13 @@ humanize_number(char *buf, size_t len, int64_t bytes,
     const char *suffix, int scale, int flags)
 {
 	const char *prefixes, *sep;
-	int	b, i, r, maxscale, s1, s2, sign;
-	int64_t	divisor, max;
+	int	b, i, r, s1, s2, sign;
+	int64_t	divisor, max, post = 1;
 	size_t	baselen;
+	int	maxscale;
+
+	if (suffix == NULL)
+		suffix = "";
 
 	if (flags & HN_DIVISOR_1000) {
 		/* SI for decimal multiplies */
@@ -66,25 +71,37 @@ humanize_number(char *buf, size_t len, int64_t bytes,
 	}
 
 #define	SCALE2PREFIX(scale)	(&prefixes[(scale) << 1])
-	maxscale = 7;
+	maxscale = 6;
 
-	if (scale >= maxscale &&
-	    (scale & (HN_AUTOSCALE | HN_GETSCALE)) == 0)
+	if (scale < 0 || (scale > maxscale &&
+	    (scale & (HN_AUTOSCALE | HN_GETSCALE)) == 0))
 		return (-1);
 
-	if (buf == NULL || suffix == NULL)
+	if (buf == NULL)
 		return (-1);
 
 	if (len > 0)
 		buf[0] = '\0';
+
 	if (bytes < 0) {
 		sign = -1;
-		bytes *= -100;
 		baselen = 3;		/* sign, digit, prefix */
+		if (-bytes < INT64_MAX / 100)
+			bytes *= -100;
+		else {
+			bytes = -bytes;
+			post = 100;
+			baselen += 2;
+		}
 	} else {
 		sign = 1;
-		bytes *= 100;
 		baselen = 2;		/* digit, prefix */
+		if (bytes < INT64_MAX / 100)
+			bytes *= 100;
+		else {
+			post = 100;
+			baselen += 2;
+		}
 	}
 	if (flags & HN_NOSPACE)
 		sep = "";
@@ -99,39 +116,78 @@ humanize_number(char *buf, size_t len, int64_t bytes,
 		return (-1);
 
 	if (scale & (HN_AUTOSCALE | HN_GETSCALE)) {
-		/* See if there is additional columns can be used. */
-		for (max = 100, i = len - baselen; i-- > 0;)
-			max *= 10;
-
 		/*
-		 * Divide the number until it fits the given column.
-		 * If there will be an overflow by the rounding below,
-		 * divide once more.
+		 * 19 is number of digits in biggest possible int64_t
+		 * If we don't do this, the calc of max just below can
+		 * overflow, leading to absurd results.   If the buffer
+		 * is big enough for the number, simply use it, no scaling.
 		 */
-		for (i = 0; bytes >= max - 50 && i < maxscale; i++)
-			bytes /= divisor;
+		if (len - baselen > 19)
+			i = 0;
+		else {
+			/* See if there are additional columns to be used. */
+			for (max = 100, i = len - baselen; i-- > 0;)
+				max *= 10;
 
-		if (scale & HN_GETSCALE)
-			return (i);
-	} else
+			/*
+			 * Divide the number until it fits the avail buffer.
+			 * If there will be an overflow by the rounding below,
+			 * (the "-50") divide once more.
+			 */
+			for (i = 0; bytes >= max - 50 && i < maxscale; i++)
+				bytes /= divisor;
+		}
+		if (scale & HN_GETSCALE) {
+			return i;
+		}
+	} else {
+		/* XXX
+		 * we already know scale <= maxscale, so
+		 * i < scale ==> i < maxscale
+		 */
 		for (i = 0; i < scale && i < maxscale; i++)
 			bytes /= divisor;
+	}
 
-	/* If a value <= 9.9 after rounding and ... */
-	if (bytes < 995 && i > 0 && flags & HN_DECIMAL) {
-		/* baselen + \0 + .N */
-		if (len < baselen + 1 + 2)
-			return (-1);
-		b = ((int)bytes + 5) / 10;
-		s1 = b / 10;
-		s2 = b % 10;
-		r = snprintf(buf, len, "%d%s%d%s%s%s",
-		    sign * s1, localeconv()->decimal_point, s2,
-		    sep, SCALE2PREFIX(i), suffix);
-	} else
+	if (i == 0) {
+		/*
+		 * Cannot go the bytes *= post route, as
+		 * that can cause overflow of bytes
+		 *
+		 * but if we already scaled up, undo that.
+		 */
+		if (post == 1)
+			bytes /= 100;
+
 		r = snprintf(buf, len, "%" PRId64 "%s%s%s",
-		    sign * ((bytes + 50) / 100),
-		    sep, SCALE2PREFIX(i), suffix);
+		    sign * bytes, sep, SCALE2PREFIX(0), suffix);
+	} else {
+		/*
+		 * Here this is safe, as if i > 0, we have already
+		 * divided bytes by at least 1000, post <= 100, so ...
+		 */
+		bytes *= post;
+
+		/* If a value <= 9.9 after rounding and ... */
+		if (bytes < 995 && i > 0 && flags & HN_DECIMAL) {
+			/* baselen + \0 + .N */
+			if (len < baselen + 1 + 1 +
+			    strlen(localeconv()->decimal_point))
+				return (-1);
+			b = ((int)bytes + 5) / 10;
+			s1 = b / 10;
+			s2 = b % 10;
+			r = snprintf(buf, len, "%d%s%d%s%s%s",
+			    sign * s1, localeconv()->decimal_point, s2,
+			    sep, SCALE2PREFIX(i), suffix);
+		} else
+			r = snprintf(buf, len, "%" PRId64 "%s%s%s",
+			    sign * ((bytes + 50) / 100),
+			    sep, SCALE2PREFIX(i), suffix);
+	}
+
+	if ((size_t)r > len)
+		r = -1;
 
 	return (r);
 }
