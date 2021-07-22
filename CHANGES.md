@@ -1,3 +1,13 @@
+## Version 21.7.0 (2021-07-22)
+
+ * Syncronise latest `humanize_number()` from NetBSD, sizes greater than 64PB
+   are now printed correctly.
+ * Regenerate for autoconf-2.71 and fix "make distcheck".
+ * Fix inconsistent output when using globs.
+ * Fix out-of-srcdir builds.
+ * Improve fetch failure error messages.
+ * Update documentation to reflect IRC migration to Libera.
+
 ## Version 20.12.1 (2020-12-30)
 
  * Fix version selection of packages and dependencies for install.  Previously
