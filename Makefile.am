@@ -30,6 +30,10 @@ pkgin_SOURCES+=		pkg_str.c pkgindb.c pkgindb_queries.c pkglist.c preferred.c
 pkgin_SOURCES+=		selection.c sqlite_callbacks.c summary.c tools.c
 pkgin_SOURCES+=		$(openssh_SOURCES) $(pkg_install_SOURCES)
 
+noinst_HEADERS=		cmd.h messages.h pkgin.h pkgindb.h tools.h
+noinst_HEADERS+=	external/dewey.h external/humanize_number.h external/lib.h
+noinst_HEADERS+=	external/progressmeter.h external/queue.h
+
 #
 # Conditional sources.
 #
@@ -66,6 +70,7 @@ pkgin_CPPFLAGS+=	-DPREFIX=\""$(prefix)"\"
 # Manual pages.
 #
 man1_MANS=		pkgin.1
+dist_pkgin_SOURCES=	pkgin.1.in
 nodist_pkgin_SOURCES=	pkgin.1
 pkgin.1: pkgin.1.in
 	@sed -e 's,/var/db/pkgin,$(PKGIN_DBDIR),g' \
@@ -74,6 +79,7 @@ pkgin.1: pkgin.1.in
 #
 # Generated sources.
 #
+dist_pkgin_SOURCES+=	pkgin.sql
 nodist_pkgin_SOURCES+=	pkgindb_create.h
 pkgindb_create.h: Makefile
 	@echo "/* Automatically generated, DO NOT EDIT */" >$@

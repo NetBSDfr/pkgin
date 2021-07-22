@@ -30,6 +30,7 @@
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
 
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -114,7 +115,7 @@ am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
-	$(am__configure_deps) $(am__DIST_COMMON)
+	$(am__configure_deps) $(noinst_HEADERS) $(am__DIST_COMMON)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
@@ -149,8 +150,10 @@ am_pkgin_OBJECTS = pkgin-actions.$(OBJEXT) pkgin-autoremove.$(OBJEXT) \
 	pkgin-selection.$(OBJEXT) pkgin-sqlite_callbacks.$(OBJEXT) \
 	pkgin-summary.$(OBJEXT) pkgin-tools.$(OBJEXT) $(am__objects_1) \
 	$(am__objects_2) $(am__objects_3)
+dist_pkgin_OBJECTS =
 nodist_pkgin_OBJECTS =
-pkgin_OBJECTS = $(am_pkgin_OBJECTS) $(nodist_pkgin_OBJECTS)
+pkgin_OBJECTS = $(am_pkgin_OBJECTS) $(dist_pkgin_OBJECTS) \
+	$(nodist_pkgin_OBJECTS)
 am__DEPENDENCIES_1 =
 pkgin_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -210,8 +213,9 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(pkgin_SOURCES) $(nodist_pkgin_SOURCES)
-DIST_SOURCES = $(am__pkgin_SOURCES_DIST)
+SOURCES = $(pkgin_SOURCES) $(dist_pkgin_SOURCES) \
+	$(nodist_pkgin_SOURCES)
+DIST_SOURCES = $(am__pkgin_SOURCES_DIST) $(dist_pkgin_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -247,6 +251,7 @@ am__uninstall_files_from_dir = { \
 man1dir = $(mandir)/man1
 NROFF = nroff
 MANS = $(man1_MANS)
+HEADERS = $(noinst_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP) \
 	config.h.in
 # Read a list of newline-separated strings from the standard input,
@@ -404,6 +409,9 @@ pkgin_SOURCES = actions.c autoremove.c depends.c download.c fsops.c \
 	pkg_str.c pkgindb.c pkgindb_queries.c pkglist.c preferred.c \
 	selection.c sqlite_callbacks.c summary.c tools.c \
 	$(openssh_SOURCES) $(pkg_install_SOURCES) $(am__append_1)
+noinst_HEADERS = cmd.h messages.h pkgin.h pkgindb.h tools.h \
+	external/dewey.h external/humanize_number.h external/lib.h \
+	external/progressmeter.h external/queue.h
 
 #
 # Pull in library dependencies.
@@ -431,6 +439,7 @@ man1_MANS = pkgin.1
 #
 # Generated sources.
 #
+dist_pkgin_SOURCES = pkgin.1.in pkgin.sql
 nodist_pkgin_SOURCES = pkgin.1 pkgindb_create.h
 BUILT_SOURCES = $(nodist_pkgin_SOURCES)
 CLEANFILES = $(BUILT_SOURCES)
@@ -1298,7 +1307,7 @@ distcleancheck: distclean
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(PROGRAMS) $(MANS) config.h
+all-am: Makefile $(PROGRAMS) $(MANS) $(HEADERS) config.h
 installdirs:
 	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
