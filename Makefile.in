@@ -300,7 +300,6 @@ AWK = @AWK@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
-CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
@@ -308,9 +307,7 @@ DEPDIR = @DEPDIR@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
-EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -385,6 +382,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -1495,11 +1493,11 @@ uninstall-man: uninstall-man1
 
 pkgin.1: pkgin.1.in
 	@sed -e 's,/var/db/pkgin,$(PKGIN_DBDIR),g' \
-	     -e 's,/usr/pkg/etc,$(sysconfdir),g' pkgin.1.in >$@
+	     -e 's,/usr/pkg/etc,$(sysconfdir),g' $(srcdir)/pkgin.1.in >$@
 pkgindb_create.h: Makefile
 	@echo "/* Automatically generated, DO NOT EDIT */" >$@
 	@echo "#define CREATE_DRYDB \" \\" >>$@
-	@sed -e 's/$$/ \\/' -e 's/\"/\\\"/g' pkgin.sql >>$@
+	@sed -e 's/$$/ \\/' -e 's/\"/\\\"/g' $(srcdir)/pkgin.sql >>$@
 	@echo '"'  >>$@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
