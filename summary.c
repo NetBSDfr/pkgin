@@ -90,7 +90,16 @@ int			colcount = 0;
 /* force pkg_summary reload */
 int			force_fetch = 0;
 
+/*
+ * Slow machines with limited memory will probably want to define this to
+ * reduce memory usage and speed up decompression, at the cost of increased
+ * bandwidth usage (pkg_summary approx sizes: gz=5MB, bz2=3MB, xz=2MB).
+ */
+#if defined(PREFER_GZIP_SUMMARY)
+static const char *const sumexts[] = { "gz", "bz2", "xz", NULL };
+#else
 static const char *const sumexts[] = { "xz", "bz2", "gz", NULL };
+#endif
 
 /*
  * Open a remote summary and return an open libarchive handler to it.
