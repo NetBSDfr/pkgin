@@ -1,3 +1,8 @@
+## Version 21.10.0 (2021-10-12)
+
+ * Support building with `-DPREFER_GZIP_SUMMARY` which will attempt to fetch
+   `pkg_summary.gz` first, useful on slower machines with limited memory.
+
 ## Version 21.7.0 (2021-07-22)
 
  * Syncronise latest `humanize_number()` from NetBSD, sizes greater than 64PB
