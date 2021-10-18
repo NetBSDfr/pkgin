@@ -385,6 +385,7 @@ action_list(char *flatlist, char *str)
 	 */
 	if (noflag) {
 		newlist = xasprintf("%s\n%s", flatlist, str);
+		free(flatlist);
 		return newlist;
 	}
 
@@ -399,6 +400,7 @@ action_list(char *flatlist, char *str)
 	else
 		newlist = xasprintf("%s %s", flatlist, str);
 
+	free(flatlist);
 	return newlist;
 }
 
