@@ -177,6 +177,7 @@ order_install(Plisthead *impacthead)
 	 * package upgrades.
 	 */
 	for (i = maxlevel; i >= 0; i--) {
+		pi_dp = NULL;
 		SLIST_FOREACH(pimpact, impacthead, next) {
 			if (pimpact->level != i)
 				continue;
