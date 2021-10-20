@@ -1,3 +1,9 @@
+## Version 21.10.1 (2021-10-20)
+
+ * Free memory correctly when building package lists for printing.  Reduces
+   memory usage considerably when operating on a large number of packages.
+ * Avoid infinite loop in package linked list when handling pkg\_install.
+
 ## Version 21.10.0 (2021-10-12)
 
  * Support building with `-DPREFER_GZIP_SUMMARY` which will attempt to fetch
