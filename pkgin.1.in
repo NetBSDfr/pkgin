@@ -94,7 +94,7 @@ A
 package is equivalent to a non-automatic package in
 .Xr pkgsrc 7
 terminology.
-.Ic list
+.It Cm list
 Lists all packages installed locally on a system.
 If the
 .Fl l
