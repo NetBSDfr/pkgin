@@ -90,7 +90,7 @@ Example:
 .It Cm keep Ar package Ar
 Marks package as "non auto-removable".
 A
-.Pf Cm keep No -able
+.Cm keep Ns No -able
 package is equivalent to a non-automatic package in
 .Xr pkgsrc 7
 terminology.
