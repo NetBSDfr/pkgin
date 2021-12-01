@@ -1,3 +1,8 @@
+## Version 21.12.0 (2021-12-01)
+
+ * Manual page fixes.
+ * Avoid crash when `FILE_SIZE` is invalid in a remote repository.
+
 ## Version 21.10.1 (2021-10-20)
 
  * Free memory correctly when building package lists for printing.  Reduces
