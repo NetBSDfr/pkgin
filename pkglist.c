@@ -137,12 +137,14 @@ init_global_pkglists(void)
 	SLIST_INIT(&r_plisthead);
 	plist.P_Plisthead = &r_plisthead;
 	plist.P_count = 0;
+	plist.P_type = 1;
 	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, pdb_rec_list, &plist);
 	r_plistcounter = plist.P_count;
 
 	SLIST_INIT(&l_plisthead);
 	plist.P_Plisthead = &l_plisthead;
 	plist.P_count = 0;
+	plist.P_type = 0;
 	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, pdb_rec_list, &plist);
 	l_plistcounter = plist.P_count;
 }
@@ -198,6 +200,7 @@ rec_pkglist(const char *fmt, ...)
 	plist = (Plistnumbered *)malloc(sizeof(Plistnumbered));
 	plist->P_Plisthead = init_head();
 	plist->P_count = 0;
+	plist->P_type = 0;
 
 	va_start(ap, fmt);
 	vsnprintf(query, BUFSIZ, fmt, ap);

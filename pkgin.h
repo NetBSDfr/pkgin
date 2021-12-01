@@ -181,6 +181,7 @@ typedef SLIST_HEAD(, Pkglist) Plisthead;
 typedef struct Plistnumbered {
 	Plisthead	*P_Plisthead;
 	int		P_count;
+	int		P_type; /* 0 = local, 1 = remote */
 } Plistnumbered;
 
 typedef struct Preflist {

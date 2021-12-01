@@ -469,13 +469,6 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			if (!check_yesno(DEFAULT_NO))
 				goto installend;
 
-		/* XXX: this should be moved higher up, pdb_rec_list assert? */
-		if (pkg->file_size <= 0) {
-			(void) fprintf(stderr, MSG_EMPTY_FILE_SIZE,
-			    pkg->depend);
-			continue;
-		}
-
 		/*
 		 * Retrieve the correct repository for the package and save it,
 		 * this is used later by pkg_download().

@@ -69,7 +69,7 @@
 #define MSG_EMPTY_NOKEEP_LIST "empty autoremovable package list"
 #define MSG_EMPTY_AVAIL_PKGLIST "empty available packages list"
 #define MSG_PKG_INSTALL_LOGGING_TO "pkg_install error log can be found in %s\n"
-#define MSG_EMPTY_FILE_SIZE "warning: package %s has an empty FILE_SIZE on repository.\n"
+#define MSG_BAD_FILE_SIZE "warning: remote package %s has an invalid or missing FILE_SIZE\n"
 #define MSG_WARNS_ERRS "pkg_install warnings: %d, errors: %d\n"
 
 /* depends.c */

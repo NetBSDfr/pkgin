@@ -79,6 +79,17 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 			plist->size_pkg = strtol(argv[i], (char **)NULL, 10);
 	}
 
+	/*
+	 * Verify FILE_SIZE exists for remote packages.
+	 */
+	if (plisthead->P_type == 1) {
+		if (plist->file_size == 0) {
+			fprintf(stderr, MSG_BAD_FILE_SIZE, plist->full);
+			free_pkglist_entry(&plist);
+			return PDB_ERR;
+		}
+	}
+
 	SLIST_INSERT_HEAD(plisthead->P_Plisthead, plist, next);
 	plisthead->P_count++;
 
