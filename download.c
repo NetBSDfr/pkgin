@@ -30,6 +30,8 @@
 #include "pkgin.h"
 #include "external/progressmeter.h"
 
+extern char fetchflags[3];
+
 /*
  * Open a pkg_summary and if newer than local return an open libfetch
  * connection to it.
@@ -44,7 +46,7 @@ sum_open(char *str_url, time_t *db_mtime)
 
 	url = fetchParseURL(str_url);
 
-	if (url == NULL || (f = fetchXGet(url, &st, "")) == NULL)
+	if (url == NULL || (f = fetchXGet(url, &st, fetchflags)) == NULL)
 		goto nofetch;
 
 	if (st.size == -1) { /* could not obtain file size */
@@ -171,7 +173,7 @@ download_pkg(char *pkg_url, FILE *fp)
 	if ((url = fetchParseURL(pkg_url)) == NULL)
 		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
 
-	if ((f = fetchXGet(url, &st, "")) == NULL) {
+	if ((f = fetchXGet(url, &st, fetchflags)) == NULL) {
 		fprintf(stderr, "download error: %s %s\n", pkg_url,
 		    fetchLastErrString);
 		return -1;
