@@ -52,7 +52,7 @@ main(int argc, char *argv[])
 	int		force_update = 0;
 	char		**pkgargs = NULL;
 	const char	*chrootpath = NULL;
-	int		ffi = 0;
+	int		v4flag = 0, v6flag = 0, ffi = 0;
 
 	setprogname("pkgin");
 
@@ -62,10 +62,10 @@ main(int argc, char *argv[])
 	while ((ch = getopt(argc, argv, "46dhyfFPvVl:nc:t:p")) != -1) {
 		switch (ch) {
 		case '4':
-			fetchflags[ffi++] = '4';
+			v4flag = 1;
 			break;
 		case '6':
-			fetchflags[ffi++] = '6';
+			v4flag = 1;
 			break;
 		case 'f':
 			force_update = 1;
@@ -133,6 +133,14 @@ main(int argc, char *argv[])
 
 		if (chdir("/") == -1)
 			errx(-1, MSG_CHDIR_FAILED);
+	}
+
+	if (v4flag) {
+		fetchflags[ffi++] = '4';
+	}
+
+	if (v6flag) {
+		fetchflags[ffi++] = '6';
 	}
 
 	/* Configure pkg_install */
