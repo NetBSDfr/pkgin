@@ -65,7 +65,7 @@ main(int argc, char *argv[])
 			v4flag = 1;
 			break;
 		case '6':
-			v4flag = 1;
+			v6flag = 1;
 			break;
 		case 'f':
 			force_update = 1;
