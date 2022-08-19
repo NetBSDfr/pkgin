@@ -6,7 +6,7 @@
 .Nd pkgsrc binary package manager
 .Sh SYNOPSIS
 .Nm
-.Op Fl dfhnPpVvy
+.Op Fl 46dfhnPpVvy
 .Op Fl c Ar chroot_path
 .Op Fl l Ar limit_chars
 .Op Fl t Ar log_file
@@ -24,6 +24,14 @@ installing, upgrading, removing, and querying available packages.
 .Sh OPTIONS
 The following command line arguments are supported:
 .Bl -tag -width 15n -offset 6n
+.It Fl 4
+Forces
+.B pkgin
+to only use IPv4 addresses.
+.It Fl 6
+Forces
+.B pkgin
+to only use IPv6 addresses.
 .It Fl c Ar chroot_path
 Enable chrooting
 .Nm
