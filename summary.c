@@ -393,6 +393,7 @@ insert_local_summary(FILE *fp)
 {
 	static int	pkgid = 1;
 	char		buf[BUFSIZ];
+	uint64_t	savepoint;
 
 	if (fp == NULL) {
 		pkgindb_close();
@@ -406,7 +407,7 @@ insert_local_summary(FILE *fp)
 
 	SLIST_INIT(&inserthead);
 
-        pkgindb_doquery("BEGIN;", NULL, NULL);
+	savepoint = pkgindb_savepoint();
 
 	while (fgets(buf, BUFSIZ, fp) != NULL) {
 		/*
@@ -421,7 +422,7 @@ insert_local_summary(FILE *fp)
 		parse_entry(sumsw[LOCAL_SUMMARY], pkgid, buf);
 	}
 
-        pkgindb_doquery("COMMIT;", NULL, NULL);
+	pkgindb_savepoint_release(savepoint);
 }
 
 /*
@@ -434,6 +435,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 	size_t		buflen, offset;
 	ssize_t		r;
 	char		*buf, *pe, *pi, *npi;
+	uint64_t	savepoint;
 
 	if (a == NULL) {
 		pkgindb_close();
@@ -455,7 +457,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 
 	SLIST_INIT(&inserthead);
 
-	pkgindb_doquery("BEGIN;", NULL, NULL);
+	savepoint = pkgindb_savepoint();
 
 	/*
 	 * Main loop.  Read in archive, split into package records and parse
@@ -526,13 +528,13 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 
 	XFREE(buf);
 
-	pkgindb_doquery("COMMIT;", NULL, NULL);
-
 	if (r != ARCHIVE_OK) {
-		delete_remote_tbl(sumsw[REMOTE_SUMMARY], cur_repo);
+		pkgindb_savepoint_rollback(savepoint);
 		errx(EXIT_FAILURE, "Short read of pkg_summary: %s",
 		    archive_error_string(a));
 	}
+
+	pkgindb_savepoint_release(savepoint);
 
 #if ARCHIVE_VERSION_NUMBER < 3000000
 	archive_read_finish(a);
