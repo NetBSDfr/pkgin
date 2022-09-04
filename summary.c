@@ -581,12 +581,31 @@ update_localdb(char **pkgkeep)
 	Plistnumbered	*keeplisthead, *nokeeplisthead;
 	Pkglist		*pkglist;
 
+	/*
+	 * Start a write transaction, excluding other writers until
+	 * committed.  This serves two purposes:
+	 *
+	 * - If interrupted before we've recreated the local summary
+	 *   and reinitialized the PKG_KEEP state, this ensures we
+	 *   don't lose anything.
+	 *
+	 * - If a concurrent pkgin process simultaneously tries to do
+	 *   update_localdb, it can't invalidate the keep list we read
+	 *   with KEEP_LOCAL_PKGS.
+	 *
+	 * Note that this does not nest inside transactions or
+	 * savepoints.
+	 */
+	if (pkgindb_doquery("BEGIN IMMEDIATE;", NULL, NULL))
+		errx(EXIT_FAILURE, "failed to begin immediate transaction");
+
 	/* has the pkgdb (pkgsrc) changed ? if not, continue */
 	if (!pkg_db_mtime(&st) && !force_fetch)
-		return;
+		goto out;
 
 	/* record the keep list */
 	keeplisthead = rec_pkglist(KEEP_LOCAL_PKGS);
+
 	/* delete local pkg table (faster than updating) */
 	pkgindb_doquery(DELETE_LOCAL, NULL, NULL);
 
@@ -646,6 +665,9 @@ update_localdb(char **pkgkeep)
 	if (pkgkeep != NULL)
 		/* installation: mark the packages as "keep" */
 		pkg_keep(KEEP, pkgkeep);
+
+out:	if (pkgindb_doquery("COMMIT;", NULL, NULL))
+		errx(EXIT_FAILURE, "failed to commit transaction");
 }
 
 static int
