@@ -302,6 +302,9 @@ int		pdb_get_value(void *, int, char **, char **);
 int		pkgindb_doquery(const char *,
 		    int (*)(void *, int, char *[], char *[]), void *);
 int		pkgindb_dovaquery(const char *, ...);
+uint64_t	pkgindb_savepoint(void);
+void		pkgindb_savepoint_rollback(uint64_t);
+void		pkgindb_savepoint_release(uint64_t);
 int		pkgindb_open(void);
 void		pkgindb_close(void);
 int		pkg_db_mtime(struct stat *);

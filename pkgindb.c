@@ -34,6 +34,7 @@
 
 static sqlite3	*pdb;
 static int              repo_counter = 0;
+static uint64_t		savepoint_counter = 0;
 
 static const char *pragmaopts[] = {
 	"locking_mode = EXCLUSIVE",
@@ -199,6 +200,37 @@ pkgindb_dovaquery(const char *fmt, ...)
 	free(buf);
 
 	return rv;
+}
+
+uint64_t
+pkgindb_savepoint(void)
+{
+	uint64_t savepoint = savepoint_counter++;
+
+	if (pkgindb_dovaquery("SAVEPOINT sp%"PRIu64, savepoint))
+		errx(EXIT_FAILURE, "savepoint: %s", sqlite3_errmsg(pdb));
+
+	return savepoint;
+}
+
+void
+pkgindb_savepoint_rollback(uint64_t savepoint)
+{
+
+	if (pkgindb_dovaquery("ROLLBACK TO sp%"PRIu64, savepoint)) {
+		errx(EXIT_FAILURE, "rollback savepoint %s",
+		    sqlite3_errmsg(pdb));
+	}
+}
+
+void
+pkgindb_savepoint_release(uint64_t savepoint)
+{
+
+	if (pkgindb_dovaquery("RELEASE sp%"PRIu64, savepoint)) {
+		errx(EXIT_FAILURE, "release savepoint %s",
+		    sqlite3_errmsg(pdb));
+	}
 }
 
 /*
