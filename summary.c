@@ -31,6 +31,7 @@
  * Import pkg_summary to SQLite database
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 
 static const struct Summary {
@@ -211,27 +212,30 @@ prepare_insert(int pkgid, struct Summary sum)
 	char		querybuf[4096];
 	char		tmpbuf[1024];
 
-	snprintf(querybuf, sizeof(querybuf), "INSERT INTO %s (PKG_ID", sum.tbl_name);
+	sqlite3_snprintf(sizeof(querybuf), querybuf, "INSERT INTO %s (PKG_ID",
+	    sum.tbl_name);
 
 	/* insert fields */
 	SLIST_FOREACH(pi, &inserthead, next) {
-		snprintf(tmpbuf, sizeof(tmpbuf), ",%s", pi->field);
-		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
+		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",%s", pi->field);
+		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >=
+		    sizeof(querybuf))
 			goto err;
 	}
 
-	snprintf(tmpbuf, sizeof(tmpbuf), ") VALUES (%d", pkgid);
+	sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ") VALUES (%d", pkgid);
 	if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
 		goto err;
 
 	/* insert values */
 	SLIST_FOREACH(pi, &inserthead, next) {
-		snprintf(tmpbuf, sizeof(tmpbuf), ",'%s'", pi->value);
-		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
+		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",'%s'", pi->value);
+		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >=
+		    sizeof(querybuf))
 			goto err;
 	}
 
-	snprintf(tmpbuf, sizeof(tmpbuf), ");");
+	sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ");");
 	if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
 		goto err;
 
@@ -401,8 +405,8 @@ insert_local_summary(FILE *fp)
 	}
 
 	/* record columns names to cols */
-	snprintf(buf, BUFSIZ, "PRAGMA table_info(%s);",
-			sumsw[LOCAL_SUMMARY].tbl_name);
+	sqlite3_snprintf(BUFSIZ, buf, "PRAGMA table_info(%s);",
+	    sumsw[LOCAL_SUMMARY].tbl_name);
 	pkgindb_doquery(buf, colnames, NULL);
 
 	SLIST_INIT(&inserthead);
@@ -451,7 +455,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 	buf = xmalloc(buflen + 1);
 
 	/* record columns names to cols */
-	snprintf(buf, buflen, "PRAGMA table_info(%s);",
+	sqlite3_snprintf(buflen, buf, "PRAGMA table_info(%s);",
 	    sumsw[REMOTE_SUMMARY].tbl_name);
 	pkgindb_doquery(buf, colnames, NULL);
 
