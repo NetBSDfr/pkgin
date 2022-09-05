@@ -31,12 +31,40 @@
 
 #include "lib.h"
 
+/*
+ * Newer macOS releases are not able to correctly handle vfork() when the
+ * underlying file is changed or removed, as is the case when upgrading
+ * pkg_install itself.  The manual pages suggest using posix_spawn()
+ * instead, which seems to work ok.
+ */
+#if defined(__APPLE__) && \
+	((__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__-0) >= 1050)
+#define FEXEC_USE_POSIX_SPAWN   1
+#else
+#define FEXEC_USE_POSIX_SPAWN   0
+#endif
+
+#if FEXEC_USE_POSIX_SPAWN
+#include <spawn.h>
+extern char **environ;
+
+#ifndef O_CLOEXEC
+#define O_CLOEXEC	0
+#endif
+
+#ifndef O_DIRECTORY
+#define O_DIRECTORY	0
+#endif
+#endif
+
 static int	vfcexec(const char *, int, const char *, va_list);
 
 /*
  * fork, then change current working directory to path and
  * execute the command and arguments in the argv array.
  * wait for the command to finish, then return the exit status.
+ *
+ * macOS uses posix_spawn() instead due to reasons explained above.
  */
 int
 pfcexec(const char *path, const char *file, const char **argv)
@@ -44,6 +72,31 @@ pfcexec(const char *path, const char *file, const char **argv)
 	pid_t			child;
 	int			status;
 
+#if FEXEC_USE_POSIX_SPAWN
+	int prevcwd;
+
+	if ((prevcwd = open(".", O_RDONLY|O_CLOEXEC|O_DIRECTORY)) < 0) {
+		warn("open prevcwd failed");
+		return -1;
+	}
+
+	if ((path != NULL) && (chdir(path) < 0)) {
+		warn("chdir %s failed", path);
+		return -1;
+	}
+
+	if (posix_spawn(&child, file, NULL, NULL, (char **)argv, environ) < 0) {
+		warn("posix_spawn failed");
+		return -1;
+	}
+
+	if (fchdir(prevcwd) < 0) {
+		warn("fchdir prevcwd failed");
+		return -1;
+	}
+
+	(void)close(prevcwd);
+#else
 	child = vfork();
 	switch (child) {
 	case 0:
@@ -56,6 +109,7 @@ pfcexec(const char *path, const char *file, const char **argv)
 	case -1:
 		return -1;
 	}
+#endif
 
 	while (waitpid(child, &status, 0) < 0) {
 		if (errno != EINTR)
