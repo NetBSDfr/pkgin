@@ -48,8 +48,10 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 		/* first package to recurse on and exact pkg name, this is an
 		 * exact match due to many versions of the package
 		 */
-		if (exact_pkgfmt(pkgname))
-			snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
+		if (exact_pkgfmt(pkgname)) {
+			sqlite3_snprintf(BUFSIZ, query, EXACT_DIRECT_DEPS,
+			    pkgname);
+		}
 	} /* else, LOCAL_REVERSE_DEPS */
 
 	TRACE("[>]-entering depends\n");
@@ -114,7 +116,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 				if ((dephead = rec_pkglist(query)) == NULL)
 					continue;
 				SLIST_FOREACH(dep, dephead->P_Plisthead, next) {
-					snprintf(query, BUFSIZ,
+					sqlite3_snprintf(BUFSIZ, query,
 					    EXACT_DIRECT_DEPS, dep->full);
 					if (pkg_match(pdp->depend, dep->full))
 						break;
@@ -161,7 +163,7 @@ show_direct_depends(const char *pkgarg)
 
 	deptreehead = init_head();
 
-	snprintf(query, BUFSIZ, EXACT_DIRECT_DEPS, pkgname);
+	sqlite3_snprintf(BUFSIZ, query, EXACT_DIRECT_DEPS, pkgname);
 
 	if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == PDB_OK) {
 		printf(MSG_DIRECT_DEPS_FOR, pkgname);
