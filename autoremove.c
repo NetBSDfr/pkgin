@@ -220,8 +220,8 @@ pkg_keep(int type, char **pkgargs)
 			case UNKEEP:
 				printf(MSG_UNMARKING_PKG_KEEP, pkglist->full);
 				/* UNKEEP_PKG query needs full pkgname */
-				snprintf(query, BUFSIZ,
-						UNKEEP_PKG, pkglist->name);
+				sqlite3_snprintf(BUFSIZ, query,
+				    UNKEEP_PKG, pkglist->name);
 				/* mark as automatic in pkgdb */
 				if (mark_as_automatic_installed(pkglist->full,
 							1) < 0)
