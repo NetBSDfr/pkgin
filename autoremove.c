@@ -33,6 +33,7 @@
  * Cleanup orphan dependencies, keep and unkeep packages
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 
 void
@@ -208,8 +209,8 @@ pkg_keep(int type, char **pkgargs)
 					printf(	MSG_MARKING_PKG_KEEP,
 						pkglist->full);
 					/* KEEP_PKG query needs full pkgname */
-					snprintf(query, BUFSIZ,
-						KEEP_PKG, pkglist->name);
+					sqlite3_snprintf(BUFSIZ, query,
+					    KEEP_PKG, pkglist->name);
 					/* mark as non-automatic in pkgdb */
 					if (mark_as_automatic_installed(
 							pkglist->full, 0) < 0)
