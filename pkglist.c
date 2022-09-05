@@ -27,6 +27,7 @@
  * SUCH DAMAGE.
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 #include <regex.h>
 
@@ -203,7 +204,7 @@ rec_pkglist(const char *fmt, ...)
 	plist->P_type = 0;
 
 	va_start(ap, fmt);
-	vsnprintf(query, BUFSIZ, fmt, ap);
+	sqlite3_vsnprintf(BUFSIZ, query, fmt, ap);
 	va_end(ap);
 
 	if (pkgindb_doquery(query, pdb_rec_list, plist) == PDB_OK)
