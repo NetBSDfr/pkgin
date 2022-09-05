@@ -392,7 +392,7 @@ repo_record(char **repos)
 	char	query[BUFSIZ], value[20];
 
 	for (i = 0; repos[i] != NULL; i++) {
-		snprintf(query, BUFSIZ, EXISTS_REPO, repos[i]);
+		sqlite3_snprintf(BUFSIZ, query, EXISTS_REPO, repos[i]);
 		pkgindb_doquery(query, pdb_get_value, &value[0]);
                 repo_counter++;
 
