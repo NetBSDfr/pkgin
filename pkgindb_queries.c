@@ -185,8 +185,8 @@ const char DELETE_REPO_URL[] =
 const char INSERT_SINGLE_VALUE[] =
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME) VALUES (%d,%Q);";
 
-const char INSERT_DEPENDS_VALUES[] = 
-	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %s_DEWEY) VALUES (%d,'%s','%s');";
+const char INSERT_DEPENDS_VALUES[] =
+	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %s_DEWEY) VALUES (%d,%Q,%Q);";
 
 const char UNIQUE_PKG[] = 
 	"SELECT FULLPKGNAME, PKGVERS FROM %s WHERE PKGNAME = '%s';";
