@@ -398,7 +398,7 @@ repo_record(char **repos)
 
 		if (value[0] == '0') {
 			/* repository does not exists */
-			snprintf(query, BUFSIZ, INSERT_REPO, repos[i]);
+			sqlite3_snprintf(BUFSIZ, query, INSERT_REPO, repos[i]);
 			pkgindb_doquery(query, NULL, NULL);
 		}
 	}
