@@ -54,7 +54,7 @@ pkgin_autoremove(void)
 
 	keephead = init_head();
 
-	/* record keep packages deps  */
+	/* record keep packages deps */
 	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
 		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, keephead);
 
@@ -175,7 +175,7 @@ void
 pkg_keep(int type, char **pkgargs)
 {
 	Pkglist	*pkglist = NULL;
-	char   	**pkeep, *pkgname, query[BUFSIZ];
+	char	**pkeep, *pkgname, query[BUFSIZ];
 
 	if (!have_privs(PRIVS_PKGDB|PRIVS_PKGINDB))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
@@ -208,9 +208,9 @@ pkg_keep(int type, char **pkgargs)
 				if (is_automatic_installed(pkglist->full)) {
 					printf(	MSG_MARKING_PKG_KEEP,
 						pkglist->full);
-					/* KEEP_PKG query needs full pkgname */
 					sqlite3_snprintf(BUFSIZ, query,
-					    KEEP_PKG, pkglist->name);
+					    KEEP_PKG, pkglist->full);
+					pkgindb_doquery(query, NULL, NULL);
 					/* mark as non-automatic in pkgdb */
 					if (mark_as_automatic_installed(
 							pkglist->full, 0) < 0)
@@ -221,15 +221,14 @@ pkg_keep(int type, char **pkgargs)
 				printf(MSG_UNMARKING_PKG_KEEP, pkglist->full);
 				/* UNKEEP_PKG query needs full pkgname */
 				sqlite3_snprintf(BUFSIZ, query,
-				    UNKEEP_PKG, pkglist->name);
+				    UNKEEP_PKG, pkglist->full);
+				pkgindb_doquery(query, NULL, NULL);
 				/* mark as automatic in pkgdb */
 				if (mark_as_automatic_installed(pkglist->full,
 							1) < 0)
 					exit(EXIT_FAILURE);
 				break;
 			}
-
-			pkgindb_doquery(query, NULL, NULL);
 		} else
 			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
 	} /* for (pkeep) */
