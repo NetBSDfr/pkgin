@@ -122,8 +122,8 @@ const char INSERT_REMOTE_PKG[] =
 	"INSERT INTO REMOTE_PKG (PKG_ID,FULLPKGNAME,PKGNAME,PKGVERS,BUILD_DATE,"
 	"COMMENT,LICENSE,PKGTOOLS_VERSION,HOMEPAGE,OS_VERSION,PKGPATH,"
 	"PKG_OPTIONS,CATEGORIES,SIZE_PKG,FILE_SIZE,OPSYS,REPOSITORY) "
-	"VALUES (%d,'%s','%s','%s','%s','%s','%s','%s','%s'"
-	"'%s','%s','%s','%s','%s','%s','%s','%s');";
+	"VALUES (%d,%Q,%Q,%Q,%Q,%Q,%Q,%Q,%Q"
+	"%Q,%Q,%Q,%Q,%Q,%Q,%Q,%Q);";
 
 /* for upgrades, prefer higher versions to be at the top of SLIST */
 const char LOCAL_PKGS_QUERY_ASC[] =
