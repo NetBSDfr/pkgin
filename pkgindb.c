@@ -191,13 +191,13 @@ pkgindb_dovaquery(const char *fmt, ...)
 	int rv;
 
 	va_start(ap, fmt);
-	if (vasprintf(&buf, fmt, ap) == -1)
+	if ((buf = sqlite3_vmprintf(fmt, ap)) == NULL)
 		errx(EXIT_FAILURE, "Insufficient memory to construct query");
 	va_end(ap);
 
 	rv = pkgindb_doquery(buf, NULL, NULL);
 
-	free(buf);
+	sqlite3_free(buf);
 
 	return rv;
 }
