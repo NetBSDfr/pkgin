@@ -27,6 +27,7 @@
  * SUCH DAMAGE.
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 #include <sys/ioctl.h>
 #include <time.h>
@@ -473,7 +474,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		 * Retrieve the correct repository for the package and save it,
 		 * this is used later by pkg_download().
 		 */
-		(void) snprintf(query, BUFSIZ, PKG_URL, pkg->full);
+		sqlite3_snprintf(BUFSIZ, query, PKG_URL, pkg->full);
 		if (pkgindb_doquery(query, pdb_get_value, pkgrepo) != 0)
 			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pkg->full);
 
