@@ -56,7 +56,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 
 	/* getting direct dependencies */
 	if (query[0] == '\0')
-	    	snprintf(query, BUFSIZ, depquery, pkgname);
+		sqlite3_snprintf(BUFSIZ, query, depquery, pkgname);
 
 	TRACE("[+]-dependencies for %s (query: %s)\n", pkgname, query);
 
@@ -123,7 +123,8 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 				free(dephead);
 			} else {
 				/* LOCAL_REVERSE_DEPS */
-				snprintf(query, BUFSIZ, depquery, pdp->name);
+				sqlite3_snprintf(BUFSIZ, query, depquery,
+				    pdp->name);
 			}
 
 			/*
