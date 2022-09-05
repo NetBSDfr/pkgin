@@ -109,7 +109,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			if (depquery == DIRECT_DEPS) {
 				sqlite3_snprintf(BUFSIZ, query,
 				    "SELECT FULLPKGNAME FROM REMOTE_PKG "
-				    "WHERE PKGNAME = '%s' "
+				    "WHERE PKGNAME = %Q "
 				    "ORDER BY FULLPKGNAME DESC;", pdp->name);
 				if ((dephead = rec_pkglist(query)) == NULL)
 					continue;
