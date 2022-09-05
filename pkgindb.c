@@ -413,8 +413,8 @@ pkg_sum_mtime(char *repo)
 	str_mtime[0] = '\0';
 
 	sqlite3_snprintf(BUFSIZ, query,
-		"SELECT REPO_MTIME FROM REPOS WHERE REPO_URL GLOB '%s*';",
-		repo);
+	    "SELECT REPO_MTIME FROM REPOS WHERE REPO_URL GLOB %Q || '*';",
+	    repo);
 	pkgindb_doquery(query, pdb_get_value, str_mtime);
 
 	if (str_mtime[0] != '\0')
