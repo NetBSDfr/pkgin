@@ -212,12 +212,12 @@ prepare_insert(int pkgid, struct Summary sum)
 	char		querybuf[4096];
 	char		tmpbuf[1024];
 
-	sqlite3_snprintf(sizeof(querybuf), querybuf, "INSERT INTO %s (PKG_ID",
+	sqlite3_snprintf(sizeof(querybuf), querybuf, "INSERT INTO %w (PKG_ID",
 	    sum.tbl_name);
 
 	/* insert fields */
 	SLIST_FOREACH(pi, &inserthead, next) {
-		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",%s", pi->field);
+		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",%w", pi->field);
 		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >=
 		    sizeof(querybuf))
 			goto err;
@@ -229,7 +229,7 @@ prepare_insert(int pkgid, struct Summary sum)
 
 	/* insert values */
 	SLIST_FOREACH(pi, &inserthead, next) {
-		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",'%s'", pi->value);
+		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",%Q", pi->value);
 		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >=
 		    sizeof(querybuf))
 			goto err;
@@ -270,7 +270,7 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 {
 	static uint8_t	check_machine_arch = 1;
 	int		i;
-	char		*val, *v, *p, *pkg, buf[BUFSIZ], *tmp;
+	char		*val, *v, *pkg, buf[BUFSIZ];
 
 	if ((val = strchr(line, '=')) == NULL)
 		errx(EXIT_FAILURE, "Invalid pkg_info entry: %s", line);
@@ -344,26 +344,6 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 		snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
 
 		if (strncmp(buf, line, strlen(buf)) == 0) {
-			tmp = NULL;
-			/*
-			 * Convert single quotes to SQLite compatible ''.
-			 */
-			if (strchr(val, '\'') != NULL) {
-				for (v = p = val; *v != '\0'; v++) {
-					if (*v != '\'')
-						continue;
-
-					*v = '\0';
-					if (tmp)
-						tmp = xasprintf("%s%s''", tmp, p);
-					else
-						tmp = xasprintf("%s''", p);
-					p = v + 1;
-				}
-				tmp = xasprintf("%s%s", tmp, p);
-				val = tmp;
-			}
-
 			/* Split PKGNAME into parts */
 			if (strncmp(cols.name[i], "PKGNAME", 7) == 0) {
 				/* some rare packages have no version */
@@ -382,8 +362,6 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 				add_to_slist("PKGVERS", v);
 			} else
 				add_to_slist(cols.name[i], val);
-
-			free(tmp);
 			break;
 		}
 	}
@@ -405,7 +383,7 @@ insert_local_summary(FILE *fp)
 	}
 
 	/* record columns names to cols */
-	sqlite3_snprintf(BUFSIZ, buf, "PRAGMA table_info(%s);",
+	sqlite3_snprintf(BUFSIZ, buf, "PRAGMA table_info(%w);",
 	    sumsw[LOCAL_SUMMARY].tbl_name);
 	pkgindb_doquery(buf, colnames, NULL);
 
@@ -455,7 +433,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 	buf = xmalloc(buflen + 1);
 
 	/* record columns names to cols */
-	sqlite3_snprintf(buflen, buf, "PRAGMA table_info(%s);",
+	sqlite3_snprintf(buflen, buf, "PRAGMA table_info(%w);",
 	    sumsw[REMOTE_SUMMARY].tbl_name);
 	pkgindb_doquery(buf, colnames, NULL);
 
