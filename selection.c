@@ -27,6 +27,7 @@
  * SUCH DAMAGE.
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 
 void
@@ -64,7 +65,8 @@ import_keep(int do_inst, const char *import_file)
 
 		trimcr(input);
 		if (strchr(input, '/') != NULL) {
-			snprintf(query, BUFSIZ, GET_PKGNAME_BY_PKGPATH, input);
+			sqlite3_snprintf(BUFSIZ, query, GET_PKGNAME_BY_PKGPATH,
+			    input);
 
 			if ((pkgindb_doquery(query,
 					pdb_get_value, fullpkgname)) == PDB_OK)
