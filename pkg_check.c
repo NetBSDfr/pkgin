@@ -27,6 +27,7 @@
  * SUCH DAMAGE.
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 
 /* find required files (REQUIRES) from PROVIDES or filename */
@@ -189,8 +190,8 @@ pkg_has_conflicts(Pkglist *pimpact)
 		if (pkg_match(conflicts->full, pimpact->full)) {
 
 			/* got a conflict, retrieve conflicting local package */
-			snprintf(query, BUFSIZ,
-				GET_CONFLICT_QUERY, conflicts->full);
+			sqlite3_snprintf(BUFSIZ, query,
+			    GET_CONFLICT_QUERY, conflicts->full);
 
 			conflict_pkg = xmalloc(BUFSIZ * sizeof(char));
 			if (pkgindb_doquery(query,
