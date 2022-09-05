@@ -27,6 +27,7 @@
  * SUCH DAMAGE.
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 
 /**
@@ -106,7 +107,7 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 			 * that matches the dependency requirement.
 			 */
 			if (depquery == DIRECT_DEPS) {
-				snprintf(query, BUFSIZ,
+				sqlite3_snprintf(BUFSIZ, query,
 				    "SELECT FULLPKGNAME FROM REMOTE_PKG "
 				    "WHERE PKGNAME = '%s' "
 				    "ORDER BY FULLPKGNAME DESC;", pdp->name);
