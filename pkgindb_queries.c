@@ -183,7 +183,7 @@ const char DELETE_REPO_URL[] =
 	"DELETE FROM REPOS WHERE REPO_URL = %Q;";
 
 const char INSERT_SINGLE_VALUE[] =
-	"INSERT INTO %s (PKG_ID, %s_PKGNAME) VALUES (%d,'%s');";
+	"INSERT INTO %s (PKG_ID, %s_PKGNAME) VALUES (%d,%Q);";
 
 const char INSERT_DEPENDS_VALUES[] = 
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %s_DEWEY) VALUES (%d,'%s','%s');";
