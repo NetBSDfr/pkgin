@@ -40,7 +40,7 @@ static void	ginto(void);
 uint8_t		yesflag = 0, noflag = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0, pflag = 0;
 char		lslimit = '\0';
-char		fetchflags[3] = { 0, 0, 0 };
+char		fetchflags[4] = { 0, 0, 0, 0 };
 FILE  		*tracefp = NULL;
 
 int
@@ -52,7 +52,7 @@ main(int argc, char *argv[])
 	int		force_update = 0;
 	char		**pkgargs = NULL;
 	const char	*chrootpath = NULL;
-	int		v4flag = 0, v6flag = 0, ffi = 0;
+	int		v4flag = 0, v6flag = 0, ffidx = 0;
 
 	setprogname("pkgin");
 
@@ -135,12 +135,17 @@ main(int argc, char *argv[])
 			errx(-1, MSG_CHDIR_FAILED);
 	}
 
+	/*
+	 * Apply flags for libfetch operations.
+	 */
 	if (v4flag) {
-		fetchflags[ffi++] = '4';
+		fetchflags[ffidx++] = '4';
 	}
-
 	if (v6flag) {
-		fetchflags[ffi++] = '6';
+		fetchflags[ffidx++] = '6';
+	}
+	if (verbosity) {
+		fetchflags[ffidx++] = 'v';
 	}
 
 	/* Configure pkg_install */
