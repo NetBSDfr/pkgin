@@ -40,6 +40,7 @@ static void	ginto(void);
 uint8_t		yesflag = 0, noflag = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0, pflag = 0;
 char		lslimit = '\0';
+char		fetchflags[3] = { 0, 0, 0 };
 FILE  		*tracefp = NULL;
 
 int
@@ -51,14 +52,21 @@ main(int argc, char *argv[])
 	int		force_update = 0;
 	char		**pkgargs = NULL;
 	const char	*chrootpath = NULL;
+	int		v4flag = 0, v6flag = 0, ffi = 0;
 
 	setprogname("pkgin");
 
 	/* Default to not doing \r printouts if we don't send to a tty */
 	parsable = !isatty(fileno(stdout));
 
-	while ((ch = getopt(argc, argv, "dhyfFPvVl:nc:t:p")) != -1) {
+	while ((ch = getopt(argc, argv, "46dhyfFPvVl:nc:t:p")) != -1) {
 		switch (ch) {
+		case '4':
+			v4flag = 1;
+			break;
+		case '6':
+			v6flag = 1;
+			break;
 		case 'f':
 			force_update = 1;
 			break;
@@ -125,6 +133,14 @@ main(int argc, char *argv[])
 
 		if (chdir("/") == -1)
 			errx(-1, MSG_CHDIR_FAILED);
+	}
+
+	if (v4flag) {
+		fetchflags[ffi++] = '4';
+	}
+
+	if (v6flag) {
+		fetchflags[ffi++] = '6';
 	}
 
 	/* Configure pkg_install */
@@ -368,7 +384,7 @@ usage(int status)
 	int i;
 
 	fprintf((status) ? stderr : stdout,
-	    "Usage: pkgin [-cdfhlnPtvVy] command [package ...]\n\n"
+	    "Usage: pkgin [-46cdfhlnPtvVy] command [package ...]\n\n"
 	    "Commands and shortcuts:\n");
 
 	for (i = 0; cmd[i].name != NULL; i++) {
