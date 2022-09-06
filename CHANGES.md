@@ -1,6 +1,18 @@
+## Version 22.9.0 (2022-09-06)
+
+ * Pass verbose flag down to libfetch operations too.
+ * Update show-keep/show-no-keep output format (Sunil Nimmagadda).
+ * Add -4 and -6 flags to force libfetch to use IPv4/IPv6 (Staffan Thomén,
+   Sebastian Wiedenroth).
+ * Convert many SQL queries to use sqlite3\_snprintf() and sqlite3 format
+   strings to reduce potential SQL injection attacks (Taylor R Campbell).
+ * Use sqlite3 savepoints, fixing issue around interrupted local summary
+   updates (Taylor R Campbell).
+ * Use posix\_spawn() on newer macOS.
+
 ## Version 21.12.0 (2021-12-01)
 
- * Manual page fixes.
+ * Manual page fixes (Arnie97).
  * Avoid crash when `FILE_SIZE` is invalid in a remote repository.
 
 ## Version 21.10.1 (2021-10-20)
@@ -19,10 +31,10 @@
  * Syncronise latest `humanize_number()` from NetBSD, sizes greater than 64PB
    are now printed correctly.
  * Regenerate for autoconf-2.71 and fix "make distcheck".
- * Fix inconsistent output when using globs.
+ * Fix inconsistent output when using globs (iMil).
  * Fix out-of-srcdir builds.
  * Improve fetch failure error messages.
- * Update documentation to reflect IRC migration to Libera.
+ * Update documentation to reflect IRC migration to Libera (Ralf Doering).
 
 ## Version 20.12.1 (2020-12-30)
 
