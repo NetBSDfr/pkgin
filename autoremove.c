@@ -209,7 +209,7 @@ pkg_keep(int type, char **pkgargs)
 					printf(	MSG_MARKING_PKG_KEEP,
 						pkglist->full);
 					sqlite3_snprintf(BUFSIZ, query,
-					    KEEP_PKG, pkglist->full);
+					    KEEP_PKG, pkglist->name);
 					pkgindb_doquery(query, NULL, NULL);
 					/* mark as non-automatic in pkgdb */
 					if (mark_as_automatic_installed(
@@ -221,7 +221,7 @@ pkg_keep(int type, char **pkgargs)
 				printf(MSG_UNMARKING_PKG_KEEP, pkglist->full);
 				/* UNKEEP_PKG query needs full pkgname */
 				sqlite3_snprintf(BUFSIZ, query,
-				    UNKEEP_PKG, pkglist->full);
+				    UNKEEP_PKG, pkglist->name);
 				pkgindb_doquery(query, NULL, NULL);
 				/* mark as automatic in pkgdb */
 				if (mark_as_automatic_installed(pkglist->full,
