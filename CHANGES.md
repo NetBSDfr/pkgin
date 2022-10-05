@@ -1,3 +1,8 @@
+## Version 22.10.0 (2022-10-05)
+
+ * Fix issue where newly-installed packages were not correctly marked as
+   keep packages.
+
 ## Version 22.9.0 (2022-09-06)
 
  * Pass verbose flag down to libfetch operations too.
