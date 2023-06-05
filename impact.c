@@ -69,6 +69,22 @@ dep_present(Plisthead *impacthead, char *depname)
 	return 0;
 }
 
+/*
+ * Is package already in impact list?
+ */
+static uint8_t
+pkg_in_impact(Plisthead *impacthead, char *depname)
+{
+	Pkglist *p;
+
+	SLIST_FOREACH(p, impacthead, next) {
+		if (strcmp(p->depend, depname) == 0)
+			return 1;
+	}
+
+	return 0;
+}
+
 static void
 break_depends(Plisthead *impacthead)
 {
@@ -330,22 +346,6 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
 
 		pimpact->file_size = rpkg->file_size;
 		pimpact->size_pkg = rpkg->size_pkg;
-	}
-
-	return 0;
-}
-
-/**
- * is pkgname already in impact list ?
- */
-uint8_t
-pkg_in_impact(Plisthead *impacthead, char *depname)
-{
-	Pkglist *pimpact;
-
-	SLIST_FOREACH(pimpact, impacthead, next) {
-		if (strcmp(pimpact->depend, depname) == 0)
-			return 1;
 	}
 
 	return 0;
