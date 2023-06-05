@@ -207,7 +207,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
 	}
 	XSTRCPY(remotepkg, rpkg->full);
 
-	TRACE(" |-matching %s over installed packages\n", remotepkg);
+	TRACE(" |- matching %s over installed packages\n", remotepkg);
 
 	/* create initial impact entry with a DONOTHING status, permitting
 	 * to check if this dependency has already been recorded
@@ -222,8 +222,8 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
 	pimpact->name = xstrdup(rpkg->name);
 
 	/*
-	 * BUILD_DATE may not necessarily be set.  This can happen if for any
-	 * reason the pkgsrc metadata wasn't generated correctly (this has been
+	 * BUILD_DATE may not necessarily be set.  This can happen if, for any
+	 * reason, the pkgsrc metadata wasn't generated correctly (this has been
 	 * observed in the wild), or simply if a package was built manually.
 	 */
 	pimpact->build_date =
@@ -231,98 +231,91 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
 
 	SLIST_INSERT_HEAD(impacthead, pimpact, next);
 
-	/* parse local packages to see if depedency is installed*/
+	/*
+	 * Loop through local packages to find a dependency match.
+	 */
 	SLIST_FOREACH(lpkg, &l_plisthead, next) {
+		if (strcmp(lpkg->name, pdp->name) != 0)
+			continue;
 
-		/* match, package is installed */
-		if (strcmp(lpkg->name, pdp->name) == 0) {
-
-			TRACE("  > found %s\n", pdp->name);
-
-			/*
-			 * Figure out if this is an upgrade or a refresh.
-			 */
-			if (pkg_match(pdp->depend, lpkg->full) == 0)
-				toupgrade = TOUPGRADE;
-			/*
-			 * Only consider a package for refresh if it has an
-			 * identical PKGPATH.
-			 */
-			else if (pkgstrcmp(lpkg->pkgpath, rpkg->pkgpath) == 0
-			     && pkgstrcmp(lpkg->build_date, rpkg->build_date))
-				toupgrade = TOREFRESH;
-
-			/* installed version does not match dep requirement */
-			if (toupgrade != DONOTHING) {
-				TRACE("   ! didn't match\n");
-
-				/*
-				 * Ignore proposed downgrades, unless it was
-				 * specifically requested by "pkgin install .."
-				 * where level will be 0.
-				 *
-				 * XXX: at some point count these as a specific
-				 * TODOWNGRADE action or something, saying it's
-				 * an upgrade is a bit confusing for users.
-				 */
-				if (pdp->level > 0 &&
-				    version_check(lpkg->full, remotepkg) == 1) {
-					toupgrade = DONOTHING;
-					return 0;
-				}
-
-				TRACE("   * upgrade with %s\n", lpkg->full);
-				/*
-				 * insert as an upgrade
-				 * oldpkg is used when building removal order
-				 * list
-				 */
-				pimpact->old = xstrdup(lpkg->full);
-				pimpact->action = toupgrade;
-				pimpact->full = xstrdup(remotepkg);
-				pimpact->level = pdp->level;
-				pimpact->file_size = rpkg->file_size;
-				pimpact->size_pkg = rpkg->size_pkg;
-				pimpact->old_size_pkg = lpkg->size_pkg;
-
-				/*
-				 * For any package that is upgraded, we need to
-				 * consider its direct reverse dependencies, as
-				 * they will need to be refreshed for any shared
-				 * library bumps etc.
-				 *
-				 * This is primarily for install operations that
-				 * result in an upgrade, as an upgrade operation
-				 * will already consider every package.
-				 */
-				if (toupgrade == TOUPGRADE) {
-					revdeps = init_head();
-					full_dep_tree(pdp->name, LOCAL_REVERSE_DEPS, revdeps);
-					SLIST_FOREACH(revdep, revdeps, next) {
-						if (revdep->level > 1)
-							continue;
-						if (!pkg_in_impact(impacthead, revdep->name))
-							deps_impact(impacthead, revdep, 0);
-					}
-				}
-			}
-
-			TRACE("  > %s matched %s\n", lpkg->full, pdp->depend);
-
-			return 0;
-		} /* if installed package match */
+		TRACE("  - found %s\n", lpkg->full);
 
 		/*
-		 * check if another local package with option matches
-		 * dependency, i.e. libflashsupport-pulse, ghostscript-esp...
-		 * would probably lead to conflict if recorded, pass.
+		 * Figure out if this is an upgrade or a refresh.  Only
+		 * consider a package for refresh if it has an identical
+		 * PKGPATH.
 		 */
-		if (pkg_match(pdp->depend, lpkg->full)) {
-			TRACE(" > local package %s matched with %s\n",
-				lpkg->full, pdp->depend);
+
+		/*
+		 * Local package no longer fulfils requirement, upgrade.
+		 */
+		if (pkg_match(pdp->depend, lpkg->full) == 0)
+			toupgrade = TOUPGRADE;
+		/*
+		 * Remote package has a different BUILD_DATE and an identical
+		 * PKGPATH, refresh.
+		 */
+		else if (pkgstrcmp(lpkg->pkgpath, rpkg->pkgpath) == 0 &&
+			 pkgstrcmp(lpkg->build_date, rpkg->build_date))
+			toupgrade = TOREFRESH;
+		else {
+			TRACE("  = %s is up-to-date\n", lpkg->full);
 			return 0;
 		}
 
+		/*
+		 * Ignore proposed downgrades, unless it was specifically
+		 * requested by "pkgin install .." where level will be 0.
+		 *
+		 * XXX: at some point count these as a specific TODOWNGRADE
+		 * action or something, as printing that it's an upgrade is a
+		 * bit confusing for users.
+		 */
+		if (pdp->level > 0 &&
+		    version_check(lpkg->full, remotepkg) == 1) {
+			TRACE("  * ignoring downgrade of %s\n", lpkg->full);
+			toupgrade = DONOTHING;
+			return 0;
+		}
+
+		if (toupgrade == TOUPGRADE) {
+			TRACE("  > upgrading %s\n", lpkg->full);
+		} else {
+			TRACE("  . refreshing %s\n", lpkg->full);
+		}
+
+		/*
+		 * Insert upgrade/refresh.
+		 */
+		pimpact->old = xstrdup(lpkg->full);
+		pimpact->action = toupgrade;
+		pimpact->full = xstrdup(remotepkg);
+		pimpact->level = pdp->level;
+		pimpact->file_size = rpkg->file_size;
+		pimpact->size_pkg = rpkg->size_pkg;
+		pimpact->old_size_pkg = lpkg->size_pkg;
+
+		/*
+		 * For any package that is upgraded, we need to consider its
+		 * direct reverse dependencies, as they will need to be
+		 * refreshed for any shared library bumps etc.
+		 *
+		 * This is primarily for install operations that result in an
+		 * upgrade, as an upgrade operation will already consider every
+		 * package.
+		 */
+		if (toupgrade == TOUPGRADE) {
+			revdeps = init_head();
+			full_dep_tree(pdp->name, LOCAL_REVERSE_DEPS, revdeps);
+			SLIST_FOREACH(revdep, revdeps, next) {
+				if (revdep->level > 1)
+					continue;
+				if (!pkg_in_impact(impacthead, revdep->name))
+					deps_impact(impacthead, revdep, 0);
+			}
+		}
+
+		return 0;
 	}
 
 	if (!dep_present(impacthead, pdp->name)) {
