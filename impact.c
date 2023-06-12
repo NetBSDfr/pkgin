@@ -85,115 +85,6 @@ pkg_in_impact(Plisthead *impacthead, char *depname)
 	return 0;
 }
 
-static void
-break_depends(Plisthead *impacthead)
-{
-	Pkglist	   	*rmimpact, *pimpact;
-	Plisthead	*rdphead, *fdphead;
-	Pkglist	   	*rdp, *fdp;
-	char		rpkg[BUFSIZ], pkgname[BUFSIZ];
-	int		dep_break, exists;
-
-	SLIST_FOREACH(pimpact, impacthead, next) {
-
-		if (pimpact->old == NULL) /* DONOTHING or TOINSTALL  */
-			continue;
-
-		rdphead = init_head();
-
-		XSTRCPY(pkgname, pimpact->old);
-		trunc_str(pkgname, '-', STR_BACKWARD);
-
-		/* fetch old package reverse dependencies */
-		full_dep_tree(pkgname, LOCAL_REVERSE_DEPS, rdphead);
-
-		/* browse reverse dependencies */
-		SLIST_FOREACH(rdp, rdphead, next) {
-			/*
-			 * do not go deeper than 1 level (direct dependency)
-			 * so we avoid removing packages that depend no more
-			 * on a child dep. Example:
-			 * qt4-libs had a direct depend on fontconfig, which had
-			 * a direct depend on freetype2. When fontconfig did not
-			 * depend anymore on freetype2, local qt4-libs has a
-			 * missing dependency on freetype2, which was wrong.
-			 */
-			if (rdp->level > 1)
-				continue;
-
-			exists = 0;
-			/* check if rdp was already on impact list */
-			SLIST_FOREACH(rmimpact, impacthead, next)
-				if (strcmp(	rmimpact->depend,
-						rdp->depend) == 0) {
-					exists = 1;
-					break;
-				}
-			if (exists)
-				continue;
-
-			fdphead = init_head();
-
-			/*
-			 * reverse dependency is a full package name,
-			 * use it and strip it
-			 */
-			XSTRCPY(rpkg, rdp->depend);
-			trunc_str(rpkg, '-', STR_BACKWARD);
-
-			/* fetch dependencies for rdp */
-			full_dep_tree(rpkg, DIRECT_DEPS, fdphead);
-
-			/* initialize to broken dependency */
-			dep_break = 1;
-
-			/*
-			 * empty full dep tree, this can't happen in normal
-			 * situation. If it does, that means that the reverse
-			 * dependency we're analyzing has no direct dependency.
-			 * Such a situation could occur if the reverse
-			 * dependency is not in the repository anymore, leading
-			 * to no information regarding this package.
-			 * So we will check if local package dependencies are
-			 * satisfied by our newly upgraded packages.
-			 */
-			if (SLIST_EMPTY(fdphead)) {
-				free_pkglist(&fdphead);
-				fdphead = init_head();
-				full_dep_tree(rpkg, LOCAL_DIRECT_DEPS, fdphead);
-			}
-
-			/*
-			 * browse dependencies for rdp and see if
-			 * new package to be installed matches
-			 */
-			SLIST_FOREACH(fdp, fdphead, next) {
-				if (pkg_match(fdp->depend, pimpact->full)) {
-					dep_break = 0;
-					break;
-				}
-			}
-
-			free_pkglist(&fdphead);
-
-			if (!dep_break)
-				continue;
-
-			/* dependency break, insert rdp in remove-list */
-			rmimpact = malloc_pkglist();
-			rmimpact->depend = xstrdup(rdp->depend);
-			rmimpact->name = xstrdup(rpkg);
-			rmimpact->full = xstrdup(rdp->depend);
-			rmimpact->old = xstrdup(rdp->depend);
-			rmimpact->action = TOREMOVE;
-			rmimpact->level = 0;
-
-			SLIST_INSERT_HEAD(impacthead, rmimpact, next);
-		}
-		free_pkglist(&rdphead);
-	}
-}
-
 /**
  * loop through local packages and match for upgrades
  */
@@ -450,9 +341,6 @@ pkg_impact(char **pkgargs, int *rc)
 	TRACE("[<]-leaving impact\n");
 
 	free_pkglist(&pdphead);
-
-	/* check for depedencies breakage (php-4 -> php-5) */
-	break_depends(impacthead);
 
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		SLIST_FOREACH(tmpimpact, impacthead, next) {
