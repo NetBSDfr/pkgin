@@ -99,15 +99,37 @@ int
 quick_pkg_match(const char *pattern, const char *pkg)
 {
 #define simple(x) (isalnum((unsigned char)(x)) || (x) == '-')
-	if (!simple(pattern[0]))
-		return 1;
-	if (pattern[0] != pkg[0])
-		return 0;
-
-	if (!simple(pattern[1]))
-		return 1;
-	if (pattern[1] != pkg[1])
-		return 0;
+	/*
+	 * In pkgin we often match over the entire remote repository, and so it
+	 * is optimal to extend this faster check to more characters and reduce
+	 * the number of candidate matches, as later pkg_match checks are much
+	 * more expensive.
+	 *
+	 * 8 loops are currrently chosen as that is the sweet spot for a 2022Q4
+	 * repository with around 24,000 packages, limiting the maximum number
+	 * of possible matches to around 120:
+	 *
+	 * $ for i in {2..10}; do
+	 * >   printf "%3s:" ${i}
+	 * >   pkgin avail | cut -c1-${i} | sort | uniq -c | sort -n | tail -1
+	 * > done
+	 *
+	 *   2:   7144 py
+	 *   3:   6415 py3
+	 *   4:   3199 py31
+	 *   5:   1608 py38-
+	 *   6:   1607 py310-
+	 *   7:    804 ruby27-
+	 *   8:    119 p5-Test-
+	 *   9:    104 py39-tryt
+	 *  10:    104 py39-tryto
+	 */
+	for (int i = 0; i < 8; i++) {
+		if (!simple(pattern[i]))
+			return 1;
+		if (pattern[i] != pkg[i])
+			return 0;
+	}
 	return 1;
 #undef simple
 }
