@@ -96,10 +96,6 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
 	Pkglist		*revdep, *pimpact, *lpkg, *rpkg = NULL;
 	char		*remotepkg = NULL;
 
-	/* Skip if a package has already been considered. */
-	if (pkg_in_impact(impacthead, pdp->depend))
-		return 0;
-
 	/* record corresponding package on remote list*/
 	if (find_preferred_pkg(pdp->depend, &rpkg, &remotepkg) != 0) {
 		if (output) {
@@ -217,7 +213,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
 			SLIST_FOREACH(revdep, revdeps, next) {
 				if (revdep->level > 1)
 					continue;
-				if (!pkg_in_impact(impacthead, revdep->name))
+				if (!pkg_in_impact(impacthead, revdep->depend))
 					deps_impact(impacthead, revdep, 0);
 			}
 		}
