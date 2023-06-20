@@ -411,7 +411,7 @@ int
 pkgin_install(char **pkgargs, int do_inst, int upgrade)
 {
 	FILE		*fp;
-	int		installnum = 0, upgradenum = 0, removenum = 0;
+	int		installnum = 0, upgradenum = 0;
 	int		refreshnum = 0, downloadnum = 0;
 	int		rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
@@ -460,10 +460,8 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		 * Packages being removed need no special handling, account
 		 * for them and move to the next package.
 		 */
-		if (pkg->action == TOREMOVE) {
-			removenum++;
+		if (pkg->action == TOREMOVE)
 			continue;
-		}
 
 		/* check for conflicts */
 		if (pkg_has_conflicts(pkg))
