@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include "pkgindb_create.h"
 
+extern const char CHECK_DB_LATEST[];
 extern const char DROP_LOCAL_TABLES[];
 extern const char DROP_REMOTE_TABLES[];
 extern const char DELETE_LOCAL[];
@@ -66,6 +67,7 @@ extern const char DELETE_REPO_URL[];
 extern const char UPDATE_REPO_MTIME[];
 extern const char INSERT_SINGLE_VALUE[];
 extern const char INSERT_DEPENDS_VALUES[];
+extern const char INSERT_REQUIRED_BY_VALUE[];
 extern const char UNIQUE_EXACT_PKG[];
 extern const char UNIQUE_PKG[];
 extern const char EXPORT_KEEP_LIST[];

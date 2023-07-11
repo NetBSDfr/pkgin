@@ -555,6 +555,122 @@ handle_manually_installed(Pkglist *pkglist, char **pkgkeep)
 	mark_as_automatic_installed(pkglist->full, 1);
 }
 
+/*
+ * The following section is taken verbatim from pkg_install files/admin/main.c
+ * to correctly handle REQUIRED_BY entries.
+ */
+struct reqd_by_entry {
+	char *pkgname;
+	SLIST_ENTRY(reqd_by_entry) entries;
+};
+SLIST_HEAD(reqd_by_entry_head, reqd_by_entry);
+
+struct pkg_reqd_by {
+	char *pkgname;
+	struct reqd_by_entry_head required_by[PKG_HASH_SIZE];
+	SLIST_ENTRY(pkg_reqd_by) entries;
+};
+SLIST_HEAD(pkg_reqd_by_head, pkg_reqd_by);
+
+static void
+add_required_by(const char *pattern, const char *pkgname, struct pkg_reqd_by_head *hash)
+{
+	struct pkg_reqd_by_head *phead;
+	struct pkg_reqd_by *pkg;
+	struct reqd_by_entry_head *ehead;
+	struct reqd_by_entry *entry;
+	char *best_installed;
+	int i;
+
+	best_installed = find_best_matching_installed_pkg(pattern, 1);
+	if (best_installed == NULL) {
+		warnx("Dependency %s of %s unresolved", pattern, pkgname);
+		return;
+	}
+	phead = &hash[PKG_HASH_ENTRY(best_installed)];
+	SLIST_FOREACH(pkg, phead, entries) {
+		if (strcmp(pkg->pkgname, best_installed) == 0) {
+			ehead = &pkg->required_by[PKG_HASH_ENTRY(pkgname)];
+			SLIST_FOREACH(entry, ehead, entries) {
+				if (strcmp(entry->pkgname, pkgname) == 0)
+					break;
+			}
+			if (entry == NULL) {
+				entry = xmalloc(sizeof(*entry));
+				entry->pkgname = xstrdup(pkgname);
+				SLIST_INSERT_HEAD(ehead, entry, entries);
+			}
+			break;
+		}
+	}
+	if (pkg == NULL) {
+		pkg = xmalloc(sizeof(*pkg));
+		pkg->pkgname = xstrdup(best_installed);
+		for (i = 0; i < PKG_HASH_SIZE; i++)
+			SLIST_INIT(&pkg->required_by[i]);
+		ehead = &pkg->required_by[PKG_HASH_ENTRY(pkgname)];
+		entry = xmalloc(sizeof(*entry));
+		entry->pkgname = xstrdup(pkgname);
+		SLIST_INSERT_HEAD(ehead, entry, entries);
+		SLIST_INSERT_HEAD(phead, pkg, entries);
+	}
+	free(best_installed);
+}
+
+static int
+add_depends_of(const char *pkgname, void *cookie)
+{
+	FILE *fp;
+	struct pkg_reqd_by_head *h = cookie;
+	plist_t *p;
+	package_t plist;
+	char *path;
+
+	path = pkgdb_pkg_file(pkgname, CONTENTS_FNAME);
+	if ((fp = fopen(path, "r")) == NULL)
+		errx(EXIT_FAILURE, "Cannot read %s of package %s",
+		    CONTENTS_FNAME, pkgname);
+	free(path);
+	read_plist(&plist, fp);
+	fclose(fp);
+
+	for (p = plist.head; p; p = p->next) {
+		if (p->type == PLIST_PKGDEP)
+			add_required_by(p->name, pkgname, h);
+	}
+
+	free_plist(&plist);
+
+	return 0;
+}
+
+static void
+insert_local_required_by(void)
+{
+	struct pkg_reqd_by_head pkgs[PKG_HASH_SIZE];
+	struct pkg_reqd_by *p;
+	struct reqd_by_entry *e;
+	int i, j;
+
+	for (i = 0; i < PKG_HASH_SIZE; i++)
+		SLIST_INIT(&pkgs[i]);
+
+	if (iterate_pkg_db(add_depends_of, &pkgs) == -1)
+		errx(EXIT_FAILURE, "cannot iterate pkgdb");
+
+	for (i = 0; i < PKG_HASH_SIZE; i++) {
+		SLIST_FOREACH(p, &pkgs[i], entries) {
+			for (j = 0; j < PKG_HASH_SIZE; j++) {
+				SLIST_FOREACH(e, &p->required_by[j], entries) {
+					pkgindb_dovaquery(
+					    INSERT_REQUIRED_BY_VALUE,
+					    p->pkgname, e->pkgname);
+				}
+			}
+		}
+	}
+}
+
 static void
 update_localdb(char **pkgkeep)
 {
@@ -600,6 +716,7 @@ update_localdb(char **pkgkeep)
 
 	/* insert the summary to the database */
 	insert_local_summary(pinfo);
+	insert_local_required_by();
 	pkg_db_update_mtime(&st);
 	pclose(pinfo);
 

@@ -27,11 +27,21 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * This query checks the compatibility of the current database, and should be
+ * one that either completes or fails due to an SQL error based on the most
+ * recent schema change.  Returned rows are ignored, so choose a query that
+ * runs quickly.
+ */
+const char CHECK_DB_LATEST[] =
+	"SELECT PKGNAME FROM LOCAL_REQUIRED_BY LIMIT 1;";
+
 const char DROP_LOCAL_TABLES[] =
 	"DROP TABLE IF EXISTS LOCAL_DEPS;"
 	"DROP TABLE IF EXISTS LOCAL_PKG;"
 	"DROP TABLE IF EXISTS LOCAL_CONFLICTS;"
 	"DROP TABLE IF EXISTS LOCAL_REQUIRES;"
+	"DROP TABLE IF EXISTS LOCAL_REQUIRED_BY;"
 	"DROP TABLE IF EXISTS LOCAL_PROVIDES;";
 
 const char DROP_REMOTE_TABLES[] =
@@ -46,6 +56,7 @@ const char DELETE_LOCAL[] =
 	"DELETE FROM LOCAL_PKG;"
 	"DELETE FROM LOCAL_CONFLICTS;"
 	"DELETE FROM LOCAL_REQUIRES;"
+	"DELETE FROM LOCAL_REQUIRED_BY;"
 	"DELETE FROM LOCAL_PROVIDES;";
 
 const char DELETE_REMOTE[] =
@@ -187,6 +198,9 @@ const char INSERT_SINGLE_VALUE[] =
 
 const char INSERT_DEPENDS_VALUES[] =
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME, %s_DEWEY) VALUES (%d,%Q,%Q);";
+
+const char INSERT_REQUIRED_BY_VALUE[] =
+	"INSERT INTO LOCAL_REQUIRED_BY (PKGNAME, REQUIRED_BY) VALUES (%Q, %Q);";
 
 const char UNIQUE_PKG[] =
 	"SELECT FULLPKGNAME, PKGVERS FROM %s WHERE PKGNAME = %Q;";

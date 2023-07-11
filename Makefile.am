@@ -21,7 +21,8 @@ bin_PROGRAMS=		pkgin
 #
 openssh_SOURCES=	external/progressmeter.c
 pkg_install_SOURCES=	external/automatic.c external/dewey.c
-pkg_install_SOURCES+=	external/fexec.c external/opattern.c external/pkgdb.c
+pkg_install_SOURCES+=	external/fexec.c external/iterate.c external/lpkg.c
+pkg_install_SOURCES+=	external/opattern.c external/pkgdb.c external/plist.c
 pkg_install_SOURCES+=	external/var.c external/xwrapper.c
 
 pkgin_SOURCES=		actions.c autoremove.c depends.c download.c fsops.c impact.c
@@ -81,7 +82,7 @@ pkgin.1: pkgin.1.in
 #
 dist_pkgin_SOURCES+=	pkgin.sql
 nodist_pkgin_SOURCES+=	pkgindb_create.h
-pkgindb_create.h: Makefile
+pkgindb_create.h: Makefile pkgin.sql
 	@echo "/* Automatically generated, DO NOT EDIT */" >$@
 	@echo "#define CREATE_DRYDB \" \\" >>$@
 	@sed -e 's/$$/ \\/' -e 's/\"/\\\"/g' $(srcdir)/pkgin.sql >>$@

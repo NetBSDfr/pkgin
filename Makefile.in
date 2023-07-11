@@ -129,15 +129,17 @@ am__pkgin_SOURCES_DIST = actions.c autoremove.c depends.c download.c \
 	pkg_install.c pkg_str.c pkgindb.c pkgindb_queries.c pkglist.c \
 	preferred.c selection.c sqlite_callbacks.c summary.c tools.c \
 	external/progressmeter.c external/automatic.c external/dewey.c \
-	external/fexec.c external/opattern.c external/pkgdb.c \
+	external/fexec.c external/iterate.c external/lpkg.c \
+	external/opattern.c external/pkgdb.c external/plist.c \
 	external/var.c external/xwrapper.c external/humanize_number.c
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = external/pkgin-progressmeter.$(OBJEXT)
 am__objects_2 = external/pkgin-automatic.$(OBJEXT) \
 	external/pkgin-dewey.$(OBJEXT) external/pkgin-fexec.$(OBJEXT) \
+	external/pkgin-iterate.$(OBJEXT) external/pkgin-lpkg.$(OBJEXT) \
 	external/pkgin-opattern.$(OBJEXT) \
-	external/pkgin-pkgdb.$(OBJEXT) external/pkgin-var.$(OBJEXT) \
-	external/pkgin-xwrapper.$(OBJEXT)
+	external/pkgin-pkgdb.$(OBJEXT) external/pkgin-plist.$(OBJEXT) \
+	external/pkgin-var.$(OBJEXT) external/pkgin-xwrapper.$(OBJEXT)
 @HAVE_HUMANIZE_NUMBER_FALSE@am__objects_3 = external/pkgin-humanize_number.$(OBJEXT)
 am_pkgin_OBJECTS = pkgin-actions.$(OBJEXT) pkgin-autoremove.$(OBJEXT) \
 	pkgin-depends.$(OBJEXT) pkgin-download.$(OBJEXT) \
@@ -191,8 +193,11 @@ am__depfiles_remade = ./$(DEPDIR)/pkgin-actions.Po \
 	external/$(DEPDIR)/pkgin-dewey.Po \
 	external/$(DEPDIR)/pkgin-fexec.Po \
 	external/$(DEPDIR)/pkgin-humanize_number.Po \
+	external/$(DEPDIR)/pkgin-iterate.Po \
+	external/$(DEPDIR)/pkgin-lpkg.Po \
 	external/$(DEPDIR)/pkgin-opattern.Po \
 	external/$(DEPDIR)/pkgin-pkgdb.Po \
+	external/$(DEPDIR)/pkgin-plist.Po \
 	external/$(DEPDIR)/pkgin-progressmeter.Po \
 	external/$(DEPDIR)/pkgin-var.Po \
 	external/$(DEPDIR)/pkgin-xwrapper.Po
@@ -403,7 +408,8 @@ top_srcdir = @top_srcdir@
 #
 openssh_SOURCES = external/progressmeter.c
 pkg_install_SOURCES = external/automatic.c external/dewey.c \
-	external/fexec.c external/opattern.c external/pkgdb.c \
+	external/fexec.c external/iterate.c external/lpkg.c \
+	external/opattern.c external/pkgdb.c external/plist.c \
 	external/var.c external/xwrapper.c
 pkgin_SOURCES = actions.c autoremove.c depends.c download.c fsops.c \
 	impact.c main.c order.c pkg_check.c pkg_infos.c pkg_install.c \
@@ -553,9 +559,15 @@ external/pkgin-dewey.$(OBJEXT): external/$(am__dirstamp) \
 	external/$(DEPDIR)/$(am__dirstamp)
 external/pkgin-fexec.$(OBJEXT): external/$(am__dirstamp) \
 	external/$(DEPDIR)/$(am__dirstamp)
+external/pkgin-iterate.$(OBJEXT): external/$(am__dirstamp) \
+	external/$(DEPDIR)/$(am__dirstamp)
+external/pkgin-lpkg.$(OBJEXT): external/$(am__dirstamp) \
+	external/$(DEPDIR)/$(am__dirstamp)
 external/pkgin-opattern.$(OBJEXT): external/$(am__dirstamp) \
 	external/$(DEPDIR)/$(am__dirstamp)
 external/pkgin-pkgdb.$(OBJEXT): external/$(am__dirstamp) \
+	external/$(DEPDIR)/$(am__dirstamp)
+external/pkgin-plist.$(OBJEXT): external/$(am__dirstamp) \
 	external/$(DEPDIR)/$(am__dirstamp)
 external/pkgin-var.$(OBJEXT): external/$(am__dirstamp) \
 	external/$(DEPDIR)/$(am__dirstamp)
@@ -599,8 +611,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-dewey.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-fexec.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-humanize_number.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-iterate.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-lpkg.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-opattern.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-pkgdb.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-plist.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-progressmeter.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-var.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@external/$(DEPDIR)/pkgin-xwrapper.Po@am__quote@ # am--include-marker
@@ -963,6 +978,34 @@ external/pkgin-fexec.obj: external/fexec.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-fexec.obj `if test -f 'external/fexec.c'; then $(CYGPATH_W) 'external/fexec.c'; else $(CYGPATH_W) '$(srcdir)/external/fexec.c'; fi`
 
+external/pkgin-iterate.o: external/iterate.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-iterate.o -MD -MP -MF external/$(DEPDIR)/pkgin-iterate.Tpo -c -o external/pkgin-iterate.o `test -f 'external/iterate.c' || echo '$(srcdir)/'`external/iterate.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) external/$(DEPDIR)/pkgin-iterate.Tpo external/$(DEPDIR)/pkgin-iterate.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='external/iterate.c' object='external/pkgin-iterate.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-iterate.o `test -f 'external/iterate.c' || echo '$(srcdir)/'`external/iterate.c
+
+external/pkgin-iterate.obj: external/iterate.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-iterate.obj -MD -MP -MF external/$(DEPDIR)/pkgin-iterate.Tpo -c -o external/pkgin-iterate.obj `if test -f 'external/iterate.c'; then $(CYGPATH_W) 'external/iterate.c'; else $(CYGPATH_W) '$(srcdir)/external/iterate.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) external/$(DEPDIR)/pkgin-iterate.Tpo external/$(DEPDIR)/pkgin-iterate.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='external/iterate.c' object='external/pkgin-iterate.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-iterate.obj `if test -f 'external/iterate.c'; then $(CYGPATH_W) 'external/iterate.c'; else $(CYGPATH_W) '$(srcdir)/external/iterate.c'; fi`
+
+external/pkgin-lpkg.o: external/lpkg.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-lpkg.o -MD -MP -MF external/$(DEPDIR)/pkgin-lpkg.Tpo -c -o external/pkgin-lpkg.o `test -f 'external/lpkg.c' || echo '$(srcdir)/'`external/lpkg.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) external/$(DEPDIR)/pkgin-lpkg.Tpo external/$(DEPDIR)/pkgin-lpkg.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='external/lpkg.c' object='external/pkgin-lpkg.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-lpkg.o `test -f 'external/lpkg.c' || echo '$(srcdir)/'`external/lpkg.c
+
+external/pkgin-lpkg.obj: external/lpkg.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-lpkg.obj -MD -MP -MF external/$(DEPDIR)/pkgin-lpkg.Tpo -c -o external/pkgin-lpkg.obj `if test -f 'external/lpkg.c'; then $(CYGPATH_W) 'external/lpkg.c'; else $(CYGPATH_W) '$(srcdir)/external/lpkg.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) external/$(DEPDIR)/pkgin-lpkg.Tpo external/$(DEPDIR)/pkgin-lpkg.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='external/lpkg.c' object='external/pkgin-lpkg.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-lpkg.obj `if test -f 'external/lpkg.c'; then $(CYGPATH_W) 'external/lpkg.c'; else $(CYGPATH_W) '$(srcdir)/external/lpkg.c'; fi`
+
 external/pkgin-opattern.o: external/opattern.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-opattern.o -MD -MP -MF external/$(DEPDIR)/pkgin-opattern.Tpo -c -o external/pkgin-opattern.o `test -f 'external/opattern.c' || echo '$(srcdir)/'`external/opattern.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) external/$(DEPDIR)/pkgin-opattern.Tpo external/$(DEPDIR)/pkgin-opattern.Po
@@ -990,6 +1033,20 @@ external/pkgin-pkgdb.obj: external/pkgdb.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='external/pkgdb.c' object='external/pkgin-pkgdb.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-pkgdb.obj `if test -f 'external/pkgdb.c'; then $(CYGPATH_W) 'external/pkgdb.c'; else $(CYGPATH_W) '$(srcdir)/external/pkgdb.c'; fi`
+
+external/pkgin-plist.o: external/plist.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-plist.o -MD -MP -MF external/$(DEPDIR)/pkgin-plist.Tpo -c -o external/pkgin-plist.o `test -f 'external/plist.c' || echo '$(srcdir)/'`external/plist.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) external/$(DEPDIR)/pkgin-plist.Tpo external/$(DEPDIR)/pkgin-plist.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='external/plist.c' object='external/pkgin-plist.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-plist.o `test -f 'external/plist.c' || echo '$(srcdir)/'`external/plist.c
+
+external/pkgin-plist.obj: external/plist.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-plist.obj -MD -MP -MF external/$(DEPDIR)/pkgin-plist.Tpo -c -o external/pkgin-plist.obj `if test -f 'external/plist.c'; then $(CYGPATH_W) 'external/plist.c'; else $(CYGPATH_W) '$(srcdir)/external/plist.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) external/$(DEPDIR)/pkgin-plist.Tpo external/$(DEPDIR)/pkgin-plist.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='external/plist.c' object='external/pkgin-plist.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o external/pkgin-plist.obj `if test -f 'external/plist.c'; then $(CYGPATH_W) 'external/plist.c'; else $(CYGPATH_W) '$(srcdir)/external/plist.c'; fi`
 
 external/pkgin-var.o: external/var.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(pkgin_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT external/pkgin-var.o -MD -MP -MF external/$(DEPDIR)/pkgin-var.Tpo -c -o external/pkgin-var.o `test -f 'external/var.c' || echo '$(srcdir)/'`external/var.c
@@ -1378,8 +1435,11 @@ distclean: distclean-am
 	-rm -f external/$(DEPDIR)/pkgin-dewey.Po
 	-rm -f external/$(DEPDIR)/pkgin-fexec.Po
 	-rm -f external/$(DEPDIR)/pkgin-humanize_number.Po
+	-rm -f external/$(DEPDIR)/pkgin-iterate.Po
+	-rm -f external/$(DEPDIR)/pkgin-lpkg.Po
 	-rm -f external/$(DEPDIR)/pkgin-opattern.Po
 	-rm -f external/$(DEPDIR)/pkgin-pkgdb.Po
+	-rm -f external/$(DEPDIR)/pkgin-plist.Po
 	-rm -f external/$(DEPDIR)/pkgin-progressmeter.Po
 	-rm -f external/$(DEPDIR)/pkgin-var.Po
 	-rm -f external/$(DEPDIR)/pkgin-xwrapper.Po
@@ -1454,8 +1514,11 @@ maintainer-clean: maintainer-clean-am
 	-rm -f external/$(DEPDIR)/pkgin-dewey.Po
 	-rm -f external/$(DEPDIR)/pkgin-fexec.Po
 	-rm -f external/$(DEPDIR)/pkgin-humanize_number.Po
+	-rm -f external/$(DEPDIR)/pkgin-iterate.Po
+	-rm -f external/$(DEPDIR)/pkgin-lpkg.Po
 	-rm -f external/$(DEPDIR)/pkgin-opattern.Po
 	-rm -f external/$(DEPDIR)/pkgin-pkgdb.Po
+	-rm -f external/$(DEPDIR)/pkgin-plist.Po
 	-rm -f external/$(DEPDIR)/pkgin-progressmeter.Po
 	-rm -f external/$(DEPDIR)/pkgin-var.Po
 	-rm -f external/$(DEPDIR)/pkgin-xwrapper.Po
@@ -1503,7 +1566,7 @@ uninstall-man: uninstall-man1
 pkgin.1: pkgin.1.in
 	@sed -e 's,/var/db/pkgin,$(PKGIN_DBDIR),g' \
 	     -e 's,/usr/pkg/etc,$(sysconfdir),g' $(srcdir)/pkgin.1.in >$@
-pkgindb_create.h: Makefile
+pkgindb_create.h: Makefile pkgin.sql
 	@echo "/* Automatically generated, DO NOT EDIT */" >$@
 	@echo "#define CREATE_DRYDB \" \\" >>$@
 	@sed -e 's/$$/ \\/' -e 's/\"/\\\"/g' $(srcdir)/pkgin.sql >>$@

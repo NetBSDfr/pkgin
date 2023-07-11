@@ -277,14 +277,7 @@ recreate:
 			errx(EXIT_FAILURE, "cannot create database: %s",
 			    sqlite3_errmsg(pdb));
 	} else {
-		/*
-		 * This query checks the compatibility of the current database,
-		 * and should be one that either completes or fails due to an
-		 * SQL error based on the most recent schema change.  Returned
-		 * rows are ignored, so choose a query that runs quickly.
-		 */
-		if (pkgindb_doquery("SELECT BUILD_DATE FROM LOCAL_PKG LIMIT 1;",
-		    NULL, NULL) != PDB_OK) {
+		if (pkgindb_doquery(CHECK_DB_LATEST, NULL, NULL) != PDB_OK) {
 			if (unlink(pkgin_sqldb) < 0)
 				err(EXIT_FAILURE, "cannot recreate database");
 			goto recreate;
