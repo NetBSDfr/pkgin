@@ -175,7 +175,7 @@ void
 pkg_keep(int type, char **pkgargs)
 {
 	Pkglist	*pkglist = NULL;
-	char	**pkeep, *pkgname, query[BUFSIZ];
+	char	**pkeep, query[BUFSIZ];
 
 	if (!have_privs(PRIVS_PKGDB|PRIVS_PKGINDB))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
@@ -186,17 +186,10 @@ pkg_keep(int type, char **pkgargs)
 	/* parse packages by their command line names */
 	for (pkeep = pkgargs; *pkeep != NULL; pkeep++) {
 		/* find real package name */
-		if ((pkgname = unique_pkg(*pkeep, LOCAL_PKG)) != NULL) {
-
-			trunc_str(pkgname, '-', STR_BACKWARD);
-
-			SLIST_FOREACH(pkglist, &l_plisthead, next)
-				/* PKGNAME match */
-				if (strcmp(pkgname, pkglist->name) == 0)
-					break;
-
-			XFREE(pkgname);
-		} /* pkgname != NULL */
+		if ((pkglist = find_local_pkg_match(*pkeep)) == NULL) {
+			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
+			continue;
+		}
 
 		if (pkglist != NULL && pkglist->full != NULL) {
 			switch (type) {
@@ -229,7 +222,6 @@ pkg_keep(int type, char **pkgargs)
 					exit(EXIT_FAILURE);
 				break;
 			}
-		} else
-			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
+		}
 	} /* for (pkeep) */
 }
