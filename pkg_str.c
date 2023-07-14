@@ -148,6 +148,31 @@ find_pkg_match(Plisthead *plisthead, char *match)
 	return pkg;
 }
 
+/*
+ * Find first match of a locally-installed package for a package pattern.
+ * Returns a Pkglist entry on success or NULL on failure.
+ */
+Pkglist *
+find_local_pkg_match(const char *pattern)
+{
+	Pkglist	*pkg = NULL, *p;
+
+	SLIST_FOREACH(p, &l_plisthead, next) {
+		/*
+		 * Just return the first match.  While technically we could
+		 * find the "best" result for an alternate match it doesn't
+		 * make any practical sense.
+		 */
+		if (pkg_match(pattern, p->full)) {
+			TRACE("Matched %s to %s\n", pattern, p->full);
+			pkg = p;
+			break;
+		}
+	}
+
+	return pkg;
+}
+
 /* basic full package format detection */
 int
 exact_pkgfmt(const char *pkgname)

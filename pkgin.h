@@ -262,6 +262,7 @@ char		*read_repos(void);
 int		find_preferred_pkg(const char *, Pkglist **, char **);
 char	   	*unique_pkg(const char *, const char *);
 Pkglist		*find_pkg_match(Plisthead *, char *);
+Pkglist		*find_local_pkg_match(const char *);
 uint8_t		non_trivial_glob(char *);
 char		*get_pkgname_from_depend(char *);
 int		exact_pkgfmt(const char *);
