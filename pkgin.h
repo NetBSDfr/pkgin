@@ -243,7 +243,6 @@ int		pkgin_remove(char **);
 int		pkgin_install(char **, int, int);
 char		*action_list(char *, char *);
 int		pkgin_upgrade(int);
-char		*read_preferred(char *);
 /* order.c */
 Plisthead	*order_remove(Plisthead *);
 Plisthead	*order_download(Plisthead *);
@@ -256,7 +255,6 @@ void		show_pkg_keep(void);
 void		show_pkg_nokeep(void);
 void		pkg_keep(int, char **);
 /* fsops.c */
-int		fs_has_room(const char *, int64_t);
 uint64_t	fs_room(const char *);
 void		clean_cache(void);
 char		*read_repos(void);

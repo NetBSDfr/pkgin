@@ -45,24 +45,6 @@ static const struct VarParam {
 	{ NULL, NULL }
 };
 
-int
-fs_has_room(const char *dir, int64_t size)
-{
-	int64_t		freesize;
-	struct statvfs	fsbuf;
-
-
-	if (statvfs(dir, &fsbuf) < 0)
-		err(EXIT_FAILURE, "Can't statvfs() `%s'", dir);
-
-	freesize = (int64_t)fsbuf.f_bavail  * (int64_t)fsbuf.f_frsize;
-
-	if (freesize > size)
-		return 1;
-
-	return 0;
-}
-
 uint64_t
 fs_room(const char *dir)
 {
