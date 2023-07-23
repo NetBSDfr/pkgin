@@ -674,8 +674,9 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
 
 installend:
-
+	XFREE(todownload);
 	XFREE(toinstall);
+	XFREE(torefresh);
 	XFREE(toupgrade);
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead);
