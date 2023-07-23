@@ -200,8 +200,10 @@ main(int argc, char *argv[])
 	load_preferred();
 
 	/* we need packages lists for almost everything */
-	if (ch != PKG_UPDT_CMD) /* already loaded by update_db() */
-		init_global_pkglists();
+	if (ch != PKG_UPDT_CMD) {
+		init_local_pkglist();
+		init_remote_pkglist();
+	}
 
 	switch (ch) {
 	case PKG_UPDT_CMD: /* update packages db */
@@ -326,7 +328,8 @@ main(int argc, char *argv[])
 		/* NOTREACHED */
 	}
 
-	free_global_pkglists();
+	free_local_pkglist();
+	free_remote_pkglist();
 
 	pkgindb_close();
 

@@ -222,8 +222,10 @@ int		show_direct_depends(const char *);
 int		show_full_dep_tree(const char *, const char *, const char *);
 void 		full_dep_tree(const char *, const char *, Plisthead *);
 /* pkglist.c */
-void		init_global_pkglists(void);
-void		free_global_pkglists(void);
+void		init_local_pkglist(void);
+void		init_remote_pkglist(void);
+void		free_local_pkglist(void);
+void		free_remote_pkglist(void);
 Pkglist		*malloc_pkglist(void);
 void		free_pkglist_entry(Pkglist **);
 void		free_pkglist(Plisthead **);

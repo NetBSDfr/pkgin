@@ -131,7 +131,20 @@ free_pkglist(Plisthead **plisthead)
 }
 
 void
-init_global_pkglists(void)
+init_local_pkglist(void)
+{
+	Plistnumbered plist;
+
+	SLIST_INIT(&l_plisthead);
+	plist.P_Plisthead = &l_plisthead;
+	plist.P_count = 0;
+	plist.P_type = 0;
+	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, pdb_rec_list, &plist);
+	l_plistcounter = plist.P_count;
+}
+
+void
+init_remote_pkglist(void)
 {
 	Plistnumbered plist;
 
@@ -141,13 +154,6 @@ init_global_pkglists(void)
 	plist.P_type = 1;
 	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, pdb_rec_list, &plist);
 	r_plistcounter = plist.P_count;
-
-	SLIST_INIT(&l_plisthead);
-	plist.P_Plisthead = &l_plisthead;
-	plist.P_count = 0;
-	plist.P_type = 0;
-	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, pdb_rec_list, &plist);
-	l_plistcounter = plist.P_count;
 }
 
 static void
@@ -164,9 +170,14 @@ free_global_pkglist(Plisthead *plisthead)
 }
 
 void
-free_global_pkglists(void)
+free_local_pkglist(void)
 {
 	free_global_pkglist(&l_plisthead);
+}
+
+void
+free_remote_pkglist(void)
+{
 	free_global_pkglist(&r_plisthead);
 }
 

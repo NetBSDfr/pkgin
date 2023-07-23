@@ -721,8 +721,8 @@ update_localdb(char **pkgkeep)
 	pclose(pinfo);
 
 	/* re-read local packages list as it may have changed */
-	free_global_pkglists();
-	init_global_pkglists();
+	free_local_pkglist();
+	init_local_pkglist();
 
 	/* restore keep-list */
 	if (keeplisthead != NULL) {
