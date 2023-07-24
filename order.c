@@ -29,92 +29,59 @@
 
 #include "pkgin.h"
 
-/**
- * /file order.c
+/*
+ * Order package lists to ensure they are correctly ordered when passed to
+ * pkg_add or pkg_delete.
  *
- * order.c has only one purpose: arrange lists order in order to satisfy
- * pkg_add / pkg_delete.
+ * Incorrect ordering of pkg_add arguments results in packages being installed
+ * twice, as pkg_add will pull in dependencies automatically.
+ *
+ * Incorrect ordering of pkg_delete arguments will work as we explicitly use
+ * "pkg_delete -f" but we don't want to rely on that.
  */
 
-/**
- * find dependency deepness for package removal and record it to pdp->level
- */
-static void
-remove_dep_deepness(Plisthead *deptreehead)
-{
-	char		*depname;
-	Pkglist		*pdp;
-	Plisthead	*lvldeptree;
-
-	/* get higher recursion level */
-	SLIST_FOREACH(pdp, deptreehead, next) {
-		if (pdp->level == -1) { /* unique package, just return */
-			pdp->level = 0;
-			return;
-		}
-
-		pdp->level = 1;
-
-		if (pdp->pattern == NULL)
-			/* there's something wrong with database's record,
-			 * probably a mistaken dependency
-			 */
-			continue;
-
-		/* depname received from deptreehead is in package format */
-		depname = xstrdup(pdp->pattern);
-
-		trunc_str(depname, '-', STR_BACKWARD);
-
-		lvldeptree = init_head();
-		get_depends_recursive(depname, lvldeptree, DEPENDS_REVERSE);
-
-		if (!SLIST_EMPTY(lvldeptree))
-		    	pdp->level = SLIST_FIRST(lvldeptree)->level + 1;
-
-		XFREE(depname);
-		free_pkglist(&lvldeptree);
-
-#if 0
-		printf("%s -> %d\n", pdp->pattern, pdp->level);
-#endif
-	}
-}
-
-/**
- * \fn order_remove
+/*
+ * Order removals for pkg_delete.
  *
- * \brief order the remove list according to dependency level
+ * Note that this function removes entries from the supplied impact list as an
+ * optimisation, as currently all callers of it do not re-use it.
  */
 Plisthead *
-order_remove(Plisthead *deptreehead)
+order_remove(Plisthead *impacthead)
 {
 	int		i, maxlevel = 0;
-	Pkglist		*pdp, *next;
-	Plisthead	*ordtreehead;
+	Pkglist		*p, *tmpp;
+	Plisthead	*removehead;
 
-	/* package removal cannot trust recorded dependencies, reorder */
-	remove_dep_deepness(deptreehead);
+	SLIST_FOREACH(p, impacthead, next)
+		if (p->level > maxlevel)
+			maxlevel = p->level;
 
-	SLIST_FOREACH(pdp, deptreehead, next)
-		if (pdp->level > maxlevel)
-			maxlevel = pdp->level;
+	removehead = init_head();
 
-	ordtreehead = init_head();
+	/*
+	 * Move entries from impacthead to removehead according to dependency
+	 * level.
+	 */
+	for (i = 0; i <= maxlevel; i++) {
+		SLIST_FOREACH_SAFE(p, impacthead, next, tmpp) {
+			if (p->level != i)
+				continue;
 
-	for (i = maxlevel; i >= 0; i--) {
-		pdp = SLIST_FIRST(deptreehead);
-		while (pdp != NULL) {
-			next = SLIST_NEXT(pdp, next);
-			if (pdp->level == i) {
-				SLIST_REMOVE(deptreehead, pdp, Pkglist, next);
-				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
+			/*
+			 * We do not support shooting yourself in the foot.
+			 */
+			if (strcmp(p->lpkg->name, "pkg_install") == 0) {
+				fprintf(stderr, MSG_NOT_REMOVING_PKG_INSTALL);
+				continue;
 			}
-			pdp = next;
+
+			SLIST_REMOVE(impacthead, p, Pkglist, next);
+			SLIST_INSERT_HEAD(removehead, p, next);
 		}
 	}
 
-	return ordtreehead;
+	return removehead;
 }
 
 /*

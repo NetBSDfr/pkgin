@@ -274,7 +274,6 @@ char	   	*unique_pkg(const char *, const char *);
 Pkglist		*find_pkg_match(const char *, const char *);
 Pkglist		*find_local_pkg_match(const char *);
 int		exact_pkgfmt(const char *);
-char		*simple_pkg_match(Plisthead *, const char *);
 int		version_check(char *, char *);
 int		pkgstrcmp(const char *, const char *);
 /* selection.c */

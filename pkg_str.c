@@ -192,26 +192,6 @@ exact_pkgfmt(const char *pkgname)
 	return isdigit((int)*p);
 }
 
-/* 
- * check whether or not pkgarg is a full pkgname (foo-1.0)
- */
-char *
-simple_pkg_match(Plisthead *plisthead, const char *pkgarg)
-{
-	Pkglist	*pkglist;
-
-	/* check for package existence */
-	SLIST_FOREACH(pkglist, plisthead, next) {
-		if (!pkg_match(pkgarg, pkglist->full))
-			continue;
-
-		return xstrdup(pkglist->full);
-	}
-
-
-	return NULL;
-}
-
 /* similar to opattern.c's pkg_order but without pattern */
 int
 version_check(char *first_pkg, char *second_pkg)

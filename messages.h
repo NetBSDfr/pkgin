@@ -49,6 +49,8 @@
 
 /* actions.c */
 #define MSG_REMOVING "removing %s...\n"
+#define MSG_NOT_REMOVING_PKG_INSTALL \
+	"pkg_install is a critical package and cannot be deleted\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"
 #define MSG_ERR_OPEN "error opening %s"
 #define MSG_REQT_NOT_PRESENT \

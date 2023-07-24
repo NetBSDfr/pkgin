@@ -96,10 +96,11 @@ pkgin_autoremove(void)
 			continue;
 
 		/*
-		 * Package can be auto removed, add to the list.
+		 * Package can be auto removed, find its lpkg entry and add to
+		 * the list.
 		 */
 		premove = malloc_pkglist();
-		premove->full = xstrdup(pkglist->full);
+		premove->lpkg = find_local_pkg_match(pkglist->full);
 		SLIST_INSERT_HEAD(removehead, premove, next);
 		removenb++;
 	}
@@ -120,7 +121,7 @@ pkgin_autoremove(void)
 
 	if (!SLIST_EMPTY(orderedhead)) {
 		SLIST_FOREACH(premove, orderedhead, next)
-			toremove = action_list(toremove, premove->full);
+			toremove = action_list(toremove, premove->lpkg->full);
 
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
 		if (!noflag)

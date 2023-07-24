@@ -271,29 +271,15 @@ rebuild_required_by(void)
 void
 do_pkg_remove(Plisthead *removehead)
 {
-	Pkglist *premove;
+	Pkglist *p;
 
 	/* send pkg_delete stderr to logfile */
 	open_pi_log();
 
-	SLIST_FOREACH(premove, removehead, next) {
-		/* file not available in the repository */
-		if (premove->file_size == -1)
-			continue;
-
-		if (premove->full == NULL)
-			/* SLIST corruption, badly installed package */
-			continue;
-
-		/* pkg_install cannot be deleted */
-		if (strcmp(premove->full, "pkg_install") == 0) {
-			printf("not removing pkg_install...\n");
-			continue;
-		}
-
-		log_tag(MSG_REMOVING, premove->full);
-		if (fexec(pkg_delete, verb_flag("-f"), premove->full, NULL)
-			!= EXIT_SUCCESS)
+	SLIST_FOREACH(p, removehead, next) {
+		log_tag(MSG_REMOVING, p->lpkg->full);
+		if (fexec(pkg_delete, verb_flag("-f"), p->lpkg->full, NULL)
+		    != EXIT_SUCCESS)
 			err_count++;
 	}
 
@@ -704,73 +690,49 @@ installend:
 int
 pkgin_remove(char **pkgargs)
 {
-	int		deletenum = 0, exists, rc = EXIT_SUCCESS;
-	Plisthead	*pdphead, *removehead;
-	Pkglist		*pdp;
-	char   		*todelete = NULL, **ppkgargs, *pkgname, *ppkg;
-
-	pdphead = init_head();
+	Plisthead	*rmhead, *removehead;
+	Pkglist		*lpkg, *p;
+	int		deletenum = 0, rc = EXIT_SUCCESS;
+	char   		*todelete = NULL, **arg;
 
 	if (SLIST_EMPTY(&l_plisthead))
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
-	/* act on every package passed to the command line */
-	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
+	rmhead = init_head();
 
-		if ((pkgname =
-			simple_pkg_match(&l_plisthead, *ppkgargs)) == NULL) {
-			printf(MSG_PKG_NOT_INSTALLED, *ppkgargs);
+	/*
+	 * For every package or pattern on the command line, find a matching
+	 * installed package and add to rmhead.
+	 */
+	for (arg = pkgargs; *arg != NULL; arg++) {
+		if ((lpkg = find_local_pkg_match(*arg)) == NULL) {
+			printf(MSG_PKG_NOT_INSTALLED, *arg);
 			rc = EXIT_FAILURE;
 			continue;
 		}
-		ppkg = xstrdup(pkgname);
-		trunc_str(ppkg, '-', STR_BACKWARD);
+		free(*arg);
+		*arg = xstrdup(lpkg->full);
 
-		/* record full reverse dependency list for package */
-		get_depends_recursive(ppkg, pdphead, DEPENDS_REVERSE);
+		/*
+		 * Fetch full reverse dependencies for local package and add
+		 * them to rmhead too.
+		 */
+		get_depends_recursive(lpkg->full, rmhead, DEPENDS_REVERSE);
 
-		XFREE(ppkg);
-
-		exists = 0;
-		/* check if package have already been recorded */
-		SLIST_FOREACH(pdp, pdphead, next) {
-			if (strncmp(pdp->pattern, pkgname,
-					strlen(pdp->pattern)) == 0) {
-				exists = 1;
-				break;
-			}
-		}
-
-		if (exists)
-			continue; /* next pkgarg */
-
-
-		/* add package itself */
-		pdp = malloc_pkglist();
-
-		pdp->pattern = pkgname;
-
-		if (SLIST_EMPTY(pdphead))
-			/*
-			 * identify unique package,
-			 * don't cut it when ordering
-			 */
-			pdp->level = -1;
-		else
-			pdp->level = 0;
-
-		pdp->name = xstrdup(pdp->pattern);
-		trunc_str(pdp->name, '-', STR_BACKWARD);
-
-		SLIST_INSERT_HEAD(pdphead, pdp, next);
-	} /* for pkgargs */
+		/*
+		 * Add the package itself.
+		 */
+		p = malloc_pkglist();
+		p->lpkg = lpkg;
+		SLIST_INSERT_HEAD(rmhead, p, next);
+	}
 
 	/* order remove list */
-	removehead = order_remove(pdphead);
+	removehead = order_remove(rmhead);
 
-	SLIST_FOREACH(pdp, removehead, next) {
+	SLIST_FOREACH(p, removehead, next) {
 		deletenum++;
-		todelete = action_list(todelete, pdp->pattern);
+		todelete = action_list(todelete, p->lpkg->full);
 	}
 
 	if (todelete != NULL) {
@@ -793,8 +755,7 @@ pkgin_remove(char **pkgargs)
 		printf(MSG_NO_PKGS_TO_DELETE);
 
 	free_pkglist(&removehead);
-	free_pkglist(&pdphead);
-
+	free_pkglist(&rmhead);
 	XFREE(todelete);
 
 	return rc;
