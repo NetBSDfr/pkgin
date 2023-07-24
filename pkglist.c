@@ -131,6 +131,49 @@ free_pkglist(Plisthead **plisthead)
 	plisthead = NULL;
 }
 
+/*
+ * SQLite callback, record a local or remote package list entry.
+ *
+ * See LOCAL_PKGS_QUERY_ASC and REMOTE_PKGS_QUERY_ASC for the order of entries.
+ */
+#define DUP_OR_NULL(x, y)	x = (y) ? xstrdup(y) : NULL
+#define NUM_OR_NULL(x, y)	x = (y) ? strtol(y, (char **)NULL, 10) : 0
+static int
+record_pkglist(void *param, int argc, char **argv, char **colname)
+{
+	Plistnumbered *plist = (Plistnumbered *)param;
+	Pkglist *p;
+
+	if (argv == NULL)
+		return PDB_ERR;
+
+	p = malloc_pkglist();
+	DUP_OR_NULL(p->full, argv[0]);
+	DUP_OR_NULL(p->name, argv[1]);
+	DUP_OR_NULL(p->version, argv[2]);
+	DUP_OR_NULL(p->build_date, argv[3]);
+	DUP_OR_NULL(p->comment, argv[4]);
+	NUM_OR_NULL(p->file_size, argv[5]);
+	NUM_OR_NULL(p->size_pkg, argv[6]);
+	DUP_OR_NULL(p->category, argv[7]);
+	DUP_OR_NULL(p->pkgpath, argv[8]);
+
+	if (plist->P_type == 1) {
+		if (p->file_size == 0) {
+			fprintf(stderr, MSG_BAD_FILE_SIZE, p->full);
+			free_pkglist_entry(&p);
+			return PDB_ERR;
+		}
+	}
+
+	SLIST_INSERT_HEAD(plist->P_Plisthead, p, next);
+	plist->P_count++;
+
+	return PDB_OK;
+}
+#undef DUP_OR_NULL
+#undef NUM_OR_NULL
+
 void
 init_local_pkglist(void)
 {
@@ -140,7 +183,7 @@ init_local_pkglist(void)
 	plist.P_Plisthead = &l_plisthead;
 	plist.P_count = 0;
 	plist.P_type = 0;
-	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, pdb_rec_list, &plist);
+	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, record_pkglist, &plist);
 	l_plistcounter = plist.P_count;
 }
 
@@ -153,7 +196,7 @@ init_remote_pkglist(void)
 	plist.P_Plisthead = &r_plisthead;
 	plist.P_count = 0;
 	plist.P_type = 1;
-	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, pdb_rec_list, &plist);
+	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, record_pkglist, &plist);
 	r_plistcounter = plist.P_count;
 }
 
