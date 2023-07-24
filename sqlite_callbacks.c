@@ -61,32 +61,37 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 		if (argv[i] == NULL)
 			continue;
 
-		if (strcmp(colname[i], "PKGNAME") == 0)
+		if (strcmp(colname[i], "PKGNAME") == 0) {
 			plist->name = xstrdup(argv[i]);
-		if (strcmp(colname[i], "PKGVERS") == 0)
+			continue;
+		}
+		if (strcmp(colname[i], "PKGVERS") == 0) {
 			plist->version = xstrdup(argv[i]);
-		if (strcmp(colname[i], "BUILD_DATE") == 0)
+			continue;
+		}
+		if (strcmp(colname[i], "BUILD_DATE") == 0) {
 			plist->build_date = xstrdup(argv[i]);
-		if (strcmp(colname[i], "COMMENT") == 0)
+			continue;
+		}
+		if (strcmp(colname[i], "COMMENT") == 0) {
 			plist->comment = xstrdup(argv[i]);
-		if (strcmp(colname[i], "PKGPATH") == 0)
+			continue;
+		}
+		if (strcmp(colname[i], "PKGPATH") == 0) {
 			plist->pkgpath = xstrdup(argv[i]);
-		if (strcmp(colname[i], "CATEGORIES") == 0)
+			continue;
+		}
+		if (strcmp(colname[i], "CATEGORIES") == 0) {
 			plist->category = xstrdup(argv[i]);
-		if (strcmp(colname[i], "FILE_SIZE") == 0)
+			continue;
+		}
+		if (strcmp(colname[i], "FILE_SIZE") == 0) {
 			plist->file_size = strtol(argv[i], (char **)NULL, 10);
-		if (strcmp(colname[i], "SIZE_PKG") == 0)
+			continue;
+		}
+		if (strcmp(colname[i], "SIZE_PKG") == 0) {
 			plist->size_pkg = strtol(argv[i], (char **)NULL, 10);
-	}
-
-	/*
-	 * Verify FILE_SIZE exists for remote packages.
-	 */
-	if (plisthead->P_type == 1) {
-		if (plist->file_size == 0) {
-			fprintf(stderr, MSG_BAD_FILE_SIZE, plist->full);
-			free_pkglist_entry(&plist);
-			return PDB_ERR;
+			continue;
 		}
 	}
 
