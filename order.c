@@ -54,20 +54,20 @@ remove_dep_deepness(Plisthead *deptreehead)
 		}
 
 		pdp->level = 1;
-		
-		if (pdp->depend == NULL)
+
+		if (pdp->pattern == NULL)
 			/* there's something wrong with database's record,
 			 * probably a mistaken dependency
 			 */
 			continue;
 
 		/* depname received from deptreehead is in package format */
-		depname = xstrdup(pdp->depend);
+		depname = xstrdup(pdp->pattern);
 
 		trunc_str(depname, '-', STR_BACKWARD);
 
 		lvldeptree = init_head();
-		full_dep_tree(depname, LOCAL_REVERSE_DEPS, lvldeptree);
+		get_depends_recursive(depname, lvldeptree, DEPENDS_REVERSE);
 
 		if (!SLIST_EMPTY(lvldeptree))
 		    	pdp->level = SLIST_FIRST(lvldeptree)->level + 1;
@@ -76,7 +76,7 @@ remove_dep_deepness(Plisthead *deptreehead)
 		free_pkglist(&lvldeptree);
 
 #if 0
-		printf("%s -> %d\n", pdp->depend, pdp->level);
+		printf("%s -> %d\n", pdp->pattern, pdp->level);
 #endif
 	}
 }
@@ -136,11 +136,7 @@ order_download(Plisthead *impacthead)
 			continue;
 
 		pdp = malloc_pkglist();
-		pdp->action = pimpact->action;
-		pdp->depend = xstrdup(pimpact->full);
-		pdp->download = pimpact->download;
-		pdp->pkgurl = xstrdup(pimpact->pkgurl);
-		pdp->file_size = pimpact->file_size;
+		pdp->ipkg = pimpact;
 		SLIST_INSERT_HEAD(ordtreehead, pdp, next);
 	}
 
@@ -157,7 +153,6 @@ order_install(Plisthead *impacthead)
 	Plisthead	*ordtreehead;
 	Pkglist		*pimpact, *pdp, *pi_dp = NULL;
 	int		i, maxlevel = 0;
-	char		tmpcheck[BUFSIZ];
 
 	/* Record highest dependency level on impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -191,27 +186,13 @@ order_install(Plisthead *impacthead)
 				continue;
 
 			pdp = malloc_pkglist();
-
-			pdp->action = pimpact->action;
-			pdp->depend = xstrdup(pimpact->full);
-			pdp->level = pimpact->level;
-			pdp->download = pimpact->download;
-			pdp->pkgurl = xstrdup(pimpact->pkgurl);
-			pdp->file_size = pimpact->file_size;
-
-			if (pimpact->build_date)
-				pdp->build_date = xstrdup(pimpact->build_date);
-
-			if (pimpact->old)
-				pdp->old = xstrdup(pimpact->old);
+			pdp->ipkg = pimpact;
 
 			/*
 			 * Check for pkg_install, and if found, save for later
 			 * insertion at the head of this level.
 			 */
-			strcpy(tmpcheck, pimpact->full);
-			trunc_str(tmpcheck, '-', STR_BACKWARD);
-			if (!pi_dp && strcmp(tmpcheck, "pkg_install") == 0) {
+			if (!pi_dp && strcmp(pimpact->rpkg->name, "pkg_install") == 0) {
 				pi_dp = pdp;
 			} else {
 				SLIST_INSERT_HEAD(ordtreehead, pdp, next);

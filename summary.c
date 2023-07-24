@@ -270,7 +270,7 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 {
 	static uint8_t	check_machine_arch = 1;
 	int		i;
-	char		*val, *v, *pkg, buf[BUFSIZ];
+	char		*val, *v, buf[BUFSIZ];
 
 	if ((val = strchr(line, '=')) == NULL)
 		errx(EXIT_FAILURE, "Invalid pkg_info entry: %s", line);
@@ -301,12 +301,8 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 
 	/* DEPENDS */
 	if (strncmp(line, "DEPENDS=", 8) == 0) {
-		if ((pkg = get_pkgname_from_depend(val)) != NULL) {
-			pkgindb_dovaquery(INSERT_DEPENDS_VALUES, sum.deps,
-			    sum.deps, sum.deps, pkgid, pkg, val);
-			XFREE(pkg);
-		} else
-			printf(MSG_COULD_NOT_GET_PKGNAME, val);
+		pkgindb_dovaquery(INSERT_DEPENDS_VALUES, sum.deps, sum.deps,
+		    pkgid, val);
 		return;
 	}
 

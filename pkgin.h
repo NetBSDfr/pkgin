@@ -78,6 +78,7 @@
 #define ALNUM "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 #define DELIMITER '|'
 #define ICON_WAIT "-\\|/"
+#define ICON_LEN 4
 
 #define PKG_LLIST_CMD 0
 #define PKG_RLIST_CMD 1
@@ -149,8 +150,11 @@ typedef struct Sumfile {
 typedef struct Pkglist {
 	uint8_t	type; /*!< list type (LIST, DEPTREE or IMPACT) */
 
+	struct Pkglist *ipkg;	/* Pointer to an impact Pkglist entry */
+	struct Pkglist *lpkg;	/* Pointer to a local Pkglist entry */
+	struct Pkglist *rpkg;	/* Pointer to a remote Pkglist entry */
+
 	int64_t	size_pkg; /*!< installed package size (list and impact) */
-	int64_t old_size_pkg; /*!< old installed package size */
 	int64_t	file_size; /*!< binary package size */
 	int	level; /*<! recursion level (deptree and impact) */
 
@@ -159,18 +163,14 @@ typedef struct Pkglist {
 
 	char *full; /*!< full package name with version, foo-1.0 */
 	char *name; /*!< package name, foo */
-	char *old; /*!< old package if any */
 	char *version; /*<! package version, 1.0 */
 	char *build_date; /*<! BUILD_DATE timestamp */
-	char *depend;	/*!< dewey or glob form for forward (direct)
-			 * dependencies:
-			 * foo>=1.0
-			 * or full package name for reverse dependencies:
-			 * foo-1.0
-			 */
 	char *category; /*!< package category */
 	char *pkgpath; /*!< pkgsrc pkgpath */
 	char *comment; /*!< package list comment */
+
+	char *pattern;		/* DEPENDS pattern */
+	int skip;		/* Already processed via a different path */
 	int	keep; /*!< autoremovable package ? */
 	int	action; /*!< TOINSTALL or TOUPGRADE */
 
@@ -190,6 +190,15 @@ typedef struct Preflist {
 	SLIST_ENTRY(Preflist) next;
 } Preflist;
 typedef SLIST_HEAD(, Preflist) Preflisthead;
+
+/*
+ * Type of DEPENDS traversal.
+ */
+typedef enum depends_t {
+	DEPENDS_LOCAL,
+	DEPENDS_REMOTE,
+	DEPENDS_REVERSE,
+} depends_t;
 
 extern uint8_t		verbosity;
 extern uint8_t		package_version;
@@ -216,11 +225,12 @@ void		split_repos(void);
 int		chk_repo_list(int);
 /* sqlite_callbacks.c */
 int		pdb_rec_list(void *, int, char **, char **);
-int		pdb_rec_depends(void *, int, char **, char **);
 /* depends.c */
+void		get_depends(const char *, Plisthead *, depends_t);
+void		get_depends_recursive(const char *, Plisthead *, depends_t);
 int		show_direct_depends(const char *);
-int		show_full_dep_tree(const char *, const char *, const char *);
-void 		full_dep_tree(const char *, const char *, Plisthead *);
+int		show_full_dep_tree(const char *);
+int		show_rev_dep_tree(const char *);
 /* pkglist.c */
 void		init_local_pkglist(void);
 void		init_remote_pkglist(void);
@@ -261,10 +271,8 @@ char		*read_repos(void);
 /* pkg_str.c */
 int		find_preferred_pkg(const char *, Pkglist **, char **);
 char	   	*unique_pkg(const char *, const char *);
-Pkglist		*find_pkg_match(Plisthead *, char *);
+Pkglist		*find_pkg_match(const char *, const char *);
 Pkglist		*find_local_pkg_match(const char *);
-uint8_t		non_trivial_glob(char *);
-char		*get_pkgname_from_depend(char *);
 int		exact_pkgfmt(const char *);
 char		*simple_pkg_match(Plisthead *, const char *);
 int		version_check(char *, char *);
@@ -274,7 +282,7 @@ void		export_keep(void);
 void		import_keep(int, const char *);
 /* pkg_check.c */
 int		pkg_met_reqs(Plisthead *);
-int		pkg_has_conflicts(Pkglist *);
+int		pkg_has_conflicts(Pkglist *, Plistnumbered *);
 void		show_prov_req(const char *, const char *);
 /* pkg_infos.c */
 int		show_pkg_info(char, char *);

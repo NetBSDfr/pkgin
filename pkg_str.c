@@ -122,27 +122,32 @@ unique_pkg(const char *pkgname, const char *dest)
 }
 
 /*
- * Return best matching SLIST entry in package list, or NULL if no match.
+ * Return best remote package for match and optional pkgpath, or NULL if no
+ * valid match.
  */
 Pkglist *
-find_pkg_match(Plisthead *plisthead, char *match)
+find_pkg_match(const char *match, const char *pkgpath)
 {
-	Pkglist	*pkg = NULL, *p;
+	Pkglist	*rpkg, *pkg = NULL;
 
-	SLIST_FOREACH(p, plisthead, next) {
-		if (!pkg_match(match, p->full))
+	SLIST_FOREACH(rpkg, &r_plisthead, next) {
+		if (!pkg_match(match, rpkg->full))
 			continue;
 
-		if (chk_preferred(p->full, NULL) != 0) {
-			printf("no chk_pref %s\n", p->full);
+		/*
+		 * If pkgpath is specified then the remote entry must match, to
+		 * avoid newer releases being pulled in when the user may have
+		 * specified a particular version in the past.
+		 */
+		if (pkgpath && pkgstrcmp(pkgpath, rpkg->pkgpath) != 0)
 			continue;
-		}
 
-		/* Save best match */
-		if (pkg == NULL || version_check(pkg->full, p->full) == 2) {
-			TRACE("Matched %s with %s\n", match, p->full);
-			pkg = p;
-		}
+		if (chk_preferred(rpkg->full, NULL) != 0)
+			continue;
+
+		/* Save best match and continue */
+		if (pkg == NULL || version_check(pkg->full, rpkg->full) == 2)
+			pkg = rpkg;
 	}
 
 	return pkg;
@@ -151,6 +156,9 @@ find_pkg_match(Plisthead *plisthead, char *match)
 /*
  * Find first match of a locally-installed package for a package pattern.
  * Returns a Pkglist entry on success or NULL on failure.
+ *
+ * Just return the first match.  While technically we could find the "best"
+ * result for an alternate match it doesn't make any practical sense.
  */
 Pkglist *
 find_local_pkg_match(const char *pattern)
@@ -158,13 +166,7 @@ find_local_pkg_match(const char *pattern)
 	Pkglist	*pkg = NULL, *p;
 
 	SLIST_FOREACH(p, &l_plisthead, next) {
-		/*
-		 * Just return the first match.  While technically we could
-		 * find the "best" result for an alternate match it doesn't
-		 * make any practical sense.
-		 */
 		if (pkg_match(pattern, p->full)) {
-			TRACE("Matched %s to %s\n", pattern, p->full);
 			pkg = p;
 			break;
 		}
@@ -228,94 +230,6 @@ version_check(char *first_pkg, char *second_pkg)
 		return 1;
 	else
 		return 2;
-}
-
-static void
-clear_pattern(char *depend)
-{
-	char *p;
-
-	if ((p = strpbrk(depend, GLOBCHARS)) != NULL)
-		*p = '\0';
-	else
-		return;
-
-	/* get rid of trailing dash if any */
-	if (*depend != '\0' && *--p == '-')
-		*p = '\0';
-}
-
-static void
-cleanup_version(char *pkgname)
-{
-	char	*exten;
-
-	/* have we got foo-something ? */
-	if ((exten = strrchr(pkgname, '-')) == NULL)
-		return;
-
-	/*
-	 * -something has a dot, it's a version number
-	 * unless it was something like clutter-gtk0.10
-	 */
-	if (isdigit((int)exten[1]) && strchr(exten, '.') != NULL)
-		*exten = '\0';
-}
-
-uint8_t
-non_trivial_glob(char *depend)
-{
-	if (charcount(depend, '[') > 1)
-		return 1;
-
-	return 0;
-}
-
-/*
- * AFAIK, here are the dewey/glob we can find as dependencies
- *
- * foo>=1.0 - 19129 entries
- * foo<1.0 - 1740 entries (only perl)
- * foo>1.0 - 44 entries
- * foo<=2.0 - 1
- * {foo>=1.0,bar>=2.0}
- * foo>=1.0<2.0
- * foo{-bar,-baz}>=1.0
- * foo{-bar,-baz}-[0-9]*
- * foo-{bar,baz}
- * foo-1.0{,nb[0-9]*} - 260
- * foo-[0-9]* - 3214
- * foo-[a-z]*-[0-9]* - not handled here, see pdb_rec_depends()
- * foo-1.0 - 20
- */
-char *
-get_pkgname_from_depend(char *depend)
-{
-	char	*pkgname, *tmp;
-
-	if (depend == NULL || *depend == '\0')
-		return NULL;
-
-	/* 1. worse case, {foo>=1.0,bar-[0-9]*} */
-	if (*depend == '{') {
-		pkgname = xstrdup(depend + 1);
-		tmp = strrchr(pkgname, '}');
-		if (tmp != NULL)
-			*tmp = '\0'; /* pkgname == "foo,bar" */
-
-		/* {foo,bar} should always have comma */
-		while ((tmp = strchr(pkgname, ',')) != NULL)
-			*tmp = '\0'; /* pkgname == foo-[0-9]* or whatever */
-	} else /* we should now have a "normal" pattern */
-		pkgname = xstrdup(depend);
-
-	/* 2. classic case, foo-[<>{?*\[] */
-	clear_pattern(pkgname);
-
-	/* 3. only foo-1.0 should remain */
-	cleanup_version(pkgname);
-
-	return pkgname;
 }
 
 /*

@@ -64,13 +64,15 @@ malloc_pkglist(void)
 	pkglist = xmalloc(sizeof(Pkglist));
 
 	/*!< Init all the things! (http://knowyourmeme.com/memes/x-all-the-y) */
+	pkglist->ipkg = NULL;
+	pkglist->lpkg = NULL;
+	pkglist->rpkg = NULL;
 	pkglist->full = NULL;
 	pkglist->name = NULL;
 	pkglist->version = NULL;
 	pkglist->build_date = NULL;
-	pkglist->depend = NULL;
+	pkglist->pattern = NULL;
 	pkglist->size_pkg = 0;
-	pkglist->old_size_pkg = -1;
 	pkglist->file_size = 0;
 	pkglist->level = 0;
 	pkglist->download = 0;
@@ -78,9 +80,9 @@ malloc_pkglist(void)
 	pkglist->comment = NULL;
 	pkglist->category = NULL;
 	pkglist->pkgpath = NULL;
+	pkglist->skip = 0;
 	pkglist->keep = 0;
 	pkglist->action = DONOTHING;
-	pkglist->old = NULL;
 
 	return pkglist;
 }
@@ -96,11 +98,10 @@ free_pkglist_entry(Pkglist **plist)
 	XFREE((*plist)->full);
 	XFREE((*plist)->name);
 	XFREE((*plist)->version);
-	XFREE((*plist)->depend);
+	XFREE((*plist)->pattern);
 	XFREE((*plist)->comment);
 	XFREE((*plist)->category);
 	XFREE((*plist)->pkgpath);
-	XFREE((*plist)->old);
 	XFREE(*plist);
 
 	plist = NULL;

@@ -218,14 +218,11 @@ main(int argc, char *argv[])
 		break;
 	case PKG_SHFDP_CMD: /* show full dependency tree */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		rc = show_full_dep_tree(argv[1],
-			DIRECT_DEPS, MSG_FULLDEPTREE);
+		rc = show_full_dep_tree(argv[1]);
 		break;
 	case PKG_SHRDP_CMD: /* show full reverse dependency tree */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		rc = show_full_dep_tree(argv[1],
-			LOCAL_REVERSE_DEPS,
-			MSG_REVDEPTREE);
+		rc = show_rev_dep_tree(argv[1]);
 		break;
 	case PKG_LLIST_CMD:
 		/* list local packages */

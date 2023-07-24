@@ -39,67 +39,75 @@
 void
 pkgin_autoremove(void)
 {
-	Plistnumbered	*plisthead;
-	Plisthead	*keephead, *removehead, *orderedhead;
-	Pkglist		*pkglist, *premove, *pdp;
+	Plistnumbered	*nokeephead, *keephead;
+	Plisthead	*depshead, *removehead, *orderedhead;
+	Pkglist		*pkglist, *premove, *pdp, *p;
 	char		*toremove = NULL, preserve[BUFSIZ];
 	int		is_keep_dep, removenb = 0;
 
 	/*
-	 * test if there's any keep package and record them
-	 * KEEP_LOCAL_PKGS returns full packages names
+	 * Record all keep and no-keep packages.  If either are empty then
+	 * we're done.
 	 */
-	if ((plisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
+	if ((keephead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
 		errx(EXIT_FAILURE, "no packages have been marked as keepable");
 
-	keephead = init_head();
-
-	/* record keep packages deps */
-	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
-		full_dep_tree(pkglist->name, LOCAL_DIRECT_DEPS, keephead);
-
-	free_pkglist(&plisthead->P_Plisthead);
-	free(plisthead);
-
-	/* record all unkeep / automatic packages */
-	if ((plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
-		free_pkglist(&keephead);
-
+	if ((nokeephead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
+		free_pkglist(&keephead->P_Plisthead);
 		printf(MSG_ALL_KEEP_PKGS);
 		return;
 	}
 
+
+	/*
+	 * Record all recursive dependencies for each keep package.  This then
+	 * contains a list of all packages that are required.
+	 */
+	depshead = init_head();
+	SLIST_FOREACH(p, keephead->P_Plisthead, next) {
+		get_depends_recursive(p->full, depshead, DEPENDS_LOCAL);
+	}
+
 	removehead = init_head();
 
-	/* parse non-keepables packages */
-	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next) {
+	/*
+	 * For each non-keep package, get all of its reverse dependencies, and
+	 * if any of them are in keeplist then this package is still required.
+	 */
+	SLIST_FOREACH(pkglist, nokeephead->P_Plisthead, next) {
 		is_keep_dep = 0;
-		/* is it a dependence for keepable packages ? */
-		SLIST_FOREACH(pdp, keephead, next) {
-			if (pkg_match(pdp->depend, pkglist->full)) {
+		SLIST_FOREACH(pdp, depshead, next) {
+			if (strcmp(pdp->lpkg->full, pkglist->full) == 0) {
 				is_keep_dep = 1;
 				break;
 			}
 		}
-		snprintf(preserve, BUFSIZ, "%s/%s/%s",
-		    pkgdb_get_dir(), pkglist->full, PRESERVE_FNAME);
-		/* is or a dependency or a preserved package */
-		if (is_keep_dep || access(preserve, F_OK) != -1)
+		if (is_keep_dep)
 			continue;
 
-		/* package was not found, insert it on removelist */
+		/*
+		 * Also keep the package if it is a "preserve" package (one
+		 * that is specifically built to not be uninstalled, for
+		 * example important bootstrap packages.
+		 */
+		snprintf(preserve, BUFSIZ, "%s/%s/%s", pkgdb_get_dir(),
+		    pkglist->full, PRESERVE_FNAME);
+		if (access(preserve, F_OK) != -1)
+			continue;
+
+		/*
+		 * Package can be auto removed, add to the list.
+		 */
 		premove = malloc_pkglist();
-
-		premove->depend = xstrdup(pkglist->full);
-
+		premove->full = xstrdup(pkglist->full);
 		SLIST_INSERT_HEAD(removehead, premove, next);
-
 		removenb++;
-	} /* SLIST_FOREACH plisthead */
+	}
 
-	free_pkglist(&keephead);
-	free_pkglist(&plisthead->P_Plisthead);
-	free(plisthead);
+	free_pkglist(&keephead->P_Plisthead);
+	free(keephead);
+	free_pkglist(&nokeephead->P_Plisthead);
+	free(nokeephead);
 
 	if (!removenb) {
 		printf(MSG_NO_ORPHAN_DEPS);
@@ -112,7 +120,7 @@ pkgin_autoremove(void)
 
 	if (!SLIST_EMPTY(orderedhead)) {
 		SLIST_FOREACH(premove, orderedhead, next)
-			toremove = action_list(toremove, premove->depend);
+			toremove = action_list(toremove, premove->full);
 
 		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
 		if (!noflag)

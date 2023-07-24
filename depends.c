@@ -30,116 +30,235 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
-/**
- * \fn full_dep_tree
+/*
+ * SQLite callback for LOCAL_DIRECT_DEPS and REMOTE_DIRECT_DEPS, given a DEPENDS
+ * pattern find packages that match and adds them to an SLIST.
  *
- * \brief recursively parse dependencies: this is our central function
+ * May be called in a recursive context, so checks to see if the entry has
+ * already been added and skips if so.
+ *
+ * argv0: DEPENDS pattern
+ */
+static int
+record_depend(void *param, int argc, char **argv, char **colname)
+{
+	Plisthead *deps = (Plisthead *)param;
+	Pkglist *d, *p;
+
+	if (argv == NULL)
+		return PDB_ERR;
+
+	/*
+	 * If we've already searched for this exact DEPENDS pattern then return
+	 * early and do not add to deps.
+	 */
+	SLIST_FOREACH(d, deps, next) {
+		if (strcmp(d->pattern, argv[0]) == 0) {
+			TRACE(" < dependency pattern %s already recorded\n",
+			    d->pattern);
+			return PDB_OK;
+		}
+	}
+
+	d = malloc_pkglist();
+	d->pattern = xstrdup(argv[0]);
+
+	/*
+	 * Check the column name to see if we're looking for local or remote
+	 * packages.  Will be either "LOCAL_DEPS_DEWEY" or "REMOTE_DEPS_DEWEY",
+	 * so we can just look for the first character for optimal processing.
+	 *
+	 * If we found the same package already via a different DEPENDS match,
+	 * then this entry does not need to be processed.
+	 */
+	switch (colname[0][0]) {
+	case 'L':
+		/*
+		 * Find matching entry in the local package list.  It should
+		 * not be possible for this to return NULL other than database
+		 * corruption, but handle it anyway by not creating an entry
+		 * for it.
+		 */
+		if ((d->lpkg = find_local_pkg_match(argv[0])) == NULL)
+			return PDB_ERR;
+
+		SLIST_FOREACH(p, deps, next) {
+			if (strcmp(p->lpkg->full, d->lpkg->full) == 0) {
+				d->skip = 1;
+				break;
+			}
+		}
+		break;
+	case 'R':
+		/*
+		 * Find the best matching package for the DEPENDS pattern, with
+		 * no specific PKGPATH requested.  It is possible that this
+		 * returns NULL, for example self-constructed packages with
+		 * incorrect DEPENDS, and this is handled by upper layers.
+		 */
+		if ((d->rpkg = find_pkg_match(argv[0], NULL)) != NULL) {
+			SLIST_FOREACH(p, deps, next) {
+				if (strcmp(p->rpkg->full, d->rpkg->full) == 0) {
+					d->skip = 1;
+					break;
+				}
+			}
+		}
+		break;
+	default:
+		return PDB_ERR;
+	}
+
+	SLIST_INSERT_HEAD(deps, d, next);
+
+	return PDB_OK;
+}
+
+/*
+ * SQLite callback for LOCAL_REVERSE_DEPS, records REQUIRED_BY entries for a
+ * package (its reverse dependencies) to a package SLIST.
+ *
+ * May be called in a recursive context, so checks to see if the entry has
+ * already been added and skips if so.
+ *
+ * argv0: LOCAL_REQUIRED_BY.REQUIRED_BY
+ * argv1: LOCAL_PKG.PKGNAME
+ * argv2: LOCAL_PKG.PKG_KEEP
+ */
+static int
+record_reverse_depend(void *param, int argc, char **argv, char **colname)
+{
+	Plisthead *deps = (Plisthead *)param;
+	Pkglist *d;
+
+	if (argv == NULL)
+		return PDB_ERR;
+
+	/* Skip if already in the SLIST */
+	SLIST_FOREACH(d, deps, next) {
+		if (strcmp(argv[0], d->lpkg->full) == 0) {
+			TRACE(" < dependency %s already recorded\n",
+			    d->lpkg->full);
+			return PDB_OK;
+		}
+	}
+
+	d = malloc_pkglist();
+
+	/*
+	 * Find matching entry in the local package list.  It should not be
+	 * possible for this to return NULL other than database corruption, but
+	 * handle it anyway by not creating an entry for it.
+	 */
+	if ((d->lpkg = find_local_pkg_match(argv[0])) == NULL)
+		return PDB_ERR;
+
+	d->keep = (argv[2] == NULL) ? 0 : 1;
+	SLIST_INSERT_HEAD(deps, d, next);
+
+	return PDB_OK;
+}
+
+/*
+ * Record a single level of dependencies to a supplied SLIST.
  */
 void
-full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
+get_depends(const char *pkgname, Plisthead *deps, depends_t type)
 {
-	Pkglist		*pdp, *dep;
-	Plistnumbered	*dephead;
-	int		level;
-	char		query[BUFSIZ];
+	char query[BUFSIZ];
 
-	query[0] = '\0';
-	if (depquery == DIRECT_DEPS) {
-		/* first package to recurse on and exact pkg name, this is an
-		 * exact match due to many versions of the package
-		 */
-		if (exact_pkgfmt(pkgname)) {
-			sqlite3_snprintf(BUFSIZ, query, EXACT_DIRECT_DEPS,
-			    pkgname);
-		}
-	} /* else, LOCAL_REVERSE_DEPS */
+	switch (type) {
+	case DEPENDS_LOCAL:
+		sqlite3_snprintf(BUFSIZ, query, LOCAL_DIRECT_DEPS, pkgname);
+		pkgindb_doquery(query, record_depend, deps);
+		break;
+	case DEPENDS_REMOTE:
+		sqlite3_snprintf(BUFSIZ, query, REMOTE_DIRECT_DEPS, pkgname);
+		pkgindb_doquery(query, record_depend, deps);
+		break;
+	case DEPENDS_REVERSE:
+		sqlite3_snprintf(BUFSIZ, query, LOCAL_REVERSE_DEPS, pkgname);
+		pkgindb_doquery(query, record_reverse_depend, deps);
+		break;
+	}
+}
+
+/*
+ * Recursively record forward or reverse dependencies for a package to a
+ * supplied SLIST.
+ *
+ * pkgname must be a fully-specified package name including version.
+ */
+void
+get_depends_recursive(const char *pkgname, Plisthead *deps, depends_t type)
+{
+	Pkglist *d;
+	int level;
+	char *p;
 
 	TRACE("[>]-entering depends\n");
 
-	/* getting direct dependencies */
-	if (query[0] == '\0')
-		sqlite3_snprintf(BUFSIZ, query, depquery, pkgname);
+	switch (type) {
+	case DEPENDS_LOCAL:
+		TRACE("[+]-forward local dependencies for %s\n", pkgname);
+		break;
+	case DEPENDS_REMOTE:
+		TRACE("[+]-forward remote dependencies for %s\n", pkgname);
+		break;
+	case DEPENDS_REVERSE:
+		TRACE("[+]-local reverse dependencies for %s\n", pkgname);
+		break;
+	}
 
-	TRACE("[+]-dependencies for %s (query: %s)\n", pkgname, query);
-
-	/* first level of dependency for pkgname */
-	if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_ERR)
+	/*
+	 * Get first level of dependencies.  If nothing returned then we're
+	 * done.
+	 */
+	get_depends(pkgname, deps, type);
+	if (SLIST_EMPTY(deps))
 		return;
 
-	level = 1;
 	/*
-	 * loop until head first member's level is == 0
-	 * the first loop parses the first range of dependencies and set them to
-	 * 1. If anything with a level == 0 appears in head, it is provided by
-	 * pkgindb_doquery() from the following loop, its level  will then be
-	 * set to level + 1 on the next pass.
-	 * Example:
-	 * sfd eterm
-	 * . First pass:
-	 * perl, pdp->level = 1   |
-	 * libast, pdp->level = 1 |- insert their deps in head with level = 0
-	 * imlib2, pdp->level = 1 |
-	 * . Second pass: libast and imlib inserted new deps in head, with
-     *                pdp->level = 0, level is now 2 (++level)
-	 * pcre, pdp->level = 2
-	 * imlib2, pdp->level = 2
-	 *
+	 * Now recursively iterate over dependencies as they are inserted.
 	 */
-	while (SLIST_FIRST(pdphead)->level == 0) {
+	level = 1;
+	while (SLIST_FIRST(deps)->level == 0) {
 		TRACE(" > looping through dependency level %d\n", level);
-		/* loop through deptree */
-		SLIST_FOREACH(pdp, pdphead, next) {
-			if (pdp->level != 0)
-				/* 
-				 * dependency already processed, no need to
-				 * proceed as the next pdp's already have a
-				 * level too, remember head has the deps to
-				 * process.
-				 */
-				break;
-			/* set all this range to the current level */
-			pdp->level = level;
-
+		SLIST_FOREACH(d, deps, next) {
 			/*
-			 * If we're searching remote dependencies we need
-			 * to ensure that, when there are multiple versions
-			 * available, the one we pick matches DEPENDS.
-			 *
-			 * Process them in order and pick the highest version
-			 * that matches the dependency requirement.
+			 * If we hit a package with a level already set then
+			 * we've finished processing this current level, as
+			 * entries are always added at the head.
 			 */
-			if (depquery == DIRECT_DEPS) {
-				sqlite3_snprintf(BUFSIZ, query,
-				    "SELECT FULLPKGNAME FROM REMOTE_PKG "
-				    "WHERE PKGNAME = %Q "
-				    "ORDER BY FULLPKGNAME DESC;", pdp->name);
-				if ((dephead = rec_pkglist(query)) == NULL)
-					continue;
-				SLIST_FOREACH(dep, dephead->P_Plisthead, next) {
-					sqlite3_snprintf(BUFSIZ, query,
-					    EXACT_DIRECT_DEPS, dep->full);
-					if (pkg_match(pdp->depend, dep->full))
-						break;
-				}
-				free_pkglist(&dephead->P_Plisthead);
-				free(dephead);
-			} else {
-				/* LOCAL_REVERSE_DEPS */
-				sqlite3_snprintf(BUFSIZ, query, depquery,
-				    pdp->name);
+			if (d->level)
+				break;
+			d->level = level;
+
+			switch (type) {
+			case DEPENDS_LOCAL:
+			case DEPENDS_REVERSE:
+				p = d->lpkg->full;
+				break;
+			case DEPENDS_REMOTE:
+				p = d->rpkg->full;
+				break;
 			}
 
 			/*
-			 * record pdp->name's direct dependencies in head
-			 * with level = 0
-			 * */
-			if (pkgindb_doquery(query, pdb_rec_depends, pdphead) == PDB_OK)
-				TRACE(" > recording %s dependencies (will be level %d)\n",
-					pdp->name, level + 1);
-			TRACE(" |-%s-(deepness %d)\n", pdp->depend, pdp->level);
-		} /* SLIST_FOREACH */
-		/* increase level for next loop */
-		++level;
+			 * Already handled this package via an alternate
+			 * DEPENDS match.
+			 */
+			if (d->skip) {
+				TRACE(" < dependency package %s "
+				    "already recorded\n", p);
+				continue;
+			}
+
+			TRACE(" > recording %s dependencies "
+			    "(will be level %d)\n", p, level + 1);
+			get_depends(p, deps, type);
+		}
+		level++;
 	}
 	TRACE("[<]-leaving depends\n");
 }
@@ -147,9 +266,9 @@ full_dep_tree(const char *pkgname, const char *depquery, Plisthead *pdphead)
 int
 show_direct_depends(const char *pkgarg)
 {
-	char		*pkgname, query[BUFSIZ];
-	Pkglist		*pdp, *rpkg;
-	Plisthead	*deptreehead;
+	Plisthead	*pkghead;
+	Pkglist		*p;
+	char		*pkgname;
 
 	if (SLIST_EMPTY(&r_plisthead)) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
@@ -161,65 +280,78 @@ show_direct_depends(const char *pkgarg)
 		return EXIT_FAILURE;
 	}
 
-	deptreehead = init_head();
+	pkghead = init_head();
+	get_depends(pkgname, pkghead, DEPENDS_REMOTE);
 
-	sqlite3_snprintf(BUFSIZ, query, EXACT_DIRECT_DEPS, pkgname);
+	if (SLIST_EMPTY(pkghead))
+		goto done;
 
-	if (pkgindb_doquery(query, pdb_rec_depends, deptreehead) == PDB_OK) {
-		printf(MSG_DIRECT_DEPS_FOR, pkgname);
-		SLIST_FOREACH(pdp, deptreehead, next) {
-			if (package_version && 
-			    (rpkg = find_pkg_match(&r_plisthead, pdp->depend))
-			     != NULL)
-				printf("\t%s\n", rpkg->full);
-			else
-				printf("\t%s\n", pdp->depend);
-		}
-		free_pkglist(&deptreehead);
+	printf(MSG_DIRECT_DEPS_FOR, pkgname);
+	SLIST_FOREACH(p, pkghead, next) {
+		if (package_version)
+			printf("\t%s\n", p->rpkg->full);
+		else
+			printf("\t%s\n", p->pattern);
 	}
+	free_pkglist(&pkghead);
+
+done:
 	XFREE(pkgname);
 
 	return EXIT_SUCCESS;
 }
 
 int
-show_full_dep_tree(const char *pkgarg, const char *depquery, const char *msg)
+show_full_dep_tree(const char *pkgarg)
 {
-	Pkglist		*pdp, *rpkg;
-	Plisthead	*deptreehead, *plisthead;
-	char		*pkgname = NULL;
+	Plisthead	*pkghead;
+	Pkglist		*p;
+	char		*pkgname;
 
-	if (depquery == LOCAL_REVERSE_DEPS) {
-		plisthead = &l_plisthead;
-		pkgname = xstrdup(pkgarg);
-	} else {
-		plisthead = &r_plisthead;
-		pkgname = unique_pkg(pkgarg, REMOTE_PKG);
-	}
+        if (SLIST_EMPTY(&r_plisthead))
+		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
 
-	if (pkgname == NULL) {
+	if ((pkgname = unique_pkg(pkgarg, REMOTE_PKG)) == NULL) {
 		fprintf(stderr, MSG_PKG_NOT_AVAIL, pkgarg);
 		return EXIT_FAILURE;
 	}
 
-	if (plisthead == NULL)
-		errx(EXIT_FAILURE, MSG_EMPTY_AVAIL_PKGLIST);
+	pkghead = init_head();
+	get_depends_recursive(pkgname, pkghead, DEPENDS_REMOTE);
 
-	deptreehead = init_head();
-
-	printf(msg, pkgname);
-	full_dep_tree(pkgname, depquery, deptreehead);
-
-	SLIST_FOREACH(pdp, deptreehead, next) {
-		if (package_version && 
-		    (rpkg = find_pkg_match(plisthead, pdp->depend)) != NULL)
-			printf("\t%s\n", rpkg->full);
+	printf(MSG_FULLDEPTREE, pkgname);
+	SLIST_FOREACH(p, pkghead, next) {
+		if (package_version)
+			printf("\t%s\n", p->rpkg->full);
 		else
-			printf("\t%s\n", pdp->depend);
+			printf("\t%s\n", p->pattern);
 	}
 
 	XFREE(pkgname);
-	free_pkglist(&deptreehead);
+	free_pkglist(&pkghead);
 
+	return EXIT_SUCCESS;
+}
+
+int
+show_rev_dep_tree(const char *match)
+{
+	Plisthead	*deps;
+	Pkglist		*p;
+
+	if ((p = find_local_pkg_match(match)) == NULL) {
+		fprintf(stderr, MSG_PKG_NOT_INSTALLED, match);
+		return EXIT_FAILURE;
+	}
+
+	deps = init_head();
+	get_depends_recursive(p->full, deps, DEPENDS_REVERSE);
+
+	printf(MSG_REVDEPTREE, p->full);
+	SLIST_FOREACH(p, deps, next) {
+		printf("\t%s\n", p->lpkg->full);
+	}
+
+	free_pkglist(&deps);
 	return EXIT_SUCCESS;
 }

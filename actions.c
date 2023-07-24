@@ -60,47 +60,46 @@ static int
 pkg_download(Plisthead *installhead)
 {
 	FILE		*fp;
-	Pkglist  	*pinstall;
+	Pkglist  	*p;
 	struct stat	st;
 	char		pkg_fs[BUFSIZ];
-	char		*p = NULL;
-	off_t		size;
+	char		*pkgurl;
 	int		rc = EXIT_SUCCESS;
 
-	SLIST_FOREACH(pinstall, installhead, next) {
+	SLIST_FOREACH(p, installhead, next) {
 		/*
 		 * We don't (yet) support resume so start by explicitly
 		 * removing any existing file.  pkgin_install() has already
 		 * checked to see if it's valid, and we know it is not.
 		 */
 		(void) snprintf(pkg_fs, BUFSIZ, "%s/%s%s", pkgin_cache,
-		    pinstall->depend, PKG_EXT);
+		    p->ipkg->rpkg->full, PKG_EXT);
 		(void) unlink(pkg_fs);
 		(void) umask(DEF_UMASK);
 
-		if (strncmp(pinstall->pkgurl, "file:///", 8) == 0) {
+		if (strncmp(p->ipkg->pkgurl, "file:///", 8) == 0) {
 			/*
 			 * If this package repository URL is file:// we can
 			 * just symlink rather than copying.  We do not support
 			 * file:// URLs with a host component.
 			 */
-			p = &pinstall->pkgurl[7];
+			pkgurl = &p->ipkg->pkgurl[7];
 
-			if (stat(p, &st) != 0) {
+			if (stat(pkgurl, &st) != 0) {
 				fprintf(stderr, MSG_PKG_NOT_AVAIL,
-				    pinstall->depend);
+				    p->ipkg->rpkg->full);
 				rc = EXIT_FAILURE;
 				if (check_yesno(DEFAULT_NO) == ANSW_NO)
 					exit(rc);
-				pinstall->file_size = -1;
+				p->file_size = -1;
 				continue;
 			}
 
-			if (symlink(p, pkg_fs) < 0)
+			if (symlink(pkgurl, pkg_fs) < 0)
 				errx(EXIT_FAILURE,
 				    "Failed to create symlink %s", pkg_fs);
 
-			size = st.st_size;
+			p->file_size = st.st_size;
 		} else {
 			/*
 			 * Fetch via HTTP.  download_pkg() handles printing
@@ -110,7 +109,8 @@ pkg_download(Plisthead *installhead)
 			if ((fp = fopen(pkg_fs, "w")) == NULL)
 				err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
 
-			if ((size = download_pkg(pinstall->pkgurl, fp)) == -1) {
+			if ((p->file_size =
+			    download_pkg(p->ipkg->pkgurl, fp)) == -1) {
 				(void) fclose(fp);
 				(void) unlink(pkg_fs);
 				rc = EXIT_FAILURE;
@@ -118,7 +118,6 @@ pkg_download(Plisthead *installhead)
 				if (check_yesno(DEFAULT_NO) == ANSW_NO)
 					exit(rc);
 
-				pinstall->file_size = -1;
 				continue;
 			}
 
@@ -130,20 +129,21 @@ pkg_download(Plisthead *installhead)
 		 * specified by the server, this checks that it matches what
 		 * is recorded by pkg_summary.
 		 */
-		if (size != pinstall->file_size) {
+		if (p->file_size != p->ipkg->rpkg->file_size) {
 			(void) unlink(pkg_fs);
 			rc = EXIT_FAILURE;
 
 			(void) fprintf(stderr, "download error: %s size"
-			    " does not match pkg_summary\n", pinstall->depend);
+			    " does not match pkg_summary\n",
+			    p->ipkg->rpkg->full);
 
 			if (check_yesno(DEFAULT_NO) == ANSW_NO)
 				exit(rc);
 
-			pinstall->file_size = -1;
+			p->file_size = -1;
 			continue;
 		}
-	} /* download loop */
+	}
 
 	return rc;
 }
@@ -281,18 +281,18 @@ do_pkg_remove(Plisthead *removehead)
 		if (premove->file_size == -1)
 			continue;
 
-		if (premove->depend == NULL)
+		if (premove->full == NULL)
 			/* SLIST corruption, badly installed package */
 			continue;
 
 		/* pkg_install cannot be deleted */
-		if (strcmp(premove->depend, "pkg_install") == 0) {
+		if (strcmp(premove->full, "pkg_install") == 0) {
 			printf("not removing pkg_install...\n");
 			continue;
 		}
 
-		log_tag(MSG_REMOVING, premove->depend);
-		if (fexec(pkg_delete, verb_flag("-f"), premove->depend, NULL)
+		log_tag(MSG_REMOVING, premove->full);
+		if (fexec(pkg_delete, verb_flag("-f"), premove->full, NULL)
 			!= EXIT_SUCCESS)
 			err_count++;
 	}
@@ -312,30 +312,30 @@ static int
 do_pkg_install(Plisthead *installhead)
 {
 	int		rc = EXIT_SUCCESS;
-	Pkglist		*pinstall;
+	Pkglist		*p;
 	char		pkgpath[BUFSIZ];
 	char		*pflags = verb_flag("-DU");
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
 
-	SLIST_FOREACH(pinstall, installhead, next) {
+	SLIST_FOREACH(p, installhead, next) {
 		/* file not available in the repository */
-		if (pinstall->file_size == -1)
+		if (p->ipkg->file_size == -1)
 			continue;
 
-		snprintf(pkgpath, BUFSIZ,
-			"%s/%s%s", pkgin_cache, pinstall->depend, PKG_EXT);
+		snprintf(pkgpath, BUFSIZ, "%s/%s%s", pkgin_cache,
+		    p->ipkg->rpkg->full, PKG_EXT);
 
-		switch (pinstall->action) {
+		switch (p->ipkg->action) {
 		case TOREFRESH:
-			log_tag("refreshing %s...\n", pinstall->depend);
+			log_tag("refreshing %s...\n", p->ipkg->rpkg->full);
 			break;
 		case TOUPGRADE:
-			log_tag("upgrading %s...\n", pinstall->depend);
+			log_tag("upgrading %s...\n", p->ipkg->rpkg->full);
 			break;
 		case TOINSTALL:
-			log_tag("installing %s...\n", pinstall->depend);
+			log_tag("installing %s...\n", p->ipkg->rpkg->full);
 			break;
 		}
 
@@ -419,9 +419,9 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	int64_t		file_size = 0, size_pkg = 0;
 	size_t		len;
 	ssize_t		llen;
-	Pkglist		*pkg;
+	Pkglist		*p;
 	Plisthead	*impacthead, *downloadhead = NULL, *installhead = NULL;
-	char		*p;
+	Plistnumbered	*conflicts;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
 	char		*unmet_reqs = NULL;
@@ -440,7 +440,10 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	if (!have_privs(privsreqd))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
-	/* full impact list */
+	/*
+	 * Calculate full impact (list of packages and actions to perform) of
+	 * requested operation.
+	 */
 	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {
 		printf(MSG_NOTHING_TO_DO);
 		return rc;
@@ -448,23 +451,28 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 	/* check for required files */
 	if (!pkg_met_reqs(impacthead))
-		SLIST_FOREACH(pkg, impacthead, next)
-			if (pkg->action == UNMET_REQ)
+		SLIST_FOREACH(p, impacthead, next)
+			if (p->action == UNMET_REQ)
 				unmet_reqs =
-					action_list(unmet_reqs, pkg->full);
+				    action_list(unmet_reqs, p->rpkg->full);
+
+	conflicts = rec_pkglist(LOCAL_CONFLICTS);
 
 	/* browse impact tree */
-	SLIST_FOREACH(pkg, impacthead, next) {
+	SLIST_FOREACH(p, impacthead, next) {
+
+		if (p->action == DONOTHING)
+			continue;
 
 		/*
 		 * Packages being removed need no special handling, account
 		 * for them and move to the next package.
 		 */
-		if (pkg->action == TOREMOVE)
+		if (p->action == TOREMOVE)
 			continue;
 
 		/* check for conflicts */
-		if (pkg_has_conflicts(pkg))
+		if (conflicts && pkg_has_conflicts(p, conflicts))
 			if (!check_yesno(DEFAULT_NO))
 				goto installend;
 
@@ -472,11 +480,11 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		 * Retrieve the correct repository for the package and save it,
 		 * this is used later by pkg_download().
 		 */
-		sqlite3_snprintf(BUFSIZ, query, PKG_URL, pkg->full);
+		sqlite3_snprintf(BUFSIZ, query, PKG_URL, p->rpkg->full);
 		if (pkgindb_doquery(query, pdb_get_value, pkgrepo) != 0)
-			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, pkg->full);
+			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, p->rpkg->full);
 
-		pkg->pkgurl = xasprintf("%s/%s%s", pkgrepo, pkg->full,
+		p->pkgurl = xasprintf("%s/%s%s", pkgrepo, p->rpkg->full,
 		    PKG_EXT);
 
 		/*
@@ -485,28 +493,30 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		 * downloaded.
 		 */
 		(void) snprintf(pkgpath, BUFSIZ, "%s/%s%s", pkgin_cache,
-		    pkg->full, PKG_EXT);
-		if (stat(pkgpath, &st) < 0 || st.st_size != pkg->file_size)
-			pkg->download = 1;
+		    p->rpkg->full, PKG_EXT);
+		if (stat(pkgpath, &st) < 0 ||
+		    st.st_size != p->rpkg->file_size)
+			p->download = 1;
 		else {
 			/*
 			 * If the cached package has the correct size, we must
 			 * verify that the BUILD_DATE has not changed, in case
 			 * the sizes happen to be identical.
 			 */
-			p = xasprintf("%s -Q BUILD_DATE %s", pkg_info, pkgpath);
+			char *s;
+			s = xasprintf("%s -Q BUILD_DATE %s", pkg_info, pkgpath);
 
-			if ((fp = popen(p, "r")) == NULL)
-				err(EXIT_FAILURE, "Cannot execute '%s'", p);
-			(void) free(p);
+			if ((fp = popen(s, "r")) == NULL)
+				err(EXIT_FAILURE, "Cannot execute '%s'", s);
+			free(s);
 
-			for (p = NULL, len = 0;
-			     (llen = getline(&p, &len, fp)) > 0;
-			     (void) free(p), p = NULL, len = 0) {
-				if (p[llen - 1] == '\n')
-					p[llen - 1] = '\0';
-				if (pkgstrcmp(p, pkg->build_date))
-					pkg->download = 1;
+			for (s = NULL, len = 0;
+			     (llen = getline(&s, &len, fp)) > 0;
+			     free(s), s = NULL, len = 0) {
+				if (s[llen - 1] == '\n')
+					s[llen - 1] = '\0';
+				if (pkgstrcmp(s, p->rpkg->build_date))
+					p->download = 1;
 			}
 			(void) pclose(fp);
 		}
@@ -514,18 +524,18 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		/*
 		 * Don't account for download size if using a file:// repo.
 		 */
-		if (pkg->download) {
+		if (p->download) {
 			downloadnum++;
 			if (strncmp(pkgrepo, "file:///", 8) != 0)
-				file_size += pkg->file_size;
+				file_size += p->rpkg->file_size;
 		}
 
-		if (pkg->old_size_pkg > 0)
-			pkg->size_pkg -= pkg->old_size_pkg;
+		if (p->lpkg && p->lpkg->size_pkg > 0)
+			size_pkg += p->rpkg->size_pkg - p->lpkg->size_pkg;
+		else
+			size_pkg += p->rpkg->size_pkg;
 
-		size_pkg += pkg->size_pkg;
-
-		switch (pkg->action) {
+		switch (p->action) {
 		case TOREFRESH:
 			refreshnum++;
 			break;
@@ -571,21 +581,21 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	 * Separate package lists according to action.
 	 */
 	downloadhead = order_download(impacthead);
-	SLIST_FOREACH(pkg, downloadhead, next) {
-		todownload = action_list(todownload, pkg->depend);
+	SLIST_FOREACH(p, downloadhead, next) {
+		todownload = action_list(todownload, p->ipkg->rpkg->full);
 	}
 
 	installhead = order_install(impacthead);
-	SLIST_FOREACH(pkg, installhead, next) {
-		switch (pkg->action) {
+	SLIST_FOREACH(p, installhead, next) {
+		switch (p->ipkg->action) {
 		case TOREFRESH:
-			torefresh = action_list(torefresh, pkg->depend);
+			torefresh = action_list(torefresh, p->ipkg->rpkg->full);
 			break;
 		case TOUPGRADE:
-			toupgrade = action_list(toupgrade, pkg->depend);
+			toupgrade = action_list(toupgrade, p->ipkg->rpkg->full);
 			break;
 		case TOINSTALL:
-			toinstall = action_list(toinstall, pkg->depend);
+			toinstall = action_list(toinstall, p->ipkg->rpkg->full);
 			break;
 		}
 	}
@@ -633,11 +643,11 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		if (!do_inst)
 			goto installend;
 
-		SLIST_FOREACH(pkg, downloadhead, next) {
-			if (pkg->file_size != -1)
+		SLIST_FOREACH(p, downloadhead, next) {
+			if (p->file_size != -1)
 				continue;
 
-			switch (pkg->action) {
+			switch (p->ipkg->action) {
 			case TOREFRESH:
 				refreshnum--;
 				break;
@@ -717,15 +727,15 @@ pkgin_remove(char **pkgargs)
 		trunc_str(ppkg, '-', STR_BACKWARD);
 
 		/* record full reverse dependency list for package */
-		full_dep_tree(ppkg, LOCAL_REVERSE_DEPS, pdphead);
+		get_depends_recursive(ppkg, pdphead, DEPENDS_REVERSE);
 
 		XFREE(ppkg);
 
 		exists = 0;
 		/* check if package have already been recorded */
 		SLIST_FOREACH(pdp, pdphead, next) {
-			if (strncmp(pdp->depend, pkgname,
-					strlen(pdp->depend)) == 0) {
+			if (strncmp(pdp->pattern, pkgname,
+					strlen(pdp->pattern)) == 0) {
 				exists = 1;
 				break;
 			}
@@ -738,7 +748,7 @@ pkgin_remove(char **pkgargs)
 		/* add package itself */
 		pdp = malloc_pkglist();
 
-		pdp->depend = pkgname;
+		pdp->pattern = pkgname;
 
 		if (SLIST_EMPTY(pdphead))
 			/*
@@ -749,7 +759,7 @@ pkgin_remove(char **pkgargs)
 		else
 			pdp->level = 0;
 
-		pdp->name = xstrdup(pdp->depend);
+		pdp->name = xstrdup(pdp->pattern);
 		trunc_str(pdp->name, '-', STR_BACKWARD);
 
 		SLIST_INSERT_HEAD(pdphead, pdp, next);
@@ -760,7 +770,7 @@ pkgin_remove(char **pkgargs)
 
 	SLIST_FOREACH(pdp, removehead, next) {
 		deletenum++;
-		todelete = action_list(todelete, pdp->depend);
+		todelete = action_list(todelete, pdp->pattern);
 	}
 
 	if (todelete != NULL) {
@@ -888,11 +898,7 @@ pkgin_upgrade(int do_inst)
 	if (SLIST_EMPTY(&l_plisthead))
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
-	pkgargs = record_upgrades(&l_plisthead);
-
-	rc = pkgin_install(pkgargs, do_inst, 1);
-
-	free_list(pkgargs);
+	rc = pkgin_install(NULL, do_inst, 1);
 
 	/* Record keep list */
 	if (do_inst) {

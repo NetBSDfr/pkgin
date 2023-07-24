@@ -50,7 +50,7 @@ pkg_met_reqs(Plisthead *impacthead)
 	SLIST_FOREACH(pimpact, impacthead, next) {
 		/* retreive requires list for package */
 		if ((requireshead = rec_pkglist(GET_REQUIRES_QUERY,
-					pimpact->full)) == NULL)
+					pimpact->rpkg->full)) == NULL)
 			/* empty requires list (very unlikely) */
 			continue;
 
@@ -66,7 +66,7 @@ pkg_met_reqs(Plisthead *impacthead)
 				    strlen(PREFIX) - 1)) != 0) {
 				if (stat(requires->full, &sb) < 0) {
 					printf(MSG_REQT_NOT_PRESENT,
-						requires->full, pimpact->full);
+						requires->full, pimpact->rpkg->full);
 
 					/*
 					 * mark as DONOTHING,
@@ -174,20 +174,18 @@ pkg_met_reqs(Plisthead *impacthead)
 
 /* check for conflicts and if needed files are present */
 int
-pkg_has_conflicts(Pkglist *pimpact)
+pkg_has_conflicts(Pkglist *pimpact, Plistnumbered *conflictshead)
 {
 	int			has_conflicts = 0;
 	char		*conflict_pkg, query[BUFSIZ];
 	Pkglist		*conflicts; /* SLIST conflicts pointer */
-	Plistnumbered	*conflictshead;
 
-	/* conflicts list */
-	if ((conflictshead = rec_pkglist(LOCAL_CONFLICTS)) == NULL)
+	if (SLIST_EMPTY(conflictshead->P_Plisthead))
 		return 0;
 
 	/* check conflicts */
 	SLIST_FOREACH(conflicts, conflictshead->P_Plisthead, next) {
-		if (pkg_match(conflicts->full, pimpact->full)) {
+		if (pkg_match(conflicts->full, pimpact->rpkg->full)) {
 
 			/* got a conflict, retrieve conflicting local package */
 			sqlite3_snprintf(BUFSIZ, query,
@@ -198,16 +196,13 @@ pkg_has_conflicts(Pkglist *pimpact)
 					pdb_get_value, conflict_pkg) == PDB_OK)
 
 				printf(MSG_CONFLICT_PKG,
-					pimpact->full, conflict_pkg);
+					pimpact->rpkg->full, conflict_pkg);
 
 			XFREE(conflict_pkg);
 
 			has_conflicts = 1;
-		} /* match conflict */
-	} /* SLIST_FOREACH conflicts */
-
-	free_pkglist(&conflictshead->P_Plisthead);
-	free(conflictshead);
+		}
+	}
 
 	return has_conflicts;
 }

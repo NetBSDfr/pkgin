@@ -27,367 +27,351 @@
  * SUCH DAMAGE.
  */
 
-/**
- * pkg_impact() calculates "impact" of installing a package
- * it is the heart of package install / update
- *
- * pkg_impact rationale:
- *
- * pkg_impact() receive a package list as an argument.
- * Those are the packages to be installed / upgraded.
- *
- * For every package, a dependency tree is loaded,
- * and every dependency is passed to deps_impact()
- * deps_impact() loops through local (installed) packages
- * and matches depencendy over them.
- * If the dependency exists but its version does not
- * satisfy pkg_match(), the package is marked as
- * "to upgrade", meaning it will be deleted (oldpkg) and
- * a new version will be installed (pkgname).
- *
- * Finally, the package itself is passed to deps_impact()
- * to figure out if it needs to be installed or upgraded
- */
-
 #include "pkgin.h"
-
-/**
- * \fn dep_present
- *
- * \brief check if a dependency is already recorded in the impact list
- */
-static int
-dep_present(Plisthead *impacthead, char *depname)
-{
-	Pkglist *pimpact;
-
-	SLIST_FOREACH(pimpact, impacthead, next)
-		if (pimpact->full != NULL &&
-			pkg_match(depname, pimpact->full))
-			return 1;
-
-	return 0;
-}
 
 /*
  * Is package already in impact list?
  */
 static uint8_t
-pkg_in_impact(Plisthead *impacthead, char *depname)
+local_pkg_in_impact(Plisthead *impacthead, char *pkgname)
 {
 	Pkglist *p;
 
 	SLIST_FOREACH(p, impacthead, next) {
-		if (strcmp(p->depend, depname) == 0)
+		if (p->lpkg && strcmp(p->lpkg->full, pkgname) == 0) {
 			return 1;
+		}
 	}
 
 	return 0;
 }
 
-/**
- * loop through local packages and match for upgrades
+static uint8_t
+pkg_in_impact(Plisthead *impacthead, char *pkgname)
+{
+	Pkglist *p;
+
+	SLIST_FOREACH(p, impacthead, next) {
+		if (p->rpkg && strcmp(p->rpkg->full, pkgname) == 0) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+/*
+ * Compare a local and matching remote package and determine what action needs
+ * to be taken.  Requires both arguments be valid package list pointers.
  */
 static int
-deps_impact(Plisthead *impacthead, Pkglist *pdp, int output)
+calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 {
-	int		toupgrade = DONOTHING;
-	Plisthead	*revdeps;
-	Pkglist		*revdep, *pimpact, *lpkg, *rpkg = NULL;
-	char		*remotepkg = NULL;
-
-	/* record corresponding package on remote list*/
-	if (find_preferred_pkg(pdp->depend, &rpkg, &remotepkg) != 0) {
-		if (output) {
-			if (remotepkg == NULL)
-				fprintf(stderr, "\n"MSG_PKG_NOT_AVAIL,
-				    pdp->depend);
-			else
-				fprintf(stderr, "\n"MSG_PKG_NOT_PREFERRED,
-				    pdp->depend, remotepkg);
-		}
-		return 1;
+        /*
+	 * If a DEPENDS match is specified and the local package does not match
+	 * it then we need to upgrade.
+	 *
+	 * Otherwise if the version does not match then it is considered an
+	 * upgrade.  Remote versions can go backwards in the event of a revert,
+	 * however there is no support yet for TODOWNGRADE.
+         */
+	if ((rpkg->pattern && pkg_match(rpkg->pattern, lpkg->full) == 0) ||
+	    (strcmp(lpkg->full, rpkg->full) != 0)) {
+		TRACE("  > upgrading %s\n", lpkg->full);
+		return TOUPGRADE;
 	}
-	XSTRCPY(remotepkg, rpkg->full);
-
-	TRACE(" |- matching %s over installed packages\n", remotepkg);
-
-	/* create initial impact entry with a DONOTHING status, permitting
-	 * to check if this dependency has already been recorded
-	 */
-	pimpact = malloc_pkglist();
-
-	pimpact->depend = xstrdup(pdp->depend);
-
-	pimpact->action = DONOTHING;
-	pimpact->old = NULL;
-	pimpact->full = NULL;
-	pimpact->name = xstrdup(rpkg->name);
 
 	/*
-	 * BUILD_DATE may not necessarily be set.  This can happen if, for any
-	 * reason, the pkgsrc metadata wasn't generated correctly (this has been
-	 * observed in the wild), or simply if a package was built manually.
+	 * If the remote package has an identical PKGPATH but a different
+	 * BUILD_DATE then the package needs to be refreshed.
+	 *
+	 * Both matches use pkgstrcmp() as both fields could be NULL, for
+	 * example in the case of manually constructed packages.
 	 */
-	pimpact->build_date =
-	    (rpkg->build_date) ? xstrdup(rpkg->build_date) : NULL;
+	if (pkgstrcmp(lpkg->pkgpath, rpkg->pkgpath) == 0 &&
+	    pkgstrcmp(lpkg->build_date, rpkg->build_date)) {
+		TRACE("  . refreshing %s\n", lpkg->full);
+		return TOREFRESH;
+	}
 
-	SLIST_INSERT_HEAD(impacthead, pimpact, next);
+	TRACE("  = %s is up-to-date\n", lpkg->full);
+	return DONOTHING;
+}
 
-	/*
-	 * Loop through local packages to find a dependency match.
-	 */
+/*
+ * Given a remote package entry, loop through local packages looking for a
+ * matching package name and calculate the required action.
+ */
+static void
+deps_impact(Plisthead *impacthead, Pkglist *pdp, int upgrade)
+{
+	Plisthead	*rdeps;
+	Pkglist		*pkg, *lpkg, *p;
+
+	pkg = malloc_pkglist();
+
+	pkg->action = DONOTHING;
+	pkg->level = pdp->level;
+	pkg->rpkg = pdp->rpkg;
+	SLIST_INSERT_HEAD(impacthead, pkg, next);
+
+	TRACE(" |- matching %s over installed packages\n", pkg->rpkg->full);
 	SLIST_FOREACH(lpkg, &l_plisthead, next) {
-		if (strcmp(lpkg->name, pdp->name) != 0)
+		if (strcmp(lpkg->name, pkg->rpkg->name) != 0)
 			continue;
 
 		TRACE("  - found %s\n", lpkg->full);
-
-		/*
-		 * Figure out if this is an upgrade or a refresh.  Only
-		 * consider a package for refresh if it has an identical
-		 * PKGPATH.
-		 */
-
-		/*
-		 * Local package no longer fulfils requirement, upgrade.
-		 */
-		if (pkg_match(pdp->depend, lpkg->full) == 0)
-			toupgrade = TOUPGRADE;
-		/*
-		 * Remote package has a different BUILD_DATE and an identical
-		 * PKGPATH, refresh.
-		 */
-		else if (pkgstrcmp(lpkg->pkgpath, rpkg->pkgpath) == 0 &&
-			 pkgstrcmp(lpkg->build_date, rpkg->build_date))
-			toupgrade = TOREFRESH;
-		else {
-			TRACE("  = %s is up-to-date\n", lpkg->full);
-			return 0;
-		}
-
-		/*
-		 * Ignore proposed downgrades, unless it was specifically
-		 * requested by "pkgin install .." where level will be 0.
-		 *
-		 * XXX: at some point count these as a specific TODOWNGRADE
-		 * action or something, as printing that it's an upgrade is a
-		 * bit confusing for users.
-		 */
-		if (pdp->level > 0 &&
-		    version_check(lpkg->full, remotepkg) == 1) {
-			TRACE("  * ignoring downgrade of %s\n", lpkg->full);
-			toupgrade = DONOTHING;
-			return 0;
-		}
-
-		if (toupgrade == TOUPGRADE) {
-			TRACE("  > upgrading %s\n", lpkg->full);
-		} else {
-			TRACE("  . refreshing %s\n", lpkg->full);
-		}
-
-		/*
-		 * Insert upgrade/refresh.
-		 */
-		pimpact->old = xstrdup(lpkg->full);
-		pimpact->action = toupgrade;
-		pimpact->full = xstrdup(remotepkg);
-		pimpact->level = pdp->level;
-		pimpact->file_size = rpkg->file_size;
-		pimpact->size_pkg = rpkg->size_pkg;
-		pimpact->old_size_pkg = lpkg->size_pkg;
+		pkg->lpkg = lpkg;
+		pkg->action = calculate_action(pkg->lpkg, pkg->rpkg);
 
 		/*
 		 * For any package that is upgraded, we need to consider its
-		 * direct reverse dependencies, as they will need to be
+		 * direct local reverse dependencies, as they will need to be
 		 * refreshed for any shared library bumps etc.
 		 *
-		 * This is primarily for install operations that result in an
-		 * upgrade, as an upgrade operation will already consider every
-		 * package.
+		 * This is only for install operations, as upgrades will
+		 * already consider every package.
 		 */
-		if (toupgrade == TOUPGRADE) {
-			revdeps = init_head();
-			full_dep_tree(pdp->name, LOCAL_REVERSE_DEPS, revdeps);
-			SLIST_FOREACH(revdep, revdeps, next) {
-				if (revdep->level > 1)
-					continue;
-				if (!pkg_in_impact(impacthead, revdep->depend))
-					deps_impact(impacthead, revdep, 0);
-			}
-		}
+		if (upgrade || pkg->action != TOUPGRADE)
+			return;
 
-		return 0;
-	}
+		TRACE("  - considering reverse dependencies\n");
+		rdeps = init_head();
+		get_depends(pkg->lpkg->full, rdeps, DEPENDS_REVERSE);
+		SLIST_FOREACH(p, rdeps, next) {
+			Pkglist *l = p->lpkg;
 
-	if (!dep_present(impacthead, pdp->name)) {
-		TRACE(" > recording %s as to install\n", remotepkg);
-
-		pimpact->old = NULL;
-		pimpact->action = TOINSTALL;
-
-		pimpact->full = xstrdup(remotepkg);
-		/* record package dependency deepness */
-		pimpact->level = pdp->level;
-
-		pimpact->file_size = rpkg->file_size;
-		pimpact->size_pkg = rpkg->size_pkg;
-	}
-
-	return 0;
-}
-
-Plisthead *
-pkg_impact(char **pkgargs, int *rc)
-{
-	static char	*icon = __UNCONST(ICON_WAIT);
-	Plisthead	*impacthead, *pdphead = NULL;
-	Pkglist		*pimpact, *tmpimpact, *pdp;
-	char		**ppkgargs, *pkgname = NULL;
-	int		istty, rv;
-	char		tmpicon;
-
-	TRACE("[>]-entering impact\n");
-
-	impacthead = init_head();
-
-	istty = isatty(fileno(stdout));
-
-	if (!istty)
-		printf("calculating dependencies...");
-
-	/* retreive impact list for all packages listed in the command line */
-	for (ppkgargs = pkgargs; *ppkgargs != NULL; ppkgargs++) {
-
-		if ((rv = find_preferred_pkg(*ppkgargs, NULL, &pkgname)) != 0) {
-			if (pkgname == NULL)
-				fprintf(stderr, MSG_PKG_NOT_AVAIL, *ppkgargs);
-			else
-				fprintf(stderr, MSG_PKG_NOT_PREFERRED, *ppkgargs, pkgname);
-			*rc = EXIT_FAILURE;
-			continue;
-		}
-
-		TRACE("[+]-impact for %s\n", pkgname);
-		/* copy real package name back to pkgargs */
-		*ppkgargs = pkgname;
-
-		if (istty) {
-			tmpicon = *icon++;
-			printf("\rcalculating dependencies...%c", tmpicon);
-			fflush(stdout);
-			if (*icon == '\0')
-				icon = icon - strlen(ICON_WAIT);
-		}
-
-		pdphead = init_head();
-		/* dependencies discovery */
-		full_dep_tree(pkgname, DIRECT_DEPS, pdphead);
-
-		/* parse dependencies for pkgname */
-		SLIST_FOREACH(pdp, pdphead, next) {
-
-			/* is dependency already recorded in impact list ? */
-			if (pkg_in_impact(impacthead, pdp->depend))
+			if (local_pkg_in_impact(impacthead, l->full))
 				continue;
 
-			/* compare needed deps with local packages */
-			if (deps_impact(impacthead, pdp, 1) != 0) {
-				/*
-				 * There was a versioning mismatch, proceed?
-				 *
-				 * XXX: Shouldn't this just bail?  Surely only
-				 * bad things will happen if we continue.
-				 */
-				if (!check_yesno(DEFAULT_NO)) {
-					free_pkglist(&impacthead);
-					/* avoid free's repetition */
-					goto impactfail;
-				}
-			}
-		} /* SLIST_FOREACH deps */
-		free_pkglist(&pdphead);
-
-		/* finally, insert package itself */
-		pdp = malloc_pkglist();
-
-		pdp->name = xstrdup(pkgname);
-		trunc_str(pdp->name, '-', STR_BACKWARD);
-
-		/* pkgname is not already recorded */
-		if (!pkg_in_impact(impacthead, pkgname)) {
-			pdp->depend = xstrdup(pkgname);
-			if (deps_impact(impacthead, pdp, 1) != 0) {
-				free_pkglist(&impacthead);
-				goto impactfail;
-			}
-			XFREE(pdp->depend);
+			if ((p->rpkg = find_pkg_match(l->name, l->pkgpath)))
+				deps_impact(impacthead, p, upgrade);
 		}
 
-		XFREE(pdp->name);
-		XFREE(pdp);
-	} /* for (ppkgargs) */
+		return;
+	}
 
+	/*
+	 * If we didn't match any local packages then this is a new package to
+	 * install.
+	 */
+	TRACE(" > recording %s as to install\n", pkg->rpkg->full);
+	pkg->action = TOINSTALL;
+}
+
+/*
+ * Progress spinner.
+ */
+static char *icon = __UNCONST(ICON_WAIT);
+
+static void
+start_deps_spinner(int istty)
+{
+	if (!istty)
+		printf("calculating dependencies...");
+}
+
+static void
+update_deps_spinner(int istty)
+{
+	if (istty) {
+		printf("\rcalculating dependencies...%c", *icon++);
+		fflush(stdout);
+		if (*icon == '\0')
+			icon = icon - ICON_LEN;
+	}
+}
+static void
+finish_deps_spinner(int istty)
+{
 	if (istty)
 		printf("\rcalculating dependencies...done.\n");
 	else
 		printf("done.\n");
+}
+
+/*
+ * Loop through all local packages looking for available updates.
+ */
+static Plisthead *
+pkg_impact_upgrade(void)
+{
+	Plisthead *impacthead, *depshead;
+	Pkglist *lpkg, *p;
+	int istty;
+
+	istty = isatty(fileno(stdout));
+
+	impacthead = init_head();
+	depshead = init_head();
+
+	SLIST_FOREACH(lpkg, &l_plisthead, next) {
+		if (local_pkg_in_impact(impacthead, lpkg->full))
+			continue;
+
+		TRACE("  [+]-impact for %s\n", lpkg->full);
+		p = malloc_pkglist();
+		p->action = DONOTHING;
+		p->lpkg = lpkg;
+		SLIST_INSERT_HEAD(impacthead, p, next);
+
+		/*
+		 * Find a remote package that matches our PKGPATH (if we
+		 * installed a specific version of e.g. nodejs then we don't
+		 * want a newer version with a different PKGPATH to be
+		 * considered).
+		 *
+		 * If there are no matches the package is just skipped, this
+		 * can happen if for example the local package is self-built.
+		 */
+		p->rpkg = find_pkg_match(lpkg->name, lpkg->pkgpath);
+		if (p->rpkg == NULL) {
+			TRACE("   | - no remote match found\n");
+			continue;
+		}
+
+		/* No upgrade or refresh found, we're done. */
+		if ((p->action = calculate_action(lpkg, p->rpkg)) == DONOTHING)
+			continue;
+
+		/*
+		 * If the remote package is being installed, find all of the
+		 * remote package dependencies as there may be new or updated
+		 * dependencies that need to be installed.
+		 */
+		update_deps_spinner(istty);
+		get_depends_recursive(p->rpkg->full, depshead, DEPENDS_REMOTE);
+	}
+
+	/*
+	 * We now have a full list of dependencies for all local packages,
+	 * process them in turn, adding to impact list.
+	 */
+	SLIST_FOREACH(p, depshead, next) {
+		if (pkg_in_impact(impacthead, p->rpkg->full))
+			continue;
+		deps_impact(impacthead, p, 1);
+	}
+	free_pkglist(&depshead);
+
+	return impacthead;
+}
+
+/*
+ * For each package argument on the command line, look for suitable remote
+ * packages and their dependencies to install.
+ */
+static Plisthead *
+pkg_impact_install(char **pkgargs, int *rc)
+{
+	Plisthead *impacthead, *depshead;
+	Pkglist *rpkg, *p;
+	char **arg, *pkgname = NULL;
+	int istty, rv;
+
+	istty = isatty(fileno(stdout));
+
+	impacthead = init_head();
+	depshead = init_head();
+
+	for (arg = pkgargs; *arg != NULL; arg++) {
+		TRACE("  [+]-impact for %s\n", *arg);
+
+		/*
+		 * Find best remote package match.
+		 */
+		if ((rv = find_preferred_pkg(*arg, &rpkg, &pkgname)) != 0) {
+			if (pkgname == NULL)
+				fprintf(stderr, MSG_PKG_NOT_AVAIL, *arg);
+			else
+				fprintf(stderr, MSG_PKG_NOT_PREFERRED, *arg,
+				    pkgname);
+			*rc = EXIT_FAILURE;
+			free(pkgname);
+			continue;
+		}
+		/* copy real package name back to pkgargs */
+		free(*arg);
+		*arg = pkgname;
+
+		TRACE("   | - found remote match %s\n", rpkg->full);
+
+		/*
+		 * It's possible we've already seen this package, either via a
+		 * duplicate pattern match, or because it is a dependency for a
+		 * package already processed.
+		 */
+		if (pkg_in_impact(impacthead, rpkg->full))
+			continue;
+
+		p = malloc_pkglist();
+		p->rpkg = rpkg;
+		SLIST_INSERT_HEAD(impacthead, p, next);
+
+		/*
+		 * Get all recursive dependencies of the remote package and
+		 * calculate their actions based on whether they match a local
+		 * package or not.
+		 */
+		update_deps_spinner(istty);
+		get_depends_recursive(p->rpkg->full, depshead, DEPENDS_REMOTE);
+		deps_impact(impacthead, p, 0);
+	}
+
+	/*
+	 * We now have a full list of dependencies for all local packages,
+	 * process them in turn, adding to impact list.
+	 */
+	SLIST_FOREACH(p, depshead, next) {
+		if (pkg_in_impact(impacthead, p->rpkg->full))
+			continue;
+		deps_impact(impacthead, p, 0);
+	}
+	free_pkglist(&depshead);
+
+	return impacthead;
+}
+
+/*
+ * Return a list of package operations to perform, or NULL if nothing to do.
+ *
+ * If pkgargs is set we are performing an install operation with an input list
+ * of packages and package matches, otherwise we are performing an upgrade
+ * which loops through all local packages looking for upgrades.
+ */
+Plisthead *
+pkg_impact(char **pkgargs, int *rc)
+{
+	Plisthead *impacthead;
+	Pkglist *p, *tmpp;
+	int istty;
+
+	istty = isatty(fileno(stdout));
+
+	TRACE("[>]-entering impact\n");
+	start_deps_spinner(istty);
+
+	if (pkgargs)
+		impacthead = pkg_impact_install(pkgargs, rc);
+	else
+		impacthead = pkg_impact_upgrade();
 
 	TRACE("[<]-leaving impact\n");
+	finish_deps_spinner(istty);
 
-	free_pkglist(&pdphead);
-
-	SLIST_FOREACH(pimpact, impacthead, next) {
-		SLIST_FOREACH(tmpimpact, impacthead, next) {
-			if (strcmp(pimpact->name, tmpimpact->name) != 0)
-				continue;
-
-			/*
-			 * If a package has been initially marked as remove or
-			 * refresh but then later is required for upgrade, mark
-			 * the original as do nothing.
-			 */
-			if (pimpact->action == TOUPGRADE &&
-			    (tmpimpact->action == TOREMOVE ||
-			     tmpimpact->action == TOREFRESH)) {
-				tmpimpact->action = DONOTHING;
-				continue;
-			}
-
-			/*
-			 * A package has been added multiple times with the
-			 * same action but via different dependency matches.
-			 * This will cause double counting, so we need to mark
-			 * one of them as DONOTHING.  As it currently doesn't
-			 * matter which dependency caused the action, choose to
-			 * mark the latter for now.
-			 */
-			if (pimpact->action == tmpimpact->action &&
-			    strcmp(pimpact->depend, tmpimpact->depend) != 0) {
-				TRACE("Duplicate action %d for %s:"
-				    " removing depends '%s', keeping '%s'\n",
-				    pimpact->action, pimpact->name,
-				    tmpimpact->depend, pimpact->depend);
-				tmpimpact->action = DONOTHING;
-			}
+	/*
+	 * Remove DONOTHING entries to simplify processing in later stages,
+	 * leaving only actionable entries.
+	 */
+	SLIST_FOREACH_SAFE(p, impacthead, next, tmpp) {
+		if (p->action == DONOTHING) {
+			SLIST_REMOVE(impacthead, p, Pkglist, next);
+			free_pkglist_entry(&p);
 		}
 	}
 
-	/* remove DONOTHING entries */
-	SLIST_FOREACH_SAFE(pimpact, impacthead, next, tmpimpact) {
-		if (pimpact->action == DONOTHING) {
-
-			SLIST_REMOVE(impacthead, pimpact, Pkglist, next);
-
-			free_pkglist_entry(&pimpact);
-		}
-	}
-
-	/* no more impact, empty list */
 	if (SLIST_EMPTY(impacthead))
 		free_pkglist(&impacthead);
 
-impactfail:
 	return impacthead;
 }
