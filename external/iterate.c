@@ -33,6 +33,11 @@
 #include "config.h"
 #endif
 
+/*
+ * Include our copy of queue.h before nbcompat pulls in its version.
+ */
+#include "queue.h"
+
 #include <nbcompat.h>
 
 #if HAVE_ERR_H
