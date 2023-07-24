@@ -3221,6 +3221,9 @@ fi
 AM_BACKSLASH='\'
 
 
+# Code is written to a C99 baseline.
+: ${CFLAGS="-std=c99 -g -O2"}
+
 # Checks for programs.
 
 

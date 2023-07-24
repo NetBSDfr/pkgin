@@ -7,6 +7,9 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_MAINTAINER_MODE([enable])
 AM_SILENT_RULES([yes])
 
+# Code is written to a C99 baseline.
+: ${CFLAGS="-std=c99 -g -O2"}
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL
