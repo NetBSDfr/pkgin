@@ -540,17 +540,6 @@ delete_remote_tbl(struct Summary sum, char *repo)
 	pkgindb_dovaquery(DELETE_REMOTE_PKG_REPO, repo);
 }
 
-static void
-handle_manually_installed(Pkglist *pkglist, char **pkgkeep)
-{
-	/* update local db with manually installed packages */
-	if (pkgkeep == NULL && !is_automatic_installed(pkglist->full)) {
-		pkgindb_dovaquery(KEEP_PKG, pkglist->name);
-		return;
-	}
-	mark_as_automatic_installed(pkglist->full, 1);
-}
-
 /*
  * The following section is taken verbatim from pkg_install files/admin/main.c
  * to correctly handle REQUIRED_BY entries.
@@ -668,100 +657,56 @@ insert_local_required_by(void)
 }
 
 static void
-update_localdb(char **pkgkeep)
+update_localdb()
 {
-	FILE		*pinfo;
-	struct stat	st;
-	Plistnumbered	*keeplisthead, *nokeeplisthead;
-	Pkglist		*pkglist;
+	FILE *pinfo;
+	struct stat st;
+	Pkglist *lpkg;
 
 	/*
-	 * Start a write transaction, excluding other writers until
-	 * committed.  This serves two purposes:
-	 *
-	 * - If interrupted before we've recreated the local summary
-	 *   and reinitialized the PKG_KEEP state, this ensures we
-	 *   don't lose anything.
-	 *
-	 * - If a concurrent pkgin process simultaneously tries to do
-	 *   update_localdb, it can't invalidate the keep list we read
-	 *   with KEEP_LOCAL_PKGS.
-	 *
-	 * Note that this does not nest inside transactions or
-	 * savepoints.
+	 * Start a write transaction, excluding other writers until committed.
 	 */
 	if (pkgindb_doquery("BEGIN IMMEDIATE;", NULL, NULL))
 		errx(EXIT_FAILURE, "failed to begin immediate transaction");
 
-	/* has the pkgdb (pkgsrc) changed ? if not, continue */
+	/*
+	 * Only replace the database if forced or if the pkgdb changed.
+	 */
 	if (!pkg_db_mtime(&st) && !force_fetch)
 		goto out;
 
-	/* record the keep list */
-	keeplisthead = rec_pkglist(KEEP_LOCAL_PKGS);
-
-	/* delete local pkg table (faster than updating) */
+	/*
+	 * Delete and recreate the LOCAL_PKG table, as it's simpler and faster
+	 * than updating.
+	 */
 	pkgindb_doquery(DELETE_LOCAL, NULL, NULL);
 
 	printf(MSG_READING_LOCAL_SUMMARY);
-	/* generate summary locally */
 	if ((pinfo = popen(PKG_INSTALL_DIR "/pkg_info -Xa", "r")) == NULL)
 		errx(EXIT_FAILURE, "Couldn't run pkg_info");
 
 	printf(MSG_PROCESSING_LOCAL_SUMMARY);
-
-	/* insert the summary to the database */
 	insert_local_summary(pinfo);
 	insert_local_required_by();
 	pkg_db_update_mtime(&st);
 	pclose(pinfo);
 
-	/* re-read local packages list as it may have changed */
+	/*
+	 * Reread the local package list.  This updates l_plisthead.
+	 */
 	free_local_pkglist();
 	init_local_pkglist();
 
-	/* restore keep-list */
-	if (keeplisthead != NULL) {
-		SLIST_FOREACH(pkglist, keeplisthead->P_Plisthead, next) {
-			pkgindb_dovaquery(KEEP_PKG, pkglist->name);
-		}
-		free_pkglist(&keeplisthead->P_Plisthead);
-		free(keeplisthead);
-
-		/*
-		 * packages are installed "manually" by pkgin_install()
-		 * they are recorded as "non-automatic" in pkgdb, we
-		 * need to mark unkeeps as "automatic".
-		 */
-		if ((nokeeplisthead = rec_pkglist(NOKEEP_LOCAL_PKGS)) != NULL) {
-			SLIST_FOREACH(	pkglist,
-					nokeeplisthead->P_Plisthead,
-					next) {
-				handle_manually_installed(pkglist, pkgkeep);
-			}
-
-			free_pkglist(&nokeeplisthead->P_Plisthead);
-			free(nokeeplisthead);
-		}
-	} else { /* empty keep list */
-		/*
-		 * no packages are marked as keep in pkgin's db
-		 * probably a fresh install or a rebuild
-		 * restore keep flags with pkgdb informations
-		 */
-		SLIST_FOREACH(pkglist, &l_plisthead, next) {
-			if (!is_automatic_installed(pkglist->full)) {
-				pkgindb_dovaquery(KEEP_PKG, pkglist->name);
-			}
+	/*
+	 * Generate PKG_KEEP database entries based on pkgdb data.
+	 */
+	SLIST_FOREACH(lpkg, &l_plisthead, next) {
+		if (!is_automatic_installed(lpkg->full)) {
+			pkg_keep(KEEP, lpkg->full);
 		}
 	}
-
-	/* insert new keep list if there's any */
-	if (pkgkeep != NULL)
-		/* installation: mark the packages as "keep" */
-		pkg_keep(KEEP, pkgkeep);
-
-out:	if (pkgindb_doquery("COMMIT;", NULL, NULL))
+out:
+	if (pkgindb_doquery("COMMIT;", NULL, NULL))
 		errx(EXIT_FAILURE, "failed to commit transaction");
 }
 
@@ -840,13 +785,13 @@ update_remotedb(int verbose)
 }
 
 int
-update_db(int which, char **pkgkeep, int verbose)
+update_db(int which, int verbose)
 {
 	if (!have_privs(PRIVS_PKGINDB))
 		return EXIT_FAILURE;
 
 	/* always check for LOCAL_SUMMARY updates */
-	update_localdb(pkgkeep);
+	update_localdb();
 
 	if (which == REMOTE_SUMMARY)
 		update_remotedb(verbose);

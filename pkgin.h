@@ -220,7 +220,7 @@ ssize_t		sum_read(struct archive *, void *, const void **);
 int		sum_close(struct archive *, void *);
 off_t		download_pkg(char *, FILE *);
 /* summary.c */
-int		update_db(int, char **, int);
+int		update_db(int, int);
 void		split_repos(void);
 int		chk_repo_list(int);
 /* sqlite_callbacks.c */
@@ -263,7 +263,7 @@ Plisthead	*pkg_impact(char **, int *);
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);
 void		show_pkg_nokeep(void);
-void		pkg_keep(int, char **);
+int		pkg_keep(int, char *);
 /* fsops.c */
 uint64_t	fs_room(const char *);
 void		clean_cache(void);

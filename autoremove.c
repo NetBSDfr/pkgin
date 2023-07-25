@@ -129,7 +129,7 @@ pkgin_autoremove(void)
 		if (check_yesno(DEFAULT_YES)) {
 			do_pkg_remove(orderedhead);
 
-			(void)update_db(LOCAL_SUMMARY, NULL, 1);
+			(void)update_db(LOCAL_SUMMARY, 1);
 		}
 	}
 
@@ -177,60 +177,50 @@ show_pkg_nokeep(void)
 	free(plisthead);
 }
 
-/**
- * \brief flag packages in pkgargs as non or autoremovable
+/*
+ * Mark packages as keep (non-autoremovable) or nokeep (autoremovable).
  */
-void
-pkg_keep(int type, char **pkgargs)
+int
+pkg_keep(int type, char *pkgname)
 {
-	Pkglist	*pkglist = NULL;
-	char	**pkeep, query[BUFSIZ];
+	Pkglist *lpkg;
+	char query[BUFSIZ];
 
 	if (!have_privs(PRIVS_PKGDB|PRIVS_PKGINDB))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
-	if (SLIST_EMPTY(&l_plisthead)) /* no packages recorded */
-		return;
+	if (SLIST_EMPTY(&l_plisthead))
+		return 1;
 
-	/* parse packages by their command line names */
-	for (pkeep = pkgargs; *pkeep != NULL; pkeep++) {
-		/* find real package name */
-		if ((pkglist = find_local_pkg_match(*pkeep)) == NULL) {
-			printf(MSG_PKG_NOT_INSTALLED, *pkeep);
-			continue;
-		}
+	if ((lpkg = find_local_pkg_match(pkgname)) == NULL) {
+		printf(MSG_PKG_NOT_INSTALLED, pkgname);
+		return 1;
+	}
 
-		if (pkglist != NULL && pkglist->full != NULL) {
-			switch (type) {
-			case KEEP:
-				/*
-				 * pkglist is a keep-package but marked as
-				 * automatic, tag it
-				 */
-				if (is_automatic_installed(pkglist->full)) {
-					printf(	MSG_MARKING_PKG_KEEP,
-						pkglist->full);
-					sqlite3_snprintf(BUFSIZ, query,
-					    KEEP_PKG, pkglist->name);
-					pkgindb_doquery(query, NULL, NULL);
-					/* mark as non-automatic in pkgdb */
-					if (mark_as_automatic_installed(
-							pkglist->full, 0) < 0)
-						exit(EXIT_FAILURE);
-				}
-				break;
-			case UNKEEP:
-				printf(MSG_UNMARKING_PKG_KEEP, pkglist->full);
-				/* UNKEEP_PKG query needs full pkgname */
-				sqlite3_snprintf(BUFSIZ, query,
-				    UNKEEP_PKG, pkglist->name);
-				pkgindb_doquery(query, NULL, NULL);
-				/* mark as automatic in pkgdb */
-				if (mark_as_automatic_installed(pkglist->full,
-							1) < 0)
-					exit(EXIT_FAILURE);
-				break;
-			}
+	/*
+	 * Only print a message if the state is being changed, and update the
+	 * pkgdb as the source of truth.
+	 */
+	switch (type) {
+	case KEEP:
+		if (is_automatic_installed(lpkg->full)) {
+			printf(MSG_MARKING_PKG_KEEP, lpkg->full);
+			if (mark_as_automatic_installed(lpkg->full, 0) < 0)
+				exit(EXIT_FAILURE);
 		}
-	} /* for (pkeep) */
+		sqlite3_snprintf(BUFSIZ, query, KEEP_PKG, lpkg->name);
+		break;
+	case UNKEEP:
+		if (!is_automatic_installed(lpkg->full)) {
+			printf(MSG_UNMARKING_PKG_KEEP, lpkg->full);
+			if (mark_as_automatic_installed(lpkg->full, 1) < 0)
+				exit(EXIT_FAILURE);
+		}
+		sqlite3_snprintf(BUFSIZ, query, UNKEEP_PKG, lpkg->name);
+		break;
+	}
+
+	pkgindb_doquery(query, NULL, NULL);
+
+	return 0;
 }

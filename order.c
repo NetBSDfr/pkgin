@@ -93,21 +93,21 @@ order_remove(Plisthead *impacthead)
 Plisthead *
 order_download(Plisthead *impacthead)
 {
-	Plisthead	*ordtreehead;
-	Pkglist		*pimpact, *pdp;
+	Plisthead	*dlhead;
+	Pkglist		*p, *pkg;
 
-	ordtreehead = init_head();
+	dlhead = init_head();
 
-	SLIST_FOREACH(pimpact, impacthead, next) {
-		if (!pimpact->download)
+	SLIST_FOREACH(p, impacthead, next) {
+		if (!p->download)
 			continue;
 
-		pdp = malloc_pkglist();
-		pdp->ipkg = pimpact;
-		SLIST_INSERT_HEAD(ordtreehead, pdp, next);
+		pkg = malloc_pkglist();
+		pkg->ipkg = p;
+		SLIST_INSERT_HEAD(dlhead, pkg, next);
 	}
 
-	return ordtreehead;
+	return dlhead;
 }
 
 /*
@@ -117,31 +117,21 @@ order_download(Plisthead *impacthead)
 Plisthead *
 order_install(Plisthead *impacthead)
 {
-	Plisthead	*ordtreehead;
-	Pkglist		*pimpact, *pdp, *pi_dp = NULL;
+	Plisthead	*installhead;
+	Pkglist		*p, *pkg, *savepi = NULL;
 	int		i, maxlevel = 0;
 
 	/* Record highest dependency level on impact list */
-	SLIST_FOREACH(pimpact, impacthead, next) {
-		if (pimpact->level > maxlevel)
-			maxlevel = pimpact->level;
+	SLIST_FOREACH(p, impacthead, next) {
+		if (p->level > maxlevel)
+			maxlevel = p->level;
 	}
 
-	ordtreehead = init_head();
+	installhead = init_head();
 
-	/*
-	 * Start at the highest level (leaf packages), inserting each entry at
-	 * the head of the list, before moving down a level, resulting in core
-	 * dependencies at the head of the list and leaf packages at the end.
-	 *
-	 * pkg_install is special, and if there is an upgrade available then we
-	 * want it to be installed first so that it is used for all subsequent
-	 * package upgrades.
-	 */
-	for (i = maxlevel; i >= 0; i--) {
-		pi_dp = NULL;
-		SLIST_FOREACH(pimpact, impacthead, next) {
-			if (pimpact->level != i)
+	for (i = 0; i <= maxlevel; i++) {
+		SLIST_FOREACH(p, impacthead, next) {
+			if (p->level != i)
 				continue;
 
 			/*
@@ -149,33 +139,35 @@ order_install(Plisthead *impacthead)
 			 * properly during upgrades, but is necessary for now
 			 * to avoid issues with pkgurl being set to NULL.
 			 */
-			if (pimpact->action == TOREMOVE)
+			if (p->action == TOREMOVE)
 				continue;
 
-			pdp = malloc_pkglist();
-			pdp->ipkg = pimpact;
+			pkg = malloc_pkglist();
+			pkg->ipkg = p;
 
 			/*
 			 * Check for pkg_install, and if found, save for later
 			 * insertion at the head of this level.
 			 */
-			if (!pi_dp && strcmp(pimpact->rpkg->name, "pkg_install") == 0) {
-				pi_dp = pdp;
-			} else {
-				SLIST_INSERT_HEAD(ordtreehead, pdp, next);
+			if (strcmp(p->rpkg->name, "pkg_install") == 0) {
+				savepi = pkg;
+				continue;
 			}
+
+			SLIST_INSERT_HEAD(installhead, pkg, next);
 		}
 
 		/*
-		 * Put pkg_install at the head of this level.  It isn't
-		 * guaranteed that this is the lowest level, there are cases
-		 * where pkg_install can depend on other packages, in which
-		 * case they will be installed using the currently-installed
-		 * version first.
+		 * Put pkg_install at the head of this level so that the newer
+		 * version is used for as many installs as possible.  It isn't
+		 * guaranteed that this is the lowest level as there are cases
+		 * where pkg_install can depend on other packages.
 		 */
-		if (pi_dp != NULL)
-			SLIST_INSERT_HEAD(ordtreehead, pi_dp, next);
+		if (savepi != NULL) {
+			SLIST_INSERT_HEAD(installhead, savepi, next);
+			savepi = NULL;
+		}
 	}
 
-	return ordtreehead;
+	return installhead;
 }

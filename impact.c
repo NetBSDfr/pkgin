@@ -32,32 +32,32 @@
 /*
  * Is package already in impact list?
  */
-static uint8_t
+Pkglist *
 local_pkg_in_impact(Plisthead *impacthead, char *pkgname)
 {
 	Pkglist *p;
 
 	SLIST_FOREACH(p, impacthead, next) {
 		if (p->lpkg && strcmp(p->lpkg->full, pkgname) == 0) {
-			return 1;
+			return p;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
-static uint8_t
+Pkglist *
 pkg_in_impact(Plisthead *impacthead, char *pkgname)
 {
 	Pkglist *p;
 
 	SLIST_FOREACH(p, impacthead, next) {
 		if (p->rpkg && strcmp(p->rpkg->full, pkgname) == 0) {
-			return 1;
+			return p;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
 /*
@@ -112,6 +112,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int upgrade)
 
 	pkg->action = DONOTHING;
 	pkg->level = pdp->level;
+	pkg->keep = pdp->keep;
 	pkg->rpkg = pdp->rpkg;
 	SLIST_INSERT_HEAD(impacthead, pkg, next);
 
@@ -197,7 +198,7 @@ static Plisthead *
 pkg_impact_upgrade(void)
 {
 	Plisthead *impacthead, *depshead;
-	Pkglist *lpkg, *p;
+	Pkglist *dpkg, *lpkg, *p;
 	int istty;
 
 	istty = isatty(fileno(stdout));
@@ -245,12 +246,18 @@ pkg_impact_upgrade(void)
 
 	/*
 	 * We now have a full list of dependencies for all local packages,
-	 * process them in turn, adding to impact list.
+	 * process them in turn, adding to impact list.  As we may have already
+	 * seen an entry as part of looping through all packages, but without
+	 * its correct dependency depth, update it if we found a deeper path so
+	 * that install ordering is correct.
 	 */
-	SLIST_FOREACH(p, depshead, next) {
-		if (pkg_in_impact(impacthead, p->rpkg->full))
+	SLIST_FOREACH(dpkg, depshead, next) {
+		if ((p = pkg_in_impact(impacthead, dpkg->rpkg->full))) {
+			if (dpkg->level > p->level)
+				p->level = dpkg->level;
 			continue;
-		deps_impact(impacthead, p, 1);
+		}
+		deps_impact(impacthead, dpkg, 1);
 	}
 	free_pkglist(&depshead);
 
@@ -265,7 +272,7 @@ static Plisthead *
 pkg_impact_install(char **pkgargs, int *rc)
 {
 	Plisthead *impacthead, *depshead;
-	Pkglist *rpkg, *p;
+	Pkglist *dpkg, *rpkg, *p;
 	char **arg, *pkgname = NULL;
 	int istty, rv;
 
@@ -299,12 +306,16 @@ pkg_impact_install(char **pkgargs, int *rc)
 		/*
 		 * It's possible we've already seen this package, either via a
 		 * duplicate pattern match, or because it is a dependency for a
-		 * package already processed.
+		 * package already processed.  If so, ensure it is marked as a
+		 * keep package before skipping.
 		 */
-		if (pkg_in_impact(impacthead, rpkg->full))
+		if ((p = pkg_in_impact(impacthead, rpkg->full))) {
+			p->keep = 1;
 			continue;
+		}
 
 		p = malloc_pkglist();
+		p->keep = 1;
 		p->rpkg = rpkg;
 		SLIST_INSERT_HEAD(impacthead, p, next);
 
@@ -320,12 +331,18 @@ pkg_impact_install(char **pkgargs, int *rc)
 
 	/*
 	 * We now have a full list of dependencies for all local packages,
-	 * process them in turn, adding to impact list.
+	 * process them in turn, adding to impact list.  As we may have already
+	 * seen an entry as part of looping through all packages, but without
+	 * its correct dependency depth, update it if we found a deeper path so
+	 * that install ordering is correct.
 	 */
-	SLIST_FOREACH(p, depshead, next) {
-		if (pkg_in_impact(impacthead, p->rpkg->full))
+	SLIST_FOREACH(dpkg, depshead, next) {
+		if ((p = pkg_in_impact(impacthead, dpkg->rpkg->full))) {
+			if (dpkg->level > p->level)
+				p->level = dpkg->level;
 			continue;
-		deps_impact(impacthead, p, 0);
+		}
+		deps_impact(impacthead, dpkg, 0);
 	}
 	free_pkglist(&depshead);
 

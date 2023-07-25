@@ -166,7 +166,7 @@ main(int argc, char *argv[])
 	 * if necessary.  Ignore any returned errors so that unprivileged users
 	 * can perform query operations.
 	 */
-	(void) update_db(LOCAL_SUMMARY, NULL, 1);
+	(void) update_db(LOCAL_SUMMARY, 1);
 
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
@@ -184,7 +184,7 @@ main(int argc, char *argv[])
 	 * have explicitly requested a refresh.
 	 */
 	if (need_upgrade || need_refresh) {
-		(void) update_db(REMOTE_SUMMARY, NULL, 1);
+		(void) update_db(REMOTE_SUMMARY, 1);
 	/*
 	 * If we're performing any operations that fetch remote packages, make
 	 * sure the remote databases are up-to-date to avoid mismatches.  These
@@ -192,7 +192,7 @@ main(int argc, char *argv[])
 	 */
 	} else if (ch == PKG_INST_CMD || ch == PKG_UPGRD_CMD ||
 	    ch == PKG_FUPGRD_CMD) {
-		if (update_db(REMOTE_SUMMARY, NULL, 0) == EXIT_FAILURE)
+		if (update_db(REMOTE_SUMMARY, 0) == EXIT_FAILURE)
 			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 	}
 
@@ -209,7 +209,7 @@ main(int argc, char *argv[])
 	case PKG_UPDT_CMD: /* update packages db */
 		if (need_upgrade || need_refresh) /* no need to do it twice */
 			break;
-		if (update_db(REMOTE_SUMMARY, NULL, 1) == EXIT_FAILURE)
+		if (update_db(REMOTE_SUMMARY, 1) == EXIT_FAILURE)
 			errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 		break;
 	case PKG_SHDDP_CMD: /* show direct depends */
@@ -256,11 +256,11 @@ main(int argc, char *argv[])
 		break;
 	case PKG_KEEP_CMD: /* mark a package as "keep" (not automatic) */
 		missing_param(argc, 2, MSG_PKG_ARGS_KEEP);
-		pkg_keep(KEEP, &argv[1]);
+		pkg_keep(KEEP, argv[1]);
 		break;
 	case PKG_UNKEEP_CMD: /* mark a package as "unkeep" (automatic) */
 		missing_param(argc, 2, MSG_PKG_ARGS_UNKEEP);
-		pkg_keep(UNKEEP, &argv[1]);
+		pkg_keep(UNKEEP, argv[1]);
 		break;
 	case PKG_SHKP_CMD: /* show keep packages */
 		show_pkg_keep();

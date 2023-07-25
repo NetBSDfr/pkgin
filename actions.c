@@ -300,7 +300,15 @@ do_pkg_install(Plisthead *installhead)
 	int		rc = EXIT_SUCCESS;
 	Pkglist		*p;
 	char		pkgpath[BUFSIZ];
-	char		*pflags = verb_flag("-DU");
+	const char	*iflags, *aflags, *pflags;
+
+	/*
+	 * Packages specified on the command line are marked as "keep", while
+	 * their dependencies use the -A pkg_add flag to indicate they are
+	 * automatic packages that can be autoremoved when no longer required.
+	 */
+	iflags = (verbosity) ? "-DUv" : "-DU";
+	aflags = (verbosity) ? "-ADUv" : "-ADU";
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
@@ -309,6 +317,16 @@ do_pkg_install(Plisthead *installhead)
 		/* file not available in the repository */
 		if (p->ipkg->file_size == -1)
 			continue;
+
+		/*
+		 * If package has been marked as keep (explicitly installed),
+		 * or is an upgrade of a local package that was marked as keep,
+		 * then use the non-automatic flags, otherwise use -A.
+		 */
+		if (p->ipkg->keep || (p->ipkg->lpkg && p->ipkg->lpkg->keep))
+			pflags = iflags;
+		else
+			pflags = aflags;
 
 		snprintf(pkgpath, BUFSIZ, "%s/%s%s", pkgin_cache,
 		    p->ipkg->rpkg->full, PKG_EXT);
@@ -665,9 +683,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	if (rebuild_required_by() != EXIT_SUCCESS)
 		rc = EXIT_FAILURE;
 
-	/* pure install, not called by pkgin_upgrade */
-	if (!upgrade)
-		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
+	(void)update_db(LOCAL_SUMMARY, 1);
 
 installend:
 	XFREE(todownload);
@@ -749,7 +765,7 @@ pkgin_remove(char **pkgargs)
 			if (rebuild_required_by() != EXIT_SUCCESS)
 				rc = EXIT_FAILURE;
 
-			(void)update_db(LOCAL_SUMMARY, NULL, 1);
+			(void)update_db(LOCAL_SUMMARY, 1);
 		}
 	} else
 		printf(MSG_NO_PKGS_TO_DELETE);
@@ -761,115 +777,12 @@ pkgin_remove(char **pkgargs)
 	return rc;
 }
 
-/*
- * Find best match for a package to be upgraded.
- */
-static char *
-narrow_match(Pkglist *opkg)
-{
-	Pkglist	*pkglist;
-	char	*best_match;
-	int	refresh = 0;
-
-	/* for now, best match is old package itself */
-	best_match = xstrdup(opkg->full);
-
-	SLIST_FOREACH(pkglist, &r_plisthead, next) {
-		/* not the same pkgname, next */
-		if (pkgstrcmp(opkg->name, pkglist->name))
-			continue;
-
-		/*
-		 * Do not propose an upgrade if the PKGPATH does not match,
-		 * otherwise users who have requested a specific version of a
-		 * package for which there are usually multiple versions
-		 * available (e.g. nodejs or mysql) would always have it
-		 * replaced by the latest version.
-		 *
-		 * Note that this comparison does allow both PKGPATH values
-		 * to be NULL, for example with local self-built packages, in
-		 * which case we permit an upgrade.
-		 */
-		if (pkgstrcmp(opkg->pkgpath, pkglist->pkgpath))
-			continue;
-
-		/*
-		 * If the package version is identical, check if the BUILD_DATE
-		 * has changed.  If it has, we need to refresh the package as
-		 * it has been rebuilt, possibly against newer dependencies.
-		 */
-		if (pkgstrcmp(opkg->full, pkglist->full) == 0) {
-			if (pkgstrcmp(opkg->build_date, pkglist->build_date))
-				refresh = 1;
-			continue;
-		}
-
-		/* second package is greater */
-		if (version_check(best_match, pkglist->full) == 2) {
-			XFREE(best_match);
-			best_match = xstrdup(pkglist->full);
-		}
-	} /* SLIST_FOREACH remoteplisthead */
-
-	/* there was no upgrade candidate */
-	if (strcmp(best_match, opkg->full) == 0 && !refresh)
-		XFREE(best_match);
-
-	return best_match;
-}
-
-static char **
-record_upgrades(Plisthead *plisthead)
-{
-	Pkglist	*pkglist;
-	size_t	count = 0;
-	char	**pkgargs;
-
-	SLIST_FOREACH(pkglist, plisthead, next)
-		count++;
-
-	pkgargs = xmalloc((count + 2) * sizeof(char *));
-
-	count = 0;
-	SLIST_FOREACH(pkglist, plisthead, next) {
-		pkgargs[count] = narrow_match(pkglist);
-
-		if (pkgargs[count] == NULL)
-			continue;
-
-		count++;
-	}
-	pkgargs[count] = NULL;
-
-	return pkgargs;
-}
-
 int
 pkgin_upgrade(int do_inst)
 {
-	Plistnumbered	*keeplisthead;
-	char		**pkgargs;
-	int		rc;
 
-	/* record keepable packages */
-	if ((keeplisthead = rec_pkglist(KEEP_LOCAL_PKGS)) == NULL)
-		errx(EXIT_FAILURE, MSG_EMPTY_KEEP_LIST);
-
-	/* upgrade all packages, not only keepables */
 	if (SLIST_EMPTY(&l_plisthead))
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
-	rc = pkgin_install(NULL, do_inst, 1);
-
-	/* Record keep list */
-	if (do_inst) {
-		pkgargs = record_upgrades(keeplisthead->P_Plisthead);
-		(void)update_db(LOCAL_SUMMARY, pkgargs, 1);
-		free_list(pkgargs);
-	}
-
-	free_pkglist(&keeplisthead->P_Plisthead);
-	free(keeplisthead);
-
-	return rc;
+	return pkgin_install(NULL, do_inst, 1);
 }

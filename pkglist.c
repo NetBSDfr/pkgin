@@ -158,6 +158,12 @@ record_pkglist(void *param, int argc, char **argv, char **colname)
 	DUP_OR_NULL(p->category, argv[7]);
 	DUP_OR_NULL(p->pkgpath, argv[8]);
 
+	/*
+	 * Only LOCAL_PKG has PKG_KEEP
+	 */
+	if (plist->P_type == 0)
+		NUM_OR_NULL(p->keep, argv[9]);
+
 	if (plist->P_type == 1) {
 		if (p->file_size == 0) {
 			fprintf(stderr, MSG_BAD_FILE_SIZE, p->full);
