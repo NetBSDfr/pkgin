@@ -30,7 +30,6 @@
 
 #include "pkgin.h"
 
-char *pkg_install_dir;
 char *pkg_add;
 char *pkg_admin;
 char *pkg_delete;
@@ -48,15 +47,11 @@ setup_pkg_install(void)
 	size_t len;
 	ssize_t llen;
 
-	if ((p = getenv("PKG_INSTALL_DIR")) != NULL)
-		pkg_install_dir = xstrdup(p);
-	else
-		pkg_install_dir = xstrdup(PKG_INSTALL_DIR);
-
-	pkg_add = xasprintf("%s/pkg_add", pkg_install_dir);
-	pkg_admin = xasprintf("%s/pkg_admin", pkg_install_dir);
-	pkg_info = xasprintf("%s/pkg_info", pkg_install_dir);
-	pkg_delete = xasprintf("%s/pkg_delete", pkg_install_dir);
+	p = getenv("PKG_INSTALL_DIR");
+	pkg_add = xasprintf("%s/pkg_add", p ? p : PKG_INSTALL_DIR);
+	pkg_admin = xasprintf("%s/pkg_admin", p ? p : PKG_INSTALL_DIR);
+	pkg_info = xasprintf("%s/pkg_info", p ? p : PKG_INSTALL_DIR);
+	pkg_delete = xasprintf("%s/pkg_delete", p ? p : PKG_INSTALL_DIR);
 
 	/* Sanity check */
 	if (access(pkg_admin, X_OK) != 0)

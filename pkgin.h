@@ -287,7 +287,6 @@ void		show_prov_req(const char *, const char *);
 int		show_pkg_info(char, char *);
 
 /* pkg_install.c */
-extern char	*pkg_install_dir;
 extern char	*pkg_add;
 extern char	*pkg_admin;
 extern char	*pkg_delete;
