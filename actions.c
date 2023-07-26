@@ -409,6 +409,57 @@ action_list(char *flatlist, char *str)
 	return newlist;
 }
 
+static char **
+get_sorted_list(Plisthead *pkgs)
+{
+	Pkglist *p;
+	char **names;
+	int i = 0;
+
+	/* Get number of entries for names allocation */
+	SLIST_FOREACH(p, pkgs, next)
+		i++;
+
+	names = xmalloc((i + 1) * sizeof(char *));
+
+	i = 0;
+	SLIST_FOREACH(p, pkgs, next) {
+		names[i++] = p->ipkg->rpkg->full;
+	}
+	names[i] = NULL;
+
+	qsort(names, i, sizeof(char *), sort_pkg_alpha);
+
+	return names;
+}
+
+static char **
+get_sorted_list_by_action(Plisthead *pkgs, int action)
+{
+	Pkglist *p;
+	char **names;
+	int i = 0;
+
+	/* Get number of entries for names allocation */
+	SLIST_FOREACH(p, pkgs, next) {
+		if (p->ipkg->action == action)
+			i++;
+	}
+
+	names = xmalloc((i + 1) * sizeof(char *));
+
+	i = 0;
+	SLIST_FOREACH(p, pkgs, next) {
+		if (p->ipkg->action == action)
+			names[i++] = p->ipkg->rpkg->full;
+	}
+	names[i] = NULL;
+
+	qsort(names, i, sizeof(char *), sort_pkg_alpha);
+
+	return names;
+}
+
 #define H_BUF 6
 
 int
@@ -417,7 +468,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0;
 	int		refreshnum = 0, downloadnum = 0;
-	int		rc = EXIT_SUCCESS;
+	int		argn, rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
 	int64_t		file_size = 0, size_pkg = 0;
@@ -426,6 +477,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	Pkglist		*p;
 	Plisthead	*impacthead, *downloadhead = NULL, *installhead = NULL;
 	Plistnumbered	*conflicts;
+	char		**names;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
 	char		*unmet_reqs = NULL;
@@ -582,27 +634,35 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	}
 
 	/*
-	 * Separate package lists according to action.
+	 * Separate package lists according to action and sort alphabetically.
 	 */
 	downloadhead = order_download(impacthead);
-	SLIST_FOREACH(p, downloadhead, next) {
-		todownload = action_list(todownload, p->ipkg->rpkg->full);
+
+	names = get_sorted_list(downloadhead);
+	for (argn = 0; names[argn] != NULL; argn++) {
+		todownload = action_list(todownload, names[argn]);
 	}
+	free(names);
 
 	installhead = order_install(impacthead);
-	SLIST_FOREACH(p, installhead, next) {
-		switch (p->ipkg->action) {
-		case TOREFRESH:
-			torefresh = action_list(torefresh, p->ipkg->rpkg->full);
-			break;
-		case TOUPGRADE:
-			toupgrade = action_list(toupgrade, p->ipkg->rpkg->full);
-			break;
-		case TOINSTALL:
-			toinstall = action_list(toinstall, p->ipkg->rpkg->full);
-			break;
-		}
+
+	names = get_sorted_list_by_action(installhead, TOREFRESH);
+	for (argn = 0; names[argn] != NULL; argn++) {
+		torefresh = action_list(torefresh, names[argn]);
 	}
+	free(names);
+
+	names = get_sorted_list_by_action(installhead, TOUPGRADE);
+	for (argn = 0; names[argn] != NULL; argn++) {
+		toupgrade = action_list(toupgrade, names[argn]);
+	}
+	free(names);
+
+	names = get_sorted_list_by_action(installhead, TOINSTALL);
+	for (argn = 0; names[argn] != NULL; argn++) {
+		toinstall = action_list(toinstall, names[argn]);
+	}
+	free(names);
 
 	printf("\n");
 

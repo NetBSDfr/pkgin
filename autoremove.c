@@ -36,14 +36,42 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
+/*
+ * Mostly duplicated from actions.c but modified as this needs to look at
+ * p->lpkg.  These should be merged if possible.
+ */
+static char **
+get_sorted_list(Plisthead *pkgs)
+{
+	Pkglist *p;
+	char **names;
+	int i = 0;
+
+	/* Get number of entries for names allocation */
+	SLIST_FOREACH(p, pkgs, next)
+		i++;
+
+	names = xmalloc((i + 1) * sizeof(char *));
+
+	i = 0;
+	SLIST_FOREACH(p, pkgs, next) {
+		names[i++] = p->lpkg->full;
+	}
+	names[i] = NULL;
+
+	qsort(names, i, sizeof(char *), sort_pkg_alpha);
+
+	return names;
+}
+
 void
 pkgin_autoremove(void)
 {
 	Plistnumbered	*nokeephead, *keephead;
 	Plisthead	*depshead, *removehead, *orderedhead;
 	Pkglist		*pkglist, *premove, *pdp, *p;
-	char		*toremove = NULL, preserve[BUFSIZ];
-	int		is_keep_dep, removenb = 0;
+	char		*toremove = NULL, **names, preserve[BUFSIZ];
+	int		argn, is_keep_dep, removenb = 0;
 
 	/*
 	 * Record all keep and no-keep packages.  If either are empty then
@@ -57,7 +85,6 @@ pkgin_autoremove(void)
 		printf(MSG_ALL_KEEP_PKGS);
 		return;
 	}
-
 
 	/*
 	 * Record all recursive dependencies for each keep package.  This then
@@ -116,21 +143,26 @@ pkgin_autoremove(void)
 	}
 
 	orderedhead = order_remove(removehead);
-
 	free_pkglist(&removehead);
 
-	if (!SLIST_EMPTY(orderedhead)) {
-		SLIST_FOREACH(premove, orderedhead, next)
-			toremove = action_list(toremove, premove->lpkg->full);
+	if (SLIST_EMPTY(orderedhead)) {
+		free_pkglist(&orderedhead);
+		return;
+	}
 
-		printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
-		if (!noflag)
-			printf("\n");
-		if (check_yesno(DEFAULT_YES)) {
-			do_pkg_remove(orderedhead);
+	names = get_sorted_list(orderedhead);
+	for (argn = 0; names[argn] != NULL; argn++) {
+		toremove = action_list(toremove, names[argn]);
+	}
+	free(names);
 
-			(void)update_db(LOCAL_SUMMARY, 1);
-		}
+	printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
+	if (!noflag)
+		printf("\n");
+
+	if (check_yesno(DEFAULT_YES)) {
+		do_pkg_remove(orderedhead);
+		(void) update_db(LOCAL_SUMMARY, 1);
 	}
 
 	XFREE(toremove);

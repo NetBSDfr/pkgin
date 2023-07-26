@@ -276,6 +276,7 @@ Pkglist		*find_local_pkg_match(const char *);
 int		exact_pkgfmt(const char *);
 int		version_check(char *, char *);
 int		pkgstrcmp(const char *, const char *);
+int		sort_pkg_alpha(const void *, const void *);
 /* selection.c */
 void		export_keep(void);
 void		import_keep(int, const char *);

@@ -232,3 +232,12 @@ pkgstrcmp(const char *p1, const char *p2)
 
 	return (strcmp(p1, p2));
 }
+
+/*
+ * qsort callback to sort alphabetically.
+ */
+int
+sort_pkg_alpha(const void *a, const void *b)
+{
+	return strcmp(*(const char * const *)a, *(const char * const *)b);
+}
