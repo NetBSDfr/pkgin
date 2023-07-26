@@ -153,8 +153,6 @@ typedef struct Sumfile {
  * \brief Master structure for all types of package lists (SLIST)
  */
 typedef struct Pkglist {
-	uint8_t	type; /*!< list type (LIST, DEPTREE or IMPACT) */
-
 	struct Pkglist *ipkg;	/* Pointer to an impact Pkglist entry */
 	struct Pkglist *lpkg;	/* Pointer to a local Pkglist entry */
 	struct Pkglist *rpkg;	/* Pointer to a remote Pkglist entry */
