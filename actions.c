@@ -91,7 +91,7 @@ pkg_download(Plisthead *installhead)
 				rc = EXIT_FAILURE;
 				if (check_yesno(DEFAULT_NO) == ANSW_NO)
 					exit(rc);
-				p->file_size = -1;
+				p->ipkg->file_size = -1;
 				continue;
 			}
 
@@ -99,7 +99,7 @@ pkg_download(Plisthead *installhead)
 				errx(EXIT_FAILURE,
 				    "Failed to create symlink %s", pkg_fs);
 
-			p->file_size = st.st_size;
+			p->ipkg->file_size = st.st_size;
 		} else {
 			/*
 			 * Fetch via HTTP.  download_pkg() handles printing
@@ -109,7 +109,7 @@ pkg_download(Plisthead *installhead)
 			if ((fp = fopen(pkg_fs, "w")) == NULL)
 				err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
 
-			if ((p->file_size =
+			if ((p->ipkg->file_size =
 			    download_pkg(p->ipkg->pkgurl, fp)) == -1) {
 				(void) fclose(fp);
 				(void) unlink(pkg_fs);
@@ -129,7 +129,7 @@ pkg_download(Plisthead *installhead)
 		 * specified by the server, this checks that it matches what
 		 * is recorded by pkg_summary.
 		 */
-		if (p->file_size != p->ipkg->rpkg->file_size) {
+		if (p->ipkg->file_size != p->ipkg->rpkg->file_size) {
 			(void) unlink(pkg_fs);
 			rc = EXIT_FAILURE;
 
@@ -140,7 +140,7 @@ pkg_download(Plisthead *installhead)
 			if (check_yesno(DEFAULT_NO) == ANSW_NO)
 				exit(rc);
 
-			p->file_size = -1;
+			p->ipkg->file_size = -1;
 			continue;
 		}
 	}
@@ -648,7 +648,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			goto installend;
 
 		SLIST_FOREACH(p, downloadhead, next) {
-			if (p->file_size != -1)
+			if (p->ipkg->file_size != -1)
 				continue;
 
 			switch (p->ipkg->action) {
