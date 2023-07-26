@@ -622,6 +622,9 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		printf("%d to refresh, %d to upgrade, %d to install\n",
 		    refreshnum, upgradenum, installnum);
 		printf("%s to download, %s to install\n", h_fsize, h_psize);
+
+		if (refreshnum == 0 && upgradenum == 0 && installnum == 0)
+			exit(rc);
 	} else {
 		printf("%d package%s to download:\n%s\n", downloadnum,
 		    (downloadnum == 1) ? "" : "s", todownload);
