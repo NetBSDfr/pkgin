@@ -332,14 +332,17 @@ do_pkg_install(Plisthead *installhead)
 		    p->ipkg->rpkg->full, PKG_EXT);
 
 		switch (p->ipkg->action) {
-		case TOREFRESH:
+		case ACTION_REFRESH:
 			log_tag("refreshing %s...\n", p->ipkg->rpkg->full);
 			break;
-		case TOUPGRADE:
+		case ACTION_UPGRADE:
 			log_tag("upgrading %s...\n", p->ipkg->rpkg->full);
 			break;
-		case TOINSTALL:
+		case ACTION_INSTALL:
 			log_tag("installing %s...\n", p->ipkg->rpkg->full);
+			break;
+		default:
+			/* XXX assert? */
 			break;
 		}
 
@@ -434,7 +437,7 @@ get_sorted_list(Plisthead *pkgs)
 }
 
 static char **
-get_sorted_list_by_action(Plisthead *pkgs, int action)
+get_sorted_list_by_action(Plisthead *pkgs, action_t action)
 {
 	Pkglist *p;
 	char **names;
@@ -508,7 +511,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	/* check for required files */
 	if (!pkg_met_reqs(impacthead))
 		SLIST_FOREACH(p, impacthead, next)
-			if (p->action == UNMET_REQ)
+			if (p->action == ACTION_UNMET_REQ)
 				unmet_reqs =
 				    action_list(unmet_reqs, p->rpkg->full);
 
@@ -517,14 +520,14 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	/* browse impact tree */
 	SLIST_FOREACH(p, impacthead, next) {
 
-		if (p->action == DONOTHING)
+		if (p->action == ACTION_NONE)
 			continue;
 
 		/*
 		 * Packages being removed need no special handling, account
 		 * for them and move to the next package.
 		 */
-		if (p->action == TOREMOVE)
+		if (p->action == ACTION_REMOVE)
 			continue;
 
 		/* check for conflicts */
@@ -592,14 +595,17 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			size_pkg += p->rpkg->size_pkg;
 
 		switch (p->action) {
-		case TOREFRESH:
+		case ACTION_REFRESH:
 			refreshnum++;
 			break;
-		case TOUPGRADE:
+		case ACTION_UPGRADE:
 			upgradenum++;
 			break;
-		case TOINSTALL:
+		case ACTION_INSTALL:
 			installnum++;
+			break;
+		default:
+			/* XXX assert? */
 			break;
 		}
 	}
@@ -646,19 +652,19 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 	installhead = order_install(impacthead);
 
-	names = get_sorted_list_by_action(installhead, TOREFRESH);
+	names = get_sorted_list_by_action(installhead, ACTION_REFRESH);
 	for (argn = 0; names[argn] != NULL; argn++) {
 		torefresh = action_list(torefresh, names[argn]);
 	}
 	free(names);
 
-	names = get_sorted_list_by_action(installhead, TOUPGRADE);
+	names = get_sorted_list_by_action(installhead, ACTION_UPGRADE);
 	for (argn = 0; names[argn] != NULL; argn++) {
 		toupgrade = action_list(toupgrade, names[argn]);
 	}
 	free(names);
 
-	names = get_sorted_list_by_action(installhead, TOINSTALL);
+	names = get_sorted_list_by_action(installhead, ACTION_INSTALL);
 	for (argn = 0; names[argn] != NULL; argn++) {
 		toinstall = action_list(toinstall, names[argn]);
 	}
@@ -712,14 +718,17 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 				continue;
 
 			switch (p->ipkg->action) {
-			case TOREFRESH:
+			case ACTION_REFRESH:
 				refreshnum--;
 				break;
-			case TOUPGRADE:
+			case ACTION_UPGRADE:
 				upgradenum--;
 				break;
-			case TOINSTALL:
+			case ACTION_INSTALL:
 				installnum--;
+				break;
+			default:
+				/* XXX assert? */
 				break;
 			}
 		}

@@ -82,7 +82,7 @@ malloc_pkglist(void)
 	pkglist->pkgpath = NULL;
 	pkglist->skip = 0;
 	pkglist->keep = 0;
-	pkglist->action = DONOTHING;
+	pkglist->action = ACTION_NONE;
 
 	return pkglist;
 }

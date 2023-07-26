@@ -64,7 +64,7 @@ pkg_in_impact(Plisthead *impacthead, char *pkgname)
  * Compare a local and matching remote package and determine what action needs
  * to be taken.  Requires both arguments be valid package list pointers.
  */
-static int
+static action_t
 calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 {
         /*
@@ -73,12 +73,12 @@ calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 	 *
 	 * Otherwise if the version does not match then it is considered an
 	 * upgrade.  Remote versions can go backwards in the event of a revert,
-	 * however there is no support yet for TODOWNGRADE.
+	 * however there is no support yet for ACTION_DOWNGRADE.
          */
 	if ((rpkg->pattern && pkg_match(rpkg->pattern, lpkg->full) == 0) ||
 	    (strcmp(lpkg->full, rpkg->full) != 0)) {
 		TRACE("  > upgrading %s\n", lpkg->full);
-		return TOUPGRADE;
+		return ACTION_UPGRADE;
 	}
 
 	/*
@@ -91,11 +91,11 @@ calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 	if (pkgstrcmp(lpkg->pkgpath, rpkg->pkgpath) == 0 &&
 	    pkgstrcmp(lpkg->build_date, rpkg->build_date)) {
 		TRACE("  . refreshing %s\n", lpkg->full);
-		return TOREFRESH;
+		return ACTION_REFRESH;
 	}
 
 	TRACE("  = %s is up-to-date\n", lpkg->full);
-	return DONOTHING;
+	return ACTION_NONE;
 }
 
 /*
@@ -110,7 +110,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int upgrade)
 
 	pkg = malloc_pkglist();
 
-	pkg->action = DONOTHING;
+	pkg->action = ACTION_NONE;
 	pkg->level = pdp->level;
 	pkg->keep = pdp->keep;
 	pkg->rpkg = pdp->rpkg;
@@ -133,7 +133,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int upgrade)
 		 * This is only for install operations, as upgrades will
 		 * already consider every package.
 		 */
-		if (upgrade || pkg->action != TOUPGRADE)
+		if (upgrade || pkg->action != ACTION_UPGRADE)
 			return;
 
 		TRACE("  - considering reverse dependencies\n");
@@ -157,7 +157,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int upgrade)
 	 * install.
 	 */
 	TRACE(" > recording %s as to install\n", pkg->rpkg->full);
-	pkg->action = TOINSTALL;
+	pkg->action = ACTION_INSTALL;
 }
 
 /*
@@ -212,7 +212,7 @@ pkg_impact_upgrade(void)
 
 		TRACE("  [+]-impact for %s\n", lpkg->full);
 		p = malloc_pkglist();
-		p->action = DONOTHING;
+		p->action = ACTION_NONE;
 		p->lpkg = lpkg;
 		SLIST_INSERT_HEAD(impacthead, p, next);
 
@@ -232,7 +232,8 @@ pkg_impact_upgrade(void)
 		}
 
 		/* No upgrade or refresh found, we're done. */
-		if ((p->action = calculate_action(lpkg, p->rpkg)) == DONOTHING)
+		p->action = calculate_action(lpkg, p->rpkg);
+		if (p->action == ACTION_NONE)
 			continue;
 
 		/*
@@ -377,11 +378,11 @@ pkg_impact(char **pkgargs, int *rc)
 	finish_deps_spinner(istty);
 
 	/*
-	 * Remove DONOTHING entries to simplify processing in later stages,
-	 * leaving only actionable entries.
+	 * Remove ACTION_NONE entries to simplify processing in later
+	 * stages, leaving only actionable entries.
 	 */
 	SLIST_FOREACH_SAFE(p, impacthead, next, tmpp) {
-		if (p->action == DONOTHING) {
+		if (p->action == ACTION_NONE) {
 			SLIST_REMOVE(impacthead, p, Pkglist, next);
 			free_pkglist_entry(&p);
 		}

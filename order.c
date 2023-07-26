@@ -139,7 +139,7 @@ order_install(Plisthead *impacthead)
 			 * properly during upgrades, but is necessary for now
 			 * to avoid issues with pkgurl being set to NULL.
 			 */
-			if (p->action == TOREMOVE)
+			if (p->action == ACTION_REMOVE)
 				continue;
 
 			pkg = malloc_pkglist();

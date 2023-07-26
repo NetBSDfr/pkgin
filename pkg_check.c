@@ -72,7 +72,7 @@ pkg_met_reqs(Plisthead *impacthead)
 					 * mark as DONOTHING,
 					 * requirement missing
 					 */
-					pimpact->action = UNMET_REQ;
+					pimpact->action = ACTION_UNMET_REQ;
 
 					met_reqs = 0;
 				}

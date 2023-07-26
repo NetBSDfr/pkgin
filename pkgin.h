@@ -62,13 +62,6 @@
 #define LOCAL_SUMMARY 0
 #define REMOTE_SUMMARY 1
 
-#define DONOTHING -1
-#define TOINSTALL 0
-#define TOUPGRADE 1
-#define TOREMOVE 2
-#define UNMET_REQ 3
-#define TOREFRESH 4
-
 #define KEEP 1
 #define UNKEEP 0
 
@@ -130,6 +123,18 @@
 #define pkgin_nanotime	0
 #endif
 
+/*
+ * Action to perform.
+ */
+typedef enum action_t {
+	ACTION_NONE,
+	ACTION_INSTALL,
+	ACTION_UPGRADE,
+	ACTION_REFRESH,
+	ACTION_REMOVE,
+	ACTION_UNMET_REQ,
+} action_t;
+
 /**
  * \struct Sumfile
  * \brief Remote pkg_summary information
@@ -170,9 +175,9 @@ typedef struct Pkglist {
 	char *comment; /*!< package list comment */
 
 	char *pattern;		/* DEPENDS pattern */
+	action_t action;	/* Action to perform */
 	int skip;		/* Already processed via a different path */
 	int	keep; /*!< autoremovable package ? */
-	int	action; /*!< TOINSTALL or TOUPGRADE */
 
 	SLIST_ENTRY(Pkglist) next;
 } Pkglist;
