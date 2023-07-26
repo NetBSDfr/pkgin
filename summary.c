@@ -657,7 +657,7 @@ insert_local_required_by(void)
 }
 
 static void
-update_localdb()
+update_localdb(int verbose)
 {
 	FILE *pinfo;
 	struct stat st;
@@ -681,11 +681,15 @@ update_localdb()
 	 */
 	pkgindb_doquery(DELETE_LOCAL, NULL, NULL);
 
-	printf(MSG_READING_LOCAL_SUMMARY);
+	if (verbose)
+		printf(MSG_READING_LOCAL_SUMMARY);
+
 	if ((pinfo = popen(PKG_INSTALL_DIR "/pkg_info -Xa", "r")) == NULL)
 		errx(EXIT_FAILURE, "Couldn't run pkg_info");
 
-	printf(MSG_PROCESSING_LOCAL_SUMMARY);
+	if (verbose)
+		printf(MSG_PROCESSING_LOCAL_SUMMARY);
+
 	insert_local_summary(pinfo);
 	insert_local_required_by();
 	pkg_db_update_mtime(&st);
@@ -791,7 +795,7 @@ update_db(int which, int verbose)
 		return EXIT_FAILURE;
 
 	/* always check for LOCAL_SUMMARY updates */
-	update_localdb();
+	update_localdb(verbose);
 
 	if (which == REMOTE_SUMMARY)
 		update_remotedb(verbose);

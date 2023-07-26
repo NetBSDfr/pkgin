@@ -163,10 +163,11 @@ main(int argc, char *argv[])
 
 	/*
 	 * Check for updates to the local pkgdb and refresh the local database
-	 * if necessary.  Ignore any returned errors so that unprivileged users
+	 * (quietly to avoid unexpected stdout for e.g. "pkgin export") if
+	 * necessary.  Ignore any returned errors so that unprivileged users
 	 * can perform query operations.
 	 */
-	(void) update_db(LOCAL_SUMMARY, 1);
+	(void) update_db(LOCAL_SUMMARY, 0);
 
 	/* split PKG_REPOS env variable and record them */
 	split_repos();
