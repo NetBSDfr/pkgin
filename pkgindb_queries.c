@@ -34,7 +34,7 @@
  * runs quickly.
  */
 const char CHECK_DB_LATEST[] =
-	"SELECT PKG_ID FROM REMOTE_SUPERSEDES LIMIT 1;";
+	"SELECT PATTERN FROM LOCAL_DEPS LIMIT 1;";
 
 const char DROP_LOCAL_TABLES[] =
 	"DROP TABLE IF EXISTS LOCAL_DEPS;"
@@ -69,14 +69,18 @@ const char DELETE_REMOTE[] =
 const char DELETE_REMOTE_PKG_REPO[] =
 	"DELETE FROM REMOTE_PKG WHERE REPOSITORY = %Q;";
 
+/*
+ * The "AS L" and "AS R" in these queries are deliberate so that
+ * record_depend() known which to handle based on the column name.
+ */
 const char LOCAL_DIRECT_DEPS[] =
-	"SELECT LOCAL_DEPS_DEWEY "
+	"SELECT PATTERN AS L "
 	"  FROM LOCAL_DEPS, LOCAL_PKG "
 	" WHERE LOCAL_PKG.FULLPKGNAME = %Q "
 	"   AND LOCAL_DEPS.PKG_ID = LOCAL_PKG.PKG_ID;";
 
 const char REMOTE_DIRECT_DEPS[] =
-	"SELECT REMOTE_DEPS_DEWEY "
+	"SELECT PATTERN AS R "
 	"  FROM REMOTE_DEPS, REMOTE_PKG "
 	" WHERE REMOTE_PKG.FULLPKGNAME = %Q "
 	"   AND REMOTE_DEPS.PKG_ID = REMOTE_PKG.PKG_ID;";
@@ -195,7 +199,7 @@ const char INSERT_SINGLE_VALUE[] =
 	"INSERT INTO %s (PKG_ID, %s_PKGNAME) VALUES (%d,%Q);";
 
 const char INSERT_DEPENDS_VALUES[] =
-	"INSERT INTO %s (PKG_ID, %s_DEWEY) VALUES (%d,%Q);";
+	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d,%Q);";
 
 const char INSERT_SUPERSEDES[] =
 	"INSERT INTO REMOTE_SUPERSEDES (PKG_ID, PATTERN) VALUES (%d, %Q);";

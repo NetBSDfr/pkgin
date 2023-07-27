@@ -65,8 +65,8 @@ record_depend(void *param, int argc, char **argv, char **colname)
 
 	/*
 	 * Check the column name to see if we're looking for local or remote
-	 * packages.  Will be either "LOCAL_DEPS_DEWEY" or "REMOTE_DEPS_DEWEY",
-	 * so we can just look for the first character for optimal processing.
+	 * packages.  The queries use "AS L" and "AS R" so we can just look at
+	 * the first character for optimal processing.
 	 *
 	 * If we found the same package already via a different DEPENDS match,
 	 * then this entry does not need to be processed.

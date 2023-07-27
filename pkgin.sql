@@ -59,12 +59,12 @@ CREATE TABLE [LOCAL_REQUIRED_BY] (
 CREATE TABLE [LOCAL_DEPS] (
 	[LOCAL_DEPS_ID] INTEGER PRIMARY KEY AUTOINCREMENT,
 	[PKG_ID] INTEGER,
-	[LOCAL_DEPS_DEWEY] TEXT
+	[PATTERN] TEXT
 );
 CREATE TABLE [REMOTE_DEPS] (
 	[REMOTE_DEPS_ID] INTEGER PRIMARY KEY AUTOINCREMENT,
 	[PKG_ID] INTEGER,
-	[REMOTE_DEPS_DEWEY] TEXT
+	[PATTERN] TEXT
 );
 
 CREATE TABLE [LOCAL_CONFLICTS] (
@@ -131,6 +131,16 @@ CREATE INDEX [idx_local_pkg_name] ON [LOCAL_PKG] (
 	[PKGNAME] ASC
 );
 
+CREATE INDEX [idx_local_deps_pkg_id_pattern] ON [LOCAL_DEPS] (
+	[PKG_ID] ASC,
+	[PATTERN] ASC
+);
+
+CREATE INDEX [idx_remote_deps_pkg_id_pattern] ON [REMOTE_DEPS] (
+	[PKG_ID] ASC,
+	[PATTERN] ASC
+);
+
 CREATE INDEX [idx_local_conflicts_pkg_id_local_pkg_name] ON [LOCAL_CONFLICTS] (
 	[PKG_ID] ASC,
 	[LOCAL_CONFLICTS_PKGNAME] ASC
@@ -156,4 +166,19 @@ CREATE INDEX [idx_local_provides_pkg_id_local_pkg_name] ON [LOCAL_PROVIDES] (
 CREATE INDEX [idx_remote_provides_pkg_id_remote_pkg_name] ON [REMOTE_PROVIDES] (
 	[PKG_ID] ASC,
 	[REMOTE_PROVIDES_PKGNAME] ASC
+);
+
+CREATE INDEX [idx_local_required_by_pkg_id_pkgname] ON [LOCAL_REQUIRED_BY] (
+	[LOCAL_REQUIRED_BY_ID] ASC,
+	[PKGNAME] ASC
+);
+
+CREATE INDEX [idx_local_required_by_pkg_id_required_by] ON [LOCAL_REQUIRED_BY] (
+	[LOCAL_REQUIRED_BY_ID] ASC,
+	[REQUIRED_BY] ASC
+);
+
+CREATE INDEX [idx_remote_supersedes_pkg_id_pattern] ON [REMOTE_SUPERSEDES] (
+	[PKG_ID] ASC,
+	[PATTERN] ASC
 );

@@ -310,8 +310,7 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 
 	/* DEPENDS */
 	if (strncmp(line, "DEPENDS=", 8) == 0) {
-		pkgindb_dovaquery(INSERT_DEPENDS_VALUES, sum.deps, sum.deps,
-		    pkgid, val);
+		pkgindb_dovaquery(INSERT_DEPENDS_VALUES, sum.deps, pkgid, val);
 		return;
 	}
 
