@@ -39,6 +39,7 @@ static const struct Summary {
 	const char	*tbl_name;
 	const char	*deps;
 	const char	*conflicts;
+	const char	*supersedes;
 	const char	*requires;
 	const char	*provides;
 	const char	*end;
@@ -48,6 +49,7 @@ static const struct Summary {
 		"LOCAL_PKG",
 		"LOCAL_DEPS",
 		"LOCAL_CONFLICTS",
+		"LOCAL_SUPERSEDES",	/* Does not actually exist, unused. */
 		"LOCAL_REQUIRES",
 		"LOCAL_PROVIDES",
 		NULL
@@ -57,6 +59,7 @@ static const struct Summary {
 		"REMOTE_PKG",
 		"REMOTE_DEPS",
 		"REMOTE_CONFLICTS",
+		"REMOTE_SUPERSEDES",
 		"REMOTE_REQUIRES",
 		"REMOTE_PROVIDES",
 		NULL
@@ -296,6 +299,12 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	if (strncmp(line, "CONFLICTS=", 10) == 0) {
 		pkgindb_dovaquery(INSERT_SINGLE_VALUE, sum.conflicts,
 		    sum.conflicts, pkgid, val);
+		return;
+	}
+
+	/* SUPERSEDES */
+	if (strncmp(line, "SUPERSEDES=", 11) == 0) {
+		pkgindb_dovaquery(INSERT_SUPERSEDES, pkgid, val);
 		return;
 	}
 

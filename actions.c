@@ -241,6 +241,45 @@ close_pi_log(int output)
 	warn_count = err_count = said = 0;
 }
 
+int
+action_is_install(action_t action)
+{
+	switch (action) {
+	case ACTION_INSTALL:
+	case ACTION_UPGRADE:
+	case ACTION_REFRESH:
+		return 1;
+		break;
+	default:
+		return 0;
+		break;
+	}
+}
+
+int
+action_is_remove(action_t action)
+{
+	switch (action) {
+	case ACTION_REMOVE:
+	case ACTION_SUPERSEDED:
+		return 1;
+		break;
+	default:
+		return 0;
+		break;
+	}
+}
+
+/*
+ * Sometimes code paths use an indirect pointer via ipkg to a Pkglist entry and
+ * others go direct.
+ */
+static Pkglist *
+get_pkglist_ptr(Pkglist *p)
+{
+	return (p->ipkg) ? p->ipkg : p;
+}
+
 /*
  * Execute "pkg_admin rebuild-tree" to rebuild +REQUIRED_BY files after any
  * operation that changes the installed packages.
@@ -271,12 +310,31 @@ rebuild_required_by(void)
 void
 do_pkg_remove(Plisthead *removehead)
 {
-	Pkglist *p;
+	Pkglist *pkg, *p;
+	int perform = 0;
+
+	/*
+	 * Avoid printing logfile stats if there are no packages to remove.
+	 */
+	SLIST_FOREACH(pkg, removehead, next) {
+		p = get_pkglist_ptr(pkg);
+		if (action_is_remove(p->action)) {
+			perform = 1;
+			break;
+		}
+	}
+
+	if (!perform)
+		return;
 
 	/* send pkg_delete stderr to logfile */
 	open_pi_log();
 
-	SLIST_FOREACH(p, removehead, next) {
+	SLIST_FOREACH(pkg, removehead, next) {
+		p = get_pkglist_ptr(pkg);
+		if (!action_is_remove(p->action))
+			continue;
+
 		log_tag(MSG_REMOVING, p->lpkg->full);
 		if (fexec(pkg_delete, verb_flag("-f"), p->lpkg->full, NULL)
 		    != EXIT_SUCCESS)
@@ -314,6 +372,9 @@ do_pkg_install(Plisthead *installhead)
 	open_pi_log();
 
 	SLIST_FOREACH(p, installhead, next) {
+		if (!action_is_install(p->ipkg->action))
+			continue;
+
 		/* file not available in the repository */
 		if (p->ipkg->file_size == -1)
 			continue;
@@ -415,19 +476,23 @@ action_list(char *flatlist, char *str)
 static char **
 get_sorted_list(Plisthead *pkgs)
 {
-	Pkglist *p;
+	Pkglist *pkg, *p;
 	char **names;
 	int i = 0;
 
 	/* Get number of entries for names allocation */
-	SLIST_FOREACH(p, pkgs, next)
+	SLIST_FOREACH(pkg, pkgs, next)
 		i++;
 
 	names = xmalloc((i + 1) * sizeof(char *));
 
 	i = 0;
-	SLIST_FOREACH(p, pkgs, next) {
-		names[i++] = p->ipkg->rpkg->full;
+	SLIST_FOREACH(pkg, pkgs, next) {
+		p = get_pkglist_ptr(pkg);
+		if (p->rpkg)
+			names[i++] = p->rpkg->full;
+		else
+			names[i++] = p->lpkg->full;
 	}
 	names[i] = NULL;
 
@@ -439,22 +504,28 @@ get_sorted_list(Plisthead *pkgs)
 static char **
 get_sorted_list_by_action(Plisthead *pkgs, action_t action)
 {
-	Pkglist *p;
+	Pkglist *pkg, *p;
 	char **names;
 	int i = 0;
 
 	/* Get number of entries for names allocation */
-	SLIST_FOREACH(p, pkgs, next) {
-		if (p->ipkg->action == action)
+	SLIST_FOREACH(pkg, pkgs, next) {
+		p = get_pkglist_ptr(pkg);
+		if (p->action == action)
 			i++;
 	}
 
 	names = xmalloc((i + 1) * sizeof(char *));
 
 	i = 0;
-	SLIST_FOREACH(p, pkgs, next) {
-		if (p->ipkg->action == action)
-			names[i++] = p->ipkg->rpkg->full;
+	SLIST_FOREACH(pkg, pkgs, next) {
+		p = get_pkglist_ptr(pkg);
+		if (p->action == action) {
+			if (p->rpkg)
+				names[i++] = p->rpkg->full;
+			else
+				names[i++] = p->lpkg->full;
+		}
 	}
 	names[i] = NULL;
 
@@ -471,6 +542,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0;
 	int		refreshnum = 0, downloadnum = 0;
+	int		removenum = 0, supersedenum = 0;
 	int		argn, rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
@@ -483,6 +555,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	char		**names;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
+	char		*toremove = NULL, *tosupersede = NULL;
 	char		*unmet_reqs = NULL;
 	char		pkgpath[BUFSIZ], pkgrepo[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
@@ -517,17 +590,38 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 	conflicts = rec_pkglist(LOCAL_CONFLICTS);
 
-	/* browse impact tree */
+	/*
+	 * Set up counters.
+	 */
 	SLIST_FOREACH(p, impacthead, next) {
+		switch (p->action) {
+		case ACTION_INSTALL:
+			installnum++;
+			break;
+		case ACTION_UPGRADE:
+			upgradenum++;
+			break;
+		case ACTION_REFRESH:
+			refreshnum++;
+			break;
+		case ACTION_REMOVE:
+			removenum++;
+			break;
+		case ACTION_SUPERSEDED:
+			supersedenum++;
+			break;
+		default:
+			break;
+		}
+	}
 
-		if (p->action == ACTION_NONE)
-			continue;
-
-		/*
-		 * Packages being removed need no special handling, account
-		 * for them and move to the next package.
-		 */
-		if (p->action == ACTION_REMOVE)
+	/*
+	 * Look through impact list for packages that are being installed from
+	 * a remote repository, verify they have no conflicts (XXX this should
+	 * be done earlier in impact), and set up for downloading.
+	 */
+	SLIST_FOREACH(p, impacthead, next) {
+		if (!action_is_install(p->action))
 			continue;
 
 		/* check for conflicts */
@@ -593,21 +687,6 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			size_pkg += p->rpkg->size_pkg - p->lpkg->size_pkg;
 		else
 			size_pkg += p->rpkg->size_pkg;
-
-		switch (p->action) {
-		case ACTION_REFRESH:
-			refreshnum++;
-			break;
-		case ACTION_UPGRADE:
-			upgradenum++;
-			break;
-		case ACTION_INSTALL:
-			installnum++;
-			break;
-		default:
-			/* XXX assert? */
-			break;
-		}
 	}
 
 	(void)humanize_number(h_fsize, H_BUF, file_size, "",
@@ -670,6 +749,18 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	}
 	free(names);
 
+	names = get_sorted_list_by_action(installhead, ACTION_REMOVE);
+	for (argn = 0; names[argn] != NULL; argn++) {
+		toremove = action_list(toremove, names[argn]);
+	}
+	free(names);
+
+	names = get_sorted_list_by_action(installhead, ACTION_SUPERSEDED);
+	for (argn = 0; names[argn] != NULL; argn++) {
+		tosupersede = action_list(tosupersede, names[argn]);
+	}
+	free(names);
+
 	printf("\n");
 
 	if (do_inst) {
@@ -685,8 +776,17 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			printf("%d package%s to install:\n%s\n\n", installnum,
 			    (installnum == 1) ? "" : "s", toinstall);
 
-		printf("%d to refresh, %d to upgrade, %d to install\n",
-		    refreshnum, upgradenum, installnum);
+		if (removenum > 0)
+			printf("%d package%s to remove:\n%s\n\n", removenum,
+			    (removenum == 1) ? "" : "s", toremove);
+
+		if (supersedenum > 0)
+			printf("%d package%s to remove (superseded):\n%s\n\n",
+			    supersedenum, (supersedenum == 1) ? "" : "s",
+			    tosupersede);
+
+		printf("%d to remove, %d to refresh, %d to upgrade, %d to install\n",
+		    removenum + supersedenum, refreshnum, upgradenum, installnum);
 		printf("%s to download, %s to install\n", h_fsize, h_psize);
 	} else {
 		printf("%d package%s to download:\n%s\n", downloadnum,
@@ -714,21 +814,23 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			goto installend;
 
 		SLIST_FOREACH(p, downloadhead, next) {
+			if (!action_is_install(p->ipkg->action))
+				continue;
+
 			if (p->ipkg->file_size != -1)
 				continue;
 
 			switch (p->ipkg->action) {
-			case ACTION_REFRESH:
-				refreshnum--;
+			case ACTION_INSTALL:
+				installnum--;
 				break;
 			case ACTION_UPGRADE:
 				upgradenum--;
 				break;
-			case ACTION_INSTALL:
-				installnum--;
+			case ACTION_REFRESH:
+				refreshnum--;
 				break;
 			default:
-				/* XXX assert? */
 				break;
 			}
 		}
@@ -736,6 +838,12 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 	if (refreshnum + upgradenum + installnum == 0)
 		goto installend;
+
+	/*
+	 * Perform any removals first.  Any superseded packages are highly
+	 * likely to conflict with incoming newer packages.
+	 */
+	do_pkg_remove(installhead);
 
 	/*
 	 * At this point we're performing installs.
@@ -810,6 +918,13 @@ pkgin_remove(char **pkgargs)
 		p = malloc_pkglist();
 		p->lpkg = lpkg;
 		SLIST_INSERT_HEAD(rmhead, p, next);
+	}
+
+	/*
+	 * Add ACTION_REMOVE to all entries.
+	 */
+	SLIST_FOREACH(p, rmhead, next) {
+		p->action = ACTION_REMOVE;
 	}
 
 	/* order remove list */

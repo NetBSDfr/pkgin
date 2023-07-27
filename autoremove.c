@@ -127,6 +127,7 @@ pkgin_autoremove(void)
 		 * the list.
 		 */
 		premove = malloc_pkglist();
+		premove->action = ACTION_REMOVE;
 		premove->lpkg = find_local_pkg_match(pkglist->full);
 		SLIST_INSERT_HEAD(removehead, premove, next);
 		removenb++;

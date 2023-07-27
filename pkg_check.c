@@ -48,6 +48,13 @@ pkg_met_reqs(Plisthead *impacthead)
 
 	/* first, parse impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
+		/*
+		 * Skip entries that only operate on local packages (e.g.
+		 * ACTION_SUPERSEDED).
+		 */
+		if (pimpact->rpkg == NULL)
+			continue;
+
 		/* retreive requires list for package */
 		if ((requireshead = rec_pkglist(GET_REQUIRES_QUERY,
 					pimpact->rpkg->full)) == NULL)

@@ -27,6 +27,7 @@
  * SUCH DAMAGE.
  */
 
+#include <sqlite3.h>
 #include "pkgin.h"
 
 /*
@@ -96,6 +97,82 @@ calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 
 	TRACE("  = %s is up-to-date\n", lpkg->full);
 	return ACTION_NONE;
+}
+
+/*
+ * Look for local packages that are affected by SUPERSEDES.
+ */
+static int
+record_supersedes(void *param, int argc, char **argv, char **colname)
+{
+	Plisthead *supersedes = (Plisthead *)param;
+	Pkglist *p, *lpkg;
+
+	if (argv == NULL)
+		return PDB_ERR;
+
+	/*
+	 * If we've already searched for this exact SUPERSEDES pattern then
+	 * return early and do not add to supersedes.
+	 */
+	SLIST_FOREACH(p, supersedes, next) {
+		if (strcmp(p->pattern, argv[0]) == 0)
+			return PDB_OK;
+	}
+
+	/*
+	 * Find matching entry in the local package list.  If there are no
+	 * matches we're done.
+	 */
+	if ((lpkg = find_local_pkg_match(argv[0])) == NULL)
+		return PDB_OK;
+
+	/*
+	 * Look to see if we already found this package via an different match.
+	 */
+	SLIST_FOREACH(p, supersedes, next) {
+		if (strcmp(lpkg->full, p->lpkg->full))
+			return PDB_OK;
+	}
+
+	/*
+	 * An entry we've matched and haven't seen before, add it.
+	 */
+	p = malloc_pkglist();
+	p->pattern = xstrdup(argv[0]);
+	p->lpkg = lpkg;
+	SLIST_INSERT_HEAD(supersedes, p, next);
+
+	return PDB_OK;
+}
+
+Plisthead *
+find_supersedes(Plisthead *impacthead)
+{
+	Plisthead *supersedes;
+	Pkglist *pkg;
+	char query[BUFSIZ];
+
+	supersedes = init_head();
+
+	/*
+	 * Only consider packages that are going to be installed.
+	 */
+	SLIST_FOREACH(pkg, impacthead, next) {
+		if (!action_is_install(pkg->action))
+			continue;
+
+		sqlite3_snprintf(BUFSIZ, query, GET_SUPERSEDES_QUERY,
+		    pkg->rpkg->full);
+		pkgindb_doquery(query, record_supersedes, supersedes);
+	}
+
+	if (SLIST_EMPTY(supersedes)) {
+		free_pkglist(&supersedes);
+		return NULL;
+	}
+
+	return supersedes;
 }
 
 /*
@@ -197,14 +274,15 @@ finish_deps_spinner(int istty)
 static Plisthead *
 pkg_impact_upgrade(void)
 {
-	Plisthead *impacthead, *depshead;
+	Plisthead *deps, *impacthead, *supersedes;
 	Pkglist *dpkg, *lpkg, *p;
 	int istty;
 
 	istty = isatty(fileno(stdout));
 
+	deps = init_head();
 	impacthead = init_head();
-	depshead = init_head();
+	supersedes = init_head();
 
 	SLIST_FOREACH(lpkg, &l_plisthead, next) {
 		if (local_pkg_in_impact(impacthead, lpkg->full))
@@ -242,7 +320,7 @@ pkg_impact_upgrade(void)
 		 * dependencies that need to be installed.
 		 */
 		update_deps_spinner(istty);
-		get_depends_recursive(p->rpkg->full, depshead, DEPENDS_REMOTE);
+		get_depends_recursive(p->rpkg->full, deps, DEPENDS_REMOTE);
 	}
 
 	/*
@@ -252,7 +330,7 @@ pkg_impact_upgrade(void)
 	 * its correct dependency depth, update it if we found a deeper path so
 	 * that install ordering is correct.
 	 */
-	SLIST_FOREACH(dpkg, depshead, next) {
+	SLIST_FOREACH(dpkg, deps, next) {
 		if ((p = pkg_in_impact(impacthead, dpkg->rpkg->full))) {
 			if (dpkg->level > p->level)
 				p->level = dpkg->level;
@@ -260,7 +338,23 @@ pkg_impact_upgrade(void)
 		}
 		deps_impact(impacthead, dpkg, 1);
 	}
-	free_pkglist(&depshead);
+	free_pkglist(&deps);
+
+	/*
+	 * Get SUPERSEDES entries matching local packages.  For each affected
+	 * package, mark as superseded which will cause it to be removed.
+	 */
+	supersedes = find_supersedes(impacthead);
+	if (supersedes) {
+		SLIST_FOREACH(lpkg, supersedes, next) {
+			/*
+			 * find_supersedes() ensures lpkg will be set and this
+			 * will return a valid entry.
+			 */
+			p = local_pkg_in_impact(impacthead, lpkg->lpkg->full);
+			p->action = ACTION_SUPERSEDED;
+		}
+	}
 
 	return impacthead;
 }

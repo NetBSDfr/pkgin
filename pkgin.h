@@ -132,6 +132,7 @@ typedef enum action_t {
 	ACTION_UPGRADE,
 	ACTION_REFRESH,
 	ACTION_REMOVE,
+	ACTION_SUPERSEDED,
 	ACTION_UNMET_REQ,
 } action_t;
 
@@ -251,6 +252,8 @@ void		show_category(char *);
 int		show_pkg_category(char *);
 void		show_all_categories(void);
 /* actions.c */
+int		action_is_install(action_t);
+int		action_is_remove(action_t);
 void		do_pkg_remove(Plisthead *);
 int		pkgin_remove(char **);
 int		pkgin_install(char **, int, int);

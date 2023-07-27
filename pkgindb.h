@@ -45,6 +45,8 @@ extern const char LOCAL_REVERSE_DEPS[];
 extern const char REMOTE_REVERSE_DEPS[];
 extern const char LOCAL_CONFLICTS[];
 extern const char GET_CONFLICT_QUERY[];
+extern const char INSERT_SUPERSEDES[];
+extern const char GET_SUPERSEDES_QUERY[];
 extern const char GET_REQUIRES_QUERY[];
 extern const char GET_PROVIDES_QUERY[];
 extern const char LOCAL_PROVIDES[];

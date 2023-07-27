@@ -129,17 +129,16 @@ order_install(Plisthead *impacthead)
 
 	installhead = init_head();
 
+	/*
+	 * Perform the first loop only considering packages that are being
+	 * installed.
+	 */
 	for (i = 0; i <= maxlevel; i++) {
 		SLIST_FOREACH(p, impacthead, next) {
 			if (p->level != i)
 				continue;
 
-			/*
-			 * XXX: This is incorrect, removals need to be handled
-			 * properly during upgrades, but is necessary for now
-			 * to avoid issues with pkgurl being set to NULL.
-			 */
-			if (p->action == ACTION_REMOVE)
+			if (!action_is_install(p->action))
 				continue;
 
 			pkg = malloc_pkglist();
@@ -166,6 +165,22 @@ order_install(Plisthead *impacthead)
 		if (savepi != NULL) {
 			SLIST_INSERT_HEAD(installhead, savepi, next);
 			savepi = NULL;
+		}
+	}
+
+	/*
+	 * Now handle removals.  These must be performed first in case there
+	 * are file conflicts.
+	 */
+	for (i = 0; i <= maxlevel; i++) {
+		SLIST_FOREACH(p, impacthead, next) {
+			if (p->level != i)
+				continue;
+			if (!action_is_remove(p->action))
+				continue;
+			pkg = malloc_pkglist();
+			pkg->ipkg = p;
+			SLIST_INSERT_HEAD(installhead, pkg, next);
 		}
 	}
 
