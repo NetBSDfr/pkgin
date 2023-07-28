@@ -34,8 +34,6 @@
 #include "pkgindb_create.h"
 
 extern const char CHECK_DB_LATEST[];
-extern const char DROP_LOCAL_TABLES[];
-extern const char DROP_REMOTE_TABLES[];
 extern const char DELETE_LOCAL[];
 extern const char DELETE_REMOTE[];
 extern const char DELETE_REMOTE_PKG_REPO[];
@@ -52,7 +50,6 @@ extern const char GET_PROVIDES_QUERY[];
 extern const char LOCAL_PROVIDES[];
 extern const char KEEP_PKG[];
 extern const char UNKEEP_PKG[];
-extern const char INSERT_REMOTE_PKG[];
 extern const char LOCAL_PKGS_QUERY_ASC[];
 extern const char REMOTE_PKGS_QUERY_ASC[];
 extern const char LOCAL_PKGS_QUERY_DESC[];
