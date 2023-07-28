@@ -56,7 +56,7 @@ pkg_met_reqs(Plisthead *impacthead)
 			continue;
 
 		/* retreive requires list for package */
-		if ((requireshead = rec_pkglist(GET_REQUIRES_QUERY,
+		if ((requireshead = rec_pkglist(REMOTE_REQUIRES,
 					pimpact->rpkg->full)) == NULL)
 			/* empty requires list (very unlikely) */
 			continue;
@@ -117,7 +117,7 @@ pkg_met_reqs(Plisthead *impacthead)
 				/* re-parse impact list to retreive PROVIDES */
 				SLIST_FOREACH(impactprov, impacthead, next) {
 					if ((r_provideshead =
-						rec_pkglist(GET_PROVIDES_QUERY,
+						rec_pkglist(REMOTE_PROVIDES,
 						impactprov->full)) == NULL)
 						continue;
 
@@ -196,7 +196,7 @@ pkg_has_conflicts(Pkglist *pimpact, Plistnumbered *conflictshead)
 
 			/* got a conflict, retrieve conflicting local package */
 			sqlite3_snprintf(BUFSIZ, query,
-			    GET_CONFLICT_QUERY, conflicts->full);
+			    REMOTE_CONFLICTS, conflicts->full);
 
 			conflict_pkg = xmalloc(BUFSIZ * sizeof(char));
 			if (pkgindb_doquery(query,
@@ -226,7 +226,7 @@ show_prov_req(const char *query, const char *pkgname)
 	if ((fullpkgname = unique_pkg(pkgname, REMOTE_PKG)) == NULL)
 		errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL, pkgname);
 
-	say = ( query == GET_PROVIDES_QUERY ) ? out[0] : out[1];
+	say = (query == REMOTE_PROVIDES) ? out[0] : out[1];
 
 	if ((plisthead = rec_pkglist(query, fullpkgname)) == NULL) {
 		printf(MSG_NO_PROV_REQ, say, fullpkgname);

@@ -286,11 +286,11 @@ main(int argc, char *argv[])
 		break;
 	case PKG_SHPROV_CMD: /* show what a package provides */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_prov_req(GET_PROVIDES_QUERY, argv[1]);
+		show_prov_req(REMOTE_PROVIDES, argv[1]);
 		break;
 	case PKG_SHREQ_CMD: /* show what a package requires */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);
-		show_prov_req(GET_REQUIRES_QUERY, argv[1]);
+		show_prov_req(REMOTE_REQUIRES, argv[1]);
 		break;
 	case PKG_SHPKGCONT_CMD: /* show remote package content */
 		missing_param(argc, 2, MSG_MISSING_PKGNAME);

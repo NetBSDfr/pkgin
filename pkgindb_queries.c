@@ -34,81 +34,82 @@
  * runs quickly.
  */
 const char CHECK_DB_LATEST[] =
-	"SELECT PATTERN FROM LOCAL_DEPS LIMIT 1;";
+	"SELECT PATTERN FROM LOCAL_DEPENDS LIMIT 1;";
 
 const char DELETE_LOCAL[] =
-	"DELETE FROM LOCAL_DEPS;"
 	"DELETE FROM LOCAL_PKG;"
 	"DELETE FROM LOCAL_CONFLICTS;"
+	"DELETE FROM LOCAL_DEPENDS;"
+	"DELETE FROM LOCAL_PROVIDES;"
 	"DELETE FROM LOCAL_REQUIRES;"
-	"DELETE FROM LOCAL_REQUIRED_BY;"
-	"DELETE FROM LOCAL_PROVIDES;";
+	"DELETE FROM LOCAL_REQUIRED_BY;";
 
 const char DELETE_REMOTE[] =
-	"DELETE FROM %s WHERE %s_ID IN "
-	"(SELECT %s.%s_ID FROM REMOTE_PKG, %s "
-	"WHERE REMOTE_PKG.REPOSITORY GLOB %Q || '*' AND "
-	"REMOTE_PKG.PKG_ID = %s.PKG_ID);";
+	"DELETE FROM %s "
+	" WHERE pkg_id IN "
+	"    (SELECT pkg_id "
+	"       FROM remote_pkg "
+	"      WHERE repository GLOB %Q || '*' "
+	"    );";
 
 const char DELETE_REMOTE_PKG_REPO[] =
 	"DELETE FROM REMOTE_PKG WHERE REPOSITORY = %Q;";
 
 /*
- * The "AS L" and "AS R" in these queries are deliberate so that
+ * The "AS l" and "AS r" in these queries are deliberate so that
  * record_depend() known which to handle based on the column name.
  */
-const char LOCAL_DIRECT_DEPS[] =
-	"SELECT PATTERN AS L "
-	"  FROM LOCAL_DEPS, LOCAL_PKG "
-	" WHERE LOCAL_PKG.FULLPKGNAME = %Q "
-	"   AND LOCAL_DEPS.PKG_ID = LOCAL_PKG.PKG_ID;";
+const char LOCAL_DIRECT_DEPENDS[] =
+	"SELECT pattern AS l "
+	"  FROM local_depends, local_pkg "
+	" WHERE fullpkgname = %Q "
+	"   AND local_depends.pkg_id = local_pkg.pkg_id;";
 
-const char REMOTE_DIRECT_DEPS[] =
-	"SELECT PATTERN AS R "
-	"  FROM REMOTE_DEPS, REMOTE_PKG "
-	" WHERE REMOTE_PKG.FULLPKGNAME = %Q "
-	"   AND REMOTE_DEPS.PKG_ID = REMOTE_PKG.PKG_ID;";
+const char REMOTE_DIRECT_DEPENDS[] =
+	"SELECT pattern AS r "
+	"  FROM remote_depends, remote_pkg "
+	" WHERE fullpkgname = %Q "
+	"   AND remote_depends.pkg_id = remote_pkg.pkg_id;";
 
-const char LOCAL_REVERSE_DEPS[] =
-	"SELECT LOCAL_REQUIRED_BY.REQUIRED_BY, LOCAL_REQUIRED_BY.PKGNAME, "
-	"       LOCAL_PKG.PKG_KEEP "
-	"  FROM LOCAL_PKG "
-	"  LEFT JOIN LOCAL_REQUIRED_BY "
-	"    ON LOCAL_PKG.FULLPKGNAME = LOCAL_REQUIRED_BY.REQUIRED_BY "
-	" WHERE LOCAL_REQUIRED_BY.PKGNAME = %Q;";
+const char LOCAL_REVERSE_DEPENDS[] =
+	"SELECT required_by, local_required_by.pkgname, local_pkg.pkg_keep "
+	"  FROM local_pkg "
+	"  LEFT JOIN local_required_by "
+	"    ON local_pkg.fullpkgname = local_required_by.required_by "
+	" WHERE local_required_by.pkgname = %Q;";
 
 const char LOCAL_CONFLICTS[] =
-	"SELECT LOCAL_CONFLICTS_PKGNAME FROM LOCAL_CONFLICTS;";
-
-const char GET_CONFLICT_QUERY[] =
-	"SELECT LOCAL_PKG.FULLPKGNAME FROM LOCAL_CONFLICTS,LOCAL_PKG "
-	"WHERE LOCAL_CONFLICTS.LOCAL_CONFLICTS_PKGNAME = %Q "
-	"AND LOCAL_CONFLICTS.PKG_ID = LOCAL_PKG.PKG_ID;";
-
-const char GET_SUPERSEDES_QUERY[] =
-	"SELECT PATTERN "
-	"  FROM REMOTE_SUPERSEDES "
-	"  LEFT JOIN REMOTE_PKG "
-	"    ON REMOTE_SUPERSEDES.PKG_ID = REMOTE_PKG.PKG_ID "
-	" WHERE FULLPKGNAME = %Q;";
-
-/* naming dirt, this is not really a PKGNAME, but this shortcut permits
- * the use of a generic function in summary.c (child_table)
- */
-const char GET_REQUIRES_QUERY[] =
-	"SELECT REMOTE_REQUIRES.REMOTE_REQUIRES_PKGNAME "
-	"FROM REMOTE_REQUIRES,REMOTE_PKG "
-	"WHERE REMOTE_PKG.FULLPKGNAME = %Q "
-	"AND REMOTE_REQUIRES.PKG_ID = REMOTE_PKG.PKG_ID;";
-
-const char GET_PROVIDES_QUERY[] =
-	"SELECT REMOTE_PROVIDES.REMOTE_PROVIDES_PKGNAME "
-	"FROM REMOTE_PROVIDES,REMOTE_PKG "
-	"WHERE REMOTE_PKG.FULLPKGNAME = %Q "
-	"AND REMOTE_PROVIDES.PKG_ID = REMOTE_PKG.PKG_ID;";
+	"SELECT pattern "
+	"  FROM local_conflicts;";
 
 const char LOCAL_PROVIDES[] =
-	"SELECT LOCAL_PROVIDES_PKGNAME FROM LOCAL_PROVIDES;";
+	"SELECT filename "
+	"  FROM local_provides;";
+
+const char REMOTE_CONFLICTS[] =
+	"SELECT local_pkg.fullpkgname "
+	"  FROM local_conflicts, local_pkg "
+	" WHERE local_conflicts.pattern = %Q "
+	"   AND local_conflicts.pkg_id = local_pkg.pkg_id;";
+
+const char REMOTE_PROVIDES[] =
+	"SELECT filename "
+	"  FROM remote_provides, remote_pkg "
+	" WHERE fullpkgname = %Q "
+	"   AND remote_provides.pkg_id = remote_pkg.pkg_id;";
+
+const char REMOTE_REQUIRES[] =
+	"SELECT filename "
+	"  FROM remote_requires, remote_pkg "
+	" WHERE fullpkgname = %Q "
+	"   AND remote_requires.pkg_id = remote_pkg.pkg_id;";
+
+const char REMOTE_SUPERSEDES[] =
+	"SELECT pattern "
+	"  FROM remote_supersedes "
+	"  LEFT JOIN remote_pkg "
+	"    ON remote_supersedes.pkg_id = remote_pkg.pkg_id "
+	" WHERE fullpkgname = %Q;";
 
 const char KEEP_PKG[] =
 	"UPDATE LOCAL_PKG SET PKG_KEEP = 1 WHERE PKGNAME = %Q;";
@@ -172,16 +173,22 @@ const char UPDATE_REPO_MTIME[] =
 const char DELETE_REPO_URL[] =
 	"DELETE FROM REPOS WHERE REPO_URL = %Q;";
 
-const char INSERT_SINGLE_VALUE[] =
-	"INSERT INTO %s (PKG_ID, %s_PKGNAME) VALUES (%d,%Q);";
+const char INSERT_CONFLICTS[] =
+	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d, %Q);";
 
-const char INSERT_DEPENDS_VALUES[] =
-	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d,%Q);";
+const char INSERT_DEPENDS[] =
+	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d, %Q);";
+
+const char INSERT_PROVIDES[] =
+	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (%d, %Q);";
+
+const char INSERT_REQUIRES[] =
+	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (%d, %Q);";
 
 const char INSERT_SUPERSEDES[] =
-	"INSERT INTO REMOTE_SUPERSEDES (PKG_ID, PATTERN) VALUES (%d, %Q);";
+	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d, %Q);";
 
-const char INSERT_REQUIRED_BY_VALUE[] =
+const char INSERT_REQUIRED_BY[] =
 	"INSERT INTO LOCAL_REQUIRED_BY (PKGNAME, REQUIRED_BY) VALUES (%Q, %Q);";
 
 const char UNIQUE_PKG[] =

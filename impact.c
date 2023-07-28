@@ -162,7 +162,7 @@ find_supersedes(Plisthead *impacthead)
 		if (!action_is_install(pkg->action))
 			continue;
 
-		sqlite3_snprintf(BUFSIZ, query, GET_SUPERSEDES_QUERY,
+		sqlite3_snprintf(BUFSIZ, query, REMOTE_SUPERSEDES,
 		    pkg->rpkg->full);
 		pkgindb_doquery(query, record_supersedes, supersedes);
 	}

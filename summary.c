@@ -34,34 +34,38 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
+/*
+ * Table name lookup, as a convenience for tables that have identical LOCAL_
+ * and REMOTE_ entities.
+ */
 static const struct Summary {
 	const int	type;
-	const char	*tbl_name;
-	const char	*deps;
+	const char	*pkg;
 	const char	*conflicts;
-	const char	*supersedes;
-	const char	*requires;
+	const char	*depends;
 	const char	*provides;
+	const char	*requires;
+	const char	*supersedes;
 	const char	*end;
 } sumsw[] = {
 	[LOCAL_SUMMARY] = {
 		LOCAL_SUMMARY,
 		"LOCAL_PKG",
-		"LOCAL_DEPS",
 		"LOCAL_CONFLICTS",
-		"LOCAL_SUPERSEDES",	/* Does not actually exist, unused. */
-		"LOCAL_REQUIRES",
+		"LOCAL_DEPENDS",
 		"LOCAL_PROVIDES",
+		"LOCAL_REQUIRES",
+		"LOCAL_SUPERSEDES",	/* Unused */
 		NULL
 	},
 	[REMOTE_SUMMARY] = {
 		REMOTE_SUMMARY,
 		"REMOTE_PKG",
-		"REMOTE_DEPS",
 		"REMOTE_CONFLICTS",
-		"REMOTE_SUPERSEDES",
-		"REMOTE_REQUIRES",
+		"REMOTE_DEPENDS",
 		"REMOTE_PROVIDES",
+		"REMOTE_REQUIRES",
+		"REMOTE_SUPERSEDES",
 		NULL
 	},
 };
@@ -216,7 +220,7 @@ prepare_insert(int pkgid, struct Summary sum)
 	char		tmpbuf[1024];
 
 	sqlite3_snprintf(sizeof(querybuf), querybuf, "INSERT INTO %w (PKG_ID",
-	    sum.tbl_name);
+	    sum.pkg);
 
 	/* insert fields */
 	SLIST_FOREACH(pi, &inserthead, next) {
@@ -295,36 +299,33 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 		return;
 	}
 
-	/* CONFLICTS */
 	if (strncmp(line, "CONFLICTS=", 10) == 0) {
-		pkgindb_dovaquery(INSERT_SINGLE_VALUE, sum.conflicts,
-		    sum.conflicts, pkgid, val);
+		pkgindb_dovaquery(INSERT_CONFLICTS, sum.conflicts, pkgid, val);
 		return;
 	}
 
-	/* SUPERSEDES */
-	if (strncmp(line, "SUPERSEDES=", 11) == 0) {
-		pkgindb_dovaquery(INSERT_SUPERSEDES, pkgid, val);
-		return;
-	}
-
-	/* DEPENDS */
 	if (strncmp(line, "DEPENDS=", 8) == 0) {
-		pkgindb_dovaquery(INSERT_DEPENDS_VALUES, sum.deps, pkgid, val);
+		pkgindb_dovaquery(INSERT_DEPENDS, sum.depends, pkgid, val);
 		return;
 	}
 
-	/* REQUIRES */
-	if (strncmp(line, "REQUIRES=", 9) == 0) {
-		pkgindb_dovaquery(INSERT_SINGLE_VALUE, sum.requires,
-		    sum.requires, pkgid, val);
-		return;
-	}
-
-	/* PROVIDES */
 	if (strncmp(line, "PROVIDES=", 9) == 0) {
-		pkgindb_dovaquery(INSERT_SINGLE_VALUE, sum.provides,
-		    sum.provides, pkgid, val);
+		pkgindb_dovaquery(INSERT_PROVIDES, sum.provides, pkgid, val);
+		return;
+	}
+
+	if (strncmp(line, "REQUIRES=", 9) == 0) {
+		pkgindb_dovaquery(INSERT_REQUIRES, sum.requires, pkgid, val);
+		return;
+	}
+
+	if (strncmp(line, "SUPERSEDES=", 11) == 0) {
+		/*
+		 * Only remote SUPERSEDES are supported.
+		 */
+		if (sum.type == REMOTE_SUMMARY)
+			pkgindb_dovaquery(INSERT_SUPERSEDES, sum.supersedes,
+			    pkgid, val);
 		return;
 	}
 
@@ -388,7 +389,7 @@ insert_local_summary(FILE *fp)
 
 	/* record columns names to cols */
 	sqlite3_snprintf(BUFSIZ, buf, "PRAGMA table_info(%w);",
-	    sumsw[LOCAL_SUMMARY].tbl_name);
+	    sumsw[LOCAL_SUMMARY].pkg);
 	pkgindb_doquery(buf, colnames, NULL);
 
 	SLIST_INIT(&inserthead);
@@ -438,7 +439,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 
 	/* record columns names to cols */
 	sqlite3_snprintf(buflen, buf, "PRAGMA table_info(%w);",
-	    sumsw[REMOTE_SUMMARY].tbl_name);
+	    sumsw[REMOTE_SUMMARY].pkg);
 	pkgindb_doquery(buf, colnames, NULL);
 
 	SLIST_INIT(&inserthead);
@@ -532,19 +533,15 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 static void
 delete_remote_tbl(struct Summary sum, char *repo)
 {
-	const char	**arr;
+	const char **table;
 
 	/*
-	 * delete repository related tables
-	 * loop through sumsw structure to record table name
-	 * and call associated SQL query
+	 * Use results from REMOTE_PKG to delete entries from REMOTE_CONFLICTS
+	 * etc first, then finally remove from REMOTE_PKG.
 	 */
-	/* (REMOTE[LOCAL)_PKG is first -> skip */
-	for (arr = &(sum.tbl_name) + 1; *arr != NULL; ++arr) {
-		pkgindb_dovaquery(DELETE_REMOTE, *arr, *arr, *arr, *arr, *arr,
-		    repo, *arr);
+	for (table = &(sum.pkg) + 1; *table != NULL; ++table) {
+		pkgindb_dovaquery(DELETE_REMOTE, *table, repo);
 	}
-
 	pkgindb_dovaquery(DELETE_REMOTE_PKG_REPO, repo);
 }
 
@@ -655,8 +652,7 @@ insert_local_required_by(void)
 		SLIST_FOREACH(p, &pkgs[i], entries) {
 			for (j = 0; j < PKG_HASH_SIZE; j++) {
 				SLIST_FOREACH(e, &p->required_by[j], entries) {
-					pkgindb_dovaquery(
-					    INSERT_REQUIRED_BY_VALUE,
+					pkgindb_dovaquery(INSERT_REQUIRED_BY,
 					    p->pkgname, e->pkgname);
 				}
 			}

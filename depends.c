@@ -31,8 +31,8 @@
 #include "pkgin.h"
 
 /*
- * SQLite callback for LOCAL_DIRECT_DEPS and REMOTE_DIRECT_DEPS, given a DEPENDS
- * pattern find packages that match and adds them to an SLIST.
+ * SQLite callback for LOCAL_DIRECT_DEPENDS and REMOTE_DIRECT_DEPENDS, given a
+ * DEPENDS pattern find packages that match and adds them to an SLIST.
  *
  * May be called in a recursive context, so checks to see if the entry has
  * already been added and skips if so.
@@ -65,14 +65,14 @@ record_depend(void *param, int argc, char **argv, char **colname)
 
 	/*
 	 * Check the column name to see if we're looking for local or remote
-	 * packages.  The queries use "AS L" and "AS R" so we can just look at
+	 * packages.  The queries use "AS l" and "AS r" so we can just look at
 	 * the first character for optimal processing.
 	 *
 	 * If we found the same package already via a different DEPENDS match,
 	 * then this entry does not need to be processed.
 	 */
 	switch (colname[0][0]) {
-	case 'L':
+	case 'l':
 		/*
 		 * Find matching entry in the local package list.  It should
 		 * not be possible for this to return NULL other than database
@@ -89,7 +89,7 @@ record_depend(void *param, int argc, char **argv, char **colname)
 			}
 		}
 		break;
-	case 'R':
+	case 'r':
 		/*
 		 * Find the best matching package for the DEPENDS pattern, with
 		 * no specific PKGPATH requested.  It is possible that this
@@ -115,7 +115,7 @@ record_depend(void *param, int argc, char **argv, char **colname)
 }
 
 /*
- * SQLite callback for LOCAL_REVERSE_DEPS, records REQUIRED_BY entries for a
+ * SQLite callback for LOCAL_REVERSE_DEPENDS, records REQUIRED_BY entries for a
  * package (its reverse dependencies) to a package SLIST.
  *
  * May be called in a recursive context, so checks to see if the entry has
@@ -169,15 +169,15 @@ get_depends(const char *pkgname, Plisthead *deps, depends_t type)
 
 	switch (type) {
 	case DEPENDS_LOCAL:
-		sqlite3_snprintf(BUFSIZ, query, LOCAL_DIRECT_DEPS, pkgname);
+		sqlite3_snprintf(BUFSIZ, query, LOCAL_DIRECT_DEPENDS, pkgname);
 		pkgindb_doquery(query, record_depend, deps);
 		break;
 	case DEPENDS_REMOTE:
-		sqlite3_snprintf(BUFSIZ, query, REMOTE_DIRECT_DEPS, pkgname);
+		sqlite3_snprintf(BUFSIZ, query, REMOTE_DIRECT_DEPENDS, pkgname);
 		pkgindb_doquery(query, record_depend, deps);
 		break;
 	case DEPENDS_REVERSE:
-		sqlite3_snprintf(BUFSIZ, query, LOCAL_REVERSE_DEPS, pkgname);
+		sqlite3_snprintf(BUFSIZ, query, LOCAL_REVERSE_DEPENDS, pkgname);
 		pkgindb_doquery(query, record_reverse_depend, deps);
 		break;
 	}
