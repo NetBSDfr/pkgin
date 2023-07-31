@@ -355,10 +355,10 @@ do_pkg_remove(Plisthead *removehead)
 static int
 do_pkg_install(Plisthead *installhead)
 {
-	int		rc = EXIT_SUCCESS;
 	Pkglist		*p;
+	int		count = 0, i = 1, rc = EXIT_SUCCESS;
+	const char	*action, *aflags, *iflags, *pflags;
 	char		pkgpath[BUFSIZ];
-	const char	*iflags, *aflags, *pflags;
 
 	/*
 	 * Packages specified on the command line are marked as "keep", while
@@ -370,6 +370,17 @@ do_pkg_install(Plisthead *installhead)
 
 	/* send pkg_add stderr to logfile */
 	open_pi_log();
+
+	/*
+	 * Get total number of packages we'll be operating on.
+	 */
+	SLIST_FOREACH(p, installhead, next) {
+		if (!action_is_install(p->ipkg->action))
+			continue;
+		if (p->ipkg->file_size == -1)
+			continue;
+		count++;
+	}
 
 	SLIST_FOREACH(p, installhead, next) {
 		if (!action_is_install(p->ipkg->action))
@@ -394,19 +405,24 @@ do_pkg_install(Plisthead *installhead)
 
 		switch (p->ipkg->action) {
 		case ACTION_REFRESH:
-			log_tag("refreshing %s...\n", p->ipkg->rpkg->full);
+			action = "refreshing";
 			break;
 		case ACTION_UPGRADE:
-			log_tag("upgrading %s...\n", p->ipkg->rpkg->full);
+			action = "upgrading";
 			break;
 		case ACTION_INSTALL:
-			log_tag("installing %s...\n", p->ipkg->rpkg->full);
+			action = "installing";
 			break;
 		default:
-			/* XXX assert? */
+			/*
+			 * action_is_install() earlier already excluded all
+			 * other possible cases.
+			 */
 			break;
 		}
 
+		log_tag("[%d/%d] %s %s...\n", i++, count, action,
+		    p->ipkg->rpkg->full);
 		if (fexec(pkg_add, pflags, pkgpath, NULL) == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
 	}
