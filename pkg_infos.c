@@ -60,5 +60,7 @@ show_pkg_info(char flag, char *pkgname)
 			rv = 1;
 	}
 
+	free(fullpkgname);
+
 	return rv;
 }

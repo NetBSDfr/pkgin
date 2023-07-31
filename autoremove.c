@@ -82,6 +82,7 @@ pkgin_autoremove(void)
 
 	if ((nokeephead = rec_pkglist(NOKEEP_LOCAL_PKGS)) == NULL) {
 		free_pkglist(&keephead->P_Plisthead);
+		free(keephead);
 		printf(MSG_ALL_KEEP_PKGS);
 		return;
 	}
@@ -137,6 +138,7 @@ pkgin_autoremove(void)
 	free(keephead);
 	free_pkglist(&nokeephead->P_Plisthead);
 	free(nokeephead);
+	free_pkglist(&depshead);
 
 	if (!removenb) {
 		printf(MSG_NO_ORPHAN_DEPS);

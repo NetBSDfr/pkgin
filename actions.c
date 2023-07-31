@@ -683,6 +683,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 				if (pkgstrcmp(s, p->rpkg->build_date))
 					p->download = 1;
 			}
+			free(s);
 			(void) pclose(fp);
 		}
 
@@ -897,15 +898,22 @@ installend:
 	XFREE(toinstall);
 	XFREE(torefresh);
 	XFREE(toupgrade);
+	XFREE(toremove);
+	XFREE(tosupersede);
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead);
 	free_pkglist(&downloadhead);
+	if (conflicts != NULL) {
+		free_pkglist(&conflicts->P_Plisthead);
+		free(conflicts);
+	}
 	/*
 	 * installhead may be NULL, for example if trying to install a package
 	 * that conflicts.
 	 */
 	if (installhead != NULL)
 		free_pkglist(&installhead);
+	free(installhead);
 
 	return rc;
 }

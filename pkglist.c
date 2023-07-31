@@ -452,7 +452,9 @@ search_pkg(const char *pattern)
 		snprintf(outpkg, BUFSIZ, sfmt, psort[i].full, psort[i].flag);
 		printf(pfmt, outpkg, psort[i].comment);
 
+		XFREE(psort[i].full);
 		XFREE(psort[i].name);
+		XFREE(psort[i].version);
 		XFREE(psort[i].comment);
 	}
 

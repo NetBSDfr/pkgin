@@ -200,9 +200,18 @@ main(int argc, char *argv[])
 	/* load preferred file */
 	load_preferred();
 
-	/* we need packages lists for almost everything */
+	/*
+	 * Load package lists for everything other than update.  It's likely
+	 * this can be tightened up further to speed up a few commands.
+	 */
 	if (ch != PKG_UPDT_CMD) {
-		init_local_pkglist();
+		/*
+		 * update_localdb(), called earlier via update_db(), explicitly
+		 * inits the local pkglist if any changes were required, so
+		 * this may already be initialised.
+		 */
+		if (SLIST_EMPTY(&l_plisthead))
+			init_local_pkglist();
 		init_remote_pkglist();
 	}
 

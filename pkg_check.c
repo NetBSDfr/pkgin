@@ -237,5 +237,7 @@ show_prov_req(const char *query, const char *pkgname)
 	SLIST_FOREACH(plist, plisthead->P_Plisthead, next)
 		printf("\t%s\n", plist->full);
 
+	free_pkglist(&plisthead->P_Plisthead);
+	free(plisthead);
 	XFREE(fullpkgname);
 }

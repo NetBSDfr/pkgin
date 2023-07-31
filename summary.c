@@ -654,8 +654,20 @@ insert_local_required_by(void)
 				SLIST_FOREACH(e, &p->required_by[j], entries) {
 					pkgindb_dovaquery(INSERT_REQUIRED_BY,
 					    p->pkgname, e->pkgname);
+					free(e->pkgname);
+				}
+				while (!SLIST_EMPTY(&p->required_by[j])) {
+					e = SLIST_FIRST(&p->required_by[j]);
+					SLIST_REMOVE_HEAD(&p->required_by[j], entries);
+					free(e);
 				}
 			}
+			free(p->pkgname);
+		}
+		while (!SLIST_EMPTY(&pkgs[i])) {
+			p = SLIST_FIRST(&pkgs[i]);
+			SLIST_REMOVE_HEAD(&pkgs[i], entries);
+			free(p);
 		}
 	}
 }
@@ -706,7 +718,7 @@ update_localdb(int verbose)
 	init_local_pkglist();
 
 	/*
-	 * Generate PKG_KEEP database entries based on pkgdb data.
+	 * Insert PKG_KEEP database entries based on pkgdb data.
 	 */
 	SLIST_FOREACH(lpkg, &l_plisthead, next) {
 		if (!is_automatic_installed(lpkg->full)) {

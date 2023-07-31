@@ -176,8 +176,10 @@ download_pkg(char *pkg_url, FILE *fp)
 	if ((f = fetchXGet(url, &st, fetchflags)) == NULL) {
 		fprintf(stderr, "download error: %s %s\n", pkg_url,
 		    fetchLastErrString);
+		fetchFreeURL(url);
 		return -1;
 	}
+	fetchFreeURL(url);
 
 	if ((pkg = strrchr(pkg_url, '/')) != NULL)
 		pkg++;
@@ -223,7 +225,6 @@ download_pkg(char *pkg_url, FILE *fp)
 		stop_progress_meter();
 
 	fetchIO_close(f);
-	fetchFreeURL(url);
 
 	if (written != st.size) {
 		fprintf(stderr, "download error: %s truncated\n", pkg_url);

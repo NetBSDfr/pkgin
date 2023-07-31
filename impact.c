@@ -225,6 +225,7 @@ deps_impact(Plisthead *impacthead, Pkglist *pdp, int upgrade)
 			if ((p->rpkg = find_pkg_match(l->name, l->pkgpath)))
 				deps_impact(impacthead, p, upgrade);
 		}
+		free_pkglist(&rdeps);
 
 		return;
 	}
@@ -282,7 +283,6 @@ pkg_impact_upgrade(void)
 
 	deps = init_head();
 	impacthead = init_head();
-	supersedes = init_head();
 
 	SLIST_FOREACH(lpkg, &l_plisthead, next) {
 		if (local_pkg_in_impact(impacthead, lpkg->full))
@@ -344,8 +344,7 @@ pkg_impact_upgrade(void)
 	 * Get SUPERSEDES entries matching local packages.  For each affected
 	 * package, mark as superseded which will cause it to be removed.
 	 */
-	supersedes = find_supersedes(impacthead);
-	if (supersedes) {
+	if ((supersedes = find_supersedes(impacthead))) {
 		SLIST_FOREACH(lpkg, supersedes, next) {
 			/*
 			 * find_supersedes() ensures lpkg will be set and this
@@ -354,6 +353,7 @@ pkg_impact_upgrade(void)
 			p = local_pkg_in_impact(impacthead, lpkg->lpkg->full);
 			p->action = ACTION_SUPERSEDED;
 		}
+		free_pkglist(&supersedes);
 	}
 
 	return impacthead;
