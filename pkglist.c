@@ -76,6 +76,7 @@ malloc_pkglist(void)
 	pkglist->file_size = 0;
 	pkglist->level = 0;
 	pkglist->download = 0;
+	pkglist->pkgfs = NULL;
 	pkglist->pkgurl = NULL;
 	pkglist->comment = NULL;
 	pkglist->category = NULL;
@@ -95,13 +96,16 @@ malloc_pkglist(void)
 void
 free_pkglist_entry(Pkglist **plist)
 {
+	XFREE((*plist)->pkgfs);
+	XFREE((*plist)->pkgurl);
 	XFREE((*plist)->full);
 	XFREE((*plist)->name);
 	XFREE((*plist)->version);
-	XFREE((*plist)->pattern);
-	XFREE((*plist)->comment);
+	XFREE((*plist)->build_date);
 	XFREE((*plist)->category);
 	XFREE((*plist)->pkgpath);
+	XFREE((*plist)->comment);
+	XFREE((*plist)->pattern);
 	XFREE(*plist);
 
 	plist = NULL;

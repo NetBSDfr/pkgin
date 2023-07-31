@@ -62,7 +62,6 @@ pkg_download(Plisthead *installhead)
 	FILE		*fp;
 	Pkglist  	*p;
 	struct stat	st;
-	char		pkg_fs[BUFSIZ];
 	char		*pkgurl;
 	int		rc = EXIT_SUCCESS;
 
@@ -72,9 +71,7 @@ pkg_download(Plisthead *installhead)
 		 * removing any existing file.  pkgin_install() has already
 		 * checked to see if it's valid, and we know it is not.
 		 */
-		(void) snprintf(pkg_fs, BUFSIZ, "%s/%s%s", pkgin_cache,
-		    p->ipkg->rpkg->full, PKG_EXT);
-		(void) unlink(pkg_fs);
+		(void) unlink(p->ipkg->pkgfs);
 		(void) umask(DEF_UMASK);
 
 		if (strncmp(p->ipkg->pkgurl, "file:///", 8) == 0) {
@@ -95,9 +92,11 @@ pkg_download(Plisthead *installhead)
 				continue;
 			}
 
-			if (symlink(pkgurl, pkg_fs) < 0)
+			if (symlink(pkgurl, p->ipkg->pkgfs) < 0) {
 				errx(EXIT_FAILURE,
-				    "Failed to create symlink %s", pkg_fs);
+				    "Failed to create symlink %s",
+				    p->ipkg->pkgfs);
+			}
 
 			p->ipkg->file_size = st.st_size;
 		} else {
@@ -106,13 +105,13 @@ pkg_download(Plisthead *installhead)
 			 * errors from various failure modes, so we handle
 			 * cleanup only.
 			 */
-			if ((fp = fopen(pkg_fs, "w")) == NULL)
-				err(EXIT_FAILURE, MSG_ERR_OPEN, pkg_fs);
+			if ((fp = fopen(p->ipkg->pkgfs, "w")) == NULL)
+				err(EXIT_FAILURE, MSG_ERR_OPEN, p->ipkg->pkgfs);
 
 			if ((p->ipkg->file_size =
 			    download_pkg(p->ipkg->pkgurl, fp)) == -1) {
 				(void) fclose(fp);
-				(void) unlink(pkg_fs);
+				(void) unlink(p->ipkg->pkgfs);
 				rc = EXIT_FAILURE;
 
 				if (check_yesno(DEFAULT_NO) == ANSW_NO)
@@ -130,7 +129,7 @@ pkg_download(Plisthead *installhead)
 		 * is recorded by pkg_summary.
 		 */
 		if (p->ipkg->file_size != p->ipkg->rpkg->file_size) {
-			(void) unlink(pkg_fs);
+			(void) unlink(p->ipkg->pkgfs);
 			rc = EXIT_FAILURE;
 
 			(void) fprintf(stderr, "download error: %s size"
@@ -358,7 +357,6 @@ do_pkg_install(Plisthead *installhead)
 	Pkglist		*p;
 	int		count = 0, i = 1, rc = EXIT_SUCCESS;
 	const char	*action, *aflags, *iflags, *pflags;
-	char		pkgpath[BUFSIZ];
 
 	/*
 	 * Packages specified on the command line are marked as "keep", while
@@ -400,9 +398,6 @@ do_pkg_install(Plisthead *installhead)
 		else
 			pflags = aflags;
 
-		snprintf(pkgpath, BUFSIZ, "%s/%s%s", pkgin_cache,
-		    p->ipkg->rpkg->full, PKG_EXT);
-
 		switch (p->ipkg->action) {
 		case ACTION_REFRESH:
 			action = "refreshing";
@@ -423,7 +418,8 @@ do_pkg_install(Plisthead *installhead)
 
 		log_tag("[%d/%d] %s %s...\n", i++, count, action,
 		    p->ipkg->rpkg->full);
-		if (fexec(pkg_add, pflags, pkgpath, NULL) == EXIT_FAILURE)
+		if (fexec(pkg_add, pflags, p->ipkg->pkgfs, NULL)
+		    == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
 	}
 
@@ -573,7 +569,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	char		*torefresh = NULL, *todownload = NULL;
 	char		*toremove = NULL, *tosupersede = NULL;
 	char		*unmet_reqs = NULL;
-	char		pkgpath[BUFSIZ], pkgrepo[BUFSIZ], query[BUFSIZ];
+	char		pkgrepo[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
 	struct		stat st;
 
@@ -653,6 +649,8 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		if (pkgindb_doquery(query, pdb_get_value, pkgrepo) != 0)
 			errx(EXIT_FAILURE, MSG_PKG_NO_REPO, p->rpkg->full);
 
+		p->pkgfs = xasprintf("%s/%s%s", pkgin_cache, p->rpkg->full,
+		    PKG_EXT);
 		p->pkgurl = xasprintf("%s/%s%s", pkgrepo, p->rpkg->full,
 		    PKG_EXT);
 
@@ -661,9 +659,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		 * its size does not match pkg_summary, then mark it to be
 		 * downloaded.
 		 */
-		(void) snprintf(pkgpath, BUFSIZ, "%s/%s%s", pkgin_cache,
-		    p->rpkg->full, PKG_EXT);
-		if (stat(pkgpath, &st) < 0 ||
+		if (stat(p->pkgfs, &st) < 0 ||
 		    st.st_size != p->rpkg->file_size)
 			p->download = 1;
 		else {
@@ -673,7 +669,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			 * the sizes happen to be identical.
 			 */
 			char *s;
-			s = xasprintf("%s -Q BUILD_DATE %s", pkg_info, pkgpath);
+			s = xasprintf("%s -Q BUILD_DATE %s", pkg_info, p->pkgfs);
 
 			if ((fp = popen(s, "r")) == NULL)
 				err(EXIT_FAILURE, "Cannot execute '%s'", s);

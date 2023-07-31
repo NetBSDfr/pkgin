@@ -162,8 +162,9 @@ typedef struct Pkglist {
 	int64_t	file_size; /*!< binary package size */
 	int	level; /*<! recursion level (deptree and impact) */
 
-	int	download; /*<! binary package needs to be fetched */
-	char	*pkgurl; /*<! which repository to fetch package from */
+	int	download;	/* Binary package needs to be fetched */
+	char	*pkgfs;		/* Local filename of downloaded package */
+	char	*pkgurl;	/* Remote URL of package to fetch */
 
 	char *full; /*!< full package name with version, foo-1.0 */
 	char *name; /*!< package name, foo */
