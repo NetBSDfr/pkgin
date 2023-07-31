@@ -380,7 +380,7 @@ find_cmd(const char *arg)
 static char **
 mkpkgargs(char **args)
 {
-	int i;
+	size_t i;
 	char **pkgargs;
 
 	for (i = 0; args[i] != NULL; i++); /* args number */

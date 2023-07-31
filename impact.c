@@ -33,7 +33,7 @@
 /*
  * Is package already in impact list?
  */
-Pkglist *
+static Pkglist *
 local_pkg_in_impact(Plisthead *impacthead, char *pkgname)
 {
 	Pkglist *p;
@@ -47,7 +47,7 @@ local_pkg_in_impact(Plisthead *impacthead, char *pkgname)
 	return NULL;
 }
 
-Pkglist *
+static Pkglist *
 pkg_in_impact(Plisthead *impacthead, char *pkgname)
 {
 	Pkglist *p;
@@ -146,7 +146,7 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
-Plisthead *
+static Plisthead *
 find_supersedes(Plisthead *impacthead)
 {
 	Plisthead *supersedes;

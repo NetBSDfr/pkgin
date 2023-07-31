@@ -489,8 +489,8 @@ static char **
 get_sorted_list(Plisthead *pkgs)
 {
 	Pkglist *pkg, *p;
+	size_t i = 0;
 	char **names;
-	int i = 0;
 
 	/* Get number of entries for names allocation */
 	SLIST_FOREACH(pkg, pkgs, next)
@@ -517,8 +517,8 @@ static char **
 get_sorted_list_by_action(Plisthead *pkgs, action_t action)
 {
 	Pkglist *pkg, *p;
+	size_t i = 0;
 	char **names;
-	int i = 0;
 
 	/* Get number of entries for names allocation */
 	SLIST_FOREACH(pkg, pkgs, next) {

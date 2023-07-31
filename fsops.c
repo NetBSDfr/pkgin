@@ -112,7 +112,7 @@ read_repos(void)
 					continue;
 				}
 				if ((b = strreplace(buf, vp->opt, tmp)) != NULL)
-					strncpy(buf, b, BUFSIZ);
+					strncpy(buf, b, BUFSIZ - 1);
 				else
 					warn(MSG_INVALID_REPOS, buf);
 

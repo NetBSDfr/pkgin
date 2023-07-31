@@ -163,10 +163,10 @@ record_pkglist(void *param, int argc, char **argv, char **colname)
 	DUP_OR_NULL(p->pkgpath, argv[8]);
 
 	/*
-	 * Only LOCAL_PKG has PKG_KEEP
+	 * Only LOCAL_PKG has PKG_KEEP.
 	 */
-	if (plist->P_type == 0)
-		NUM_OR_NULL(p->keep, argv[9]);
+	if (plist->P_type == 0 && argv[9])
+		p->keep = 1;
 
 	if (plist->P_type == 1) {
 		if (p->file_size == 0) {
@@ -406,9 +406,10 @@ search_pkg(const char *pattern)
 	Pkglist	   	*plist;
 	struct pkg_sort	*psort;
 	regex_t		re;
-	int		i, rc;
+	size_t		i, pcount = 0;
+	int		rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
-	int		matched = 0, pcount = 0;
+	int		matched = 0;
 	char		sfmt[10], pfmt[10];
 
 	setfmt(&sfmt[0], &pfmt[0]);

@@ -44,8 +44,8 @@ static char **
 get_sorted_list(Plisthead *pkgs)
 {
 	Pkglist *p;
+	size_t i = 0;
 	char **names;
-	int i = 0;
 
 	/* Get number of entries for names allocation */
 	SLIST_FOREACH(p, pkgs, next)
