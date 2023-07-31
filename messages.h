@@ -74,6 +74,26 @@
 #define MSG_BAD_FILE_SIZE "warning: remote package %s has an invalid or missing FILE_SIZE\n"
 #define MSG_WARNS_ERRS "pkg_install warnings: %d, errors: %d\n"
 
+#define MSG_ONE_TO_REFRESH	"1 package to refresh:\n%s\n\n"
+#define MSG_NUM_TO_REFRESH	"%d packages to refresh:\n%s\n\n"
+#define MSG_ONE_TO_UPGRADE	"1 package to upgrade:\n%s\n\n"
+#define MSG_NUM_TO_UPGRADE	"%d packages to upgrade:\n%s\n\n"
+#define MSG_ONE_TO_INSTALL	"1 package to install:\n%s\n\n"
+#define MSG_NUM_TO_INSTALL	"%d packages to install:\n%s\n\n"
+#define MSG_ONE_TO_REMOVE	"1 package to remove:\n%s\n\n"
+#define MSG_NUM_TO_REMOVE	"%d packages to remove:\n%s\n\n"
+#define MSG_ONE_TO_SUPERSEDE	"1 package to remove (superseded):\n%s\n\n"
+#define MSG_NUM_TO_SUPERSEDE	"%d packages to remove (superseded):\n%s\n\n"
+#define MSG_ONE_TO_DOWNLOAD	"1 package to download:\n%s\n\n"
+#define MSG_NUM_TO_DOWNLOAD	"%d packages to download:\n%s\n\n"
+#define MSG_ALL_TO_ACTION	"%d to remove, %d to refresh, " \
+				"%d to upgrade, %d to install\n"
+#define MSG_DOWNLOAD		"%s to download\n"
+#define MSG_DOWNLOAD_USED	"%s to download, " \
+				"%s of additional disk space will be used\n"
+#define MSG_DOWNLOAD_FREED	"%s to download, " \
+				"%s of disk space will be freed up\n"
+
 /* depends.c */
 #define MSG_DIRECT_DEPS_FOR "direct dependencies for %s\n"
 

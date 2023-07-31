@@ -689,10 +689,18 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			size_pkg += p->rpkg->size_pkg;
 	}
 
+	/*
+	 * Ensure pretty-printed h_psize is always positive, and adjust output
+	 * messages based on size_pkg.
+	 */
 	(void)humanize_number(h_fsize, H_BUF, file_size, "",
 		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-	(void)humanize_number(h_psize, H_BUF, size_pkg, "",
-		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+	if (size_pkg < 0)
+		(void)humanize_number(h_psize, H_BUF, 0 - size_pkg, "",
+			HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+	else
+		(void)humanize_number(h_psize, H_BUF, size_pkg, "",
+			HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
 
 	/* check disk space */
 	free_space = fs_room(pkgin_cache);
@@ -764,34 +772,44 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	printf("\n");
 
 	if (do_inst) {
-		if (refreshnum > 0)
-			printf("%d package%s to refresh:\n%s\n\n", refreshnum,
-			    (refreshnum == 1) ? "" : "s", torefresh);
+		if (refreshnum == 1)
+			printf(MSG_ONE_TO_REFRESH, torefresh);
+		else if (refreshnum > 1)
+			printf(MSG_NUM_TO_REFRESH, refreshnum, torefresh);
 
-		if (upgradenum > 0)
-			printf("%d package%s to upgrade:\n%s\n\n", upgradenum,
-			    (upgradenum == 1) ? "" : "s", toupgrade);
+		if (upgradenum == 1)
+			printf(MSG_ONE_TO_UPGRADE, toupgrade);
+		else if (upgradenum > 1)
+			printf(MSG_NUM_TO_UPGRADE, upgradenum, toupgrade);
 
-		if (installnum > 0)
-			printf("%d package%s to install:\n%s\n\n", installnum,
-			    (installnum == 1) ? "" : "s", toinstall);
+		if (installnum == 1)
+			printf(MSG_ONE_TO_INSTALL, toinstall);
+		else if (installnum > 1)
+			printf(MSG_NUM_TO_INSTALL, installnum, toinstall);
 
-		if (removenum > 0)
-			printf("%d package%s to remove:\n%s\n\n", removenum,
-			    (removenum == 1) ? "" : "s", toremove);
+		if (removenum == 1)
+			printf(MSG_ONE_TO_REMOVE, toremove);
+		else if (removenum > 1)
+			printf(MSG_NUM_TO_REMOVE, removenum, toremove);
 
-		if (supersedenum > 0)
-			printf("%d package%s to remove (superseded):\n%s\n\n",
-			    supersedenum, (supersedenum == 1) ? "" : "s",
-			    tosupersede);
+		if (supersedenum == 1)
+			printf(MSG_ONE_TO_SUPERSEDE, tosupersede);
+		else if (supersedenum > 1)
+			printf(MSG_NUM_TO_SUPERSEDE, supersedenum, tosupersede);
 
-		printf("%d to remove, %d to refresh, %d to upgrade, %d to install\n",
-		    removenum + supersedenum, refreshnum, upgradenum, installnum);
-		printf("%s to download, %s to install\n", h_fsize, h_psize);
+		printf(MSG_ALL_TO_ACTION, removenum + supersedenum, refreshnum,
+		    upgradenum, installnum);
+
+		if (size_pkg >= 0)
+			printf(MSG_DOWNLOAD_USED, h_fsize, h_psize);
+		else
+			printf(MSG_DOWNLOAD_FREED, h_fsize, h_psize);
 	} else {
-		printf("%d package%s to download:\n%s\n", downloadnum,
-		    (downloadnum == 1) ? "" : "s", todownload);
-		printf("%s to download\n", h_fsize);
+		if (downloadnum == 1)
+			printf(MSG_ONE_TO_DOWNLOAD, todownload);
+		else
+			printf(MSG_NUM_TO_DOWNLOAD, downloadnum, todownload);
+		printf(MSG_DOWNLOAD, h_fsize);
 	}
 
 	if (unmet_reqs != NULL)/* there were unmet requirements */
