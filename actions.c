@@ -305,25 +305,30 @@ rebuild_required_by(void)
 	return rv;
 }
 
-/* package removal */
+/*
+ * Remove a list of packages.  The package list may contain entries that are
+ * not removals.
+ */
 void
 do_pkg_remove(Plisthead *removehead)
 {
 	Pkglist *pkg, *p;
-	int perform = 0;
+	int count = 0, i = 1;
 
 	/*
-	 * Avoid printing logfile stats if there are no packages to remove.
+	 * Get count of packages that are being removed.
 	 */
 	SLIST_FOREACH(pkg, removehead, next) {
 		p = get_pkglist_ptr(pkg);
 		if (action_is_remove(p->action)) {
-			perform = 1;
-			break;
+			count++;
 		}
 	}
 
-	if (!perform)
+	/*
+	 * Avoid printing logfile stats if there are no packages to remove.
+	 */
+	if (count == 0)
 		return;
 
 	/* send pkg_delete stderr to logfile */
@@ -334,7 +339,7 @@ do_pkg_remove(Plisthead *removehead)
 		if (!action_is_remove(p->action))
 			continue;
 
-		log_tag(MSG_REMOVING, p->lpkg->full);
+		log_tag("[%d/%d] removing %s...\n", i++, count, p->lpkg->full);
 		if (fexec(pkg_delete, verb_flag("-f"), p->lpkg->full, NULL)
 		    != EXIT_SUCCESS)
 			err_count++;

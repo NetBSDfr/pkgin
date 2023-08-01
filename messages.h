@@ -48,7 +48,6 @@
 #define MSG_DONT_HAVE_RIGHTS "You don't have enough rights for this operation."
 
 /* actions.c */
-#define MSG_REMOVING "removing %s...\n"
 #define MSG_NOT_REMOVING_PKG_INSTALL \
 	"pkg_install is a critical package and cannot be deleted\n"
 #define MSG_PKG_NO_REPO "%s has no associated repository"
