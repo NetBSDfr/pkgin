@@ -159,7 +159,7 @@ sum_close(struct archive *a, void *data)
  * Download a package to the local cache.
  */
 off_t
-download_pkg(char *pkg_url, FILE *fp)
+download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 {
 	struct url_stat st;
 	size_t size, wrote;
@@ -168,7 +168,7 @@ download_pkg(char *pkg_url, FILE *fp)
 	struct url *url;
 	fetchIO *f = NULL;
 	char buf[4096];
-	char *pkg, *ptr;
+	char *pkg, *ptr, *msg;
 
 	if ((url = fetchParseURL(pkg_url)) == NULL)
 		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
@@ -189,9 +189,9 @@ download_pkg(char *pkg_url, FILE *fp)
 	if (parsable) {
 		printf("downloading %s", pkg);
 	} else {
-		printf("downloading %s:   0%%", pkg);
+		msg = xasprintf("[%d/%d] %s", cur, total, pkg);
 		fflush(stdout);
-		start_progress_meter(pkg, st.size, &statsize);
+		start_progress_meter(msg, st.size, &statsize);
 	}
 
 	while (written < st.size) {
@@ -221,8 +221,10 @@ download_pkg(char *pkg_url, FILE *fp)
 
 	if (parsable)
 		printf(" done.\n");
-	else
+	else {
 		stop_progress_meter();
+		free(msg);
+	}
 
 	fetchIO_close(f);
 

@@ -63,7 +63,14 @@ pkg_download(Plisthead *installhead)
 	Pkglist  	*p;
 	struct stat	st;
 	char		*pkgurl;
-	int		rc = EXIT_SUCCESS;
+	int		count = 0, i = 1, rc = EXIT_SUCCESS;
+
+	/*
+	 * Get total for download counters.
+	 */
+	SLIST_FOREACH(p, installhead, next) {
+		count++;
+	}
 
 	SLIST_FOREACH(p, installhead, next) {
 		/*
@@ -108,8 +115,10 @@ pkg_download(Plisthead *installhead)
 			if ((fp = fopen(p->ipkg->pkgfs, "w")) == NULL)
 				err(EXIT_FAILURE, MSG_ERR_OPEN, p->ipkg->pkgfs);
 
-			if ((p->ipkg->file_size =
-			    download_pkg(p->ipkg->pkgurl, fp)) == -1) {
+			p->ipkg->file_size =
+			    download_pkg(p->ipkg->pkgurl, fp, i++, count);
+
+			if (p->ipkg->file_size == -1) {
 				(void) fclose(fp);
 				(void) unlink(p->ipkg->pkgfs);
 				rc = EXIT_FAILURE;
@@ -664,8 +673,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		 * its size does not match pkg_summary, then mark it to be
 		 * downloaded.
 		 */
-		if (stat(p->pkgfs, &st) < 0 ||
-		    st.st_size != p->rpkg->file_size)
+		if (stat(p->pkgfs, &st) < 0 || st.st_size != p->rpkg->file_size)
 			p->download = 1;
 		else {
 			/*
