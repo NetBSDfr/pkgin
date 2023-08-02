@@ -179,39 +179,37 @@ pkg_met_reqs(Plisthead *impacthead)
 	return met_reqs;
 }
 
-/* check for conflicts and if needed files are present */
+/*
+ * Check if incoming remote package conflicts with any local packages.
+ */
 int
-pkg_has_conflicts(Pkglist *pimpact, Plistnumbered *conflictshead)
+pkg_has_conflicts(Pkglist *pkg, Plistnumbered *conflictshead)
 {
-	int			has_conflicts = 0;
-	char		*conflict_pkg, query[BUFSIZ];
-	Pkglist		*conflicts; /* SLIST conflicts pointer */
+	Pkglist *p;
+	char query[BUFSIZ];
+	char *cpkg;
 
 	if (SLIST_EMPTY(conflictshead->P_Plisthead))
 		return 0;
 
-	/* check conflicts */
-	SLIST_FOREACH(conflicts, conflictshead->P_Plisthead, next) {
-		if (pkg_match(conflicts->full, pimpact->rpkg->full)) {
+	SLIST_FOREACH(p, conflictshead->P_Plisthead, next) {
+		if (!pkg_match(p->full, pkg->rpkg->full))
+			continue;
 
-			/* got a conflict, retrieve conflicting local package */
-			sqlite3_snprintf(BUFSIZ, query,
-			    REMOTE_CONFLICTS, conflicts->full);
+		/*
+		 * Got a conflict match, get local package.
+		 */
+		sqlite3_snprintf(BUFSIZ, query, REMOTE_CONFLICTS, p->full);
 
-			conflict_pkg = xmalloc(BUFSIZ * sizeof(char));
-			if (pkgindb_doquery(query,
-					pdb_get_value, conflict_pkg) == PDB_OK)
+		cpkg = xmalloc(BUFSIZ * sizeof(char));
+		if (pkgindb_doquery(query, pdb_get_value, cpkg) == PDB_OK)
+			printf(MSG_CONFLICT_PKG, pkg->rpkg->full, cpkg);
+		XFREE(cpkg);
 
-				printf(MSG_CONFLICT_PKG,
-					pimpact->rpkg->full, conflict_pkg);
-
-			XFREE(conflict_pkg);
-
-			has_conflicts = 1;
-		}
+		return 1;
 	}
 
-	return has_conflicts;
+	return 0;
 }
 
 void

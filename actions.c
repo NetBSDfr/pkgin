@@ -569,6 +569,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	int		installnum = 0, upgradenum = 0;
 	int		refreshnum = 0, downloadnum = 0;
 	int		removenum = 0, supersedenum = 0;
+	int		conflictnum;
 	int		argn, rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
@@ -614,7 +615,22 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 				unmet_reqs =
 				    action_list(unmet_reqs, p->rpkg->full);
 
-	conflicts = rec_pkglist(LOCAL_CONFLICTS);
+	/*
+	 * Check for conflicts.
+	 */
+	conflictnum = 0;
+	if ((conflicts = rec_pkglist(LOCAL_CONFLICTS))) {
+		SLIST_FOREACH(p, impacthead, next) {
+			if (!action_is_install(p->action))
+				continue;
+			if (pkg_has_conflicts(p, conflicts))
+				conflictnum++;
+		}
+		free_pkglist(&conflicts->P_Plisthead);
+		free(conflicts);
+	}
+	if (conflictnum && !check_yesno(DEFAULT_NO))
+		goto installend;
 
 	/*
 	 * Set up counters.
@@ -642,18 +658,11 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	}
 
 	/*
-	 * Look through impact list for packages that are being installed from
-	 * a remote repository, verify they have no conflicts (XXX this should
-	 * be done earlier in impact), and set up for downloading.
+	 * Set up download URLs and sizes.
 	 */
 	SLIST_FOREACH(p, impacthead, next) {
 		if (!action_is_install(p->action))
 			continue;
-
-		/* check for conflicts */
-		if (conflicts && pkg_has_conflicts(p, conflicts))
-			if (!check_yesno(DEFAULT_NO))
-				goto installend;
 
 		/*
 		 * Retrieve the correct repository for the package and save it,
@@ -916,10 +925,6 @@ installend:
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead);
 	free_pkglist(&downloadhead);
-	if (conflicts != NULL) {
-		free_pkglist(&conflicts->P_Plisthead);
-		free(conflicts);
-	}
 	/*
 	 * installhead may be NULL, for example if trying to install a package
 	 * that conflicts.
