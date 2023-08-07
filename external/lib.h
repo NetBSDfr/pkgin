@@ -213,7 +213,7 @@ int	quick_pkg_match(const char *, const char *);
 
 /* Iterator functions */
 int	iterate_pkg_db(int (*)(const char *, void *), void *);
-char	*find_best_matching_installed_pkg(const char *, int);
+char	*find_matching_installed_pkg(const char *, int, int);
 
 /* Packing list */
 plist_t *new_plist_entry(void);

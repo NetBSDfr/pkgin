@@ -572,7 +572,7 @@ add_required_by(const char *pattern, const char *pkgname, struct pkg_reqd_by_hea
 	char *best_installed;
 	int i;
 
-	best_installed = find_best_matching_installed_pkg(pattern, 1);
+	best_installed = find_matching_installed_pkg(pattern, 1, 0);
 	if (best_installed == NULL) {
 		warnx("Dependency %s of %s unresolved", pattern, pkgname);
 		return;

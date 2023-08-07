@@ -384,19 +384,43 @@ match_best_installed(const char *pkg, void *cookie)
 }
 
 /*
- * Returns a copy of the name of best matching package.
+ * Only save the first matching package, ignoring any further matches.
+ */
+static int
+match_first_installed(const char *pkg, void *cookie)
+{
+	struct best_installed_match_arg *arg = cookie;
+
+	if (arg->best_current_match)
+		return 0;
+
+	if (pkg_match(arg->pattern, pkg))
+		arg->best_current_match = xstrdup(pkg);
+
+	return 0;
+}
+
+/*
+ * Returns a copy of the name of a matching installed package for pattern.
  * If no package matched the pattern or an error occured, return NULL.
  *
  * If use_cached is set, return a cached match entry if it exists, and also use
  * the iterate_pkg_db cache, otherwise clear any matching cache entry and use
  * regular iterate_pkg_db().
+ *
+ * If best is set, return what pkg_match() considers to be the best match,
+ * otherwise just return the first match.  Given the limitations on installed
+ * packages, and that it should be impossible for two packages with the same
+ * name but different versions to be installed, it is unlikely that searching
+ * for the best match is useful, and it can be a lot more expensive.
  */
 char *
-find_best_matching_installed_pkg(const char *pattern, int use_cached)
+find_matching_installed_pkg(const char *pattern, int use_cached, int best)
 {
 	struct best_installed_match_arg arg;
 	struct pkg_match_list *pkg;
 	int idx = PKG_HASH_ENTRY(pattern), rv;
+	int (*matchiter)(const char *, void *);
 
 	if (pattern == NULL)
 		return NULL;
@@ -417,10 +441,12 @@ find_best_matching_installed_pkg(const char *pattern, int use_cached)
 	arg.pattern = pattern;
 	arg.best_current_match = NULL;
 
+	matchiter = (best) ? match_best_installed : match_first_installed;
+
 	if (use_cached)
-		rv = iterate_pkg_db_cached(match_best_installed, &arg);
+		rv = iterate_pkg_db_cached(matchiter, &arg);
 	else
-		rv = iterate_pkg_db(match_best_installed, &arg);
+		rv = iterate_pkg_db(matchiter, &arg);
 
 	if (rv == -1) {
 		warnx("could not process pkgdb");
