@@ -39,10 +39,12 @@ int
 find_preferred_pkg(const char *pkgname, Pkglist **pkg, char **match)
 {
 	Pkglist *p, *best = NULL;
+	int i;
 	char *result = NULL;
 
 	/* Find best match */
-	SLIST_FOREACH(p, &r_plisthead, next) {
+	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
+	SLIST_FOREACH(p, &r_plisthead[i], next) {
 		if (!pkg_match(pkgname, p->full))
 			continue;
 
@@ -65,6 +67,7 @@ find_preferred_pkg(const char *pkgname, Pkglist **pkg, char **match)
 		/* Save best match */
 		if (best == NULL || version_check(best->full, p->full) == 2)
 			best = p;
+	}
 	}
 
 	/*
@@ -122,32 +125,53 @@ unique_pkg(const char *pkgname, const char *dest)
 }
 
 /*
- * Return best remote package for match and optional pkgpath, or NULL if no
+ * Return best remote package for a pattern and optional pkgpath, or NULL if no
  * valid match.
  */
 Pkglist *
-find_pkg_match(const char *match, const char *pkgpath)
+find_remote_pkg(const char *pattern, const char *pkgname, const char *pkgpath)
 {
-	Pkglist	*rpkg, *pkg = NULL;
+	Pkglist	*p, *pkg = NULL;
+	size_t size = REMOTE_PKG_HASH_SIZE;
+	size_t slot = 0;
 
-	SLIST_FOREACH(rpkg, &r_plisthead, next) {
-		if (!pkg_match(match, rpkg->full))
-			continue;
+	/*
+	 * If a valid pkgname is supplied then the caller has indicated that
+	 * the pattern will always match the specific pkgname, and so we can
+	 * optimise the lookup by only considering the hash entry for that
+	 * pkgname.  For example pattern is "foo>=1<2" and pkgname is "foo".
+	 */
+	if (pkgname) {
+		slot = pkg_hash_entry(pkgname, REMOTE_PKG_HASH_SIZE);
+		size = slot + 1;
+	}
 
-		/*
-		 * If pkgpath is specified then the remote entry must match, to
-		 * avoid newer releases being pulled in when the user may have
-		 * specified a particular version in the past.
-		 */
-		if (pkgpath && pkgstrcmp(pkgpath, rpkg->pkgpath) != 0)
-			continue;
+	for (; slot < size; slot++) {
+		SLIST_FOREACH(p, &r_plisthead[slot], next) {
+			if (!pkg_match(pattern, p->full))
+				continue;
 
-		if (chk_preferred(rpkg->full, NULL) != 0)
-			continue;
+			/*
+			 * If pkgpath is specified then the remote entry must
+			 * match, to avoid newer releases being pulled in when
+			 * the user may have specified a particular version in
+			 * the past.
+			 */
+			if (pkgpath && pkgstrcmp(pkgpath, p->pkgpath) != 0)
+				continue;
 
-		/* Save best match and continue */
-		if (pkg == NULL || version_check(pkg->full, rpkg->full) == 2)
-			pkg = rpkg;
+			if (chk_preferred(p->full, NULL) != 0)
+				continue;
+
+			/*
+			 * Save match if we haven't seen one yet, or if this
+			 * one is a higher version number than the current best
+			 * match.
+			 */
+			if (pkg == NULL ||
+			    version_check(pkg->full, p->full) == 2)
+				pkg = p;
+		}
 	}
 
 	return pkg;
@@ -161,18 +185,32 @@ find_pkg_match(const char *match, const char *pkgpath)
  * result for an alternate match it doesn't make any practical sense.
  */
 Pkglist *
-find_local_pkg_match(const char *pattern)
+find_local_pkg(const char *pattern, const char *pkgname)
 {
-	Pkglist	*pkg = NULL, *p;
+	Pkglist	*p;
+	size_t size = LOCAL_PKG_HASH_SIZE;
+	size_t slot = 0;
 
-	SLIST_FOREACH(p, &l_plisthead, next) {
-		if (pkg_match(pattern, p->full)) {
-			pkg = p;
-			break;
+	/*
+	 * If a valid pkgname is supplied then the caller has indicated that
+	 * the pattern will always match the specific pkgname, and so we can
+	 * optimise the lookup by only considering the hash entry for that
+	 * pkgname.  For example pattern is "foo>=1<2" and pkgname is "foo".
+	 */
+	if (pkgname) {
+		slot = pkg_hash_entry(pkgname, LOCAL_PKG_HASH_SIZE);
+		size = slot + 1;
+	}
+
+	for (; slot < size; slot++) {
+		SLIST_FOREACH(p, &l_plisthead[slot], next) {
+			if (pkg_match(pattern, p->full)) {
+				return p;
+			}
 		}
 	}
 
-	return pkg;
+	return NULL;
 }
 
 /* basic full package format detection */
@@ -231,6 +269,69 @@ pkgstrcmp(const char *p1, const char *p2)
 		return 1;
 
 	return (strcmp(p1, p2));
+}
+
+/*
+ * To speed up lookups of patterns we use hashes keyed on the package name if
+ * available.  This function extracts a single package name from a pattern if
+ * that is the only possible package that can satisfy the pattern.
+ *
+ * For example, "foo-[0-9]*" and "foo>1" etc can be guaranteed to only match
+ * for the package name "foo", whereas "{foo,bar}-[0-9]*", "fo{o,b}*>1" can
+ * not.  The latter return NULL and callers will instead have to traverse the
+ * entire hash.
+ *
+ * This is kept relatively conservative as we cannot be sure what creative
+ * patterns users may come up with in the future.
+ */
+
+char *
+pkgname_from_pattern(const char *pattern)
+{
+	char *p, *pkgname;
+
+	/*
+	 * Any alternate matches can be immediately discounted.  It may
+	 * be possible in the future to expand these and record all
+	 * possible package names to look up in turn.
+	 */
+	if (strpbrk(pattern, "{"))
+		return NULL;
+
+	pkgname = xstrdup(pattern);
+
+	/*
+	 * Since we discounted alternate matches, any specific version
+	 * matches ("foo>1", "foo<5", etc) are guaranteed to have the
+	 * package name on the left of the first match.
+	 *
+	 * The only thing we need to double check is that the package
+	 * name does not contain any globs (not currently used in
+	 * pkgsrc and highly suspicious but we do not want to take any
+	 * chances).
+	 */
+	if ((p = strpbrk(pkgname, "<>"))) {
+		*p = '\0';
+		if ((p = strpbrk(pkgname, "*")))
+			return NULL;
+		return pkgname;
+	}
+
+	/*
+	 * The only other case we support for now is the incredibly common
+	 * "foo-[0-9]*".  Any other version match e.g. "foo-1.*" is a little
+	 * too complicated to handle, just in case there is a "*" glob
+	 * somewhere in the package name, or if the package name itself
+	 * contains '-[0-9]*'.
+	 */
+	if ((p = strrchr(pkgname, '[')) && --p > pkgname) {
+		if (strcmp(p, "-[0-9]*") != 0)
+			return NULL;
+		*p = '\0';
+		return pkgname;
+	}
+
+	return NULL;
 }
 
 /*

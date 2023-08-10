@@ -55,31 +55,27 @@ const char DELETE_REMOTE[] =
 const char DELETE_REMOTE_PKG_REPO[] =
 	"DELETE FROM REMOTE_PKG WHERE REPOSITORY = %Q;";
 
-/*
- * The "AS l" and "AS r" in these queries are deliberate so that
- * record_depend() known which to handle based on the column name.
- */
 const char LOCAL_DIRECT_DEPENDS[] =
-	"SELECT pattern AS l "
+	"SELECT pattern, pkgbase "
 	"  FROM local_depends, local_pkg "
 	" WHERE fullpkgname = %Q "
 	"   AND local_depends.pkg_id = local_pkg.pkg_id;";
 
 const char REMOTE_DIRECT_DEPENDS[] =
-	"SELECT pattern AS r "
+	"SELECT pattern, pkgbase "
 	"  FROM remote_depends, remote_pkg "
 	" WHERE fullpkgname = %Q "
 	"   AND remote_depends.pkg_id = remote_pkg.pkg_id;";
 
 const char LOCAL_REVERSE_DEPENDS[] =
-	"SELECT required_by, local_required_by.pkgname, local_pkg.pkg_keep "
+	"SELECT required_by, local_pkg.pkgname, local_pkg.pkg_keep "
 	"  FROM local_pkg "
 	"  LEFT JOIN local_required_by "
 	"    ON local_pkg.fullpkgname = local_required_by.required_by "
 	" WHERE local_required_by.pkgname = %Q;";
 
 const char LOCAL_CONFLICTS[] =
-	"SELECT pattern "
+	"SELECT pattern, pkgbase "
 	"  FROM local_conflicts;";
 
 const char LOCAL_PROVIDES[] =
@@ -105,7 +101,7 @@ const char REMOTE_REQUIRES[] =
 	"   AND remote_requires.pkg_id = remote_pkg.pkg_id;";
 
 const char REMOTE_SUPERSEDES[] =
-	"SELECT pattern "
+	"SELECT pattern, pkgbase "
 	"  FROM remote_supersedes "
 	"  LEFT JOIN remote_pkg "
 	"    ON remote_supersedes.pkg_id = remote_pkg.pkg_id "
@@ -174,10 +170,10 @@ const char DELETE_REPO_URL[] =
 	"DELETE FROM REPOS WHERE REPO_URL = %Q;";
 
 const char INSERT_CONFLICTS[] =
-	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d, %Q);";
+	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (%d, %Q, %Q);";
 
 const char INSERT_DEPENDS[] =
-	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d, %Q);";
+	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (%d, %Q, %Q);";
 
 const char INSERT_PROVIDES[] =
 	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (%d, %Q);";
@@ -186,7 +182,7 @@ const char INSERT_REQUIRES[] =
 	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (%d, %Q);";
 
 const char INSERT_SUPERSEDES[] =
-	"INSERT INTO %s (PKG_ID, PATTERN) VALUES (%d, %Q);";
+	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (%d, %Q, %Q);";
 
 const char INSERT_REQUIRED_BY[] =
 	"INSERT INTO LOCAL_REQUIRED_BY (PKGNAME, REQUIRED_BY) VALUES (%Q, %Q);";

@@ -119,12 +119,14 @@ order_install(Plisthead *impacthead)
 {
 	Plisthead	*installhead;
 	Pkglist		*p, *pkg, *savepi = NULL;
-	int		i, maxlevel = 0;
+	int		i, minlevel = 0, maxlevel = 0;
 
 	/* Record highest dependency level on impact list */
 	SLIST_FOREACH(p, impacthead, next) {
 		if (p->level > maxlevel)
 			maxlevel = p->level;
+		if (p->level < minlevel)
+			minlevel = p->level;
 	}
 
 	installhead = init_head();
@@ -133,7 +135,7 @@ order_install(Plisthead *impacthead)
 	 * Perform the first loop only considering packages that are being
 	 * installed.
 	 */
-	for (i = 0; i <= maxlevel; i++) {
+	for (i = minlevel; i <= maxlevel; i++) {
 		SLIST_FOREACH(p, impacthead, next) {
 			if (p->level != i)
 				continue;

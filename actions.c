@@ -588,7 +588,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
 	struct		stat st;
 
-	if (SLIST_EMPTY(&r_plisthead)) {
+	if (is_empty_remote_pkglist()) {
 		printf("%s\n", MSG_EMPTY_AVAIL_PKGLIST);
 		return EXIT_FAILURE;
 	}
@@ -939,22 +939,23 @@ installend:
 int
 pkgin_remove(char **pkgargs)
 {
-	Plisthead	*rmhead, *removehead;
+	Plistarray	*rmhead;
+	Plisthead	*removehead;
 	Pkglist		*lpkg, *p;
 	int		deletenum = 0, rc = EXIT_SUCCESS;
 	char   		*todelete = NULL, **arg;
 
-	if (SLIST_EMPTY(&l_plisthead))
+	if (is_empty_local_pkglist())
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
-	rmhead = init_head();
+	rmhead = init_array(1);
 
 	/*
 	 * For every package or pattern on the command line, find a matching
 	 * installed package and add to rmhead.
 	 */
 	for (arg = pkgargs; *arg != NULL; arg++) {
-		if ((lpkg = find_local_pkg_match(*arg)) == NULL) {
+		if ((lpkg = find_local_pkg(*arg, NULL)) == NULL) {
 			printf(MSG_PKG_NOT_INSTALLED, *arg);
 			rc = EXIT_FAILURE;
 			continue;
@@ -973,18 +974,18 @@ pkgin_remove(char **pkgargs)
 		 */
 		p = malloc_pkglist();
 		p->lpkg = lpkg;
-		SLIST_INSERT_HEAD(rmhead, p, next);
+		SLIST_INSERT_HEAD(&rmhead->head[0], p, next);
 	}
 
 	/*
 	 * Add ACTION_REMOVE to all entries.
 	 */
-	SLIST_FOREACH(p, rmhead, next) {
+	SLIST_FOREACH(p, &rmhead->head[0], next) {
 		p->action = ACTION_REMOVE;
 	}
 
 	/* order remove list */
-	removehead = order_remove(rmhead);
+	removehead = order_remove(&rmhead->head[0]);
 
 	SLIST_FOREACH(p, removehead, next) {
 		deletenum++;
@@ -1011,7 +1012,7 @@ pkgin_remove(char **pkgargs)
 		printf(MSG_NO_PKGS_TO_DELETE);
 
 	free_pkglist(&removehead);
-	free_pkglist(&rmhead);
+	free_array(rmhead);
 	XFREE(todelete);
 
 	return rc;
@@ -1020,8 +1021,7 @@ pkgin_remove(char **pkgargs)
 int
 pkgin_upgrade(int do_inst)
 {
-
-	if (SLIST_EMPTY(&l_plisthead))
+	if (is_empty_local_pkglist())
 		errx(EXIT_FAILURE, MSG_EMPTY_LOCAL_PKGLIST);
 
 	return pkgin_install(NULL, do_inst, 1);

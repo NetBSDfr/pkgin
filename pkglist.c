@@ -35,7 +35,8 @@
 #define PKG_GREATER	'>'
 #define PKG_LESSER	'<'
 
-Plisthead	r_plisthead, l_plisthead;
+Plisthead	r_plisthead[REMOTE_PKG_HASH_SIZE];
+Plisthead	l_plisthead[LOCAL_PKG_HASH_SIZE];
 int		r_plistcounter, l_plistcounter;
 
 static void setfmt(char *, char *);
@@ -50,6 +51,22 @@ struct pkg_sort {
 	char *comment;
 	char flag;
 };
+
+static size_t
+djb_hash(const char *s)
+{
+	size_t h = 5381;
+
+	while (*s)
+		h = h * 33 + (size_t)(unsigned char)*s++;
+	return h;
+}
+
+size_t
+pkg_hash_entry(const char *s, int size)
+{
+	return djb_hash(s) % size;
+}
 
 /**
  * \fn malloc_pkglist
@@ -71,7 +88,8 @@ malloc_pkglist(void)
 	pkglist->name = NULL;
 	pkglist->version = NULL;
 	pkglist->build_date = NULL;
-	pkglist->pattern = NULL;
+	pkglist->patterns = NULL;
+	pkglist->patcount = 0;
 	pkglist->size_pkg = 0;
 	pkglist->file_size = 0;
 	pkglist->level = 0;
@@ -96,6 +114,8 @@ malloc_pkglist(void)
 void
 free_pkglist_entry(Pkglist **plist)
 {
+	int i;
+
 	XFREE((*plist)->pkgfs);
 	XFREE((*plist)->pkgurl);
 	XFREE((*plist)->full);
@@ -105,7 +125,11 @@ free_pkglist_entry(Pkglist **plist)
 	XFREE((*plist)->category);
 	XFREE((*plist)->pkgpath);
 	XFREE((*plist)->comment);
-	XFREE((*plist)->pattern);
+
+	for (i = 0; i < (*plist)->patcount; i++)
+		XFREE((*plist)->patterns[i]);
+
+	XFREE((*plist)->patterns);
 	XFREE(*plist);
 
 	plist = NULL;
@@ -147,6 +171,7 @@ record_pkglist(void *param, int argc, char **argv, char **colname)
 {
 	Plistnumbered *plist = (Plistnumbered *)param;
 	Pkglist *p;
+	size_t val;
 
 	if (argv == NULL)
 		return PDB_ERR;
@@ -176,7 +201,13 @@ record_pkglist(void *param, int argc, char **argv, char **colname)
 		}
 	}
 
-	SLIST_INSERT_HEAD(plist->P_Plisthead, p, next);
+	if (plist->P_type == 0)
+		val = pkg_hash_entry(p->name, LOCAL_PKG_HASH_SIZE);
+	else {
+		val = pkg_hash_entry(p->name, REMOTE_PKG_HASH_SIZE);
+	}
+	SLIST_INSERT_HEAD(&plist->P_Plisthead[val], p, next);
+
 	plist->P_count++;
 
 	return PDB_OK;
@@ -188,9 +219,12 @@ void
 init_local_pkglist(void)
 {
 	Plistnumbered plist;
+	int i;
 
-	SLIST_INIT(&l_plisthead);
-	plist.P_Plisthead = &l_plisthead;
+	for (i = 0; i < LOCAL_PKG_HASH_SIZE; i++)
+		SLIST_INIT(&l_plisthead[i]);
+
+	plist.P_Plisthead = &l_plisthead[0];
 	plist.P_count = 0;
 	plist.P_type = 0;
 	pkgindb_doquery(LOCAL_PKGS_QUERY_ASC, record_pkglist, &plist);
@@ -201,13 +235,107 @@ void
 init_remote_pkglist(void)
 {
 	Plistnumbered plist;
+	int i;
 
-	SLIST_INIT(&r_plisthead);
-	plist.P_Plisthead = &r_plisthead;
+	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++)
+		SLIST_INIT(&r_plisthead[i]);
+
+	plist.P_Plisthead = &r_plisthead[0];
 	plist.P_count = 0;
 	plist.P_type = 1;
 	pkgindb_doquery(REMOTE_PKGS_QUERY_ASC, record_pkglist, &plist);
 	r_plistcounter = plist.P_count;
+}
+
+int
+is_empty_plistarray(Plistarray *a)
+{
+	int i;
+
+	for (i = 0; i < a->size; i++) {
+		if (!SLIST_EMPTY(&a->head[i]))
+			return 0;
+	}
+
+	return 1;
+}
+
+int
+is_empty_local_pkglist(void)
+{
+	int i;
+
+	for (i = 0; i < LOCAL_PKG_HASH_SIZE; i++) {
+		if (!SLIST_EMPTY(&l_plisthead[i]))
+			return 0;
+	}
+
+	return 1;
+}
+
+int
+is_empty_remote_pkglist(void)
+{
+	int i;
+
+	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
+		if (!SLIST_EMPTY(&r_plisthead[i]))
+			return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * These functions look for identical lpkg, rpkg, or pattern entries in a given
+ * plist.  If size is non-zero then look through an array of plists.
+ */
+Pkglist *
+pkgname_in_local_pkglist(const char *pkgname, Plisthead *plist, int size)
+{
+	Pkglist *p;
+	int i;
+
+	for (i = 0; i < size; i++) {
+		SLIST_FOREACH(p, &plist[i], next) {
+			if (p->lpkg && strcmp(p->lpkg->full, pkgname) == 0)
+				return p;
+		}
+	}
+
+	return NULL;
+}
+Pkglist *
+pkgname_in_remote_pkglist(const char *pkgname, Plisthead *plist, int size)
+{
+	Pkglist *p;
+	int i;
+
+	for (i = 0; i < size; i++) {
+		SLIST_FOREACH(p, &plist[i], next) {
+			if (p->rpkg && strcmp(p->rpkg->full, pkgname) == 0)
+				return p;
+		}
+	}
+
+	return NULL;
+}
+Pkglist *
+pattern_in_pkglist(const char *pattern, Plisthead *plist, int size)
+{
+	Pkglist *p;
+	int c, i;
+
+	for (i = 0; i < size; i++) {
+		SLIST_FOREACH(p, &plist[i], next) {
+			for (c = 0; c < p->patcount; c++) {
+				if (strcmp(p->patterns[c], pattern) == 0)
+					return p;
+			}
+		}
+	}
+
+	return NULL;
 }
 
 static void
@@ -226,13 +354,59 @@ free_global_pkglist(Plisthead *plisthead)
 void
 free_local_pkglist(void)
 {
-	free_global_pkglist(&l_plisthead);
+	int i;
+
+	for (i = 0; i < LOCAL_PKG_HASH_SIZE; i++) {
+		free_global_pkglist(&l_plisthead[i]);
+	}
 }
 
 void
 free_remote_pkglist(void)
 {
-	free_global_pkglist(&r_plisthead);
+	int i;
+
+	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
+		free_global_pkglist(&r_plisthead[i]);
+	}
+}
+
+Plistarray *
+init_array(int size)
+{
+	Plistarray *a;
+	int i;
+
+	a = xmalloc(sizeof(Plistarray));
+	a->size = size;
+	a->head = xmalloc(sizeof(Plisthead *) * size);
+
+	for (i = 0; i < size; i++)
+		SLIST_INIT(&a->head[i]);
+
+	return a;
+}
+
+void
+free_array(Plistarray *a)
+{
+	Pkglist *p;
+	int i;
+
+	if (a == NULL)
+		return;
+
+	for (i = 0; i < a->size; i++) {
+		while (!SLIST_EMPTY(&a->head[i])) {
+			p = SLIST_FIRST(&a->head[i]);
+			SLIST_REMOVE_HEAD(&a->head[i], next);
+			free_pkglist_entry(&p);
+		}
+	}
+
+	XFREE(a->head);
+	XFREE(a);
+	a = NULL;
 }
 
 /**
@@ -282,21 +456,24 @@ rec_pkglist(const char *fmt, ...)
 }
 
 /* compare pkg version */
-int
-pkg_is_installed(Plisthead *plisthead, Pkglist *pkg)
+static int
+pkg_is_installed(Pkglist *pkg)
 {
-	Pkglist *pkglist;
+	Pkglist *p;
+	int l;
 
-	SLIST_FOREACH(pkglist, plisthead, next) {
+	for (l = 0; l < LOCAL_PKG_HASH_SIZE; l++ ) {
+	SLIST_FOREACH(p, &l_plisthead[l], next) {
 		/* make sure packages match */
-		if (strcmp(pkglist->name, pkg->name) != 0)
+		if (strcmp(p->name, pkg->name) != 0)
 			continue;
 
 		/* exact same version */
-		if (strcmp(pkglist->version, pkg->version) == 0)
+		if (strcmp(p->version, pkg->version) == 0)
 			return 0;
 
-		return version_check(pkglist->full, pkg->full);
+		return version_check(p->full, pkg->full);
+	}
 	}
 
 	return -1;
@@ -319,7 +496,7 @@ list_pkgs(const char *pkgquery, int lstype)
 {
 	Pkglist	   	*plist;
 	Plistnumbered	*plisthead;
-	int		rc;
+	int		i, rc;
 	char		pkgstatus, outpkg[BUFSIZ];
 	char		sfmt[10], pfmt[10];
 
@@ -329,15 +506,16 @@ list_pkgs(const char *pkgquery, int lstype)
 	if (lstype == PKG_LLIST_CMD && lslimit != '\0') {
 
 		/* check if local package list is empty */
-		if (SLIST_EMPTY(&l_plisthead)) {
+		if (is_empty_local_pkglist()) {
 			fprintf(stderr, MSG_EMPTY_LOCAL_PKGLIST);
 			return;
 		}
 
-		if (!SLIST_EMPTY(&r_plisthead)) {
+		if (!is_empty_remote_pkglist()) {
 
-			SLIST_FOREACH(plist, &r_plisthead, next) {
-				rc = pkg_is_installed(&l_plisthead, plist);
+			for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
+			SLIST_FOREACH(plist, &r_plisthead[i], next) {
+				rc = pkg_is_installed(plist);
 
 				pkgstatus = '\0';
 
@@ -354,6 +532,7 @@ list_pkgs(const char *pkgquery, int lstype)
 					printf(pfmt, outpkg, plist->comment);
 				}
 
+			}
 			}
 		}
 
@@ -422,12 +601,13 @@ search_pkg(const char *pattern)
 
 	psort = xmalloc(sizeof(struct pkg_sort));
 
-	SLIST_FOREACH(plist, &r_plisthead, next) {
+	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
+	SLIST_FOREACH(plist, &r_plisthead[i], next) {
 		if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
 		    regexec(&re, plist->full, 0, NULL, 0) == 0 ||
 		    regexec(&re, plist->comment, 0, NULL, 0) == 0) {
 			matched = 1;
-			rc = pkg_is_installed(&l_plisthead, plist);
+			rc = pkg_is_installed(plist);
 
 			if (rc == 0)
 				is_inst = PKG_EQUAL;
@@ -445,6 +625,7 @@ search_pkg(const char *pattern)
 			psort[pcount].comment = xstrdup(plist->comment);
 			psort[pcount++].flag = is_inst;
 		}
+	}
 	}
 
 	qsort(psort, pcount, sizeof(struct pkg_sort), pkg_sort_cmp);
@@ -476,12 +657,15 @@ void
 show_category(char *category)
 {
 	Pkglist	   	*plist;
+	int i;
 
-	SLIST_FOREACH(plist, &r_plisthead, next) {
+	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
+	SLIST_FOREACH(plist, &r_plisthead[i], next) {
 		if (plist->category == NULL)
 			continue;
 		if (strcmp(plist->category, category) == 0)
 			printf("%-20s %s\n", plist->full, plist->comment);
+	}
 	}
 }
 
@@ -489,15 +673,17 @@ int
 show_pkg_category(char *pkgname)
 {
 	Pkglist	   	*plist;
-	int		matched = 0;
+	int		i, matched = 0;
 
-	SLIST_FOREACH(plist, &r_plisthead, next) {
+	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
+	SLIST_FOREACH(plist, &r_plisthead[i], next) {
 		if (strcmp(plist->name, pkgname) == 0) {
 			matched = 1;
 			if (plist->category == NULL)
 				continue;
 			printf("%-12s - %s\n", plist->category, plist->full);
 		}
+	}
 	}
 
 	if (matched)

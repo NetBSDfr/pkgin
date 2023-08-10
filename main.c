@@ -210,7 +210,7 @@ main(int argc, char *argv[])
 		 * inits the local pkglist if any changes were required, so
 		 * this may already be initialised.
 		 */
-		if (SLIST_EMPTY(&l_plisthead))
+		if (is_empty_local_pkglist())
 			init_local_pkglist();
 		init_remote_pkglist();
 	}

@@ -300,12 +300,14 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	}
 
 	if (strncmp(line, "CONFLICTS=", 10) == 0) {
-		pkgindb_dovaquery(INSERT_CONFLICTS, sum.conflicts, pkgid, val);
+		pkgindb_dovaquery(INSERT_CONFLICTS, sum.conflicts, pkgid, val,
+		    pkgname_from_pattern(val));
 		return;
 	}
 
 	if (strncmp(line, "DEPENDS=", 8) == 0) {
-		pkgindb_dovaquery(INSERT_DEPENDS, sum.depends, pkgid, val);
+		pkgindb_dovaquery(INSERT_DEPENDS, sum.depends, pkgid, val,
+		    pkgname_from_pattern(val));
 		return;
 	}
 
@@ -325,7 +327,7 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 		 */
 		if (sum.type == REMOTE_SUMMARY)
 			pkgindb_dovaquery(INSERT_SUPERSEDES, sum.supersedes,
-			    pkgid, val);
+			    pkgid, val, pkgname_from_pattern(val));
 		return;
 	}
 
@@ -678,6 +680,7 @@ update_localdb(int verbose)
 	FILE *pinfo;
 	struct stat st;
 	Pkglist *lpkg;
+	int l;
 
 	/*
 	 * Start a write transaction, excluding other writers until committed.
@@ -720,10 +723,12 @@ update_localdb(int verbose)
 	/*
 	 * Insert PKG_KEEP database entries based on pkgdb data.
 	 */
-	SLIST_FOREACH(lpkg, &l_plisthead, next) {
+	for (l = 0; l < LOCAL_PKG_HASH_SIZE; l++) {
+	SLIST_FOREACH(lpkg, &l_plisthead[l], next) {
 		if (!is_automatic_installed(lpkg->full)) {
 			pkg_keep(KEEP, lpkg->full);
 		}
+	}
 	}
 out:
 	if (pkgindb_doquery("COMMIT;", NULL, NULL))

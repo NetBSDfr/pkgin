@@ -31,34 +31,35 @@
 #include "pkgin.h"
 
 /*
- * Is package already in impact list?
+ * Check for an existing entry in impact head for either a local pkg or remote.
  */
 static Pkglist *
-local_pkg_in_impact(Plisthead *impacthead, char *pkgname)
+local_pkg_in_impact(Plistarray *impacthead, Pkglist *pkg)
 {
-	Pkglist *p;
+	Plisthead *head;
+	Pkglist *epkg;
+	int slot;
 
-	SLIST_FOREACH(p, impacthead, next) {
-		if (p->lpkg && strcmp(p->lpkg->full, pkgname) == 0) {
-			return p;
-		}
-	}
+	slot = pkg_hash_entry(pkg->name, impacthead->size);
+	head = &impacthead->head[slot];
 
-	return NULL;
+	epkg = pkgname_in_local_pkglist(pkg->full, head, 1);
+
+	return epkg;
 }
-
 static Pkglist *
-pkg_in_impact(Plisthead *impacthead, char *pkgname)
+remote_pkg_in_impact(Plistarray *impacthead, Pkglist *pkg)
 {
-	Pkglist *p;
+	Plisthead *head;
+	Pkglist *epkg;
+	int slot;
 
-	SLIST_FOREACH(p, impacthead, next) {
-		if (p->rpkg && strcmp(p->rpkg->full, pkgname) == 0) {
-			return p;
-		}
-	}
+	slot = pkg_hash_entry(pkg->name, impacthead->size);
+	head = &impacthead->head[slot];
 
-	return NULL;
+	epkg = pkgname_in_remote_pkglist(pkg->full, head, 1);
+
+	return epkg;
 }
 
 /*
@@ -68,17 +69,29 @@ pkg_in_impact(Plisthead *impacthead, char *pkgname)
 static action_t
 calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 {
+	int c;
+
         /*
-	 * If a DEPENDS match is specified and the local package does not match
-	 * it then we need to upgrade.
-	 *
-	 * Otherwise if the version does not match then it is considered an
-	 * upgrade.  Remote versions can go backwards in the event of a revert,
-	 * however there is no support yet for ACTION_DOWNGRADE.
-         */
-	if ((rpkg->pattern && pkg_match(rpkg->pattern, lpkg->full) == 0) ||
-	    (strcmp(lpkg->full, rpkg->full) != 0)) {
-		TRACE("  > upgrading %s\n", lpkg->full);
+	 * If a DEPENDS match is specified but the local package does not match
+	 * it then it needs to be upgraded.
+	 */
+	if (rpkg->patcount) {
+		for (c = 0; c < rpkg->patcount; c++) {
+			if (pkg_match(rpkg->patterns[c], lpkg->full) == 0) {
+				TRACE("  > upgrading %s to match %s\n",
+				    lpkg->full, rpkg->patterns[c]);
+				return ACTION_UPGRADE;
+			}
+		}
+	}
+
+	/*
+	 * If the version does not match then it is considered an upgrade.
+	 * Remote versions can go backwards in the event of a revert, however
+	 * there is no distinction yet for these (e.g. ACTION_DOWNGRADE).
+	 */
+	if (strcmp(lpkg->full, rpkg->full) != 0) {
+		TRACE("  > upgrading %s to %s\n", lpkg->full, rpkg->full);
 		return ACTION_UPGRADE;
 	}
 
@@ -116,7 +129,7 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 	 * return early and do not add to supersedes.
 	 */
 	SLIST_FOREACH(p, supersedes, next) {
-		if (strcmp(p->pattern, argv[0]) == 0)
+		if (strcmp(p->patterns[0], argv[0]) == 0)
 			return PDB_OK;
 	}
 
@@ -124,7 +137,7 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 	 * Find matching entry in the local package list.  If there are no
 	 * matches we're done.
 	 */
-	if ((lpkg = find_local_pkg_match(argv[0])) == NULL)
+	if ((lpkg = find_local_pkg(argv[0], NULL)) == NULL)
 		return PDB_OK;
 
 	/*
@@ -139,7 +152,10 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 	 * An entry we've matched and haven't seen before, add it.
 	 */
 	p = malloc_pkglist();
-	p->pattern = xstrdup(argv[0]);
+	p->patterns = xmalloc(2 * sizeof(char *));
+	p->patterns[0] = xstrdup(argv[0]);
+	p->patterns[1] = NULL;
+	p->patcount = 1;
 	p->lpkg = lpkg;
 	SLIST_INSERT_HEAD(supersedes, p, next);
 
@@ -147,10 +163,11 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 }
 
 static Plisthead *
-find_supersedes(Plisthead *impacthead)
+find_supersedes(Plistarray *impacthead)
 {
 	Plisthead *supersedes;
 	Pkglist *pkg;
+	int i;
 	char query[BUFSIZ];
 
 	supersedes = init_head();
@@ -158,13 +175,15 @@ find_supersedes(Plisthead *impacthead)
 	/*
 	 * Only consider packages that are going to be installed.
 	 */
-	SLIST_FOREACH(pkg, impacthead, next) {
+	for (i = 0; i < impacthead->size; i++) {
+	SLIST_FOREACH(pkg, &impacthead->head[i], next) {
 		if (!action_is_install(pkg->action))
 			continue;
 
 		sqlite3_snprintf(BUFSIZ, query, REMOTE_SUPERSEDES,
 		    pkg->rpkg->full);
 		pkgindb_doquery(query, record_supersedes, supersedes);
+	}
 	}
 
 	if (SLIST_EMPTY(supersedes)) {
@@ -176,66 +195,42 @@ find_supersedes(Plisthead *impacthead)
 }
 
 /*
- * Given a remote package entry, loop through local packages looking for a
- * matching package name and calculate the required action.
+ * Calculate the impact for a remote package entry, and add to impacthead.
+ * Returns the calculated action.
  */
-static void
-deps_impact(Plisthead *impacthead, Pkglist *pdp, int upgrade)
+static action_t
+add_remote_to_impact(Plistarray *impacthead, Pkglist *pkg)
 {
-	Plisthead	*rdeps;
-	Pkglist		*pkg, *lpkg, *p;
-
-	pkg = malloc_pkglist();
+	Pkglist *lpkg;
+	size_t slot;
 
 	pkg->action = ACTION_NONE;
-	pkg->level = pdp->level;
-	pkg->keep = pdp->keep;
-	pkg->rpkg = pdp->rpkg;
-	SLIST_INSERT_HEAD(impacthead, pkg, next);
-
-	TRACE(" |- matching %s over installed packages\n", pkg->rpkg->full);
-	SLIST_FOREACH(lpkg, &l_plisthead, next) {
-		if (strcmp(lpkg->name, pkg->rpkg->name) != 0)
-			continue;
-
-		TRACE("  - found %s\n", lpkg->full);
-		pkg->lpkg = lpkg;
-		pkg->action = calculate_action(pkg->lpkg, pkg->rpkg);
-
-		/*
-		 * For any package that is upgraded, we need to consider its
-		 * direct local reverse dependencies, as they will need to be
-		 * refreshed for any shared library bumps etc.
-		 *
-		 * This is only for install operations, as upgrades will
-		 * already consider every package.
-		 */
-		if (upgrade || pkg->action != ACTION_UPGRADE)
-			return;
-
-		TRACE("  - considering reverse dependencies\n");
-		rdeps = init_head();
-		get_depends(pkg->lpkg->full, rdeps, DEPENDS_REVERSE);
-		SLIST_FOREACH(p, rdeps, next) {
-			Pkglist *l = p->lpkg;
-
-			if (local_pkg_in_impact(impacthead, l->full))
-				continue;
-
-			if ((p->rpkg = find_pkg_match(l->name, l->pkgpath)))
-				deps_impact(impacthead, p, upgrade);
-		}
-		free_pkglist(&rdeps);
-
-		return;
-	}
 
 	/*
 	 * If we didn't match any local packages then this is a new package to
-	 * install.
+	 * install, otherwise set lpkg and calculate the action.
 	 */
-	TRACE(" > recording %s as to install\n", pkg->rpkg->full);
-	pkg->action = ACTION_INSTALL;
+	TRACE(" |- matching %s over installed packages\n", pkg->rpkg->full);
+	if ((lpkg = find_local_pkg(pkg->rpkg->name, pkg->rpkg->name)) == NULL) {
+		TRACE(" > recording %s as to install\n", pkg->rpkg->full);
+		pkg->action = ACTION_INSTALL;
+	} else {
+		TRACE("  - found %s\n", lpkg->full);
+		pkg->lpkg = lpkg;
+		pkg->action = calculate_action(pkg->lpkg, pkg->rpkg);
+	}
+
+	slot = pkg_hash_entry(pkg->rpkg->name, impacthead->size);
+	SLIST_INSERT_HEAD(&impacthead->head[slot], pkg, next);
+
+	return pkg->action;
+}
+
+static void
+update_level_if_higher(Pkglist *pkg, int level)
+{
+	if (pkg->level < level)
+		pkg->level = level;
 }
 
 /*
@@ -270,29 +265,34 @@ finish_deps_spinner(int istty)
 }
 
 /*
- * Loop through all local packages looking for available updates.
+ * Compared to installs, upgrades are relatively easy to reason about.  Iterate
+ * through all local packages and check each for upgrades.
  */
-static Plisthead *
+static Plistarray *
 pkg_impact_upgrade(void)
 {
-	Plisthead *deps, *impacthead, *supersedes;
-	Pkglist *dpkg, *lpkg, *p;
-	int istty;
+	Plistarray *deps, *impacthead;
+	Plisthead *supersedes;
+	Pkglist *dpkg, *epkg, *lpkg, *p, *save;
+	size_t slot;
+	int i, l, istty;
 
 	istty = isatty(fileno(stdout));
 
-	deps = init_head();
-	impacthead = init_head();
+	impacthead = init_array(PKGS_HASH_SIZE);
+	deps = init_array(DEPS_HASH_SIZE);
 
-	SLIST_FOREACH(lpkg, &l_plisthead, next) {
-		if (local_pkg_in_impact(impacthead, lpkg->full))
+	for (l = 0; l < LOCAL_PKG_HASH_SIZE; l++) {
+	SLIST_FOREACH(lpkg, &l_plisthead[l], next) {
+		if (local_pkg_in_impact(impacthead, lpkg))
 			continue;
 
 		TRACE("  [+]-impact for %s\n", lpkg->full);
 		p = malloc_pkglist();
 		p->action = ACTION_NONE;
 		p->lpkg = lpkg;
-		SLIST_INSERT_HEAD(impacthead, p, next);
+		slot = pkg_hash_entry(lpkg->name, impacthead->size);
+		SLIST_INSERT_HEAD(&impacthead->head[slot], p, next);
 
 		/*
 		 * Find a remote package that matches our PKGPATH (if we
@@ -303,7 +303,7 @@ pkg_impact_upgrade(void)
 		 * If there are no matches the package is just skipped, this
 		 * can happen if for example the local package is self-built.
 		 */
-		p->rpkg = find_pkg_match(lpkg->name, lpkg->pkgpath);
+		p->rpkg = find_remote_pkg(lpkg->name, lpkg->name, lpkg->pkgpath);
 		if (p->rpkg == NULL) {
 			TRACE("   | - no remote match found\n");
 			continue;
@@ -322,6 +322,7 @@ pkg_impact_upgrade(void)
 		update_deps_spinner(istty);
 		get_depends_recursive(p->rpkg->full, deps, DEPENDS_REMOTE);
 	}
+	}
 
 	/*
 	 * We now have a full list of dependencies for all local packages,
@@ -330,15 +331,17 @@ pkg_impact_upgrade(void)
 	 * its correct dependency depth, update it if we found a deeper path so
 	 * that install ordering is correct.
 	 */
-	SLIST_FOREACH(dpkg, deps, next) {
-		if ((p = pkg_in_impact(impacthead, dpkg->rpkg->full))) {
-			if (dpkg->level > p->level)
-				p->level = dpkg->level;
+	for (i = 0; i < deps->size; i++) {
+	SLIST_FOREACH_SAFE(dpkg, &deps->head[i], next, save) {
+		SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
+		if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
+			update_level_if_higher(epkg, dpkg->level);
 			continue;
 		}
-		deps_impact(impacthead, dpkg, 1);
+		add_remote_to_impact(impacthead, dpkg);
 	}
-	free_pkglist(&deps);
+	}
+	free_array(deps);
 
 	/*
 	 * Get SUPERSEDES entries matching local packages.  For each affected
@@ -350,7 +353,7 @@ pkg_impact_upgrade(void)
 			 * find_supersedes() ensures lpkg will be set and this
 			 * will return a valid entry.
 			 */
-			p = local_pkg_in_impact(impacthead, lpkg->lpkg->full);
+			p = local_pkg_in_impact(impacthead, lpkg->lpkg);
 			p->action = ACTION_SUPERSEDED;
 		}
 		free_pkglist(&supersedes);
@@ -360,21 +363,120 @@ pkg_impact_upgrade(void)
 }
 
 /*
+ * Recursively process a list of packages that are being upgraded, finding
+ * their forward and reverse dependencies to ensure they are correctly
+ * accounted for.
+ *
+ * If any do not exist in impacthead, add.
+ */
+static void
+resolve_forward_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
+{
+	Plisthead *deps;
+	Pkglist *p, *npkg, *save;
+
+	deps = init_head();
+	get_depends(pkg->rpkg->full, deps, DEPENDS_REMOTE);
+
+	SLIST_FOREACH_SAFE(p, deps, next, save) {
+		SLIST_REMOVE(deps, p, Pkglist, next);
+		/*
+		 * If we've already seen this package then we're done.
+		 */
+		if (remote_pkg_in_impact(impacthead, p->rpkg))
+			continue;
+
+		/*
+		 * Otherwise set the dependency to the next level, add to
+		 * impact, and if it's going to be an upgrade then add it to
+		 * upgrades so it is considered in the next loop.
+		 */
+		p->level = pkg->level + 1;
+		if ((add_remote_to_impact(impacthead, p)) == ACTION_UPGRADE) {
+			npkg = malloc_pkglist();
+			npkg->ipkg = p;
+			SLIST_INSERT_HEAD(upgrades, npkg, next);
+		}
+	}
+
+	free_pkglist(&deps);
+}
+
+static void
+resolve_reverse_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
+{
+	Plisthead *revdeps;
+	Pkglist *p, *npkg, *save;
+
+	revdeps = init_head();
+	get_depends(pkg->lpkg->full, revdeps, DEPENDS_REVERSE);
+
+	SLIST_FOREACH_SAFE(p, revdeps, next, save) {
+		SLIST_REMOVE(revdeps, p, Pkglist, next);
+		/*
+		 * If we've already seen this package then we're done.
+		 */
+		if (local_pkg_in_impact(impacthead, p))
+			continue;
+
+		/*
+		 * Get suitable remote package.  In theory this shouldn't
+		 * return NULL, but if it does then there's not much we can do
+		 * about it other than log and skip.
+		 */
+		p->rpkg = find_remote_pkg(p->name, p->name, p->pkgpath);
+		if (p->rpkg == NULL) {
+			TRACE("ERROR: unable to find remote pkg for %s at %s\n",
+			    p->name, p->pkgpath);
+			continue;
+		}
+
+		/*
+		 * Otherwise set the dependency to a lower level, add to
+		 * impact, and if it's going to be an upgrade then add it to
+		 * upgrades so it is considered in the next loop.
+		 */
+		p->level = pkg->level - 1;
+		if ((add_remote_to_impact(impacthead, p)) == ACTION_UPGRADE) {
+			npkg = malloc_pkglist();
+			npkg->ipkg = p;
+			SLIST_INSERT_HEAD(upgrades, npkg, next);
+		}
+	}
+
+	free_pkglist(&revdeps);
+}
+
+static void
+recurse_upgrades(Plisthead *upgrades, Plistarray *impacthead)
+{
+	Pkglist *save, *u;
+
+	while (!(SLIST_EMPTY(upgrades))) {
+		SLIST_FOREACH_SAFE(u, upgrades, next, save) {
+			SLIST_REMOVE(upgrades, u, Pkglist, next);
+			resolve_forward_deps(upgrades, impacthead, u->ipkg);
+			resolve_reverse_deps(upgrades, impacthead, u->ipkg);
+		}
+	}
+}
+
+/*
  * For each package argument on the command line, look for suitable remote
  * packages and their dependencies to install.
  */
-static Plisthead *
+static Plistarray *
 pkg_impact_install(char **pkgargs, int *rc)
 {
-	Plisthead *impacthead, *depshead;
-	Pkglist *dpkg, *rpkg, *p;
+	Plistarray *deps, *impacthead;
+	Plisthead *ipkgs;
+	Pkglist *dpkg, *epkg, *rpkg, *p, *r, *save;
 	char **arg, *pkgname = NULL;
-	int istty, rv;
+	int i, istty, rv;
 
 	istty = isatty(fileno(stdout));
 
-	impacthead = init_head();
-	depshead = init_head();
+	impacthead = init_array(PKGS_HASH_SIZE);
 
 	for (arg = pkgargs; *arg != NULL; arg++) {
 		TRACE("  [+]-impact for %s\n", *arg);
@@ -404,7 +506,7 @@ pkg_impact_install(char **pkgargs, int *rc)
 		 * package already processed.  If so, ensure it is marked as a
 		 * keep package before skipping.
 		 */
-		if ((p = pkg_in_impact(impacthead, rpkg->full))) {
+		if ((p = remote_pkg_in_impact(impacthead, rpkg))) {
 			p->keep = 1;
 			continue;
 		}
@@ -412,7 +514,7 @@ pkg_impact_install(char **pkgargs, int *rc)
 		p = malloc_pkglist();
 		p->keep = 1;
 		p->rpkg = rpkg;
-		SLIST_INSERT_HEAD(impacthead, p, next);
+		add_remote_to_impact(impacthead, p);
 
 		/*
 		 * Get all recursive dependencies of the remote package and
@@ -420,26 +522,48 @@ pkg_impact_install(char **pkgargs, int *rc)
 		 * package or not.
 		 */
 		update_deps_spinner(istty);
-		get_depends_recursive(p->rpkg->full, depshead, DEPENDS_REMOTE);
-		deps_impact(impacthead, p, 0);
+		deps = init_array(DEPS_HASH_SIZE);
+		get_depends_recursive(p->rpkg->full, deps, DEPENDS_REMOTE);
+		for (i = 0; i < deps->size; i++) {
+		SLIST_FOREACH_SAFE(dpkg, &deps->head[i], next, save) {
+			SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
+			if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
+				update_level_if_higher(epkg, dpkg->level);
+				continue;
+			}
+			add_remote_to_impact(impacthead, dpkg);
+		}
+		}
+		free_array(deps);
 	}
 
 	/*
-	 * We now have a full list of dependencies for all local packages,
-	 * process them in turn, adding to impact list.  As we may have already
-	 * seen an entry as part of looping through all packages, but without
-	 * its correct dependency depth, update it if we found a deeper path so
-	 * that install ordering is correct.
+	 * For any package that is to be upgraded, we need to consider its
+	 * direct local reverse dependencies, as they will need to be refreshed
+	 * for any shared library bumps etc.
+	 *
+	 * This is only for install operations, as upgrades will already
+	 * consider every package.
 	 */
-	SLIST_FOREACH(dpkg, depshead, next) {
-		if ((p = pkg_in_impact(impacthead, dpkg->rpkg->full))) {
-			if (dpkg->level > p->level)
-				p->level = dpkg->level;
-			continue;
+	ipkgs = init_head();
+
+	/*
+	 * First, get all upgrade packages from our current state.
+	 */
+	for (i = 0; i < impacthead->size; i++) {
+		SLIST_FOREACH(dpkg, &impacthead->head[i], next) {
+			if (dpkg->action != ACTION_UPGRADE)
+				continue;
+			r = malloc_pkglist();
+			r->ipkg = dpkg;
+			SLIST_INSERT_HEAD(ipkgs, r, next);
 		}
-		deps_impact(impacthead, dpkg, 0);
 	}
-	free_pkglist(&depshead);
+
+	/*
+	 * Now recursively process them until they are all added to impacthead.
+	 */
+	recurse_upgrades(ipkgs, impacthead);
 
 	return impacthead;
 }
@@ -454,9 +578,10 @@ pkg_impact_install(char **pkgargs, int *rc)
 Plisthead *
 pkg_impact(char **pkgargs, int *rc)
 {
+	Plistarray *pkgs;
 	Plisthead *impacthead;
 	Pkglist *p, *tmpp;
-	int istty;
+	int i, istty;
 
 	istty = isatty(fileno(stdout));
 
@@ -464,21 +589,30 @@ pkg_impact(char **pkgargs, int *rc)
 	start_deps_spinner(istty);
 
 	if (pkgargs)
-		impacthead = pkg_impact_install(pkgargs, rc);
+		pkgs = pkg_impact_install(pkgargs, rc);
 	else
-		impacthead = pkg_impact_upgrade();
+		pkgs = pkg_impact_upgrade();
 
 	TRACE("[<]-leaving impact\n");
 	finish_deps_spinner(istty);
 
+	impacthead = init_head();
+
 	/*
-	 * Remove ACTION_NONE entries to simplify processing in later
-	 * stages, leaving only actionable entries.
+	 * Remove ACTION_NONE entries to simplify processing in later stages,
+	 * leaving only actionable entries.
+	 *
+	 * Convert back to a single layer for simpler processing by callers.
 	 */
-	SLIST_FOREACH_SAFE(p, impacthead, next, tmpp) {
-		if (p->action == ACTION_NONE) {
-			SLIST_REMOVE(impacthead, p, Pkglist, next);
-			free_pkglist_entry(&p);
+	for (i = 0; i < pkgs->size; i++) {
+		SLIST_FOREACH_SAFE(p, &pkgs->head[i], next, tmpp) {
+			SLIST_REMOVE(&pkgs->head[i], p, Pkglist, next);
+
+			if (p->action == ACTION_NONE) {
+				free_pkglist_entry(&p);
+			} else {
+				SLIST_INSERT_HEAD(impacthead, p, next);
+			}
 		}
 	}
 

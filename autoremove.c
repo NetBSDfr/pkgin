@@ -67,8 +67,9 @@ get_sorted_list(Plisthead *pkgs)
 void
 pkgin_autoremove(void)
 {
+	Plistarray	*depshead;
 	Plistnumbered	*nokeephead, *keephead;
-	Plisthead	*depshead, *removehead, *orderedhead;
+	Plisthead	*removehead, *orderedhead;
 	Pkglist		*pkglist, *premove, *pdp, *p;
 	char		*toremove = NULL, **names, preserve[BUFSIZ];
 	int		argn, is_keep_dep, removenb = 0;
@@ -91,7 +92,7 @@ pkgin_autoremove(void)
 	 * Record all recursive dependencies for each keep package.  This then
 	 * contains a list of all packages that are required.
 	 */
-	depshead = init_head();
+	depshead = init_array(1);
 	SLIST_FOREACH(p, keephead->P_Plisthead, next) {
 		get_depends_recursive(p->full, depshead, DEPENDS_LOCAL);
 	}
@@ -104,7 +105,7 @@ pkgin_autoremove(void)
 	 */
 	SLIST_FOREACH(pkglist, nokeephead->P_Plisthead, next) {
 		is_keep_dep = 0;
-		SLIST_FOREACH(pdp, depshead, next) {
+		SLIST_FOREACH(pdp, &depshead->head[0], next) {
 			if (strcmp(pdp->lpkg->full, pkglist->full) == 0) {
 				is_keep_dep = 1;
 				break;
@@ -129,7 +130,7 @@ pkgin_autoremove(void)
 		 */
 		premove = malloc_pkglist();
 		premove->action = ACTION_REMOVE;
-		premove->lpkg = find_local_pkg_match(pkglist->full);
+		premove->lpkg = find_local_pkg(pkglist->full, pkglist->name);
 		SLIST_INSERT_HEAD(removehead, premove, next);
 		removenb++;
 	}
@@ -138,7 +139,7 @@ pkgin_autoremove(void)
 	free(keephead);
 	free_pkglist(&nokeephead->P_Plisthead);
 	free(nokeephead);
-	free_pkglist(&depshead);
+	free_array(depshead);
 
 	if (!removenb) {
 		printf(MSG_NO_ORPHAN_DEPS);
@@ -216,7 +217,7 @@ show_pkg_nokeep(void)
  * Mark packages as keep (non-autoremovable) or nokeep (autoremovable).
  */
 int
-pkg_keep(int type, char *pkgname)
+pkg_keep(int type, char *pattern)
 {
 	Pkglist *lpkg;
 	char query[BUFSIZ];
@@ -224,11 +225,11 @@ pkg_keep(int type, char *pkgname)
 	if (!have_privs(PRIVS_PKGDB|PRIVS_PKGINDB))
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
-	if (SLIST_EMPTY(&l_plisthead))
+	if (is_empty_local_pkglist())
 		return 1;
 
-	if ((lpkg = find_local_pkg_match(pkgname)) == NULL) {
-		printf(MSG_PKG_NOT_INSTALLED, pkgname);
+	if ((lpkg = find_local_pkg(pattern, NULL)) == NULL) {
+		printf(MSG_PKG_NOT_INSTALLED, pattern);
 		return 1;
 	}
 

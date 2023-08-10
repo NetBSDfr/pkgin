@@ -124,6 +124,112 @@
 #endif
 
 /*
+ * The remote package hash is used by almost every operation, and is the one
+ * that when tuned well provides the greatest performance benefits.  In most
+ * situations the number of remote packages will be a large number, with the
+ * total somewhere around the number of packages available in pkgsrc, with
+ * 25,000 being a reasonable expectation in 2023.
+ *
+ * On the test system both the upgrade and install scenarios were tested, and
+ * showed the following results (runtime and number of pkg_match() calls).
+ *
+ *  Size	Upgrade			Install
+ *     1	19.675s	493,519,906	6.867s	230,816,916
+ *    16	 8.334s	 48,824,381	1.980s	 24,875,947
+ *    64	 7.106s	 26,579,645	1.422s	 14,572,242
+ *   256	 6.677s	 21,023,457	1.222s	 11,999,939
+ *  1024	 6.514s	 19,638,215	1.201s	 11,354,472
+ *  4096	 6.643s	 19,293,278	1.097s	 11,192,549
+ * 16384	 6.496s	 19,205,922	1.097s	 11,152,356
+ *
+ * An additional consideration to make when sizing this hash is that over time
+ * the number of remote packages is likely to grow, and so we shouldn't be shy
+ * about setting a reasonably large value to ensure that pkgin continues to
+ * perform well in the event of considerable package growth.
+ *
+ * As the remote package list is only ever loaded once, there are fewer costs
+ * associated with setting it to a higher value, and so for now 4096 is chosen.
+ *
+ * We may even want to dynamically resize this at some point based on the
+ * number of remote packages, especially if its shown to provide benefits
+ * against smaller (e.g. self-built) repositories.
+ */
+#define	REMOTE_PKG_HASH_SIZE	4096
+
+/*
+ * Both the packages and dependencies hashes depend on the number of affected
+ * packages from either install or upgrade operations.  Using the pessimistic
+ * test case, the following total entries were observed:
+ *
+ *  - "pkgin install": pkgs=5257,  deps=5
+ *  - "pkgin upgrade": pkgs=13803, deps=6748
+ *
+ * Note of course that as the "pkgin install" operation in our test case mostly
+ * handles packages that are already installed, the deps number is artificially
+ * low as the dependencies will already have been handled by deps_impact() by
+ * the time later packages are considered.  A normal "pkgin install" for new
+ * packages will result in a higher deps number.
+ *
+ * For both hashes we are simply optimising for strcmp() calls which search for
+ * existing hash entries to avoid duplicate entries, there are no pkg_match()
+ * calls to consider.
+ *
+ * For the packages hash the following results were observed (runtime and
+ * number of strcmp() calls) with DEPS_HASH_SIZE=1.
+ *
+ *  Size	Upgrade			Install
+ *     1	6.675s	365,703,632	1.099s	39,903,276
+ *    16	3.618s	252,966,780	0.708s	 3,593,899
+ *    64	3.514s	247,323,761	0.678s	 1,763,491
+ *   256	3.519s	245,913,686	0.651s	 1,307,191
+ *  8192	3.366s	245,457,901	0.604s	 1,158,908
+ * 16384	3.475s	245,450,585	0.637s	 1,156,550
+ *
+ * Any gains over 256 are marginal and so that's chosen.
+ *
+ * For dependencies, PKGS_HASH_SIZE was set to 256 and the results are:
+ *
+ *  Size	Upgrade	strcmp()
+ *     1	3.395s	245,913,686
+ *    16	1.380s	 16,493,696
+ *    64	1.208s	  5,094,489
+ *   256	1.170s	  2,163,943
+ *  1024	1.207s	  1,392,635
+ *  4096	1.428s	  1,394,523
+ *
+ * Again there are minimal gains over 256, and certainly no performance
+ * increase, so for simplicity we use 256 for both values.
+ */
+#define	PKGS_HASH_SIZE		256
+#define	DEPS_HASH_SIZE		256
+
+/*
+ * The local package hash is only of benefit for "pkgin install" operations
+ * where selected remote packages need to search for matching local packages to
+ * upgrade.  "pkgin upgrade" will always consider all local packages and so
+ * very few, if any, additional lookups are performed.
+ *
+ * A relatively small hash size is all that's needed to provide reasonable
+ * benefits.  Using the same install operation as described below, the runtime
+ * was calculated and pkg_match() calls were counted using DTrace:
+ *
+ * LOCAL_PKG_HASH_SIZE=1	9.918s	398,107,802
+ * LOCAL_PKG_HASH_SIZE=4	8.771s	270,646,524
+ * LOCAL_PKG_HASH_SIZE=16	7.280s	238,795,130
+ * LOCAL_PKG_HASH_SIZE=64	6.871s	230,865,958
+ * LOCAL_PKG_HASH_SIZE=256	6.714s	228,828,534
+ * LOCAL_PKG_HASH_SIZE=16384	6.639s	228,174,701
+ *
+ * Clearly the advantages drop off considerably over 64, and given the test
+ * case is about as pessimistic as can be constructed and the vast majority of
+ * installs will have orders of magnitude fewer packages, there's no reason to
+ * consider higher values, especially as for some operations the local package
+ * array needs to be reconstructed after pkgdb modifications which will cause
+ * additional setup and teardown costs.
+ */
+#define	LOCAL_PKG_HASH_SIZE	64
+
+/*
  * Action to perform.
  */
 typedef enum action_t {
@@ -174,7 +280,9 @@ typedef struct Pkglist {
 	char *pkgpath; /*!< pkgsrc pkgpath */
 	char *comment; /*!< package list comment */
 
-	char *pattern;		/* DEPENDS pattern */
+	char **patterns;	/* DEPENDS patterns for this package */
+	int patcount;		/* Number of DEPENDS patterns */
+
 	action_t action;	/* Action to perform */
 	int skip;		/* Already processed via a different path */
 	int	keep; /*!< autoremovable package ? */
@@ -188,6 +296,14 @@ typedef struct Plistnumbered {
 	int		P_count;
 	int		P_type; /* 0 = local, 1 = remote */
 } Plistnumbered;
+
+/*
+ * An array of  Plistheads suitable for hashed entries.
+ */
+typedef struct Plistarray {
+	Plisthead	*head;
+	int		size;
+} Plistarray;
 
 typedef struct Preflist {
 	char		*pkg;
@@ -209,13 +325,13 @@ extern uint8_t		verbosity;
 extern uint8_t		package_version;
 extern uint8_t		parsable;
 extern uint8_t		pflag;
-extern int		r_plistcounter;
-extern int		l_plistcounter;
 extern char		*env_repos;
 extern char		**pkg_repos;
 extern char  		lslimit;
-extern Plisthead	r_plisthead;
-extern Plisthead	l_plisthead;
+extern int		l_plistcounter;
+extern int		r_plistcounter;
+extern Plisthead	l_plisthead[LOCAL_PKG_HASH_SIZE];
+extern Plisthead	r_plisthead[REMOTE_PKG_HASH_SIZE];
 extern FILE		*tracefp;
 
 /* download.c*/
@@ -232,21 +348,29 @@ int		chk_repo_list(int);
 int		pdb_rec_list(void *, int, char **, char **);
 /* depends.c */
 void		get_depends(const char *, Plisthead *, depends_t);
-void		get_depends_recursive(const char *, Plisthead *, depends_t);
+void		get_depends_recursive(const char *, Plistarray *, depends_t);
 int		show_direct_depends(const char *);
 int		show_full_dep_tree(const char *);
 int		show_rev_dep_tree(const char *);
 /* pkglist.c */
 void		init_local_pkglist(void);
 void		init_remote_pkglist(void);
+int		is_empty_plistarray(Plistarray *);
+int		is_empty_local_pkglist(void);
+int		is_empty_remote_pkglist(void);
+Pkglist		*pkgname_in_local_pkglist(const char *, Plisthead *, int);
+Pkglist		*pkgname_in_remote_pkglist(const char *, Plisthead *, int);
+Pkglist		*pattern_in_pkglist(const char *, Plisthead *, int);
+size_t		pkg_hash_entry(const char *, int);
 void		free_local_pkglist(void);
 void		free_remote_pkglist(void);
 Pkglist		*malloc_pkglist(void);
 void		free_pkglist_entry(Pkglist **);
 void		free_pkglist(Plisthead **);
+Plistarray	*init_array(int);
+void		free_array(Plistarray *);
 Plisthead	*init_head(void);
 Plistnumbered	*rec_pkglist(const char *, ...);
-int		pkg_is_installed(Plisthead *, Pkglist *);
 void		list_pkgs(const char *, int);
 int		search_pkg(const char *);
 void		show_category(char *);
@@ -278,11 +402,12 @@ char		*read_repos(void);
 /* pkg_str.c */
 int		find_preferred_pkg(const char *, Pkglist **, char **);
 char	   	*unique_pkg(const char *, const char *);
-Pkglist		*find_pkg_match(const char *, const char *);
-Pkglist		*find_local_pkg_match(const char *);
+Pkglist		*find_remote_pkg(const char *, const char *, const char *);
+Pkglist		*find_local_pkg(const char *, const char *);
 int		exact_pkgfmt(const char *);
 int		version_check(char *, char *);
 int		pkgstrcmp(const char *, const char *);
+char *		pkgname_from_pattern(const char *);
 int		sort_pkg_alpha(const void *, const void *);
 /* selection.c */
 void		export_keep(void);

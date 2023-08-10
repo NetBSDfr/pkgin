@@ -53,7 +53,8 @@ CREATE TABLE [LOCAL_PKG] (
  */
 CREATE TABLE local_conflicts (
 	pkg_id		INTEGER,
-	pattern		TEXT
+	pattern		TEXT NOT NULL,
+	pkgbase		TEXT
 );
 CREATE INDEX idx_local_conflicts_pkg_id ON local_conflicts (
 	pkg_id		ASC
@@ -63,7 +64,8 @@ CREATE INDEX idx_local_conflicts_pattern ON local_conflicts (
 );
 CREATE TABLE remote_conflicts (
 	pkg_id		INTEGER,
-	pattern		TEXT
+	pattern		TEXT NOT NULL,
+	pkgbase		TEXT
 );
 CREATE INDEX idx_remote_conflicts_pkg_id ON remote_conflicts (
 	pkg_id		ASC
@@ -77,7 +79,8 @@ CREATE INDEX idx_remote_conflicts_pattern ON remote_conflicts (
  */
 CREATE TABLE local_depends (
 	pkg_id		INTEGER,
-	pattern		TEXT
+	pattern		TEXT NOT NULL,
+	pkgbase		TEXT
 );
 CREATE INDEX idx_local_depends_pkg_id ON local_depends (
 	pkg_id		ASC
@@ -87,7 +90,8 @@ CREATE INDEX idx_local_depends_pattern ON local_depends (
 );
 CREATE TABLE remote_depends (
 	pkg_id		INTEGER,
-	pattern		TEXT
+	pattern		TEXT NOT NULL,
+	pkgbase		TEXT
 );
 CREATE INDEX idx_remote_depends_pkg_id ON remote_depends (
 	pkg_id		ASC
@@ -149,7 +153,8 @@ CREATE INDEX idx_remote_requires_filename ON remote_requires (
  */
 CREATE TABLE remote_supersedes (
 	pkg_id		INTEGER,
-	pattern		TEXT
+	pattern		TEXT NOT NULL,
+	pkgbase		TEXT
 );
 CREATE INDEX idx_remote_supersedes_pkg_id ON remote_supersedes (
 	pkg_id		ASC
