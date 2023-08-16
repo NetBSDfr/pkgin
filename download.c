@@ -187,7 +187,7 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 		pkg = (char *)pkg_url; /* should not happen */
 
 	if (parsable) {
-		printf("downloading %s", pkg);
+		printf("[%d/%d] downloading %s", cur, total, pkg);
 	} else {
 		msg = xasprintf("[%d/%d] %s", cur, total, pkg);
 		fflush(stdout);

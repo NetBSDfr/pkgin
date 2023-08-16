@@ -85,16 +85,16 @@ order_remove(Plisthead *impacthead)
 }
 
 /*
- * Simple download order.  In the future it would be nice to sort this
- * alphabetically for prettier output.
+ * Download order, sorted alphabetically.
  *
- * All we do is skip any packages not marked for download by pkgin_install().
+ * All we do is skip any packages not marked for download by pkgin_install()
+ * and then insert based on sorted PKGNAME.
  */
 Plisthead *
 order_download(Plisthead *impacthead)
 {
 	Plisthead	*dlhead;
-	Pkglist		*p, *pkg;
+	Pkglist		*d, *dsave, *p, *pkg;
 
 	dlhead = init_head();
 
@@ -104,7 +104,27 @@ order_download(Plisthead *impacthead)
 
 		pkg = malloc_pkglist();
 		pkg->ipkg = p;
-		SLIST_INSERT_HEAD(dlhead, pkg, next);
+
+		if (SLIST_EMPTY(dlhead)) {
+			SLIST_INSERT_HEAD(dlhead, pkg, next);
+			continue;
+		}
+
+		/*
+		 * Find first existing entry that sorts after us.  No doubt
+		 * there is a better algorithm that could be used here...
+		 */
+		dsave = NULL;
+		SLIST_FOREACH(d, dlhead, next) {
+			if (strcmp(pkg->ipkg->rpkg->full,
+			    d->ipkg->rpkg->full) < 0)
+				break;
+			dsave = d;
+		}
+		if (dsave)
+			SLIST_INSERT_AFTER(dsave, pkg, next);
+		else
+			SLIST_INSERT_HEAD(dlhead, pkg, next);
 	}
 
 	return dlhead;
