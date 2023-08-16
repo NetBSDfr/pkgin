@@ -1,3 +1,44 @@
+## Version 23.8.0 (2023-08-16)
+
+This is the biggest overhaul of pkgin yet!  As well as fixing many bugs, pkgin
+23.8.0 runs "pkgin -n upgrade" over 2,000x faster on a test system with 12,663
+packages installed compared to 22.10.0 (1.4 seconds vs over 54 minutes).
+
+ * Large overhaul of dependency resolution code, fixing many upgrade issues,
+   providing significant performance improvements, and improving code and
+   logic readability.
+
+ * Add support for `SUPERSEDES`.
+
+ * Fix install and removal ordering.
+
+ * Improve and fix handling of "keep" packages, using `pkg_add -A` to
+   correctly install automatic packages rather than applying keep or unkeep
+   flags afterwards.
+
+ * Output improvements, sorting packages alphabetically and providing a
+   simple progress counter.  Fix unwanted output that could end up mixed
+   with package paths in "pkgin export".
+
+ * Correct handling of `+REQUIRED_BY` for reverse dependencies, fixing
+   `DEPENDS` that use alternate matches.
+
+ * Many internal code improvements, memory leaks plugged, and compiler
+   warnings eradicated.
+
+Fixes at least the following issues:
+
+ * NetBSDfr/pkgin#10
+ * NetBSDfr/pkgin#44
+ * NetBSDfr/pkgin#79
+ * NetBSDfr/pkgin#95
+ * NetBSDfr/pkgin#97
+ * NetBSDfr/pkgin#110
+ * NetBSDfr/pkgin#113
+ * NetBSDfr/pkgin#128
+ * NetBSD PR#51465
+ * NetBSD PR#56683
+
 ## Version 22.10.0 (2022-10-05)
 
  * Fix issue where newly-installed packages were not correctly marked as
