@@ -307,12 +307,12 @@ pkgname_from_pattern(const char *pattern)
 	 *
 	 * The only thing we need to double check is that the package
 	 * name does not contain any globs (not currently used in
-	 * pkgsrc and highly suspicious but we do not want to take any
+	 * pkgsrc and highly suspicious, but we do not want to take any
 	 * chances).
 	 */
 	if ((p = strpbrk(pkgname, "<>"))) {
 		*p = '\0';
-		if ((p = strpbrk(pkgname, "*")))
+		if (strpbrk(pkgname, "[]*"))
 			return NULL;
 		return pkgname;
 	}
@@ -328,6 +328,8 @@ pkgname_from_pattern(const char *pattern)
 		if (strcmp(p, "-[0-9]*") != 0)
 			return NULL;
 		*p = '\0';
+		if (strpbrk(pkgname, "[]*"))
+			return NULL;
 		return pkgname;
 	}
 
