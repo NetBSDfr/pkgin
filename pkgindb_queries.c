@@ -34,7 +34,9 @@
  * runs quickly.
  */
 const char CHECK_DB_LATEST[] =
-	"SELECT PATTERN FROM LOCAL_DEPENDS LIMIT 1;";
+	"SELECT pkgbase "
+	"  FROM local_conflicts "
+	" LIMIT 1;";
 
 const char DELETE_LOCAL[] =
 	"DELETE FROM LOCAL_PKG;"
