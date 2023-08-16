@@ -300,14 +300,17 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	}
 
 	if (strncmp(line, "CONFLICTS=", 10) == 0) {
+		v = pkgname_from_pattern(val);
 		pkgindb_dovaquery(INSERT_CONFLICTS, sum.conflicts, pkgid, val,
-		    pkgname_from_pattern(val));
+		    v);
+		free(v);
 		return;
 	}
 
 	if (strncmp(line, "DEPENDS=", 8) == 0) {
-		pkgindb_dovaquery(INSERT_DEPENDS, sum.depends, pkgid, val,
-		    pkgname_from_pattern(val));
+		v = pkgname_from_pattern(val);
+		pkgindb_dovaquery(INSERT_DEPENDS, sum.depends, pkgid, val, v);
+		free(v);
 		return;
 	}
 
@@ -325,9 +328,12 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 		/*
 		 * Only remote SUPERSEDES are supported.
 		 */
-		if (sum.type == REMOTE_SUMMARY)
+		if (sum.type == REMOTE_SUMMARY) {
+			v = pkgname_from_pattern(val);
 			pkgindb_dovaquery(INSERT_SUPERSEDES, sum.supersedes,
-			    pkgid, val, pkgname_from_pattern(val));
+			    pkgid, val, v);
+			free(v);
+		}
 		return;
 	}
 

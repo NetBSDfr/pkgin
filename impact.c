@@ -340,6 +340,7 @@ pkg_impact_upgrade(void)
 		SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
 		if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
 			update_level_if_higher(epkg, dpkg->level);
+			free_pkglist_entry(&dpkg);
 			continue;
 		}
 		add_remote_to_impact(impacthead, dpkg);
@@ -387,8 +388,10 @@ resolve_forward_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
 		/*
 		 * If we've already seen this package then we're done.
 		 */
-		if (remote_pkg_in_impact(impacthead, p->rpkg))
+		if (remote_pkg_in_impact(impacthead, p->rpkg)) {
+			free_pkglist_entry(&p);
 			continue;
+		}
 
 		/*
 		 * Otherwise set the dependency to the next level, add to
@@ -420,8 +423,10 @@ resolve_reverse_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
 		/*
 		 * If we've already seen this package then we're done.
 		 */
-		if (local_pkg_in_impact(impacthead, p))
+		if (local_pkg_in_impact(impacthead, p)) {
+			free_pkglist_entry(&p);
 			continue;
+		}
 
 		/*
 		 * Get suitable remote package.  In theory this shouldn't
@@ -432,6 +437,7 @@ resolve_reverse_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
 		if (p->rpkg == NULL) {
 			TRACE("ERROR: unable to find remote pkg for %s at %s\n",
 			    p->name, p->pkgpath);
+			free_pkglist_entry(&p);
 			continue;
 		}
 
@@ -461,6 +467,7 @@ recurse_upgrades(Plisthead *upgrades, Plistarray *impacthead)
 			SLIST_REMOVE(upgrades, u, Pkglist, next);
 			resolve_forward_deps(upgrades, impacthead, u->ipkg);
 			resolve_reverse_deps(upgrades, impacthead, u->ipkg);
+			free_pkglist_entry(&u);
 		}
 	}
 }
@@ -533,6 +540,7 @@ pkg_impact_install(char **pkgargs, int *rc)
 			SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
 			if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
 				update_level_if_higher(epkg, dpkg->level);
+				free_pkglist_entry(&dpkg);
 				continue;
 			}
 			add_remote_to_impact(impacthead, dpkg);
@@ -568,6 +576,7 @@ pkg_impact_install(char **pkgargs, int *rc)
 	 * Now recursively process them until they are all added to impacthead.
 	 */
 	recurse_upgrades(ipkgs, impacthead);
+	free_pkglist(&ipkgs);
 
 	return impacthead;
 }
@@ -619,6 +628,7 @@ pkg_impact(char **pkgargs, int *rc)
 			}
 		}
 	}
+	free_array(pkgs);
 
 	if (SLIST_EMPTY(impacthead))
 		free_pkglist(&impacthead);

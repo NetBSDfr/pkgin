@@ -290,8 +290,10 @@ get_depends(const char *pkgname, Plisthead *depends, depends_t type)
 	 */
 	SLIST_FOREACH_SAFE(d, deps, next, save) {
 		SLIST_REMOVE(deps, d, Pkglist, next);
-		if ((new_depend(d, depends, 1, type)) == NULL)
+		if ((new_depend(d, depends, 1, type)) == NULL) {
+			free_pkglist_entry(&d);
 			continue;
+		}
 		SLIST_INSERT_HEAD(depends, d, next);
 	}
 	free_pkglist(&deps);
@@ -327,8 +329,10 @@ get_depends_recursive(const char *pkgname, Plistarray *depends, depends_t type)
 	 */
 	deps = init_head();
 	get_depends_matches(pkgname, deps, type);
-	if (SLIST_EMPTY(deps))
+	if (SLIST_EMPTY(deps)) {
+		free_pkglist(&deps);
 		return;
+	}
 
 	/*
 	 * Now recursively iterate over dependencies as they are inserted,
@@ -350,8 +354,10 @@ get_depends_recursive(const char *pkgname, Plistarray *depends, depends_t type)
 			dephead = &depends->head[slot];
 
 			nextpkg = new_depend(d, dephead, size, type);
-			if (nextpkg == NULL)
+			if (nextpkg == NULL) {
+				free_pkglist_entry(&d);
 				continue;
+			}
 
 			SLIST_INSERT_HEAD(dephead, d, next);
 
@@ -362,6 +368,7 @@ get_depends_recursive(const char *pkgname, Plistarray *depends, depends_t type)
 		level++;
 	}
 	TRACE("[<]-leaving depends\n");
+	free_pkglist(&deps);
 }
 
 int
