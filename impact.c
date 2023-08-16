@@ -113,7 +113,11 @@ calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 }
 
 /*
- * Look for local packages that are affected by SUPERSEDES.
+ * SQLite callback for REMOTE_SUPERSEDES, look for any local package that
+ * matches a SUPERSEDES pattern, using an optional PKGBASE for faster lookups.
+ *
+ * argv0: SUPERSEDES pattern
+ * argv1: PKGBASE, may be NULL if it cannot be determined from pattern
  */
 static int
 record_supersedes(void *param, int argc, char **argv, char **colname)
@@ -137,14 +141,14 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 	 * Find matching entry in the local package list.  If there are no
 	 * matches we're done.
 	 */
-	if ((lpkg = find_local_pkg(argv[0], NULL)) == NULL)
+	if ((lpkg = find_local_pkg(argv[0], argv[1])) == NULL)
 		return PDB_OK;
 
 	/*
 	 * Look to see if we already found this package via an different match.
 	 */
 	SLIST_FOREACH(p, supersedes, next) {
-		if (strcmp(lpkg->full, p->lpkg->full))
+		if (strcmp(lpkg->full, p->lpkg->full) == 0)
 			return PDB_OK;
 	}
 
