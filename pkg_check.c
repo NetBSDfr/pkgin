@@ -30,6 +30,51 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
+/*
+ * SQLite callback for LOCAL_CONFLICTS etc, record a pattern and optional
+ * PKGBASE to a Plistarray.
+ *
+ * argv0: pattern
+ * argv1: pkgbase, may be NULL if it cannot be determined from pattern
+ */
+static int
+record_pattern_to_array(void *param, int argc, char **argv, char **colname)
+{
+	Plistarray *depends = (Plistarray *)param;
+	Pkglist *d;
+	int slot;
+
+	if (argv == NULL)
+		return PDB_ERR;
+
+	d = malloc_pkglist();
+	d->patterns = xmalloc(2 * sizeof(char *));
+	d->patterns[0] = xstrdup(argv[0]);
+	d->patterns[1] = NULL;
+	d->patcount = 1;
+
+	/*
+	 * XXX: default slot if no pkgbase available, should we allocate one
+	 * outside of the normal range for these?
+	 */
+	slot = 0;
+
+	if (argv[1]) {
+		d->name = xstrdup(argv[1]);
+		slot = pkg_hash_entry(d->name, depends->size);
+	}
+
+	SLIST_INSERT_HEAD(&depends->head[slot], d, next);
+
+	return PDB_OK;
+}
+
+void
+get_conflicts(Plistarray *conflicts)
+{
+	pkgindb_doquery(LOCAL_CONFLICTS, record_pattern_to_array, conflicts);
+}
+
 /* find required files (REQUIRES) from PROVIDES or filename */
 int
 pkg_met_reqs(Plisthead *impacthead)
@@ -180,33 +225,66 @@ pkg_met_reqs(Plisthead *impacthead)
 }
 
 /*
- * Check if incoming remote package conflicts with any local packages.
+ * A remote package has been identified as matching a local conflict.  Retrieve
+ * the local package and print the conflict.
+ */
+static void
+print_pkg_conflict(const char *pattern, const char *pkgname)
+{
+	char query[BUFSIZ];
+	char *conflict;
+
+	conflict = xmalloc(BUFSIZ * sizeof(char));
+
+	sqlite3_snprintf(BUFSIZ, query, REMOTE_CONFLICTS, pattern);
+	if (pkgindb_doquery(query, pdb_get_value, conflict) == PDB_OK)
+		printf(MSG_CONFLICT_PKG, pkgname, conflict);
+
+	XFREE(conflict);
+}
+
+/*
+ * Check if an incoming remote package conflicts with any local packages.
  */
 int
-pkg_has_conflicts(Pkglist *pkg, Plistnumbered *conflictshead)
+pkg_has_conflicts(Pkglist *pkg, Plistarray *conflicts)
 {
 	Pkglist *p;
-	char query[BUFSIZ];
-	char *cpkg;
+	int i, slot;
 
-	if (SLIST_EMPTY(conflictshead->P_Plisthead))
+	if (is_empty_plistarray(conflicts))
 		return 0;
 
-	SLIST_FOREACH(p, conflictshead->P_Plisthead, next) {
-		if (!pkg_match(p->full, pkg->rpkg->full))
-			continue;
+	slot = pkg_hash_entry(pkg->rpkg->name, conflicts->size);
+	SLIST_FOREACH(p, &conflicts->head[slot], next) {
+		for (i = 0; i < p->patcount; i++) {
+			if (!pkg_match(p->patterns[i], pkg->rpkg->full))
+				continue;
 
-		/*
-		 * Got a conflict match, get local package.
-		 */
-		sqlite3_snprintf(BUFSIZ, query, REMOTE_CONFLICTS, p->full);
+			/*
+			 * Incoming remote package matches a local CONFLICTS
+			 * entry, print the conflict message and return fail.
+			 */
+			print_pkg_conflict(p->patterns[i], pkg->rpkg->full);
+			return 1;
+		}
+	}
 
-		cpkg = xmalloc(BUFSIZ * sizeof(char));
-		if (pkgindb_doquery(query, pdb_get_value, cpkg) == PDB_OK)
-			printf(MSG_CONFLICT_PKG, pkg->rpkg->full, cpkg);
-		XFREE(cpkg);
+	/*
+	 * We also need to check slot 0 if not already checked as that's where
+	 * any CONFLICTS that have a complicated pattern and no pkgbase are
+	 * stored.
+	 */
+	if (slot == 0)
+		return 0;
 
-		return 1;
+	SLIST_FOREACH(p, &conflicts->head[0], next) {
+		for (i = 0; i < p->patcount; i++) {
+			if (!pkg_match(p->patterns[i], pkg->rpkg->full))
+				continue;
+			print_pkg_conflict(p->patterns[i], pkg->rpkg->full);
+			return 1;
+		}
 	}
 
 	return 0;

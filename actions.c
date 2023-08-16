@@ -565,11 +565,12 @@ get_sorted_list_by_action(Plisthead *pkgs, action_t action)
 int
 pkgin_install(char **pkgargs, int do_inst, int upgrade)
 {
+	Plistarray	*conflicts;
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0;
 	int		refreshnum = 0, downloadnum = 0;
 	int		removenum = 0, supersedenum = 0;
-	int		conflictnum;
+	int		conflictnum = 0;
 	int		argn, rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
@@ -578,7 +579,6 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	ssize_t		llen;
 	Pkglist		*p;
 	Plisthead	*impacthead, *downloadhead = NULL, *installhead = NULL;
-	Plistnumbered	*conflicts;
 	char		**names;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
@@ -617,18 +617,20 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 	/*
 	 * Check for conflicts.
+	 *
+	 * XXX: this should really be done during impact so that we have a
+	 * chance to consider alternatives.
 	 */
-	conflictnum = 0;
-	if ((conflicts = rec_pkglist(LOCAL_CONFLICTS))) {
-		SLIST_FOREACH(p, impacthead, next) {
-			if (!action_is_install(p->action))
-				continue;
-			if (pkg_has_conflicts(p, conflicts))
-				conflictnum++;
-		}
-		free_pkglist(&conflicts->P_Plisthead);
-		free(conflicts);
+	conflicts = init_array(CONFLICTS_HASH_SIZE);
+	get_conflicts(conflicts);
+	SLIST_FOREACH(p, impacthead, next) {
+		if (!action_is_install(p->action))
+			continue;
+		if (pkg_has_conflicts(p, conflicts))
+			conflictnum++;
 	}
+	free_array(conflicts);
+
 	if (conflictnum && !check_yesno(DEFAULT_NO))
 		goto installend;
 

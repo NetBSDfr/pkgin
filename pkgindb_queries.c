@@ -75,7 +75,7 @@ const char LOCAL_REVERSE_DEPENDS[] =
 	" WHERE local_required_by.pkgname = %Q;";
 
 const char LOCAL_CONFLICTS[] =
-	"SELECT pattern, pkgbase "
+	"SELECT DISTINCT pattern, pkgbase "
 	"  FROM local_conflicts;";
 
 const char LOCAL_PROVIDES[] =

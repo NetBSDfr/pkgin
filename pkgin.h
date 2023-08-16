@@ -230,6 +230,26 @@
 #define	LOCAL_PKG_HASH_SIZE	64
 
 /*
+ * On the test system there were 1592 CONFLICTS entries that each upgrade
+ * package needed to be compared against, however that dropped to 1036 once
+ * only distinct patterns were queried.  The tests were against the original
+ * number though, and used DTrace to count the total time spent in
+ * pkg_has_conflicts():
+ *
+ * CONFLICTS_HASH_SIZE		Time spent (ns)		Total Runtime
+ * 		     1		339029895		1.347s
+ * 		     4		 65412959		1.051s
+ * 		    16		 20528980		1.035s
+ * 		    64		 12216525		0.999s
+ * 		   256		 10009372		0.987s
+ * 		  1024		  9248654		1.001s
+ *
+ * Marginal gains above 64, and adding DISTINCT will keep the numbers down a
+ * lot.
+ */
+#define CONFLICTS_HASH_SIZE	64
+
+/*
  * Action to perform.
  */
 typedef enum action_t {
@@ -413,8 +433,9 @@ int		sort_pkg_alpha(const void *, const void *);
 void		export_keep(void);
 void		import_keep(int, const char *);
 /* pkg_check.c */
+void		get_conflicts(Plistarray *);
 int		pkg_met_reqs(Plisthead *);
-int		pkg_has_conflicts(Pkglist *, Plistnumbered *);
+int		pkg_has_conflicts(Pkglist *, Plistarray *);
 void		show_prov_req(const char *, const char *);
 /* pkg_infos.c */
 int		show_pkg_info(char, char *);
