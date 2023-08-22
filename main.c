@@ -266,11 +266,17 @@ main(int argc, char *argv[])
 		break;
 	case PKG_KEEP_CMD: /* mark a package as "keep" (not automatic) */
 		missing_param(argc, 2, MSG_PKG_ARGS_KEEP);
-		pkg_keep(KEEP, argv[1]);
+		for (i = 1; i < argc; i++) {
+			if (pkg_keep(KEEP, argv[i]))
+				rc = EXIT_FAILURE;
+		}
 		break;
 	case PKG_UNKEEP_CMD: /* mark a package as "unkeep" (automatic) */
 		missing_param(argc, 2, MSG_PKG_ARGS_UNKEEP);
-		pkg_keep(UNKEEP, argv[1]);
+		for (i = 1; i < argc; i++) {
+			if (pkg_keep(UNKEEP, argv[i]))
+				rc = EXIT_FAILURE;
+		}
 		break;
 	case PKG_SHKP_CMD: /* show keep packages */
 		show_pkg_keep();

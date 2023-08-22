@@ -143,12 +143,16 @@ const char REMOTE_PKGS_QUERY_DESC[] =
 	"ORDER BY FULLPKGNAME DESC;";
 
 const char NOKEEP_LOCAL_PKGS[] =
-	"SELECT FULLPKGNAME,PKGNAME,PKGPATH,COMMENT "
-	"FROM LOCAL_PKG WHERE PKG_KEEP IS NULL;";
+	"SELECT fullpkgname,pkgname,pkgpath,comment "
+	"  FROM local_pkg "
+	" WHERE pkg_keep IS NULL "
+	" ORDER BY fullpkgname DESC;";
 
 const char KEEP_LOCAL_PKGS[] =
-	"SELECT FULLPKGNAME,PKGNAME,PKGPATH,COMMENT "
-	"FROM LOCAL_PKG WHERE PKG_KEEP IS NOT NULL;";
+	"SELECT fullpkgname,pkgname,pkgpath,comment "
+	"  FROM local_pkg "
+	" WHERE pkg_keep IS NOT NULL"
+	" ORDER BY fullpkgname DESC;";
 
 const char PKG_URL[] =
 	"SELECT REPOSITORY FROM REMOTE_PKG WHERE FULLPKGNAME = %Q;";
