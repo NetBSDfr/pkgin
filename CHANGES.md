@@ -1,3 +1,8 @@
+## Version 23.8.1 (2023-08-22)
+
+ * Fix regression introduced in 23.8.0 where only the first argument to "keep"
+   and "unkeep" commands was processed.  Reported by gdt.
+
 ## Version 23.8.0 (2023-08-16)
 
 This is the biggest overhaul of pkgin yet!  As well as fixing many bugs, pkgin
