@@ -353,6 +353,8 @@ extern int		r_plistcounter;
 extern Plisthead	l_plisthead[LOCAL_PKG_HASH_SIZE];
 extern Plisthead	r_plisthead[REMOTE_PKG_HASH_SIZE];
 extern FILE		*tracefp;
+extern char		fetchflags[];
+extern char		insecurefetchflags[];
 
 /* download.c*/
 Sumfile		*sum_open(char *, time_t *);
