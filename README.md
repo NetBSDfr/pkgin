@@ -3,7 +3,7 @@ pkgin(1) -- A tool to manage pkgsrc binary packages.
 
 ## SYNOPSIS
 
-`pkgin` [`-dfFhpPvVyn`] [`-l` _limit_chars_] [`-c` _chroot_path_] [`-t` _log_file_] _command_ [package ...]
+`pkgin` [`-dfFhipPvVyn`] [`-l` _limit_chars_] [`-c` _chroot_path_] [`-t` _log_file_] _command_ [package ...]
 
 ## DESCRIPTION
 
@@ -27,6 +27,10 @@ The following command line arguments are supported:
 
   * `-h`:
     Displays help for the command
+
+  * `-i`:
+    Allow insecure downloads: bypass HTTPS certificate validation,
+    allow HTTPS to redirect to HTTP/FTP
 
   * `-l` _limit_chars_:
     Only include the packages with the specified [STATUS FLAGS][]

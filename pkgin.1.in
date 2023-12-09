@@ -1,4 +1,4 @@
-.Dd July 1, 2020
+.Dd December 8, 2023
 .Dt PKGIN 1
 .Os
 .Sh NAME
@@ -6,7 +6,7 @@
 .Nd pkgsrc binary package manager
 .Sh SYNOPSIS
 .Nm
-.Op Fl 46dfhnPpVvy
+.Op Fl 46dfhinPpVvy
 .Op Fl c Ar chroot_path
 .Op Fl l Ar limit_chars
 .Op Fl t Ar log_file
@@ -42,6 +42,9 @@ Download only
 Force database update
 .It Fl h
 Displays help for the command
+.It Fl i
+Allow insecure downloads: bypass HTTPS certificate validation, allow
+HTTPS to redirect to HTTP/FTP
 .It Fl l Ar limit_chars
 Only include the packages with the specified
 .Dv STATUS FLAGS
