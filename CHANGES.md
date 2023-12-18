@@ -1,3 +1,9 @@
+## Version 23.12.0 (2023-12-18)
+
+ * Require valid certificates for https:// repositories (Taylor R Campbell).
+
+ * Introduce `-i` option to allow insecure transport (Taylor R Campbell).
+
 ## Version 23.8.1 (2023-08-22)
 
  * Fix regression introduced in 23.8.0 where only the first argument to "keep"
