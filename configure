@@ -1554,6 +1554,39 @@ fi
 
 } # ac_fn_c_try_compile
 
+# ac_fn_c_check_header_compile LINENO HEADER VAR INCLUDES
+# -------------------------------------------------------
+# Tests whether HEADER exists and can be compiled using the include files in
+# INCLUDES, setting the cache variable VAR accordingly.
+ac_fn_c_check_header_compile ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+printf %s "checking for $2... " >&6; }
+if eval test \${$3+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$4
+#include <$2>
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  eval "$3=yes"
+else $as_nop
+  eval "$3=no"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+eval ac_res=\$$3
+	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+printf "%s\n" "$ac_res" >&6; }
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+
+} # ac_fn_c_check_header_compile
+
 # ac_fn_c_try_link LINENO
 # -----------------------
 # Try to link conftest.$ac_ext, and return whether this succeeded.
@@ -1662,39 +1695,6 @@ printf "%s\n" "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_c_check_func
-
-# ac_fn_c_check_header_compile LINENO HEADER VAR INCLUDES
-# -------------------------------------------------------
-# Tests whether HEADER exists and can be compiled using the include files in
-# INCLUDES, setting the cache variable VAR accordingly.
-ac_fn_c_check_header_compile ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
-printf %s "checking for $2... " >&6; }
-if eval test \${$3+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-$4
-#include <$2>
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  eval "$3=yes"
-else $as_nop
-  eval "$3=no"
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-fi
-eval ac_res=\$$3
-	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
-printf "%s\n" "$ac_res" >&6; }
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-
-} # ac_fn_c_check_header_compile
 
 # ac_fn_c_check_member LINENO AGGR MEMBER VAR INCLUDES
 # ----------------------------------------------------
@@ -4511,36 +4511,108 @@ fi
 if test ${with_libarchive+y}
 then :
   withval=$with_libarchive;
-		if test "x$withval" = "x" || ! test -d "$withval"
-then :
-  as_fn_error $? "Invalid --with-libarchive directory" "$LINENO" 5
+		LIBARCHIVE_INCLUDES="-I$withval/include"
+		LIBARCHIVE_LDFLAGS="-L$withval/lib"
+		LIBARCHIVE_LIBS="-larchive"
+
+
 fi
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $withval/include/archive.h" >&5
-printf %s "checking for $withval/include/archive.h... " >&6; }
-		if test -f "$withval/include/archive.h"
+
+CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $LIBARCHIVE_INCLUDES"
+LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $LIBARCHIVE_LDFLAGS"
+LIBS_save=$LIBS; LIBS="$LIBS $LIBARCHIVE_LIBS"
+
+ac_header= ac_cache=
+for ac_item in $ac_header_c_list
+do
+  if test $ac_cache; then
+    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
+    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
+      printf "%s\n" "#define $ac_item 1" >> confdefs.h
+    fi
+    ac_header= ac_cache=
+  elif test $ac_header; then
+    ac_cache=$ac_item
+  else
+    ac_header=$ac_item
+  fi
+done
+
+
+
+
+
+
+
+
+if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
 then :
 
-			LIBARCHIVE_INCLUDES="-I$withval/include"
-			LIBARCHIVE_LDFLAGS="-L$withval/lib"
-			LIBARCHIVE_LIBS="-larchive"
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
+printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
+
+fi
+ac_fn_c_check_header_compile "$LINENO" "archive.h" "ac_cv_header_archive_h" "$ac_includes_default"
+if test "x$ac_cv_header_archive_h" = xyes
+then :
 
 else $as_nop
-
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: not found" >&5
-printf "%s\n" "not found" >&6; }
-			as_fn_error $? "Could not find libarchive" "$LINENO" 5
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find archive.h
+See \`config.log' for more details" "$LINENO" 5; }
 fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for archive_read_new in -larchive" >&5
+printf %s "checking for archive_read_new in -larchive... " >&6; }
+if test ${ac_cv_lib_archive_archive_read_new+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-larchive  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char archive_read_new ();
+int
+main (void)
+{
+return archive_read_new ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_archive_archive_read_new=yes
+else $as_nop
+  ac_cv_lib_archive_archive_read_new=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_archive_archive_read_new" >&5
+printf "%s\n" "$ac_cv_lib_archive_archive_read_new" >&6; }
+if test "x$ac_cv_lib_archive_archive_read_new" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBARCHIVE 1" >>confdefs.h
+
+  LIBS="-larchive $LIBS"
 
 else $as_nop
-
-		as_fn_error $? "--with-libarchive is mandatory" "$LINENO" 5
-
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find libarchive
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 
+CPPFLAGS=$CPPFLAGS_save
+LDFLAGS=$LDFLAGS_save
+LIBS=$LIBS_save
 
 
 
@@ -4550,36 +4622,78 @@ fi
 if test ${with_libfetch+y}
 then :
   withval=$with_libfetch;
-		if test "x$withval" = "x" || ! test -d "$withval"
-then :
-  as_fn_error $? "Invalid --with-libfetch directory" "$LINENO" 5
-fi
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $withval/include/fetch.h" >&5
-printf %s "checking for $withval/include/fetch.h... " >&6; }
-		if test -f "$withval/include/fetch.h"
-then :
+		LIBFETCH_INCLUDES="-I$withval/include"
+		LIBFETCH_LDFLAGS="-L$withval/lib"
+		LIBFETCH_LIBS="-lfetch"
 
-			LIBFETCH_INCLUDES="-I$withval/include"
-			LIBFETCH_LDFLAGS="-L$withval/lib"
-			LIBFETCH_LIBS="-lfetch"
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
+
+fi
+
+CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $LIBFETCH_INCLUDES"
+LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $LIBFETCH_LDFLAGS"
+LIBS_save=$LIBS; LIBS="$LIBS $LIBFETCH_LIBS"
+ac_fn_c_check_header_compile "$LINENO" "fetch.h" "ac_cv_header_fetch_h" "$ac_includes_default"
+if test "x$ac_cv_header_fetch_h" = xyes
+then :
 
 else $as_nop
-
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-			as_fn_error $? "Could not find libfetch" "$LINENO" 5
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find fetch.h
+See \`config.log' for more details" "$LINENO" 5; }
 fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for fetchMakeURL in -lfetch" >&5
+printf %s "checking for fetchMakeURL in -lfetch... " >&6; }
+if test ${ac_cv_lib_fetch_fetchMakeURL+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lfetch  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char fetchMakeURL ();
+int
+main (void)
+{
+return fetchMakeURL ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_fetch_fetchMakeURL=yes
+else $as_nop
+  ac_cv_lib_fetch_fetchMakeURL=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_fetch_fetchMakeURL" >&5
+printf "%s\n" "$ac_cv_lib_fetch_fetchMakeURL" >&6; }
+if test "x$ac_cv_lib_fetch_fetchMakeURL" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBFETCH 1" >>confdefs.h
+
+  LIBS="-lfetch $LIBS"
 
 else $as_nop
-
-		as_fn_error $? "--with-libfetch is mandatory" "$LINENO" 5
-
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find libfetch
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 
+CPPFLAGS=$CPPFLAGS_save
+LDFLAGS=$LDFLAGS_save
+LIBS=$LIBS_save
 
 
 
@@ -4589,36 +4703,78 @@ fi
 if test ${with_openssl+y}
 then :
   withval=$with_openssl;
-		if test "x$withval" = "x" || ! test -d "$withval"
-then :
-  as_fn_error $? "Invalid --with-openssl directory" "$LINENO" 5
-fi
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $withval/include/openssl/ssl.h" >&5
-printf %s "checking for $withval/include/openssl/ssl.h... " >&6; }
-		if test -f "$withval/include/openssl/ssl.h"
-then :
+		OPENSSL_INCLUDES="-I$withval/include"
+		OPENSSL_LDFLAGS="-L$withval/lib"
+		OPENSSL_LIBS="-lssl -lcrypto"
 
-			OPENSSL_INCLUDES="-I$withval/include"
-			OPENSSL_LDFLAGS="-L$withval/lib"
-			OPENSSL_LIBS="-lssl -lcrypto"
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
+
+fi
+
+CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $OPENSSL_INCLUDES"
+LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $OPENSSL_LDFLAGS"
+LIBS_save=$LIBS; LIBS="$LIBS $OPENSSL_LIBS"
+ac_fn_c_check_header_compile "$LINENO" "openssl/ssl.h" "ac_cv_header_openssl_ssl_h" "$ac_includes_default"
+if test "x$ac_cv_header_openssl_ssl_h" = xyes
+then :
 
 else $as_nop
-
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-			as_fn_error $? "Could not find openssl" "$LINENO" 5
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find openssl/ssl.h
+See \`config.log' for more details" "$LINENO" 5; }
 fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for SSL_CTX_new in -lssl" >&5
+printf %s "checking for SSL_CTX_new in -lssl... " >&6; }
+if test ${ac_cv_lib_ssl_SSL_CTX_new+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lssl  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char SSL_CTX_new ();
+int
+main (void)
+{
+return SSL_CTX_new ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_ssl_SSL_CTX_new=yes
+else $as_nop
+  ac_cv_lib_ssl_SSL_CTX_new=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_ssl_SSL_CTX_new" >&5
+printf "%s\n" "$ac_cv_lib_ssl_SSL_CTX_new" >&6; }
+if test "x$ac_cv_lib_ssl_SSL_CTX_new" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBSSL 1" >>confdefs.h
+
+  LIBS="-lssl $LIBS"
 
 else $as_nop
-
-		as_fn_error $? "--with-openssl is mandatory" "$LINENO" 5
-
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find libssl
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 
+CPPFLAGS=$CPPFLAGS_save
+LDFLAGS=$LDFLAGS_save
+LIBS=$LIBS_save
 
 
 
@@ -4628,36 +4784,78 @@ fi
 if test ${with_sqlite3+y}
 then :
   withval=$with_sqlite3;
-		if test "x$withval" = "x" || ! test -d "$withval"
-then :
-  as_fn_error $? "Invalid --with-sqlite3 directory" "$LINENO" 5
-fi
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $withval/include/sqlite3.h" >&5
-printf %s "checking for $withval/include/sqlite3.h... " >&6; }
-		if test -f "$withval/include/sqlite3.h"
-then :
+		SQLITE3_INCLUDES="-I$withval/include"
+		SQLITE3_LDFLAGS="-L$withval/lib"
+		SQLITE3_LIBS="-lsqlite3"
 
-			SQLITE3_INCLUDES="-I$withval/include"
-			SQLITE3_LDFLAGS="-L$withval/lib"
-			SQLITE3_LIBS="-lsqlite3"
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
+
+fi
+
+CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $SQLITE3_INCLUDES"
+LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $SQLITE3_LDFLAGS"
+LIBS_save=$LIBS; LIBS="$LIBS $SQLITE3_LIBS"
+ac_fn_c_check_header_compile "$LINENO" "sqlite3.h" "ac_cv_header_sqlite3_h" "$ac_includes_default"
+if test "x$ac_cv_header_sqlite3_h" = xyes
+then :
 
 else $as_nop
-
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-			as_fn_error $? "Could not find sqlite3" "$LINENO" 5
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find sqlite3.h
+See \`config.log' for more details" "$LINENO" 5; }
 fi
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for sqlite3_open_v2 in -lsqlite3" >&5
+printf %s "checking for sqlite3_open_v2 in -lsqlite3... " >&6; }
+if test ${ac_cv_lib_sqlite3_sqlite3_open_v2+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsqlite3  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+char sqlite3_open_v2 ();
+int
+main (void)
+{
+return sqlite3_open_v2 ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+  ac_cv_lib_sqlite3_sqlite3_open_v2=yes
+else $as_nop
+  ac_cv_lib_sqlite3_sqlite3_open_v2=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_sqlite3_sqlite3_open_v2" >&5
+printf "%s\n" "$ac_cv_lib_sqlite3_sqlite3_open_v2" >&6; }
+if test "x$ac_cv_lib_sqlite3_sqlite3_open_v2" = xyes
+then :
+  printf "%s\n" "#define HAVE_LIBSQLITE3 1" >>confdefs.h
+
+  LIBS="-lsqlite3 $LIBS"
 
 else $as_nop
-
-		as_fn_error $? "--with-sqlite3 is mandatory" "$LINENO" 5
-
-
+  { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+printf "%s\n" "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "can't find libsqlite3
+See \`config.log' for more details" "$LINENO" 5; }
 fi
 
+CPPFLAGS=$CPPFLAGS_save
+LDFLAGS=$LDFLAGS_save
+LIBS=$LIBS_save
 
 
 
@@ -4685,26 +4883,7 @@ fi
 if test ${with_pkg_install+y}
 then :
   withval=$with_pkg_install;
-		if test "x$withval" = "x" || ! test -d "$withval"
-then :
-  as_fn_error $? "Invalid --with-pkg-install directory" "$LINENO" 5
-fi
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $withval/pkg_admin" >&5
-printf %s "checking for $withval/pkg_admin... " >&6; }
-		if test -x "$withval/pkg_admin"
-then :
-
-			PKG_INSTALL_DIR="$withval"
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-
-else $as_nop
-
-			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-			as_fn_error $? "Could not find pkg_install" "$LINENO" 5
-
-fi
+		PKG_INSTALL_DIR="$withval"
 
 else $as_nop
 
@@ -4723,7 +4902,6 @@ fi
 # The only functions we test for are those that are non-portable, and for which
 # we provide compat functions for environments where they are not available.
 #
-
 ac_fn_c_check_func "$LINENO" "humanize_number" "ac_cv_func_humanize_number"
 if test "x$ac_cv_func_humanize_number" = xyes
 then :
@@ -4816,35 +4994,6 @@ fi
 
 fi
 
-ac_header= ac_cache=
-for ac_item in $ac_header_c_list
-do
-  if test $ac_cache; then
-    ac_fn_c_check_header_compile "$LINENO" $ac_header ac_cv_header_$ac_cache "$ac_includes_default"
-    if eval test \"x\$ac_cv_header_$ac_cache\" = xyes; then
-      printf "%s\n" "#define $ac_item 1" >> confdefs.h
-    fi
-    ac_header= ac_cache=
-  elif test $ac_header; then
-    ac_cache=$ac_item
-  else
-    ac_header=$ac_item
-  fi
-done
-
-
-
-
-
-
-
-
-if test $ac_cv_header_stdlib_h = yes && test $ac_cv_header_string_h = yes
-then :
-
-printf "%s\n" "#define STDC_HEADERS 1" >>confdefs.h
-
-fi
 ac_fn_c_check_header_compile "$LINENO" "util.h" "ac_cv_header_util_h" "$ac_includes_default"
 if test "x$ac_cv_header_util_h" = xyes
 then :
