@@ -204,13 +204,14 @@ log_tag(const char *fmt, ...)
 	time_t		now;
 
 	now = time(NULL);
-	tim = *(localtime(&now));
+	tim = *(gmtime(&now));
 
 	va_start(ap, fmt);
 	vsnprintf(log_action, BUFSIZ, fmt, ap);
 	va_end(ap);
 
-	(void)strftime(now_date, DATELEN, "%b %d %H:%M:%S", &tim);
+	/* http://esr.ibiblio.org/?p=7901 */
+	(void)strftime(now_date, DATELEN, "%FT%TZ", &tim);
 
 	printf("%s", log_action);
 	if (!verbosity) {
