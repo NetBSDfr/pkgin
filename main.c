@@ -39,10 +39,8 @@ static void	ginto(void);
 
 uint8_t		yesflag = 0, noflag = 0;
 uint8_t		verbosity = 0, package_version = 0, parsable = 0, pflag = 0;
-uint8_t		insecure_transport = 0;
 char		lslimit = '\0';
-char		insecurefetchflags[5] = { 0, 0, 0, 0, 0 };
-char		fetchflags[6] = { 0, 0, 0, 0, 0, 0 };
+char		fetchflags[4] = { 0, 0, 0, 0 };
 FILE  		*tracefp = NULL;
 
 int
@@ -61,16 +59,13 @@ main(int argc, char *argv[])
 	/* Default to not doing \r printouts if we don't send to a tty */
 	parsable = !isatty(fileno(stdout));
 
-	while ((ch = getopt(argc, argv, "46dhiyfFPvVl:nc:t:p")) != -1) {
+	while ((ch = getopt(argc, argv, "46dhyfFPvVl:nc:t:p")) != -1) {
 		switch (ch) {
 		case '4':
 			v4flag = 1;
 			break;
 		case '6':
 			v6flag = 1;
-			break;
-		case 'i':
-			insecure_transport = 1;
 			break;
 		case 'f':
 			force_update = 1;
@@ -151,10 +146,6 @@ main(int argc, char *argv[])
 	}
 	if (verbosity) {
 		fetchflags[ffidx++] = 'v';
-	}
-	strlcpy(insecurefetchflags, fetchflags, sizeof(insecurefetchflags));
-	if (!insecure_transport) {
-		fetchflags[ffidx++] = 'V';
 	}
 
 	/* Configure pkg_install */

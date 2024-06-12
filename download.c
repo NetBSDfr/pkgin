@@ -30,26 +30,7 @@
 #include "pkgin.h"
 #include "external/progressmeter.h"
 
-static const char *
-urlfetchflags(const struct url *url)
-{
-
-	/*
-	 * For a package repository at http://... or ftp://..., enable
-	 * insecure transport to download it -- this way we don't break
-	 * existing setups that never expected secure transport in the
-	 * first place.
-	 *
-	 * This function is used both for the summary file and for the
-	 * package URLs, which are all constructed relative to a
-	 * repository URL.
-	 */
-	if (strcasecmp(url->scheme, SCHEME_HTTP) == 0 ||
-	    strcasecmp(url->scheme, SCHEME_FTP) == 0)
-		return insecurefetchflags;
-
-	return fetchflags;
-}
+extern char fetchflags[3];
 
 /*
  * Open a pkg_summary and if newer than local return an open libfetch
@@ -65,8 +46,7 @@ sum_open(char *str_url, time_t *db_mtime)
 
 	url = fetchParseURL(str_url);
 
-	if (url == NULL ||
-	    (f = fetchXGet(url, &st, urlfetchflags(url))) == NULL)
+	if (url == NULL || (f = fetchXGet(url, &st, fetchflags)) == NULL)
 		goto nofetch;
 
 	if (st.size == -1) { /* could not obtain file size */
@@ -193,7 +173,7 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 	if ((url = fetchParseURL(pkg_url)) == NULL)
 		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
 
-	if ((f = fetchXGet(url, &st, urlfetchflags(url))) == NULL) {
+	if ((f = fetchXGet(url, &st, fetchflags)) == NULL) {
 		fprintf(stderr, "download error: %s %s\n", pkg_url,
 		    fetchLastErrString);
 		fetchFreeURL(url);
