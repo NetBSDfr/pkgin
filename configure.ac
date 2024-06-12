@@ -20,7 +20,7 @@ AC_PROG_INSTALL
 # user failures (the bug reports are nice, the user experience is not).
 #
 AS_IF([test "x$USE_MAINTAINER_MODE" = "xyes"],
-      CFLAGS="$CFLAGS -Werror -Wall -Wextra -Wunused -Wno-unused-parameter"
+	CFLAGS="$CFLAGS -Werror -Wall -Wextra -Wunused -Wno-unused-parameter"
 )
 
 #
@@ -41,91 +41,44 @@ AC_SUBST(PKGIN_DBDIR)
 AC_ARG_WITH([libarchive],
 	[AS_HELP_STRING([--with-libarchive=DIR],
 		[Root libarchive directory (e.g. /usr/local)])],
-	[
-		LIBARCHIVE_INCLUDES="-I$withval/include"
-		LIBARCHIVE_LDFLAGS="-L$withval/lib"
-		LIBARCHIVE_LIBS="-larchive"
-	]
+	[CPPFLAGS="$CPPFLAGS -I$withval/include"
+	 LDFLAGS="$LDFLAGS -L$withval/lib"]
 )
-CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $LIBARCHIVE_INCLUDES"
-LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $LIBARCHIVE_LDFLAGS"
-LIBS_save=$LIBS; LIBS="$LIBS $LIBARCHIVE_LIBS"
 AC_CHECK_HEADER([archive.h],[],[AC_MSG_FAILURE([can't find archive.h])])
 AC_CHECK_LIB([archive],[archive_read_new],[],
-	[AC_MSG_FAILURE([can't find libarchive])])
-CPPFLAGS=$CPPFLAGS_save
-LDFLAGS=$LDFLAGS_save
-LIBS=$LIBS_save
-AC_SUBST([LIBARCHIVE_INCLUDES])
-AC_SUBST([LIBARCHIVE_LDFLAGS])
-AC_SUBST([LIBARCHIVE_LIBS])
+	[AC_MSG_FAILURE([can't find libarchive])]
+)
 
 AC_ARG_WITH([libfetch],
 	[AS_HELP_STRING([--with-libfetch=DIR],
 		[Root libfetch directory (e.g. /usr/local)])],
-	[
-		LIBFETCH_INCLUDES="-I$withval/include"
-		LIBFETCH_LDFLAGS="-L$withval/lib"
-		LIBFETCH_LIBS="-lfetch"
-	]
+	[CPPFLAGS="$CPPFLAGS -I$withval/include"
+	 LDFLAGS="$LDFLAGS -L$withval/lib"]
 )
-CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $LIBFETCH_INCLUDES"
-LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $LIBFETCH_LDFLAGS"
-LIBS_save=$LIBS; LIBS="$LIBS $LIBFETCH_LIBS"
 AC_CHECK_HEADER([fetch.h],[],[AC_MSG_FAILURE([can't find fetch.h])])
+dnl
+dnl This is a bit silly.  I can't find a way to try both with and without
+dnl OpenSSL libraries in the same check, so we're forced to look for two
+dnl different symbols (to avoid the cache).
+dnl
 AC_CHECK_LIB([fetch],[fetchMakeURL],[],
-	[AC_MSG_FAILURE([can't find libfetch])])
-CPPFLAGS=$CPPFLAGS_save
-LDFLAGS=$LDFLAGS_save
-LIBS=$LIBS_save
-AC_SUBST([LIBFETCH_INCLUDES])
-AC_SUBST([LIBFETCH_LDFLAGS])
-AC_SUBST([LIBFETCH_LIBS])
-
-AC_ARG_WITH([openssl],
-	[AS_HELP_STRING([--with-openssl=DIR],
-		[Root openssl directory (e.g. /usr/local)])],
-	[
-		OPENSSL_INCLUDES="-I$withval/include"
-		OPENSSL_LDFLAGS="-L$withval/lib"
-		OPENSSL_LIBS="-lssl -lcrypto"
-	]
+	[AC_CHECK_LIB([fetch],[fetchParseURL],
+		[LIBS="$LIBS -lfetch -lcrypto -lssl"],
+		[AC_MSG_FAILURE([can't find libfetch])],
+		[-lcrypto -lssl]
+	)]
 )
-CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $OPENSSL_INCLUDES"
-LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $OPENSSL_LDFLAGS"
-LIBS_save=$LIBS; LIBS="$LIBS $OPENSSL_LIBS"
-AC_CHECK_HEADER([openssl/ssl.h],[],
-	[AC_MSG_FAILURE([can't find openssl/ssl.h])])
-AC_CHECK_LIB([ssl],[SSL_CTX_new],[],
-	[AC_MSG_FAILURE([can't find libssl])])
-CPPFLAGS=$CPPFLAGS_save
-LDFLAGS=$LDFLAGS_save
-LIBS=$LIBS_save
-AC_SUBST([OPENSSL_INCLUDES])
-AC_SUBST([OPENSSL_LDFLAGS])
-AC_SUBST([OPENSSL_LIBS])
 
 AC_ARG_WITH([sqlite3],
 	[AS_HELP_STRING([--with-sqlite3=DIR],
 		[Root sqlite3 directory (e.g. /usr/local)])],
-	[
-		SQLITE3_INCLUDES="-I$withval/include"
-		SQLITE3_LDFLAGS="-L$withval/lib"
-		SQLITE3_LIBS="-lsqlite3"
-	]
+	[CPPFLAGS="$CPPFLAGS -I$withval/include"
+	 LDFLAGS="$LDFLAGS -L$withval/lib"]
 )
-CPPFLAGS_save=$CPPFLAGS; CPPFLAGS="$CPPFLAGS $SQLITE3_INCLUDES"
-LDFLAGS_save=$LDFLAGS; LDFLAGS="$LDFLAGS $SQLITE3_LDFLAGS"
-LIBS_save=$LIBS; LIBS="$LIBS $SQLITE3_LIBS"
 AC_CHECK_HEADER([sqlite3.h],[],[AC_MSG_FAILURE([can't find sqlite3.h])])
 AC_CHECK_LIB([sqlite3],[sqlite3_open_v2],[],
-	[AC_MSG_FAILURE([can't find libsqlite3])])
-CPPFLAGS=$CPPFLAGS_save
-LDFLAGS=$LDFLAGS_save
-LIBS=$LIBS_save
-AC_SUBST([SQLITE3_INCLUDES])
-AC_SUBST([SQLITE3_LDFLAGS])
-AC_SUBST([SQLITE3_LIBS])
+	[AC_MSG_FAILURE([can't find libsqlite3])]
+)
 
 #
 # --with-machine-arch=MACHINE_ARCH
@@ -144,11 +97,8 @@ AC_SUBST(MACHINE_ARCH)
 AC_ARG_WITH([pkg-install],
 	[AS_HELP_STRING([--with-pkg-install=DIR],
 		[Path to pkg_install commands (e.g. /usr/pkg/sbin)])],
-	[
-		PKG_INSTALL_DIR="$withval"
-	],[
-		AC_MSG_ERROR([--with-pkg-install is mandatory])
-	]
+	[PKG_INSTALL_DIR="$withval"],
+	[AC_MSG_ERROR([--with-pkg-install is mandatory])]
 )
 AC_SUBST(PKG_INSTALL_DIR)
 

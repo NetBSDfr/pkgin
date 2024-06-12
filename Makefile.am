@@ -43,24 +43,9 @@ pkgin_SOURCES+=		external/humanize_number.c
 endif
 
 #
-# Pull in library dependencies.
-#
-pkgin_CPPFLAGS=		$(LIBARCHIVE_INCLUDES)
-pkgin_LDADD=		$(LIBARCHIVE_LDFLAGS) $(LIBARCHIVE_LIBS)
-
-pkgin_CPPFLAGS+=	$(LIBFETCH_INCLUDES)
-pkgin_LDADD+=		$(LIBFETCH_LDFLAGS) $(LIBFETCH_LIBS)
-
-pkgin_CPPFLAGS+=	$(OPENSSL_INCLUDES)
-pkgin_LDADD+=		$(OPENSSL_LDFLAGS) $(OPENSSL_LIBS)
-
-pkgin_CPPFLAGS+=	$(SQLITE3_INCLUDES)
-pkgin_LDADD+=		$(SQLITE3_LDFLAGS) $(SQLITE3_LIBS)
-
-#
 # Required defines.
 #
-pkgin_CPPFLAGS+=	-DMACHINE_ARCH=\""$(MACHINE_ARCH)"\"
+pkgin_CPPFLAGS=		-DMACHINE_ARCH=\""$(MACHINE_ARCH)"\"
 pkgin_CPPFLAGS+=	-DPKGIN_DBDIR=\""$(PKGIN_DBDIR)"\"
 pkgin_CPPFLAGS+=	-DPKGIN_VERSION=\""$(VERSION)"\"
 pkgin_CPPFLAGS+=	-DPKG_INSTALL_DIR=\""$(PKG_INSTALL_DIR)"\"
