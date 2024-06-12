@@ -3,11 +3,12 @@
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif
+#ifdef HAVE_NBCOMPAT_H
 #include <nbcompat.h>
+#endif
 #if HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
 #endif
-__RCSID("$NetBSD: plist.c,v 1.32 2020/12/12 19:25:19 wiz Exp $");
 
 /*
  * FreeBSD install - a package for the installation and maintainance
@@ -65,10 +66,12 @@ __RCSID("$NetBSD: plist.c,v 1.32 2020/12/12 19:25:19 wiz Exp $");
 #if HAVE_ERR_H
 #include <err.h>
 #endif
+#if 0
 #ifndef NETBSD
 #include <nbcompat/md5.h>
 #else
 #include <md5.h>
+#endif
 #endif
 
 #if 0
