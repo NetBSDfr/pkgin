@@ -4733,61 +4733,10 @@ then :
   LIBS="-lfetch $LIBS"
 
 else case e in #(
-  e) { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for fetchParseURL in -lfetch" >&5
-printf %s "checking for fetchParseURL in -lfetch... " >&6; }
-if test ${ac_cv_lib_fetch_fetchParseURL+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lfetch -lcrypto -lssl
-	 $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-/* Override any GCC internal prototype to avoid an error.
-   Use char because int might match the return type of a GCC
-   builtin and then its argument prototype would still apply.
-   The 'extern "C"' is for builds by C++ compilers;
-   although this is not generally supported in C code supporting it here
-   has little cost and some practical benefit (sr 110532).  */
-#ifdef __cplusplus
-extern "C"
-#endif
-char fetchParseURL (void);
-int
-main (void)
-{
-return fetchParseURL ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
-then :
-  ac_cv_lib_fetch_fetchParseURL=yes
-else case e in #(
-  e) ac_cv_lib_fetch_fetchParseURL=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_fetch_fetchParseURL" >&5
-printf "%s\n" "$ac_cv_lib_fetch_fetchParseURL" >&6; }
-if test "x$ac_cv_lib_fetch_fetchParseURL" = xyes
-then :
-  LIBS="$LIBS -lfetch -lcrypto -lssl"
-else case e in #(
   e) { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: error: in '$ac_pwd':" >&5
 printf "%s\n" "$as_me: error: in '$ac_pwd':" >&2;}
 as_fn_error $? "can't find libfetch
-See 'config.log' for more details" "$LINENO" 5; } ;;
-esac
-fi
-
+See 'config.log' for more details" "$LINENO" 5; }
  ;;
 esac
 fi

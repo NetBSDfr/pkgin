@@ -62,11 +62,7 @@ dnl OpenSSL libraries in the same check, so we're forced to look for two
 dnl different symbols (to avoid the cache).
 dnl
 AC_CHECK_LIB([fetch],[fetchMakeURL],[],
-	[AC_CHECK_LIB([fetch],[fetchParseURL],
-		[LIBS="$LIBS -lfetch -lcrypto -lssl"],
-		[AC_MSG_FAILURE([can't find libfetch])],
-		[-lcrypto -lssl]
-	)]
+	[AC_MSG_FAILURE([can't find libfetch])]
 )
 
 AC_ARG_WITH([sqlite3],
