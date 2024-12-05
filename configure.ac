@@ -1,5 +1,5 @@
 AC_PREREQ([2.61])
-AC_INIT([pkgin], [23.12.0], [https://github.com/NetBSDfr/pkgin/issues])
+AC_INIT([pkgin], [24.12.0], [https://github.com/NetBSDfr/pkgin/issues])
 AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -56,11 +56,6 @@ AC_ARG_WITH([libfetch],
 	 LDFLAGS="$LDFLAGS -L$withval/lib"]
 )
 AC_CHECK_HEADER([fetch.h],[],[AC_MSG_FAILURE([can't find fetch.h])])
-dnl
-dnl This is a bit silly.  I can't find a way to try both with and without
-dnl OpenSSL libraries in the same check, so we're forced to look for two
-dnl different symbols (to avoid the cache).
-dnl
 AC_CHECK_LIB([fetch],[fetchMakeURL],[],
 	[AC_MSG_FAILURE([can't find libfetch])]
 )

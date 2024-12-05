@@ -1,3 +1,11 @@
+## Version 24.12.0 (2024-12-05)
+
+ * Cross-build fixes from Taylor.
+
+ * Ensure logs use ISO-8601 timestamps.
+
+ * Various autoconf and nbcompat cleanups.
+
 ## Version 23.8.1 (2023-08-22)
 
  * Fix regression introduced in 23.8.0 where only the first argument to "keep"
