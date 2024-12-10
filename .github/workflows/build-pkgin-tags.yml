@@ -1,0 +1,100 @@
+name: Build all pkgin release tags
+on:
+  workflow_dispatch:
+jobs:
+  build-tags:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up host
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bmake \
+            build-essential \
+            cvs \
+            libarchive-dev \
+            libsqlite3-dev \
+            libssl-dev
+          mkdir ~/.ssh
+          ssh-keyscan anoncvs.netbsd.org >>~/.ssh/known_hosts
+          cvs -d anoncvs@anoncvs.netbsd.org:/cvsroot co -P pkgsrc/net/libfetch/files
+          cvs -d anoncvs@anoncvs.netbsd.org:/cvsroot co -P pkgsrc/pkgtools/libnbcompat/files
+          (
+            cd pkgsrc/pkgtools/libnbcompat/files
+            ./configure --enable-db
+            bmake
+          )
+          (
+            cd pkgsrc/net/libfetch/files
+            export BINOWN="$(id -un)"
+            export ROOT_GROUP="$(id -gn)"
+            env \
+              CFLAGS="-DHAVE_NBCOMPAT_H=1 -I${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files" \
+            bmake
+            bmake DESTDIR=/tmp/destdir install
+          )
+          # Generate fake pkg_install binaries, they will never be used.
+          for prog in pkg_add pkg_admin pkg_create pkg_delete pkg_info; do
+            touch /tmp/${prog}
+            chmod +x /tmp/${prog}
+          done
+      - name: Build each tag
+        run: |
+          mkdir bin
+          for tag in $(git tag | grep ^v); do
+            # TODO: < v0.10 require patches for PKGIN_DBDIR / PKG_INSTALL_DIR
+            case "${tag}" in
+            v0.[0-9].*)
+              continue
+              ;;
+            # TODO: some issues with the Makefile
+            v0.*)
+              continue
+              ;;
+            # TODO: pre-automake, do not support out-of-srcdir
+            v20.*)
+              continue
+              ;;
+            esac
+            git checkout $tag
+            mkdir build
+            (
+              cd build
+              CONFIGURE_ARGS="--prefix=/usr/local"
+              case "${tag}" in
+              v0.*)
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libraries=/tmp/destdir/usr/lib"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-includes=/tmp/destdir/usr/include"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-pkginstall=/tmp"
+                ;;
+              *)
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --disable-maintainer-mode"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-dbdir=/usr/local/.pkgdb"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libarchive=/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libfetch=/tmp/destdir/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl=/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-sqlite3=/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-machine-arch=x86_64"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-pkg-install=/tmp"
+                ;;
+              esac
+              env \
+                CFLAGS="-DHAVE_NBCOMPAT_H=1 -I${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files" \
+                LDFLAGS="-L${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files" \
+                LIBS="-lnbcompat" \
+              ../configure ${CONFIGURE_ARGS} || (cat config.log && ./configure --help && false)
+              bmake || make V=1
+            )
+            mv build/pkgin bin/pkgin-"$tag"
+            rm -rf build
+          done
+          tar -czvf pkgin-bins.tar.gz ./bin
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgin-binaries
+          path: pkgin-bins.tar.gz
