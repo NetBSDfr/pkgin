@@ -1,0 +1,124 @@
+name: Build all pkgin release tags
+on:
+  workflow_dispatch:
+jobs:
+  build-tags:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up host
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            bmake \
+            build-essential \
+            cvs \
+            libarchive-dev \
+            libsqlite3-dev \
+            libssl-dev
+          sudo mkdir -p /usr/local/{bin,sbin}
+          mkdir ~/.ssh
+          ssh-keyscan anoncvs.netbsd.org >>~/.ssh/known_hosts
+          cvs -d anoncvs@anoncvs.netbsd.org:/cvsroot co -P \
+              pkgsrc/net/libfetch/files \
+              pkgsrc/pkgtools/libnbcompat/files \
+              pkgsrc/pkgtools/pkg_install/files \
+              pkgsrc/security/netpgpverify/files
+          (
+            cd pkgsrc/pkgtools/libnbcompat/files
+            ./configure --enable-db
+            bmake
+          )
+          CFLAGS="-DHAVE_NBCOMPAT_H=1"
+          CFLAGS="${CFLAGS} -I${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files"
+          export CFLAGS
+          (
+            cd pkgsrc/net/libfetch/files
+            export BINOWN="$(id -un)"
+            export ROOT_GROUP="$(id -gn)"
+            export FETCH_WITH_INET6=yes
+            bmake
+            bmake DESTDIR=/tmp/destdir install
+          )
+          (
+            cd pkgsrc/security/netpgpverify/files
+            ./configure
+            bmake
+            bmake -f Makefile.lib.in
+          )
+          (
+            cd pkgsrc/pkgtools/pkg_install/files
+            sed -i -e '/optreset/d' admin/audit.c
+            ln -s ${GITHUB_WORKSPACE}/pkgsrc/security/netpgpverify/files lib/netpgp
+            cp ${GITHUB_WORKSPACE}/pkgsrc/security/netpgpverify/files/libnetpgpverify.a lib
+            CFLAGS="${CFLAGS} -I${GITHUB_WORKSPACE}/pkgsrc/net/libfetch/files"
+            CFLAGS="${CFLAGS} -I/tmp/destdir/usr/include"
+            LDFLAGS="-L${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files"
+            LDFLAGS="${LDFLAGS} -L/tmp/destdir/usr/lib"
+            export PKGSRC_MACHINE_ARCH=x86_64
+            export OPSYS=Linux
+            export LDFLAGS
+            export LIBS="-lnbcompat"
+            ./configure --prefix=/usr/local
+            bmake
+            sudo bmake install
+          )
+      - name: Build each tag
+        run: |
+          mkdir bin
+          for tag in $(git tag | grep ^v); do
+            # TODO: < v0.10 require patches for PKGIN_DBDIR / PKG_INSTALL_DIR
+            case "${tag}" in
+            v0.[0-9].*)
+              continue
+              ;;
+            # TODO: some issues with the Makefile
+            v0.*)
+              continue
+              ;;
+            # TODO: pre-automake, do not support out-of-srcdir
+            v20.*)
+              continue
+              ;;
+            esac
+            git checkout $tag
+            mkdir build
+            (
+              cd build
+              CONFIGURE_ARGS="--prefix=/usr/local"
+              case "${tag}" in
+              v0.*)
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libraries=/tmp/destdir/usr/lib"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-includes=/tmp/destdir/usr/include"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-pkginstall=/usr/local/sbin"
+                ;;
+              *)
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --disable-maintainer-mode"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-dbdir=/usr/local/.pkgdb"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libarchive=/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-libfetch=/tmp/destdir/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-openssl=/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-sqlite3=/usr"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-machine-arch=x86_64"
+                CONFIGURE_ARGS="${CONFIGURE_ARGS} --with-pkg-install=/usr/local/sbin"
+                ;;
+              esac
+              env \
+                CFLAGS="-DHAVE_NBCOMPAT_H=1 -I${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files" \
+                LDFLAGS="-L${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files" \
+                LIBS="-lnbcompat" \
+              ../configure ${CONFIGURE_ARGS} || (cat config.log && ./configure --help && false)
+              bmake || make V=1
+            )
+            sudo cp build/pkgin /usr/local/bin/pkgin-"$tag"
+            rm -rf build
+          done
+          tar -czvf pkgin-bins.tar.gz /usr/local/{bin/pkgin-*,sbin/pkg*}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgin-binaries
+          path: pkgin-bins.tar.gz
