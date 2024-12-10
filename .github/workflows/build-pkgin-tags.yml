@@ -1,0 +1,49 @@
+name: Build all pkgin release tags
+on:
+  workflow_dispatch:
+jobs:
+  build-tags:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libarchive-dev \
+            libfetch-dev \
+            libssl-dev \
+            libsqlite3-dev \
+            build-essential
+      - name: Get tags to build
+        run: |
+          #tags=$(git tag | grep ^v)
+          tags="v24.12.0"
+          echo "tags=$tags" >> $GITHUB_ENV
+      - name: Build each tag
+        run: |
+          mkdir bin
+          for tag in ${{ env.tags }}; do
+            git checkout $tag
+            mkdir build
+            (
+              cd build
+              ./configure \
+                --prefix=/usr/local \
+                --with-dbdir=/usr/local/.pkgdb \
+                --with-pkg-install=/tmp \
+                --with-machine-arch=x86_64
+              make
+            )
+            mv build/pkgin bin/pkgin-"$tag"
+            rm -rf build
+          done
+          tar -czf pkgin-bins.tar.gz ./bin
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: pkgin-binaries
+          path: pkgin-bins.tar.gz
