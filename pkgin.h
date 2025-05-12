@@ -409,7 +409,7 @@ Plisthead	*order_remove(Plisthead *);
 Plisthead	*order_download(Plisthead *);
 Plisthead	*order_install(Plisthead *);
 /* impact.c */
-Plisthead	*pkg_impact(char **, int *);
+Plisthead	*pkg_impact(char **, int *, int);
 /* autoremove.c */
 void	   	pkgin_autoremove(void);
 void		show_pkg_keep(void);

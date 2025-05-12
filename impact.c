@@ -273,7 +273,7 @@ finish_deps_spinner(int istty)
  * through all local packages and check each for upgrades.
  */
 static Plistarray *
-pkg_impact_upgrade(void)
+pkg_impact_upgrade(int verbose)
 {
 	Plistarray *deps, *impacthead;
 	Plisthead *supersedes;
@@ -323,7 +323,8 @@ pkg_impact_upgrade(void)
 		 * remote package dependencies as there may be new or updated
 		 * dependencies that need to be installed.
 		 */
-		update_deps_spinner(istty);
+		if (verbose)
+			update_deps_spinner(istty);
 		get_depends_recursive(p->rpkg->full, deps, DEPENDS_REMOTE);
 	}
 	}
@@ -477,7 +478,7 @@ recurse_upgrades(Plisthead *upgrades, Plistarray *impacthead)
  * packages and their dependencies to install.
  */
 static Plistarray *
-pkg_impact_install(char **pkgargs, int *rc)
+pkg_impact_install(char **pkgargs, int *rc, int verbose)
 {
 	Plistarray *deps, *impacthead;
 	Plisthead *ipkgs;
@@ -532,7 +533,8 @@ pkg_impact_install(char **pkgargs, int *rc)
 		 * calculate their actions based on whether they match a local
 		 * package or not.
 		 */
-		update_deps_spinner(istty);
+		if (verbose)
+			update_deps_spinner(istty);
 		deps = init_array(DEPS_HASH_SIZE);
 		get_depends_recursive(p->rpkg->full, deps, DEPENDS_REMOTE);
 		for (i = 0; i < deps->size; i++) {
@@ -589,7 +591,7 @@ pkg_impact_install(char **pkgargs, int *rc)
  * which loops through all local packages looking for upgrades.
  */
 Plisthead *
-pkg_impact(char **pkgargs, int *rc)
+pkg_impact(char **pkgargs, int *rc, int verbose)
 {
 	Plistarray *pkgs;
 	Plisthead *impacthead;
@@ -599,15 +601,17 @@ pkg_impact(char **pkgargs, int *rc)
 	istty = isatty(fileno(stdout));
 
 	TRACE("[>]-entering impact\n");
-	start_deps_spinner(istty);
+	if (verbose)
+		start_deps_spinner(istty);
 
 	if (pkgargs)
-		pkgs = pkg_impact_install(pkgargs, rc);
+		pkgs = pkg_impact_install(pkgargs, rc, verbose);
 	else
-		pkgs = pkg_impact_upgrade();
+		pkgs = pkg_impact_upgrade(verbose);
 
 	TRACE("[<]-leaving impact\n");
-	finish_deps_spinner(istty);
+	if (verbose)
+		finish_deps_spinner(istty);
 
 	impacthead = init_head();
 

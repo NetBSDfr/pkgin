@@ -562,6 +562,32 @@ get_sorted_list_by_action(Plisthead *pkgs, action_t action)
 
 #define H_BUF 6
 
+/*
+ * Return list of installed core packages that should be checked for upgrade
+ * first, prior to any general upgrades.
+ */
+static char **
+get_core_pkgs(void)
+{
+	const char *pkgs[] = {
+		"pkg_install",
+		"pkgin",
+		NULL,
+	};
+	size_t n, p;
+	char **corepkgs = NULL;
+
+	for (p = 0; pkgs[p] != NULL; p++) {
+		if (find_local_pkg(pkgs[p], NULL) != NULL) {
+			corepkgs = xrealloc(corepkgs, (n + 2) * sizeof(char *));
+			corepkgs[n] = xstrdup(pkgs[p]);
+			corepkgs[++n] = NULL;
+		}
+	}
+
+	return corepkgs;
+}
+
 int
 pkgin_install(char **pkgargs, int do_inst, int upgrade)
 {
@@ -571,6 +597,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	int		refreshnum = 0, downloadnum = 0;
 	int		removenum = 0, supersedenum = 0;
 	int		conflictnum = 0;
+	int		coreupg = 0;
 	int		argn, rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
 	uint64_t	free_space;
@@ -578,12 +605,14 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	size_t		len;
 	ssize_t		llen;
 	Pkglist		*p;
-	Plisthead	*impacthead, *downloadhead = NULL, *installhead = NULL;
+	Plisthead	*impacthead = NULL;
+	Plisthead	*downloadhead = NULL, *installhead = NULL;
 	char		**names;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
 	char		*toremove = NULL, *tosupersede = NULL;
 	char		*unmet_reqs = NULL;
+	char		**corepkgs;
 	char		pkgrepo[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
 	struct		stat st;
@@ -600,12 +629,25 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
 	/*
-	 * Calculate full impact (list of packages and actions to perform) of
-	 * requested operation.
+	 * If pkgargs is NULL we're performing an upgrade.  First check to see
+	 * if there are any upgrades for core package tools, and if so perform
+	 * them first.
 	 */
-	if ((impacthead = pkg_impact(pkgargs, &rc)) == NULL) {
-		printf(MSG_NOTHING_TO_DO);
-		return rc;
+	if (pkgargs == NULL) {
+		if ((corepkgs = get_core_pkgs()) != NULL) {
+			if ((impacthead = pkg_impact(corepkgs, &rc, 0)) != NULL) {
+				coreupg = 1;
+			}
+		}
+	}
+	/*
+	 * Otherwise calculate full impact of either full upgrade or install.
+	 */
+	if (impacthead == NULL) {
+		if ((impacthead = pkg_impact(pkgargs, &rc, 1)) == NULL) {
+			printf(MSG_NOTHING_TO_DO);
+			return rc;
+		}
 	}
 
 	/* check for required files */
@@ -916,6 +958,13 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		rc = EXIT_FAILURE;
 
 	(void)update_db(LOCAL_SUMMARY, 1);
+
+	/*
+	 * If we only upgraded the package tools and it was successful then
+	 * print a message about performing the subsequent full upgrade.
+	 */
+	if (coreupg && rc == EXIT_SUCCESS)
+		printf(MSG_PKGTOOLS_UPGRADED);
 
 installend:
 	XFREE(todownload);

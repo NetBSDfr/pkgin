@@ -92,6 +92,8 @@
 				"%s of additional disk space will be used\n"
 #define MSG_DOWNLOAD_FREED	"%s to download, " \
 				"%s of disk space will be freed up\n"
+#define MSG_PKGTOOLS_UPGRADED	"Package tools were upgraded.  Re-run " \
+				"\"pkgin upgrade\" to complete the upgrade.\n"
 
 /* depends.c */
 #define MSG_DIRECT_DEPS_FOR "direct dependencies for %s\n"
