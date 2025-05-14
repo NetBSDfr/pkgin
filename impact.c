@@ -145,7 +145,7 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 		return PDB_OK;
 
 	/*
-	 * Look to see if we already found this package via an different match.
+	 * Look to see if we already found this package via a different match.
 	 */
 	SLIST_FOREACH(p, supersedes, next) {
 		if (strcmp(lpkg->full, p->lpkg->full) == 0)
