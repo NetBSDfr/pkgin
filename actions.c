@@ -635,7 +635,8 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	 */
 	if (pkgargs == NULL) {
 		if ((corepkgs = get_core_pkgs()) != NULL) {
-			if ((impacthead = pkg_impact(corepkgs, &rc, 0)) != NULL) {
+			impacthead = pkg_impact(corepkgs, &rc, 0);
+			if (impacthead != NULL) {
 				coreupg = 1;
 			}
 		}
