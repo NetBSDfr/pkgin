@@ -83,13 +83,6 @@ pkg_met_reqs(Plisthead *impacthead)
 	Pkglist		*pimpact, *requires;
 	Plistnumbered	*requireshead = NULL;
 	struct stat	sb;
-#ifdef CHECK_PROVIDES
-	int		foundreq;
-	Pkglist		*impactprov = NULL, *provides = NULL;
-	Plistnumbered	*l_provideshead = NULL, *r_provideshead = NULL;
-
-	l_provideshead = rec_pkglist(LOCAL_PROVIDES);
-#endif
 
 	/* first, parse impact list */
 	SLIST_FOREACH(pimpact, impacthead, next) {
@@ -105,11 +98,6 @@ pkg_met_reqs(Plisthead *impacthead)
 
 		/* parse requires list */
 		SLIST_FOREACH(requires, requireshead->P_Plisthead, next) {
-
-#ifdef CHECK_PROVIDES
-			foundreq = 0;
-#endif
-
 			/* for performance sake, first check basesys */
 			if ((strncmp(requires->full, PREFIX,
 				    strlen(PREFIX) - 1)) != 0) {
@@ -128,95 +116,10 @@ pkg_met_reqs(Plisthead *impacthead)
 				/* was a basysfile, no need to check PROVIDES */
 				continue;
 			}
-			/*
-			 * FIXME: the code below actually works, but there's no
-			 * point losing performances when some REQUIRES do not
-			 * match PROVIDES in pkg_summary(5). This is a known
-			 * issue and will hopefuly be fixed.
-			 */
-#ifndef CHECK_PROVIDES
-			continue;
-#else
-			/* search what local packages provide */
-			SLIST_FOREACH(provides, l_provideshead->P_Plisthead,
-					next) {
-				if (strncmp(provides->full,
-						requires->full,
-						strlen(requires->full)) == 0) {
-
-					foundreq = 1;
-
-					/* found, no need to go further*/
-					break;
-				} /* match */
-			} /* SLIST_FOREACH LOCAL_PROVIDES */
-
-			/*
-			 * REQUIRES was not found on local packages,
-			 * try impact list
-			 */
-			if (!foundreq) {
-				/* re-parse impact list to retreive PROVIDES */
-				SLIST_FOREACH(impactprov, impacthead, next) {
-					if ((r_provideshead =
-						rec_pkglist(REMOTE_PROVIDES,
-						impactprov->full)) == NULL)
-						continue;
-
-					/*
-					 * then parse provides list for
-					 * every package
-					 */
-					SLIST_FOREACH(provides,
-					r_provideshead->P_Plisthead, next) {
-						if (strncmp(provides->full,
-						requires->full,
-						strlen(requires->full)) == 0) {
-
-							foundreq = 1;
-
-							/*
-							 * found, no need to
-							 * go further return
-							 * to impactprov list
-							 */
-							break;
-						} /* match */
-					}
-					free_pkglist(&r_provideshead->P_Plisthead);
-					free(r_provideshead);
-
-					if (foundreq)
-					/* exit impactprov list loop */
-						break;
-
-				} /* SLIST_NEXT impactprov */
-
-			} /* if (!foundreq) LOCAL_PROVIDES -> impact list */
-
-			/* FIXME: BIG FAT DISCLAIMER
-			 * as of 04/2009, some packages described in pkg_summary
-			 * have unmet REQUIRES. This is a known bug that makes
-			 * the PROVIDES untrustable and some packages
-			 * uninstallable. foundreq is forced to 1 for now for
-			 * every REQUIRES matching PREFIX.
-			 */
-			if (!foundreq) {
-				printf(MSG_REQT_NOT_PRESENT_DEPS,
-					requires->full);
-
-				foundreq = 1;
-			}
-#endif
 		} /* SLIST_FOREACH requires */
 		free_pkglist(&requireshead->P_Plisthead);
 		free(requireshead);
 	} /* 1st impact SLIST_FOREACH */
-
-#ifdef CHECK_PROVIDES
-	free_pkglist(&l_provideshead->P_Plisthead);
-	free(l_provideshead);
-#endif
 
 	return met_reqs;
 }
