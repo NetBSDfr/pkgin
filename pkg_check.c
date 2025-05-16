@@ -36,51 +36,47 @@ get_conflicts(Plistarray *conflicts)
 	pkgindb_doquery(LOCAL_CONFLICTS, record_pattern_to_array, conflicts);
 }
 
-/* find required files (REQUIRES) from PROVIDES or filename */
+/*
+ * Check that REQUIRES is satisifed for incoming packages.  As the check
+ * happens before install, we have to exclude any REQUIRES for libraries under
+ * PREFIX as they may not exist yet.
+ *
+ * TODO: Record what will be installed from PROVIDES and enable check for files
+ * under PREFIX.
+ */
 int
 pkg_met_reqs(Plisthead *impacthead)
 {
-	int		met_reqs = 1;
-	Pkglist		*pimpact, *requires;
-	Plistnumbered	*requireshead = NULL;
 	struct stat	sb;
+	Plistnumbered	*reqhead;
+	Pkglist		*pkg, *req;
+	size_t		len;
+	int		met_reqs = 1;
 
-	/* first, parse impact list */
-	SLIST_FOREACH(pimpact, impacthead, next) {
-		/* Only check incoming packages */
-		if (!action_is_install(pimpact->action))
+	len = strlen(PREFIX) - 1;
+
+	SLIST_FOREACH(pkg, impacthead, next) {
+		if (!action_is_install(pkg->action))
 			continue;
 
-		/* retreive requires list for package */
-		if ((requireshead = rec_pkglist(REMOTE_REQUIRES,
-					pimpact->rpkg->full)) == NULL)
-			/* empty requires list (very unlikely) */
+		reqhead = rec_pkglist(REMOTE_REQUIRES, pkg->rpkg->full);
+		if (reqhead == NULL)
 			continue;
 
-		/* parse requires list */
-		SLIST_FOREACH(requires, requireshead->P_Plisthead, next) {
-			/* for performance sake, first check basesys */
-			if ((strncmp(requires->full, PREFIX,
-				    strlen(PREFIX) - 1)) != 0) {
-				if (stat(requires->full, &sb) < 0) {
-					printf(MSG_REQT_NOT_PRESENT,
-						requires->full, pimpact->rpkg->full);
-
-					/*
-					 * mark as DONOTHING,
-					 * requirement missing
-					 */
-					pimpact->action = ACTION_UNMET_REQ;
-
-					met_reqs = 0;
-				}
-				/* was a basysfile, no need to check PROVIDES */
+		SLIST_FOREACH(req, reqhead->P_Plisthead, next) {
+			if (strncmp(req->full, PREFIX, len) == 0)
 				continue;
+			if (stat(req->full, &sb) < 0) {
+				printf(MSG_REQT_NOT_PRESENT, req->full,
+				    pkg->rpkg->full);
+				pkg->action = ACTION_UNMET_REQ;
+				met_reqs = 0;
 			}
-		} /* SLIST_FOREACH requires */
-		free_pkglist(&requireshead->P_Plisthead);
-		free(requireshead);
-	} /* 1st impact SLIST_FOREACH */
+		}
+
+		free_pkglist(&reqhead->P_Plisthead);
+		free(reqhead);
+	}
 
 	return met_reqs;
 }
