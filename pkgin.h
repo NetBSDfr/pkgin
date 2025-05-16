@@ -366,6 +366,7 @@ void		split_repos(void);
 int		chk_repo_list(int);
 /* sqlite_callbacks.c */
 int		pdb_rec_list(void *, int, char **, char **);
+int		record_pattern_to_array(void *, int, char **, char **);
 /* depends.c */
 void		get_depends(const char *, Plisthead *, depends_t);
 void		get_depends_recursive(const char *, Plistarray *, depends_t);

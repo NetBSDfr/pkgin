@@ -30,45 +30,6 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
-/*
- * SQLite callback for LOCAL_CONFLICTS etc, record a pattern and optional
- * PKGBASE to a Plistarray.
- *
- * argv0: pattern
- * argv1: pkgbase, may be NULL if it cannot be determined from pattern
- */
-static int
-record_pattern_to_array(void *param, int argc, char **argv, char **colname)
-{
-	Plistarray *depends = (Plistarray *)param;
-	Pkglist *d;
-	int slot;
-
-	if (argv == NULL)
-		return PDB_ERR;
-
-	d = malloc_pkglist();
-	d->patterns = xmalloc(2 * sizeof(char *));
-	d->patterns[0] = xstrdup(argv[0]);
-	d->patterns[1] = NULL;
-	d->patcount = 1;
-
-	/*
-	 * XXX: default slot if no pkgbase available, should we allocate one
-	 * outside of the normal range for these?
-	 */
-	slot = 0;
-
-	if (argv[1]) {
-		d->name = xstrdup(argv[1]);
-		slot = pkg_hash_entry(d->name, depends->size);
-	}
-
-	SLIST_INSERT_HEAD(&depends->head[slot], d, next);
-
-	return PDB_OK;
-}
-
 void
 get_conflicts(Plistarray *conflicts)
 {
