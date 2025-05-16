@@ -103,11 +103,10 @@ const char REMOTE_REQUIRES[] =
 	"   AND remote_requires.pkg_id = remote_pkg.pkg_id;";
 
 const char REMOTE_SUPERSEDES[] =
-	"SELECT pattern, pkgbase "
+	"SELECT pattern, pkgbase, pkgname "
 	"  FROM remote_supersedes "
 	"  LEFT JOIN remote_pkg "
-	"    ON remote_supersedes.pkg_id = remote_pkg.pkg_id "
-	" WHERE fullpkgname = %Q;";
+	"    ON remote_supersedes.pkg_id = remote_pkg.pkg_id;";
 
 const char KEEP_PKG[] =
 	"UPDATE LOCAL_PKG SET PKG_KEEP = 1 WHERE PKGNAME = %Q;";

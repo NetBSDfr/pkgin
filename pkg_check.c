@@ -30,12 +30,6 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
-void
-get_conflicts(Plistarray *conflicts)
-{
-	pkgindb_doquery(LOCAL_CONFLICTS, record_pattern_to_array, conflicts);
-}
-
 /*
  * Check that REQUIRES is satisifed for incoming packages.  As the check
  * happens before install, we have to exclude any REQUIRES for libraries under
@@ -82,48 +76,24 @@ pkg_met_reqs(Plisthead *impacthead)
 }
 
 /*
- * A remote package has been identified as matching a local conflict.  Retrieve
- * the local package and print the conflict.
+ * Check if an incoming remote package matches an entry in the local CONFLICTS
+ * table, and if so return the match that can be used by callers to identify
+ * which local package is responsible.
  */
-static void
-print_pkg_conflict(const char *pattern, const char *pkgname)
-{
-	char query[BUFSIZ];
-	char *conflict;
-
-	conflict = xmalloc(BUFSIZ * sizeof(char));
-
-	sqlite3_snprintf(BUFSIZ, query, REMOTE_CONFLICTS, pattern);
-	if (pkgindb_doquery(query, pdb_get_value, conflict) == PDB_OK)
-		printf(MSG_CONFLICT_PKG, pkgname, conflict);
-
-	XFREE(conflict);
-}
-
-/*
- * Check if an incoming remote package conflicts with any local packages.
- */
-int
-pkg_has_conflicts(Pkglist *pkg, Plistarray *conflicts)
+char *
+pkg_conflicts(Pkglist *pkg)
 {
 	Pkglist *p;
 	int i, slot;
 
-	if (is_empty_plistarray(conflicts))
-		return 0;
+	if (is_empty_plistarray(l_conflicthead))
+		return NULL;
 
-	slot = pkg_hash_entry(pkg->rpkg->name, conflicts->size);
-	SLIST_FOREACH(p, &conflicts->head[slot], next) {
+	slot = pkg_hash_entry(pkg->rpkg->name, CONFLICTS_HASH_SIZE);
+	SLIST_FOREACH(p, &l_conflicthead->head[slot], next) {
 		for (i = 0; i < p->patcount; i++) {
-			if (!pkg_match(p->patterns[i], pkg->rpkg->full))
-				continue;
-
-			/*
-			 * Incoming remote package matches a local CONFLICTS
-			 * entry, print the conflict message and return fail.
-			 */
-			print_pkg_conflict(p->patterns[i], pkg->rpkg->full);
-			return 1;
+			if (pkg_match(p->patterns[i], pkg->rpkg->full))
+				return p->patterns[i];
 		}
 	}
 
@@ -133,18 +103,15 @@ pkg_has_conflicts(Pkglist *pkg, Plistarray *conflicts)
 	 * stored.
 	 */
 	if (slot == 0)
-		return 0;
-
-	SLIST_FOREACH(p, &conflicts->head[0], next) {
+		return NULL;
+	SLIST_FOREACH(p, &l_conflicthead->head[0], next) {
 		for (i = 0; i < p->patcount; i++) {
-			if (!pkg_match(p->patterns[i], pkg->rpkg->full))
-				continue;
-			print_pkg_conflict(p->patterns[i], pkg->rpkg->full);
-			return 1;
+			if (pkg_match(p->patterns[i], pkg->rpkg->full))
+				return p->patterns[i];
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
 void

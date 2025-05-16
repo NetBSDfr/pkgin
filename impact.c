@@ -118,6 +118,7 @@ calculate_action(Pkglist *lpkg, Pkglist *rpkg)
  *
  * argv0: SUPERSEDES pattern
  * argv1: PKGBASE, may be NULL if it cannot be determined from pattern
+ * argv2: PKGNAME of replacement
  */
 static int
 record_supersedes(void *param, int argc, char **argv, char **colname)
@@ -161,6 +162,7 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 	p->patterns[1] = NULL;
 	p->patcount = 1;
 	p->lpkg = lpkg;
+	p->replace = xstrdup(argv[2]);
 	SLIST_INSERT_HEAD(supersedes, p, next);
 
 	return PDB_OK;
@@ -176,19 +178,8 @@ find_supersedes(Plistarray *impacthead)
 
 	supersedes = init_head();
 
-	/*
-	 * Only consider packages that are going to be installed.
-	 */
-	for (i = 0; i < impacthead->size; i++) {
-	SLIST_FOREACH(pkg, &impacthead->head[i], next) {
-		if (!action_is_install(pkg->action))
-			continue;
-
-		sqlite3_snprintf(BUFSIZ, query, REMOTE_SUPERSEDES,
-		    pkg->rpkg->full);
-		pkgindb_doquery(query, record_supersedes, supersedes);
-	}
-	}
+	sqlite3_snprintf(BUFSIZ, query, REMOTE_SUPERSEDES);
+	pkgindb_doquery(query, record_supersedes, supersedes);
 
 	if (SLIST_EMPTY(supersedes)) {
 		free_pkglist(&supersedes);
@@ -205,8 +196,9 @@ find_supersedes(Plistarray *impacthead)
 static action_t
 add_remote_to_impact(Plistarray *impacthead, Pkglist *pkg)
 {
-	Pkglist *lpkg;
+	Pkglist *lpkg, *p;
 	size_t slot;
+	char *cmatch;
 
 	pkg->action = ACTION_NONE;
 
@@ -222,6 +214,34 @@ add_remote_to_impact(Plistarray *impacthead, Pkglist *pkg)
 		TRACE("  - found %s\n", lpkg->full);
 		pkg->lpkg = lpkg;
 		pkg->action = calculate_action(pkg->lpkg, pkg->rpkg);
+	}
+
+	/*
+	 * If incoming package matches a local CONFLICTS entry then find the
+	 * corresponding local package and mark it for removal.
+	 */
+	if ((cmatch = pkg_conflicts(pkg)) != NULL) {
+		/*
+		 * Look up corresponding local package for this match.
+		 *
+		 * TODO: This should be optimised to be already stored in
+		 * l_conflicthead and avoid the need for additional queries.
+		 */
+		char query[BUFSIZ];
+		char *cpkgname = xmalloc(BUFSIZ * sizeof(char));
+		sqlite3_snprintf(BUFSIZ, query, REMOTE_CONFLICTS, cmatch);
+		pkgindb_doquery(query, pdb_get_value, cpkgname);
+		if ((lpkg = find_local_pkg(cpkgname, NULL)) != NULL) {
+			if (p = local_pkg_in_impact(impacthead, lpkg)) {
+				p->action = ACTION_REMOVE;
+			} else {
+				p = malloc_pkglist();
+				p->action = ACTION_REMOVE;
+				p->lpkg = lpkg;
+				slot = pkg_hash_entry(lpkg->name, impacthead->size);
+				SLIST_INSERT_HEAD(&impacthead->head[slot], p, next);
+			}
+		}
 	}
 
 	slot = pkg_hash_entry(pkg->rpkg->name, impacthead->size);
@@ -330,6 +350,40 @@ pkg_impact_upgrade(int verbose)
 	}
 
 	/*
+	 * Get SUPERSEDES entries matching local packages.  For each affected
+	 * package, mark as superseded which will cause it to be removed, and
+	 * add replacement if not already installed.
+	 *
+	 */
+	if ((supersedes = find_supersedes(impacthead))) {
+		SLIST_FOREACH(lpkg, supersedes, next) {
+			Pkglist *oldp, *newp;
+			/*
+			 * find_supersedes() ensures lpkg will be set and this
+			 * will return a valid entry.
+			 */
+			oldp = local_pkg_in_impact(impacthead, lpkg->lpkg);
+			oldp->action = ACTION_SUPERSEDED;
+
+			/*
+			 * If the replacement is not already installed then install it.
+			 */
+			char *repmatch = xasprintf("%s-[0-9]*", lpkg->replace);
+			if ((newp = find_local_pkg(repmatch, lpkg->replace)) == NULL) {
+				newp = malloc_pkglist();
+				newp->rpkg = find_remote_pkg(repmatch, lpkg->replace, NULL);
+				newp->keep = oldp->lpkg->keep;
+				if (verbose)
+					update_deps_spinner(istty);
+				get_depends_recursive(newp->rpkg->full, deps, DEPENDS_REMOTE);
+				add_remote_to_impact(impacthead, newp);
+			}
+		}
+		free_pkglist(&supersedes);
+	}
+
+
+	/*
 	 * We now have a full list of dependencies for all local packages,
 	 * process them in turn, adding to impact list.  As we may have already
 	 * seen an entry as part of looping through all packages, but without
@@ -348,22 +402,6 @@ pkg_impact_upgrade(int verbose)
 	}
 	}
 	free_array(deps);
-
-	/*
-	 * Get SUPERSEDES entries matching local packages.  For each affected
-	 * package, mark as superseded which will cause it to be removed.
-	 */
-	if ((supersedes = find_supersedes(impacthead))) {
-		SLIST_FOREACH(lpkg, supersedes, next) {
-			/*
-			 * find_supersedes() ensures lpkg will be set and this
-			 * will return a valid entry.
-			 */
-			p = local_pkg_in_impact(impacthead, lpkg->lpkg);
-			p->action = ACTION_SUPERSEDED;
-		}
-		free_pkglist(&supersedes);
-	}
 
 	return impacthead;
 }

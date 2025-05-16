@@ -56,8 +56,6 @@
 	"%s, needed by %s is not present in this system.\n"
 #define MSG_REQT_NOT_PRESENT_DEPS \
 	"warning: %s is not present in this system nor package's dependencies\n"
-#define MSG_CONFLICT_PKG \
-	"%s (to be installed) conflicts with installed package %s.\n"
 #define MSG_NOTHING_TO_DO "nothing to do.\n"
 #define MSG_REQT_MISSING "the following packages have unmet requirements: %s\n\n"
 #define MSG_NO_CACHE_SPACE "%s does not have enough space for download, (%s required but only %s are available)\n"

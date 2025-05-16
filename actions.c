@@ -591,12 +591,10 @@ get_core_pkgs(void)
 int
 pkgin_install(char **pkgargs, int do_inst, int upgrade)
 {
-	Plistarray	*conflicts;
 	FILE		*fp;
 	int		installnum = 0, upgradenum = 0;
 	int		refreshnum = 0, downloadnum = 0;
 	int		removenum = 0, supersedenum = 0;
-	int		conflictnum = 0;
 	int		coreupg = 0;
 	int		argn, rc = EXIT_SUCCESS;
 	int		privsreqd = PRIVS_PKGINDB;
@@ -629,6 +627,12 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 		errx(EXIT_FAILURE, MSG_DONT_HAVE_RIGHTS);
 
 	/*
+	 * Initialise local CONFLICTS as it will be used by pkg_impact().
+	 */
+	l_conflicthead = init_array(CONFLICTS_HASH_SIZE);
+	pkgindb_doquery(LOCAL_CONFLICTS, record_pattern_to_array, l_conflicthead);
+
+	/*
 	 * If pkgargs is NULL we're performing an upgrade.  First check to see
 	 * if there are any upgrades for core package tools, and if so perform
 	 * them first.
@@ -657,25 +661,6 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 			if (p->action == ACTION_UNMET_REQ)
 				unmet_reqs =
 				    action_list(unmet_reqs, p->rpkg->full);
-
-	/*
-	 * Check for conflicts.
-	 *
-	 * XXX: this should really be done during impact so that we have a
-	 * chance to consider alternatives.
-	 */
-	conflicts = init_array(CONFLICTS_HASH_SIZE);
-	get_conflicts(conflicts);
-	SLIST_FOREACH(p, impacthead, next) {
-		if (!action_is_install(p->action))
-			continue;
-		if (pkg_has_conflicts(p, conflicts))
-			conflictnum++;
-	}
-	free_array(conflicts);
-
-	if (conflictnum && !check_yesno(DEFAULT_NO))
-		goto installend;
 
 	/*
 	 * Set up counters.

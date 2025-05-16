@@ -35,8 +35,9 @@
 #define PKG_GREATER	'>'
 #define PKG_LESSER	'<'
 
-Plisthead	r_plisthead[REMOTE_PKG_HASH_SIZE];
+Plistarray	*l_conflicthead;
 Plisthead	l_plisthead[LOCAL_PKG_HASH_SIZE];
+Plisthead	r_plisthead[REMOTE_PKG_HASH_SIZE];
 int		r_plistcounter, l_plistcounter;
 
 static void setfmt(char *, char *);
@@ -90,6 +91,7 @@ malloc_pkglist(void)
 	pkglist->build_date = NULL;
 	pkglist->patterns = NULL;
 	pkglist->patcount = 0;
+	pkglist->replace = NULL;
 	pkglist->size_pkg = 0;
 	pkglist->file_size = 0;
 	pkglist->level = 0;
@@ -130,6 +132,7 @@ free_pkglist_entry(Pkglist **plist)
 		XFREE((*plist)->patterns[i]);
 
 	XFREE((*plist)->patterns);
+	XFREE((*plist)->replace);
 	XFREE(*plist);
 
 	plist = NULL;

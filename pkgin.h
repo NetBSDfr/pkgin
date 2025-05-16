@@ -234,7 +234,7 @@
  * package needed to be compared against, however that dropped to 1036 once
  * only distinct patterns were queried.  The tests were against the original
  * number though, and used DTrace to count the total time spent in
- * pkg_has_conflicts():
+ * pkg_conflicts():
  *
  * CONFLICTS_HASH_SIZE		Time spent (ns)		Total Runtime
  * 		     1		339029895		1.347s
@@ -302,6 +302,7 @@ typedef struct Pkglist {
 
 	char **patterns;	/* DEPENDS patterns for this package */
 	int patcount;		/* Number of DEPENDS patterns */
+	char *replace;		/* PKGNAME of what SUPERSEDES a package */
 
 	action_t action;	/* Action to perform */
 	int skip;		/* Already processed via a different path */
@@ -350,6 +351,7 @@ extern char		**pkg_repos;
 extern char  		lslimit;
 extern int		l_plistcounter;
 extern int		r_plistcounter;
+extern Plistarray *	l_conflicthead;
 extern Plisthead	l_plisthead[LOCAL_PKG_HASH_SIZE];
 extern Plisthead	r_plisthead[REMOTE_PKG_HASH_SIZE];
 extern FILE		*tracefp;
@@ -434,9 +436,8 @@ int		sort_pkg_alpha(const void *, const void *);
 void		export_keep(void);
 void		import_keep(int, const char *);
 /* pkg_check.c */
-void		get_conflicts(Plistarray *);
 int		pkg_met_reqs(Plisthead *);
-int		pkg_has_conflicts(Pkglist *, Plistarray *);
+char *		pkg_conflicts(Pkglist *);
 void		show_prov_req(const char *, const char *);
 /* pkg_infos.c */
 int		show_pkg_info(char, char *);
