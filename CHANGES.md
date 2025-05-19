@@ -1,3 +1,19 @@
+## Version 25.5.0 (2025-05-19)
+
+ * Improve SUPERSEDES support.  Top-level packages that are superseded are
+   now correctly handled, and replacements are now correctly calculated to
+   handle e.g. the recent php-X.Y -> phpXY-X.Y renames.
+
+ * Improved handling for CONFLICTS.  Rather than simply give up, pkgin will
+   now calculate the impact of the CONFLICT and show what will happen if the
+   user wishes to continue.
+
+ * Upgrades will now first upgrade just the core packaging tools if they
+   have available updates.  Users may have to run "pkgin upgrade" twice to
+   ensure all packages are upgraded.  This will help upgrade scenarios and
+   avoid users having to manually run "pkg\_add -U pkg\_install pkgin" prior
+   to upgrades.
+
 ## Version 24.12.0 (2024-12-05)
 
  * Cross-build fixes from Taylor.
