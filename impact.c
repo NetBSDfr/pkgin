@@ -230,7 +230,7 @@ add_remote_to_impact(Plistarray *impacthead, Pkglist *pkg)
 		sqlite3_snprintf(BUFSIZ, query, REMOTE_CONFLICTS, cmatch);
 		pkgindb_doquery(query, pdb_get_value, cpkgname);
 		if ((lpkg = find_local_pkg(cpkgname, NULL)) != NULL) {
-			if (p = local_pkg_in_impact(impacthead, lpkg)) {
+			if ((p = local_pkg_in_impact(impacthead, lpkg))) {
 				p->action = ACTION_REMOVE;
 			} else {
 				p = malloc_pkglist();
