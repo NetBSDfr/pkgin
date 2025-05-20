@@ -61,14 +61,14 @@ clean_cache(void)
 {
 	DIR		*dp;
 	struct dirent	*ep;
-	char		pkgpath[BUFSIZ];
+	char		pkgpath[BUFSIZ + 1];
 
 	if ((dp = opendir(pkgin_cache)) == NULL)
 		err(EXIT_FAILURE, "couldn't open %s", pkgin_cache);
 
 	while ((ep = readdir(dp)) != NULL)
 		if (ep->d_name[0] != '.') {
-			snprintf(pkgpath, BUFSIZ, "%s/%s",
+			snprintf(pkgpath, sizeof(pkgpath), "%s/%s",
 				pkgin_cache, ep->d_name);
 			if (unlink(pkgpath) < 0)
 				err(EXIT_FAILURE,
