@@ -1,3 +1,7 @@
+## Version 25.5.2 (2025-05-20)
+
+ * Fix additional warnings after re-enabling maintainer mode.
+
 ## Version 25.5.1 (2025-05-20)
 
  * Fix uninitialized variable.
