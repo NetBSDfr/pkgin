@@ -172,8 +172,6 @@ static Plisthead *
 find_supersedes(Plistarray *impacthead)
 {
 	Plisthead *supersedes;
-	Pkglist *pkg;
-	int i;
 	char query[BUFSIZ];
 
 	supersedes = init_head();
