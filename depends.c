@@ -250,7 +250,7 @@ new_reverse_depend(Pkglist *pkg, Plisthead *depends, int depsize)
 static const char *
 new_depend(Pkglist *dep, Plisthead *depends, int depsize, depends_t type)
 {
-	Pkglist *d;
+	Pkglist *d = NULL;
 
 	switch (type) {
 	case DEPENDS_LOCAL:
