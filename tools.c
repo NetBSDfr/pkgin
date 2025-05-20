@@ -151,14 +151,14 @@ strreplace(char *str, const char *from, const char *to)
 	size_t	fromlen, tolen, i;
 	char	*p, *ret, buf[MAXLEN];
 
-	memset(buf, 0, MAXLEN);
+	memset(buf, 0, sizeof(buf));
 
 	fromlen = strlen(from);
 	tolen = strlen(to);
 
 	for (i = 0, p = str; *p != '\0';) {
 		if (strncmp(p, from, fromlen) == 0) {
-			strncat(buf, to, tolen);
+			strlcat(buf, to, sizeof(buf));
 			p += fromlen;
 			i += tolen;
 		} else {
