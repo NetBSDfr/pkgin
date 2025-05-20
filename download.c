@@ -168,7 +168,7 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 	struct url *url;
 	fetchIO *f = NULL;
 	char buf[4096];
-	char *pkg, *ptr, *msg;
+	char *pkg, *ptr, *msg = NULL;
 
 	if ((url = fetchParseURL(pkg_url)) == NULL)
 		errx(EXIT_FAILURE, "%s: parse failure", pkg_url);
