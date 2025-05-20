@@ -1,3 +1,7 @@
+## Version 25.5.1 (2025-05-20)
+
+ * Fix uninitialized variable.
+
 ## Version 25.5.0 (2025-05-19)
 
  * Improve SUPERSEDES support.  Top-level packages that are superseded are
