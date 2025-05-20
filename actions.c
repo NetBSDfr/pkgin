@@ -574,7 +574,7 @@ get_core_pkgs(void)
 		"pkgin",
 		NULL,
 	};
-	size_t n, p;
+	size_t n = 0, p;
 	char **corepkgs = NULL;
 
 	for (p = 0; pkgs[p] != NULL; p++) {
