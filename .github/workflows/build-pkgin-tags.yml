@@ -35,6 +35,7 @@ jobs:
           CFLAGS="-DHAVE_NBCOMPAT_H=1"
           CFLAGS="${CFLAGS} -I${GITHUB_WORKSPACE}/pkgsrc/pkgtools/libnbcompat/files"
           export CFLAGS
+          export SED="sed"
           (
             cd pkgsrc/net/libfetch/files
             export BINOWN="$(id -un)"
