@@ -1,7 +1,7 @@
 /* NetBSD: dewey.c,v 1.11 2009/03/06 15:18:42 joerg Exp */
 
 /*
- * Copyright © 2002 Alistair G. Crooks.  All rights reserved.
+ * Copyright 2002 Alistair G. Crooks.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
