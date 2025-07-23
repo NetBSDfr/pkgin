@@ -1,3 +1,10 @@
+## Version 25.7.0 (2025-07-23)
+
+ * Skip separate packaging tool upgrade step if they are only being refreshed
+   to avoid unnecessary re-runs.
+
+ * Update automake.
+
 ## Version 25.5.2 (2025-05-20)
 
  * Fix additional warnings after re-enabling maintainer mode.
