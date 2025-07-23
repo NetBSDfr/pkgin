@@ -635,20 +635,31 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	/*
 	 * If pkgargs is NULL we're performing an upgrade.  First check to see
 	 * if there are any upgrades for core package tools, and if so perform
-	 * them first.
+	 * them first.  Note that we specifically only test for ACTION_UPGRADE
+	 * and ignore refresh, as otherwise pretty much every upgrade would
+	 * result in them being done first and require two runs, which quickly
+	 * gets annoying due to the likelyhood of dependencies being touched.
+	 *
+	 * We only really care about actual upgrades where functionality has
+	 * changed or bugs have been fixed.
 	 */
 	if (pkgargs == NULL) {
 		if ((corepkgs = get_core_pkgs()) != NULL) {
 			impacthead = pkg_impact(corepkgs, &rc, 0);
 			if (impacthead != NULL) {
-				coreupg = 1;
+				SLIST_FOREACH(p, impacthead, next) {
+					if (p->action == ACTION_UPGRADE) {
+						coreupg = 1;
+						break;
+					}
+				}
 			}
 		}
 	}
 	/*
 	 * Otherwise calculate full impact of either full upgrade or install.
 	 */
-	if (impacthead == NULL) {
+	if (impacthead == NULL || coreupg == 0) {
 		if ((impacthead = pkg_impact(pkgargs, &rc, 1)) == NULL) {
 			printf(MSG_NOTHING_TO_DO);
 			return rc;
