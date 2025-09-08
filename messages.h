@@ -118,7 +118,7 @@
 #define MSG_PKG_NOT_PREFERRED "No %s package available that satisfies preferred match %s\n"
 
 /* pkglist.c */
-#define MSG_IS_INSTALLED_CODE "\n=: package is installed and up-to-date\n<: package is installed but newer version is available\n>: installed package has a greater version than available package\n"
+#define MSG_IS_INSTALLED_CODE "\n=: package is installed and up-to-date\n<: package is installed but newer version is available\n>: package is not installed and a greater version is available\n"
 #define MSG_NO_SEARCH_RESULTS "No results found for %s\n"
 #define MSG_EMPTY_LIST "Requested list is empty.\n"
 #define MSG_NO_CATEGORIES "No categories found.\n"
