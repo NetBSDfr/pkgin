@@ -244,6 +244,7 @@ pkg_keep(int type, char *pattern)
 			if (mark_as_automatic_installed(lpkg->full, 0) < 0)
 				exit(EXIT_FAILURE);
 		}
+		lpkg->keep = 1;
 		sqlite3_snprintf(BUFSIZ, query, KEEP_PKG, lpkg->name);
 		break;
 	case UNKEEP:
@@ -252,6 +253,7 @@ pkg_keep(int type, char *pattern)
 			if (mark_as_automatic_installed(lpkg->full, 1) < 0)
 				exit(EXIT_FAILURE);
 		}
+		lpkg->keep = 0;
 		sqlite3_snprintf(BUFSIZ, query, UNKEEP_PKG, lpkg->name);
 		break;
 	}
