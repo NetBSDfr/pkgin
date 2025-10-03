@@ -1,3 +1,8 @@
+## Version 25.10.0 (2025-10-03)
+
+ * Fix issue where "keep" packages were not marked correctly during upgrades
+   that immediately followed a local database update (e.g. a manual pkg\_add).
+
 ## Version 25.7.0 (2025-07-23)
 
  * Skip separate packaging tool upgrade step if they are only being refreshed
