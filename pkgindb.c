@@ -234,6 +234,31 @@ pkgindb_savepoint_release(uint64_t savepoint)
 }
 
 /*
+ * Check the application_id and user_version parameters.
+ */
+static int
+check_appid(void *param, int argc, char **argv, char **colname)
+{
+
+	if (argc != 1 || argv == NULL)
+		return PDB_ERR;
+	if (strcmp(argv[0], "1886087022") != 0)
+		return PDB_ERR;
+	return PDB_OK;
+}
+
+static int
+check_version(void *param, int argc, char **argv, char **colname)
+{
+
+	if (argc != 1 || argv == NULL)
+		return PDB_ERR;
+	if (strcmp(argv[0], "1") != 0)
+		return PDB_ERR;
+	return PDB_OK;
+}
+
+/*
  * Configure the pkgin database.  Returns 0 if opening an existing compatible
  * database, or 1 if the database needs to be created or recreated (in the case
  * of a schema upgrade).  Any other error is fatal.
@@ -277,7 +302,14 @@ recreate:
 			errx(EXIT_FAILURE, "cannot create database: %s",
 			    sqlite3_errmsg(pdb));
 	} else {
-		if (pkgindb_doquery(CHECK_DB_LATEST, NULL, NULL) != PDB_OK) {
+		if (pkgindb_doquery("PRAGMA application_id", check_appid, NULL)
+		    != PDB_OK) {
+			if (unlink(pkgin_sqldb) < 0)
+				err(EXIT_FAILURE, "cannot recreate database");
+			goto recreate;
+		}
+		if (pkgindb_doquery("PRAGMA user_version", check_version, NULL)
+		    != PDB_OK) {
 			if (unlink(pkgin_sqldb) < 0)
 				err(EXIT_FAILURE, "cannot recreate database");
 			goto recreate;
