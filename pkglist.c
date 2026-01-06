@@ -29,6 +29,7 @@
 
 #include <sqlite3.h>
 #include "pkgin.h"
+#include "pkghash.h"
 #include <regex.h>
 
 #define PKG_EQUAL	'='
@@ -103,6 +104,7 @@ malloc_pkglist(void)
 	pkglist->pkgpath = NULL;
 	pkglist->skip = 0;
 	pkglist->keep = 0;
+	pkglist->hash = NULL;
 	pkglist->action = ACTION_NONE;
 
 	return pkglist;
@@ -118,6 +120,7 @@ free_pkglist_entry(Pkglist **plist)
 {
 	int i;
 
+	XFREE((*plist)->hash);
 	XFREE((*plist)->pkgfs);
 	XFREE((*plist)->pkgurl);
 	XFREE((*plist)->full);
@@ -189,11 +192,13 @@ record_pkglist(void *param, int argc, char **argv, char **colname)
 	NUM_OR_NULL(p->size_pkg, argv[6]);
 	DUP_OR_NULL(p->category, argv[7]);
 	DUP_OR_NULL(p->pkgpath, argv[8]);
+	if (argv[9] && argv[10])
+		p->hash = pkghash_import(argv[9], argv[10]);
 
 	/*
 	 * Only LOCAL_PKG has PKG_KEEP.
 	 */
-	if (plist->P_type == 0 && argv[9])
+	if (plist->P_type == 0 && argv[11])
 		p->keep = 1;
 
 	if (plist->P_type == 1) {

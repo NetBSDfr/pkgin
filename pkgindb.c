@@ -253,7 +253,7 @@ check_version(void *param, int argc, char **argv, char **colname)
 
 	if (argc != 1 || argv == NULL)
 		return PDB_ERR;
-	if (strcmp(argv[0], "1") != 0)
+	if (strcmp(argv[0], "2") != 0)
 		return PDB_ERR;
 	return PDB_OK;
 }
