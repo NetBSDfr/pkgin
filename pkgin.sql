@@ -25,6 +25,7 @@ CREATE TABLE [REMOTE_PKG] (
 	"SIZE_PKG" TEXT,
 	"FILE_SIZE" TEXT,
 	"OPSYS" TEXT,
+	"FILE_CKSUM sha256" TEXT,
 	"REPOSITORY" TEXT
 );
 
@@ -45,6 +46,7 @@ CREATE TABLE [LOCAL_PKG] (
 	"SIZE_PKG" TEXT,
 	"FILE_SIZE" TEXT,
 	"OPSYS" TEXT,
+	"FILE_CKSUM sha256" TEXT,
 	"PKG_KEEP" INTEGER NULL
 );
 
@@ -197,4 +199,4 @@ CREATE INDEX [idx_local_pkg_name] ON [LOCAL_PKG] (
 );
 
 PRAGMA application_id = 1886087022;
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;

@@ -308,6 +308,8 @@ typedef struct Pkglist {
 	int skip;		/* Already processed via a different path */
 	int	keep; /*!< autoremovable package ? */
 
+	char	*sha256;
+
 	SLIST_ENTRY(Pkglist) next;
 } Pkglist;
 
@@ -361,7 +363,7 @@ Sumfile		*sum_open(char *, time_t *);
 int		sum_start(struct archive *, void *);
 ssize_t		sum_read(struct archive *, void *, const void **);
 int		sum_close(struct archive *, void *);
-off_t		download_pkg(char *, FILE *, int, int);
+off_t		download_pkg(char *, FILE *, int, int, const char *);
 /* summary.c */
 int		update_db(int, int);
 void		split_repos(void);
