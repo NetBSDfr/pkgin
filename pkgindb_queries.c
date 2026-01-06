@@ -27,17 +27,6 @@
  * SUCH DAMAGE.
  */
 
-/*
- * This query checks the compatibility of the current database, and should be
- * one that either completes or fails due to an SQL error based on the most
- * recent schema change.  Returned rows are ignored, so choose a query that
- * runs quickly.
- */
-const char CHECK_DB_LATEST[] =
-	"SELECT pkgbase "
-	"  FROM local_conflicts "
-	" LIMIT 1;";
-
 const char DELETE_LOCAL[] =
 	"DELETE FROM LOCAL_PKG;"
 	"DELETE FROM LOCAL_CONFLICTS;"
