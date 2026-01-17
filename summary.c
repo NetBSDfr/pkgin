@@ -224,7 +224,7 @@ prepare_insert(int pkgid, struct Summary sum)
 
 	/* insert fields */
 	SLIST_FOREACH(pi, &inserthead, next) {
-		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",%w", pi->field);
+		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",\"%w\"", pi->field);
 		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >=
 		    sizeof(querybuf))
 			goto err;
@@ -354,7 +354,12 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	 * Handle remaining columns.
 	 */
 	for (i = 0; i < cols.num; i++) {
-		snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
+		if (strncmp(cols.name[i], "FILE_CKSUM ", 11) == 0) {
+			snprintf(buf, BUFSIZ, "FILE_CKSUM=%s ",
+			    cols.name[i] + 11);
+		} else {
+			snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
+		}
 
 		if (strncmp(buf, line, strlen(buf)) == 0) {
 			/* Split PKGNAME into parts */
@@ -373,8 +378,15 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 					*v++ = '\0';
 				add_to_slist("PKGNAME", val);
 				add_to_slist("PKGVERS", v);
-			} else
+			} else {
+				if (strncmp(cols.name[i], "FILE_CKSUM ", 11)
+				    == 0) {
+					if ((val = strchr(val, ' ')) == NULL)
+						return;
+					val++;
+				}
 				add_to_slist(cols.name[i], val);
+			}
 			break;
 		}
 	}

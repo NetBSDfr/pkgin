@@ -30,6 +30,12 @@
 #include "pkgin.h"
 #include "external/progressmeter.h"
 
+#ifdef HAVE_NBCOMPAT_H
+#include <nbcompat/sha2.h>
+#else
+#include <sha2.h>
+#endif
+
 extern char fetchflags[3];
 
 /*
@@ -159,7 +165,8 @@ sum_close(struct archive *a, void *data)
  * Download a package to the local cache.
  */
 off_t
-download_pkg(char *pkg_url, FILE *fp, int cur, int total)
+download_pkg(char *pkg_url, FILE *fp, int cur, int total,
+    const char *sha256_expected)
 {
 	struct url_stat st;
 	size_t size, wrote;
@@ -168,6 +175,8 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 	struct url *url;
 	fetchIO *f = NULL;
 	char buf[4096];
+	SHA256_CTX sha256;
+	char sha256_actual[SHA256_DIGEST_STRING_LENGTH];
 	char *pkg, *ptr, *msg = NULL;
 
 	if ((url = fetchParseURL(pkg_url)) == NULL)
@@ -194,6 +203,9 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 		start_progress_meter(msg, st.size, &statsize);
 	}
 
+	if (sha256_expected)
+		SHA256_Init(&sha256);
+
 	while (written < st.size) {
 		if ((fetched = fetchIO_read(f, buf, sizeof(buf))) == 0)
 			break;
@@ -208,6 +220,8 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 		statsize += fetched;
 		size = (size_t)fetched;
 
+		if (sha256_expected)
+			SHA256_Update(&sha256, (const void *)buf, size);
 		for (ptr = buf; size > 0; ptr += wrote, size -= wrote) {
 			if ((wrote = fwrite(ptr, 1, size, fp)) < size) {
 				if (ferror(fp) && errno == EINTR)
@@ -231,6 +245,15 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 	if (written != st.size) {
 		fprintf(stderr, "download error: %s truncated\n", pkg_url);
 		return -1;
+	}
+
+	if (sha256_expected) {
+		SHA256_End(&sha256, sha256_actual);
+		if (strcmp(sha256_expected, sha256_actual) != 0) {
+			fprintf(stderr, "download error: %s corrupted\n",
+			    pkg_url);
+			return -1;
+		}
 	}
 
 	return written;

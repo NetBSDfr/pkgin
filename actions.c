@@ -39,6 +39,12 @@
 #include <termios.h>
 #endif
 
+#ifdef HAVE_NBCOMPAT_H
+#include <nbcompat/sha2.h>
+#else
+#include <sha2.h>
+#endif
+
 static int	warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
 FILE		*err_fp = NULL;
@@ -82,6 +88,8 @@ pkg_download(Plisthead *installhead)
 		(void) umask(DEF_UMASK);
 
 		if (strncmp(p->ipkg->pkgurl, "file:///", 8) == 0) {
+			char sha256[SHA256_DIGEST_STRING_LENGTH];
+
 			/*
 			 * If this package repository URL is file:// we can
 			 * just symlink rather than copying.  We do not support
@@ -97,6 +105,13 @@ pkg_download(Plisthead *installhead)
 					exit(rc);
 				p->ipkg->file_size = -1;
 				continue;
+			}
+
+			if (p->ipkg->rpkg->sha256) {
+				if (SHA256_File(pkgurl, sha256) == NULL ||
+				    strcmp(sha256, p->ipkg->rpkg->sha256) != 0)
+					errx(EXIT_FAILURE, "Hash mismatch %s",
+					    p->ipkg->pkgfs);
 			}
 
 			if (symlink(pkgurl, p->ipkg->pkgfs) < 0) {
@@ -116,7 +131,8 @@ pkg_download(Plisthead *installhead)
 				err(EXIT_FAILURE, MSG_ERR_OPEN, p->ipkg->pkgfs);
 
 			p->ipkg->file_size =
-			    download_pkg(p->ipkg->pkgurl, fp, i++, count);
+			    download_pkg(p->ipkg->pkgurl, fp, i++, count,
+				p->ipkg->rpkg->sha256);
 
 			if (p->ipkg->file_size == -1) {
 				(void) fclose(fp);
@@ -613,6 +629,7 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	char		**corepkgs;
 	char		pkgrepo[BUFSIZ], query[BUFSIZ];
 	char		h_psize[H_BUF], h_fsize[H_BUF], h_free[H_BUF];
+	char		sha256[SHA256_DIGEST_STRING_LENGTH];
 	struct		stat st;
 
 	if (is_empty_remote_pkglist()) {
@@ -720,12 +737,16 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 		/*
 		 * If the binary package has not already been downloaded, or
-		 * its size does not match pkg_summary, then mark it to be
+		 * its size/hash do not match pkg_summary, then mark it to be
 		 * downloaded.
 		 */
 		if (stat(p->pkgfs, &st) < 0 || st.st_size != p->rpkg->file_size)
 			p->download = 1;
-		else {
+		else if (p->rpkg->sha256 != NULL &&
+		    SHA256_File(p->pkgfs, sha256) != NULL &&
+		    strcmp(p->rpkg->sha256, sha256) == 0) {
+			/* exact match, no further check needed */
+		} else {
 			/*
 			 * If the cached package has the correct size, we must
 			 * verify that the BUILD_DATE has not changed, in case

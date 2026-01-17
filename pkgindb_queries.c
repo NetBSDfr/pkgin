@@ -27,17 +27,6 @@
  * SUCH DAMAGE.
  */
 
-/*
- * This query checks the compatibility of the current database, and should be
- * one that either completes or fails due to an SQL error based on the most
- * recent schema change.  Returned rows are ignored, so choose a query that
- * runs quickly.
- */
-const char CHECK_DB_LATEST[] =
-	"SELECT pkgbase "
-	"  FROM local_conflicts "
-	" LIMIT 1;";
-
 const char DELETE_LOCAL[] =
 	"DELETE FROM LOCAL_PKG;"
 	"DELETE FROM LOCAL_CONFLICTS;"
@@ -116,14 +105,15 @@ const char UNKEEP_PKG[] =
 /* for upgrades, prefer higher versions to be at the top of SLIST */
 const char LOCAL_PKGS_QUERY_ASC[] =
 	"SELECT FULLPKGNAME,PKGNAME,PKGVERS,BUILD_DATE,"
-	"COMMENT,FILE_SIZE,SIZE_PKG,CATEGORIES,PKGPATH,PKG_KEEP "
+	"COMMENT,FILE_SIZE,SIZE_PKG,CATEGORIES,PKGPATH,\"FILE_CKSUM sha256\","
+	"PKG_KEEP "
 	"FROM LOCAL_PKG "
 	"ORDER BY FULLPKGNAME ASC;";
 
 /* present packages by repository appearance to avoid conflicts between repos */
 const char REMOTE_PKGS_QUERY_ASC[] =
 	"SELECT FULLPKGNAME,PKGNAME,PKGVERS,BUILD_DATE,"
-	"COMMENT,FILE_SIZE,SIZE_PKG,CATEGORIES,PKGPATH "
+	"COMMENT,FILE_SIZE,SIZE_PKG,CATEGORIES,PKGPATH,\"FILE_CKSUM sha256\" "
 	"FROM REMOTE_PKG "
 	"INNER JOIN REPOS WHERE REMOTE_PKG.REPOSITORY = REPOS.REPO_URL "
 	"ORDER BY REPOS.ROWID, FULLPKGNAME ASC;";
