@@ -653,6 +653,34 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 						break;
 					}
 				}
+				/*
+				 * Filter out ACTION_REFRESH packages that were
+				 * explicitly passed as corepkgs.  They were
+				 * included only to check for upgrades, not for
+				 * installation.  Note that pkg_impact() modifies
+				 * corepkgs to contain full package names, so we
+				 * check for both exact match and prefix match.
+				 */
+				if (coreupg) {
+					Pkglist *tmpp;
+					char **cp;
+					size_t len;
+					SLIST_FOREACH_SAFE(p, impacthead, next, tmpp) {
+						if (p->action != ACTION_REFRESH)
+							continue;
+						for (cp = corepkgs; *cp != NULL; cp++) {
+							len = strlen(*cp);
+							if (strcmp(p->rpkg->full, *cp) == 0 ||
+							    (strncmp(p->rpkg->full, *cp, len) == 0 &&
+							     p->rpkg->full[len] == '-')) {
+								SLIST_REMOVE(impacthead, p,
+								    Pkglist, next);
+								free_pkglist_entry(&p);
+								break;
+							}
+						}
+					}
+				}
 			}
 		}
 	}

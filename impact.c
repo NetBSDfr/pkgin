@@ -416,11 +416,14 @@ resolve_forward_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
 {
 	Plisthead *deps;
 	Pkglist *p, *npkg, *save;
+	action_t action;
 
 	deps = init_head();
 	get_depends(pkg->rpkg->full, deps, DEPENDS_REMOTE);
 
 	SLIST_FOREACH_SAFE(p, deps, next, save) {
+		Pkglist *lpkg;
+
 		SLIST_REMOVE(deps, p, Pkglist, next);
 		/*
 		 * If we've already seen this package then we're done.
@@ -431,12 +434,28 @@ resolve_forward_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
 		}
 
 		/*
+		 * Skip forward deps that are already installed and satisfy
+		 * the requirement (ACTION_REFRESH).  ABI concerns apply to
+		 * reverse dependencies, not forward dependencies.
+		 */
+		lpkg = find_local_pkg(p->rpkg->name, p->rpkg->name);
+		if (lpkg != NULL &&
+		    calculate_action(lpkg, p->rpkg) == ACTION_REFRESH) {
+			free_pkglist_entry(&p);
+			continue;
+		}
+
+		/*
 		 * Otherwise set the dependency to the next level, add to
-		 * impact, and if it's going to be an upgrade then add it to
-		 * upgrades so it is considered in the next loop.
+		 * impact, and if it's going to be an upgrade, refresh, or
+		 * install then add it to upgrades so it is considered in
+		 * the next loop.  Install packages need their forward deps
+		 * processed too.
 		 */
 		p->level = pkg->level + 1;
-		if ((add_remote_to_impact(impacthead, p)) == ACTION_UPGRADE) {
+		action = add_remote_to_impact(impacthead, p);
+		if (action == ACTION_UPGRADE || action == ACTION_REFRESH ||
+		    action == ACTION_INSTALL) {
 			npkg = malloc_pkglist();
 			npkg->ipkg = p;
 			SLIST_INSERT_HEAD(upgrades, npkg, next);
@@ -451,6 +470,18 @@ resolve_reverse_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
 {
 	Plisthead *revdeps;
 	Pkglist *p, *npkg, *save;
+	action_t action;
+
+	/*
+	 * New packages (ACTION_INSTALL) don't have local package info,
+	 * so there are no reverse dependencies to process.
+	 *
+	 * ACTION_REFRESH packages have no ABI changes, so their reverse
+	 * dependencies don't need to be rebuilt.  We still need to check
+	 * their forward dependencies for changes (handled elsewhere).
+	 */
+	if (pkg->lpkg == NULL || pkg->action == ACTION_REFRESH)
+		return;
 
 	revdeps = init_head();
 	get_depends(pkg->lpkg->full, revdeps, DEPENDS_REVERSE);
@@ -480,11 +511,12 @@ resolve_reverse_deps(Plisthead *upgrades, Plistarray *impacthead, Pkglist *pkg)
 
 		/*
 		 * Otherwise set the dependency to a lower level, add to
-		 * impact, and if it's going to be an upgrade then add it to
-		 * upgrades so it is considered in the next loop.
+		 * impact, and if it's going to be an upgrade or refresh then
+		 * add it to upgrades so it is considered in the next loop.
 		 */
 		p->level = pkg->level - 1;
-		if ((add_remote_to_impact(impacthead, p)) == ACTION_UPGRADE) {
+		action = add_remote_to_impact(impacthead, p);
+		if (action == ACTION_UPGRADE || action == ACTION_REFRESH) {
 			npkg = malloc_pkglist();
 			npkg->ipkg = p;
 			SLIST_INSERT_HEAD(upgrades, npkg, next);
