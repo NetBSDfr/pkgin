@@ -1,3 +1,8 @@
+## Version 26.1.0 (2026-01-28)
+
+ * Fix upgrade issue where the full list of affected packages was not
+   calculated correctly when upgrading just the core package tools.
+
 ## Version 25.10.0 (2025-10-03)
 
  * Fix issue where "keep" packages were not marked correctly during upgrades
