@@ -41,6 +41,7 @@
 
 static int	warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
+static int	saved_stderr = -1;
 FILE		*err_fp = NULL;
 long int	rm_filepos = -1;
 char		pkgtools_flags[5];
@@ -229,6 +230,7 @@ open_pi_log(void)
 			exit(EXIT_FAILURE);
 		}
 
+		saved_stderr = dup(STDERR_FILENO);
 		dup2(fileno(err_fp), STDERR_FILENO);
 
 		rm_filepos = ftell(err_fp);
@@ -240,6 +242,11 @@ static void
 close_pi_log(int output)
 {
 	if (!verbosity && output) {
+		if (saved_stderr != -1) {
+			dup2(saved_stderr, STDERR_FILENO);
+			close(saved_stderr);
+			saved_stderr = -1;
+		}
 		analyse_pkglog(rm_filepos);
 		printf(MSG_WARNS_ERRS, warn_count, err_count);
 		if (warn_count > 0 || err_count > 0)
@@ -432,9 +439,22 @@ do_pkg_install(Plisthead *installhead)
 
 		log_tag("[%d/%d] %s %s...\n", i++, count, action,
 		    p->ipkg->rpkg->full);
+
+		/*
+		 * Temporarily restore stderr to the terminal so that
+		 * any interactive prompts from pkg_add (e.g. signature
+		 * verification) are visible to the user.
+		 */
+		if (saved_stderr != -1)
+			dup2(saved_stderr, STDERR_FILENO);
+
 		if (fexec(pkg_add, pflags, p->ipkg->pkgfs, NULL)
 		    == EXIT_FAILURE)
 			rc = EXIT_FAILURE;
+
+		/* Redirect stderr back to the logfile */
+		if (!verbosity && err_fp != NULL)
+			dup2(fileno(err_fp), STDERR_FILENO);
 	}
 
 	close_pi_log(1);
