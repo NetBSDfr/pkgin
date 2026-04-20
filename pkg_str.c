@@ -76,6 +76,8 @@ find_preferred_pkg(const char *pkgname, Pkglist **pkg, char **match)
 	 */
 	if (match != NULL)
 		*match = best ? xstrdup(best->full) : result;
+	else
+		free(result);
 
 	/*
 	 * Save pkglist entry if requested.
