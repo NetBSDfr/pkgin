@@ -1,3 +1,7 @@
+## Version 26.4.0 (2026-04-20)
+
+ * Avoid triggering a core package upgrade if only dependencies are upgraded.
+
 ## Version 26.2.0 (2026-02-10)
 
  * Support `pkg_summary.zst` files.
