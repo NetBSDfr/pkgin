@@ -563,29 +563,52 @@ get_sorted_list_by_action(Plisthead *pkgs, action_t action)
 #define H_BUF 6
 
 /*
- * Return list of installed core packages that should be checked for upgrade
- * first, prior to any general upgrades.
+ * If any of the installed core packages have an upgrade available then return
+ * the list of all installed core packages, as if one of them is being upgraded
+ * we might as well handle any refreshes for others at the same time.
+ *
+ * There must be at least one being upgraded (not refreshed) to trigger the
+ * separate upgrade process.  Refreshes are too common to be worthwhile.
+ *
+ * Otherwise return NULL.
  */
 static char **
-get_core_pkgs(void)
+check_core_upgrade(void)
 {
 	const char *pkgs[] = {
 		"pkg_install",
 		"pkgin",
 		NULL,
 	};
+	Pkglist *lpkg, *rpkg;
 	size_t n = 0, p;
-	char **corepkgs = NULL;
+	int upgrade = 0;
+	char **corepkgs = xmalloc(sizeof(pkgs));
+
+	corepkgs[0] = NULL;
 
 	for (p = 0; pkgs[p] != NULL; p++) {
-		if (find_local_pkg(pkgs[p], NULL) != NULL) {
-			corepkgs = xrealloc(corepkgs, (n + 2) * sizeof(char *));
-			corepkgs[n] = xstrdup(pkgs[p]);
-			corepkgs[++n] = NULL;
-		}
+		if ((lpkg = find_local_pkg(pkgs[p], NULL)) == NULL)
+			continue;
+		corepkgs[n++] = xstrdup(pkgs[p]);
+		corepkgs[n] = NULL;
+
+		if (upgrade)
+			continue;
+
+		if (find_preferred_pkg(pkgs[p], &rpkg, NULL) != 0)
+			continue;
+		if (calculate_action(lpkg, rpkg) == ACTION_UPGRADE)
+			upgrade = 1;
 	}
 
-	return corepkgs;
+	if (upgrade)
+		return corepkgs;
+
+	for (p = 0; p < n; p++)
+		free(corepkgs[p]);
+	free(corepkgs);
+	return NULL;
 }
 
 int
@@ -634,56 +657,18 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 	/*
 	 * If pkgargs is NULL we're performing an upgrade.  First check to see
-	 * if there are any upgrades for core package tools, and if so perform
-	 * them first.  Note that we specifically only test for ACTION_UPGRADE
-	 * and ignore refresh, as otherwise pretty much every upgrade would
-	 * result in them being done first and require two runs, which quickly
-	 * gets annoying due to the likelyhood of dependencies being touched.
-	 *
-	 * We only really care about actual upgrades where functionality has
-	 * changed or bugs have been fixed.
+	 * if there are any version upgrades pending for core package tools,
+	 * and if so perform those first.
 	 */
-	if (pkgargs == NULL) {
-		if ((corepkgs = get_core_pkgs()) != NULL) {
-			impacthead = pkg_impact(corepkgs, &rc, 0);
-			if (impacthead != NULL) {
-				SLIST_FOREACH(p, impacthead, next) {
-					if (p->action == ACTION_UPGRADE) {
-						coreupg = 1;
-						break;
-					}
-				}
-				/*
-				 * Filter out ACTION_REFRESH packages that were
-				 * explicitly passed as corepkgs.  They were
-				 * included only to check for upgrades, not for
-				 * installation.  Note that pkg_impact() modifies
-				 * corepkgs to contain full package names, so we
-				 * check for both exact match and prefix match.
-				 */
-				if (coreupg) {
-					Pkglist *tmpp;
-					char **cp;
-					size_t len;
-					SLIST_FOREACH_SAFE(p, impacthead, next, tmpp) {
-						if (p->action != ACTION_REFRESH)
-							continue;
-						for (cp = corepkgs; *cp != NULL; cp++) {
-							len = strlen(*cp);
-							if (strcmp(p->rpkg->full, *cp) == 0 ||
-							    (strncmp(p->rpkg->full, *cp, len) == 0 &&
-							     p->rpkg->full[len] == '-')) {
-								SLIST_REMOVE(impacthead, p,
-								    Pkglist, next);
-								free_pkglist_entry(&p);
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
+	if (pkgargs == NULL && (corepkgs = check_core_upgrade()) != NULL) {
+		impacthead = pkg_impact(corepkgs, &rc, 0);
+		if (impacthead != NULL)
+			coreupg = 1;
+		for (argn = 0; corepkgs[argn] != NULL; argn++)
+			free(corepkgs[argn]);
+		free(corepkgs);
 	}
+
 	/*
 	 * Otherwise calculate full impact of either full upgrade or install.
 	 */
