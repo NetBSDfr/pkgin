@@ -24,10 +24,11 @@ pkg_install_SOURCES=	external/automatic.c external/dewey.c
 pkg_install_SOURCES+=	external/fexec.c external/iterate.c external/lpkg.c
 pkg_install_SOURCES+=	external/opattern.c external/pkgdb.c external/plist.c
 pkg_install_SOURCES+=	external/var.c external/xwrapper.c
+pkg_install_SOURCES+=	external/sha2.c
 
 pkgin_SOURCES=		actions.c autoremove.c depends.c download.c fsops.c impact.c
 pkgin_SOURCES+=		main.c order.c pkg_check.c pkg_infos.c pkg_install.c
-pkgin_SOURCES+=		pkg_str.c pkgindb.c pkgindb_queries.c pkglist.c preferred.c
+pkgin_SOURCES+=		pkg_str.c pkghash.c pkgindb.c pkgindb_queries.c pkglist.c preferred.c
 pkgin_SOURCES+=		selection.c sqlite_callbacks.c summary.c tools.c
 pkgin_SOURCES+=		$(openssh_SOURCES) $(pkg_install_SOURCES)
 

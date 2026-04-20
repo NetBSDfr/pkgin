@@ -29,6 +29,7 @@
 
 #include <sqlite3.h>
 #include "pkgin.h"
+#include "pkghash.h"
 #include <sys/ioctl.h>
 #include <time.h>
 #include <unistd.h>
@@ -99,6 +100,13 @@ pkg_download(Plisthead *installhead)
 				continue;
 			}
 
+			if (p->ipkg->rpkg->hash) {
+				if (!pkghash_verify_file(p->ipkg->rpkg->hash,
+					pkgurl))
+					errx(EXIT_FAILURE, "Hash mismatch %s",
+					    p->ipkg->pkgfs);
+			}
+
 			if (symlink(pkgurl, p->ipkg->pkgfs) < 0) {
 				errx(EXIT_FAILURE,
 				    "Failed to create symlink %s",
@@ -116,7 +124,8 @@ pkg_download(Plisthead *installhead)
 				err(EXIT_FAILURE, MSG_ERR_OPEN, p->ipkg->pkgfs);
 
 			p->ipkg->file_size =
-			    download_pkg(p->ipkg->pkgurl, fp, i++, count);
+			    download_pkg(p->ipkg->pkgurl, fp, i++, count,
+				p->ipkg->rpkg->hash);
 
 			if (p->ipkg->file_size == -1) {
 				(void) fclose(fp);
@@ -733,12 +742,15 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 
 		/*
 		 * If the binary package has not already been downloaded, or
-		 * its size does not match pkg_summary, then mark it to be
+		 * its size/hash do not match pkg_summary, then mark it to be
 		 * downloaded.
 		 */
 		if (stat(p->pkgfs, &st) < 0 || st.st_size != p->rpkg->file_size)
 			p->download = 1;
-		else {
+		else if (p->rpkg->hash != NULL &&
+		    pkghash_verify_file(p->rpkg->hash, p->pkgfs)) {
+			/* exact match, no further check needed */
+		} else {
 			/*
 			 * If the cached package has the correct size, we must
 			 * verify that the BUILD_DATE has not changed, in case

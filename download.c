@@ -28,6 +28,7 @@
  */
 
 #include "pkgin.h"
+#include "pkghash.h"
 #include "external/progressmeter.h"
 
 extern char fetchflags[3];
@@ -159,7 +160,8 @@ sum_close(struct archive *a, void *data)
  * Download a package to the local cache.
  */
 off_t
-download_pkg(char *pkg_url, FILE *fp, int cur, int total)
+download_pkg(char *pkg_url, FILE *fp, int cur, int total,
+    const struct pkghash *hash)
 {
 	struct url_stat st;
 	size_t size, wrote;
@@ -168,6 +170,7 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 	struct url *url;
 	fetchIO *f = NULL;
 	char buf[4096];
+	struct pkghash_ctx *hash_ctx = NULL;
 	char *pkg, *ptr, *msg = NULL;
 
 	if ((url = fetchParseURL(pkg_url)) == NULL)
@@ -177,7 +180,8 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 		fprintf(stderr, "download error: %s %s\n", pkg_url,
 		    fetchLastErrString);
 		fetchFreeURL(url);
-		return -1;
+		written = -1;
+		goto out;
 	}
 	fetchFreeURL(url);
 
@@ -194,6 +198,9 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 		start_progress_meter(msg, st.size, &statsize);
 	}
 
+	if (hash)
+		hash_ctx = pkghash_verify_init(hash);
+
 	while (written < st.size) {
 		if ((fetched = fetchIO_read(f, buf, sizeof(buf))) == 0)
 			break;
@@ -202,12 +209,17 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 		if (fetched < 0) {
 			fprintf(stderr, "download error: %s",
 			    fetchLastErrString);
-			return -1;
+			written = -1;
+			goto out;
 		}
 
 		statsize += fetched;
 		size = (size_t)fetched;
 
+		if (hash) {
+			pkghash_verify_update(hash_ctx, (const void *)buf,
+			    size);
+		}
 		for (ptr = buf; size > 0; ptr += wrote, size -= wrote) {
 			if ((wrote = fwrite(ptr, 1, size, fp)) < size) {
 				if (ferror(fp) && errno == EINTR)
@@ -230,8 +242,20 @@ download_pkg(char *pkg_url, FILE *fp, int cur, int total)
 
 	if (written != st.size) {
 		fprintf(stderr, "download error: %s truncated\n", pkg_url);
-		return -1;
+		written = -1;
+		goto out;
 	}
 
+	if (hash) {
+		if (!pkghash_verify_final(hash_ctx)) {
+			fprintf(stderr, "download error: %s corrupted\n",
+			    pkg_url);
+			written = -1;
+			goto out;
+		}
+	}
+
+out:	if (hash)
+		free(hash_ctx);
 	return written;
 }
