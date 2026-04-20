@@ -66,7 +66,7 @@ remote_pkg_in_impact(Plistarray *impacthead, Pkglist *pkg)
  * Compare a local and matching remote package and determine what action needs
  * to be taken.  Requires both arguments be valid package list pointers.
  */
-static action_t
+action_t
 calculate_action(Pkglist *lpkg, Pkglist *rpkg)
 {
 	int c;
