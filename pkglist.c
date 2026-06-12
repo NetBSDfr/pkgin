@@ -608,7 +608,8 @@ search_pkg(const char *pattern)
 	SLIST_FOREACH(plist, &r_plisthead[i], next) {
 		if (regexec(&re, plist->name, 0, NULL, 0) == 0 ||
 		    regexec(&re, plist->full, 0, NULL, 0) == 0 ||
-		    regexec(&re, plist->comment, 0, NULL, 0) == 0) {
+		    (plist->comment != NULL &&
+		    regexec(&re, plist->comment, 0, NULL, 0) == 0)) {
 			matched = 1;
 			rc = pkg_is_installed(plist);
 
@@ -625,7 +626,8 @@ search_pkg(const char *pattern)
 			psort[pcount].full = xstrdup(plist->full);
 			psort[pcount].name = xstrdup(plist->name);
 			psort[pcount].version = xstrdup(plist->version);
-			psort[pcount].comment = xstrdup(plist->comment);
+			psort[pcount].comment =
+			    xstrdup(plist->comment ? plist->comment : "");
 			psort[pcount++].flag = is_inst;
 		}
 	}
