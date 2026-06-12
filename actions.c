@@ -253,30 +253,14 @@ close_pi_log(int output)
 int
 action_is_install(action_t action)
 {
-	switch (action) {
-	case ACTION_INSTALL:
-	case ACTION_UPGRADE:
-	case ACTION_REFRESH:
-		return 1;
-		break;
-	default:
-		return 0;
-		break;
-	}
+	return (action == ACTION_INSTALL || action == ACTION_UPGRADE ||
+	    action == ACTION_REFRESH);
 }
 
 int
 action_is_remove(action_t action)
 {
-	switch (action) {
-	case ACTION_REMOVE:
-	case ACTION_SUPERSEDED:
-		return 1;
-		break;
-	default:
-		return 0;
-		break;
-	}
+	return (action == ACTION_REMOVE || action == ACTION_SUPERSEDED);
 }
 
 /*
