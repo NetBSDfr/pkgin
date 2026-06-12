@@ -337,12 +337,3 @@ pkgname_from_pattern(const char *pattern)
 
 	return NULL;
 }
-
-/*
- * qsort callback to sort alphabetically.
- */
-int
-sort_pkg_alpha(const void *a, const void *b)
-{
-	return strcmp(*(const char * const *)a, *(const char * const *)b);
-}

@@ -392,6 +392,10 @@ void		free_pkglist(Plisthead **);
 Plistarray	*init_array(int);
 void		free_array(Plistarray *);
 Plisthead	*init_head(void);
+Pkglist		*get_pkglist_ptr(Pkglist *);
+char		*pkglist_full(Pkglist *);
+int		sort_pkglist_alpha(const void *, const void *);
+Pkglist		**sorted_pkglist(Plisthead *, action_t);
 Plistnumbered	*rec_pkglist(const char *, ...);
 void		list_pkgs(const char *, int);
 int		search_pkg(const char *);
@@ -431,7 +435,6 @@ int		exact_pkgfmt(const char *);
 int		version_check(char *, char *);
 int		pkgstrcmp(const char *, const char *);
 char *		pkgname_from_pattern(const char *);
-int		sort_pkg_alpha(const void *, const void *);
 /* selection.c */
 void		export_keep(void);
 void		import_keep(int, const char *);

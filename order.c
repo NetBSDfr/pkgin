@@ -87,45 +87,51 @@ order_remove(Plisthead *impacthead)
 /*
  * Download order, sorted alphabetically.
  *
- * All we do is skip any packages not marked for download by pkgin_install()
- * and then insert based on sorted PKGNAME.
+ * Skip any packages not marked for download by pkgin_install(), then sort the
+ * remainder by PKGNAME and build the ordered list.
  */
 Plisthead *
 order_download(Plisthead *impacthead)
 {
 	Plisthead	*dlhead;
-	Pkglist		*d, *dsave, *p, *pkg;
+	Pkglist		*p, *last = NULL, **dlpkgs;
+	size_t		i, count = 0;
 
 	dlhead = init_head();
 
+	SLIST_FOREACH(p, impacthead, next)
+		if (p->download)
+			count++;
+
+	if (count == 0)
+		return dlhead;
+
+	/*
+	 * Collect a wrapper entry for each package to download, sort them, and
+	 * then build the list in order.
+	 */
+	dlpkgs = xmalloc(count * sizeof(*dlpkgs));
+
+	i = 0;
 	SLIST_FOREACH(p, impacthead, next) {
 		if (!p->download)
 			continue;
-
-		pkg = malloc_pkglist();
-		pkg->ipkg = p;
-
-		if (SLIST_EMPTY(dlhead)) {
-			SLIST_INSERT_HEAD(dlhead, pkg, next);
-			continue;
-		}
-
-		/*
-		 * Find first existing entry that sorts after us.  No doubt
-		 * there is a better algorithm that could be used here...
-		 */
-		dsave = NULL;
-		SLIST_FOREACH(d, dlhead, next) {
-			if (strcmp(pkg->ipkg->rpkg->full,
-			    d->ipkg->rpkg->full) < 0)
-				break;
-			dsave = d;
-		}
-		if (dsave)
-			SLIST_INSERT_AFTER(dsave, pkg, next);
-		else
-			SLIST_INSERT_HEAD(dlhead, pkg, next);
+		dlpkgs[i] = malloc_pkglist();
+		dlpkgs[i]->ipkg = p;
+		i++;
 	}
+
+	qsort(dlpkgs, count, sizeof(*dlpkgs), sort_pkglist_alpha);
+
+	for (i = 0; i < count; i++) {
+		if (last == NULL)
+			SLIST_INSERT_HEAD(dlhead, dlpkgs[i], next);
+		else
+			SLIST_INSERT_AFTER(last, dlpkgs[i], next);
+		last = dlpkgs[i];
+	}
+
+	free(dlpkgs);
 
 	return dlhead;
 }

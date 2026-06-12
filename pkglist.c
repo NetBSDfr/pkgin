@@ -428,6 +428,73 @@ init_head(void)
 	return plisthead;
 }
 
+/*
+ * Some code paths use an indirect pointer via ipkg to a Pkglist entry and
+ * others go direct.  Resolve to the entry that carries the package data.
+ */
+Pkglist *
+get_pkglist_ptr(Pkglist *p)
+{
+	return (p->ipkg) ? p->ipkg : p;
+}
+
+/*
+ * Return the full package name for an entry, resolving any impact indirection
+ * and preferring the remote package name over the local one.
+ */
+char *
+pkglist_full(Pkglist *p)
+{
+	p = get_pkglist_ptr(p);
+	return (p->rpkg) ? p->rpkg->full : p->lpkg->full;
+}
+
+/*
+ * qsort callback to sort an array of "Pkglist *" alphabetically by full
+ * package name.
+ */
+int
+sort_pkglist_alpha(const void *a, const void *b)
+{
+	Pkglist *pa = *(Pkglist * const *)a;
+	Pkglist *pb = *(Pkglist * const *)b;
+
+	return strcmp(pkglist_full(pa), pkglist_full(pb));
+}
+
+/*
+ * Return a NULL-terminated, alphabetically sorted array of the entries in a
+ * list.  If action is not ACTION_NONE then only entries with a matching action
+ * are included.  The caller frees the returned array; the entries themselves
+ * remain owned by the list.
+ */
+Pkglist **
+sorted_pkglist(Plisthead *pkgs, action_t action)
+{
+	Pkglist *pkg, *p, **list;
+	size_t i = 0;
+
+	SLIST_FOREACH(pkg, pkgs, next) {
+		p = get_pkglist_ptr(pkg);
+		if (action == ACTION_NONE || p->action == action)
+			i++;
+	}
+
+	list = xmalloc((i + 1) * sizeof(*list));
+
+	i = 0;
+	SLIST_FOREACH(pkg, pkgs, next) {
+		p = get_pkglist_ptr(pkg);
+		if (action == ACTION_NONE || p->action == action)
+			list[i++] = pkg;
+	}
+	list[i] = NULL;
+
+	qsort(list, i, sizeof(*list), sort_pkglist_alpha);
+
+	return list;
+}
+
 /**
  * \fn rec_pkglist
  *

@@ -36,42 +36,14 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
-/*
- * Mostly duplicated from actions.c but modified as this needs to look at
- * p->lpkg.  These should be merged if possible.
- */
-static char **
-get_sorted_list(Plisthead *pkgs)
-{
-	Pkglist *p;
-	size_t i = 0;
-	char **names;
-
-	/* Get number of entries for names allocation */
-	SLIST_FOREACH(p, pkgs, next)
-		i++;
-
-	names = xmalloc((i + 1) * sizeof(char *));
-
-	i = 0;
-	SLIST_FOREACH(p, pkgs, next) {
-		names[i++] = p->lpkg->full;
-	}
-	names[i] = NULL;
-
-	qsort(names, i, sizeof(char *), sort_pkg_alpha);
-
-	return names;
-}
-
 void
 pkgin_autoremove(void)
 {
 	Plistarray	*depshead;
 	Plistnumbered	*nokeephead, *keephead;
 	Plisthead	*removehead, *orderedhead;
-	Pkglist		*pkglist, *premove, *pdp, *p;
-	char		*toremove = NULL, **names, preserve[BUFSIZ];
+	Pkglist		*pkglist, *premove, *pdp, *p, **sorted;
+	char		*toremove = NULL, preserve[BUFSIZ];
 	int		argn, is_keep_dep, removenb = 0;
 
 	/*
@@ -154,11 +126,10 @@ pkgin_autoremove(void)
 		return;
 	}
 
-	names = get_sorted_list(orderedhead);
-	for (argn = 0; names[argn] != NULL; argn++) {
-		toremove = action_list(toremove, names[argn]);
-	}
-	free(names);
+	sorted = sorted_pkglist(orderedhead, ACTION_NONE);
+	for (argn = 0; sorted[argn] != NULL; argn++)
+		toremove = action_list(toremove, pkglist_full(sorted[argn]));
+	free(sorted);
 
 	printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
 	if (!noflag)
