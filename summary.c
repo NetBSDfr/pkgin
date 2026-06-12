@@ -90,7 +90,6 @@ static void		free_insertlist(void);
 static void		insert_local_summary(FILE *);
 static void		insert_remote_summary(struct archive *, char *);
 static void		delete_remote_tbl(struct Summary, char *);
-static void		prepare_insert(int, struct Summary);
 int			colnames(void *, int, char **, char **);
 
 char			*env_repos, **pkg_repos;
@@ -171,11 +170,16 @@ freecols(void)
 {
 	int i;
 
+	if (cols.name == NULL)
+		return;
+
 	for (i = 0; i < cols.num; i++)
 		XFREE(cols.name[i]);
 
 	XFREE(cols.name);
 	XFREE(cols.len);
+
+	cols.num = colcount = 0;
 }
 
 static void
@@ -215,60 +219,13 @@ colnames(void *unused, int argc, char **argv, char **colname)
 	return PDB_OK;
 }
 
-/**
- * for now, values are located on a SLIST, build INSERT line with them
- */
-static void
-prepare_insert(int pkgid, struct Summary sum)
-{
-	Insertlist	*pi;
-	/*
-	 * Currently INSERT lengths are under 1K, this should be plenty until
-	 * we support more columns.
-	 */
-	char		querybuf[4096];
-	char		tmpbuf[1024];
-
-	sqlite3_snprintf(sizeof(querybuf), querybuf, "INSERT INTO %w (PKG_ID",
-	    sum.pkg);
-
-	/* insert fields */
-	SLIST_FOREACH(pi, &inserthead, next) {
-		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",%w", pi->field);
-		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >=
-		    sizeof(querybuf))
-			goto err;
-	}
-
-	sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ") VALUES (%d", pkgid);
-	if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
-		goto err;
-
-	/* insert values */
-	SLIST_FOREACH(pi, &inserthead, next) {
-		sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ",%Q", pi->value);
-		if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >=
-		    sizeof(querybuf))
-			goto err;
-	}
-
-	sqlite3_snprintf(sizeof(tmpbuf), tmpbuf, ");");
-	if (strlcat(querybuf, tmpbuf, sizeof(querybuf)) >= sizeof(querybuf))
-		goto err;
-
-	/* Apply the query */
-	pkgindb_doquery(querybuf, NULL, NULL);
-
-	return;
-err:
-	errx(EXIT_FAILURE, "Increase query buffer");
-}
-
 /*
- * Prepared statements for the per-row CONFLICTS/DEPENDS/PROVIDES/REQUIRES/
- * SUPERSEDES inserts, prepared once per summary import.
+ * Prepared statements for the per-package INSERT and the per-row
+ * CONFLICTS/DEPENDS/PROVIDES/REQUIRES/SUPERSEDES inserts, prepared once per
+ * summary import.
  */
 static struct {
+	sqlite3_stmt	*pkg;
 	sqlite3_stmt	*conflicts;
 	sqlite3_stmt	*depends;
 	sqlite3_stmt	*provides;
@@ -285,9 +242,37 @@ prepare_stmt(const char *fmt, const char *table)
 	return pkgindb_stmt_prepare(buf);
 }
 
+/*
+ * Construct the package INSERT covering every column recorded in cols,
+ * any columns not bound at execution are inserted as NULL.
+ */
+static sqlite3_stmt *
+prepare_pkg_stmt(struct Summary sum)
+{
+	char buf[BUFSIZ];
+	int i;
+
+	snprintf(buf, sizeof(buf), "INSERT INTO %s (", sum.pkg);
+	for (i = 0; i < cols.num; i++) {
+		if (i)
+			strlcat(buf, ",", sizeof(buf));
+		if (strlcat(buf, cols.name[i], sizeof(buf)) >= sizeof(buf))
+			errx(EXIT_FAILURE, "Increase query buffer");
+	}
+	strlcat(buf, ") VALUES (", sizeof(buf));
+	for (i = 0; i < cols.num; i++) {
+		if (strlcat(buf, i ? ",?" : "?", sizeof(buf)) >= sizeof(buf))
+			errx(EXIT_FAILURE, "Increase query buffer");
+	}
+	strlcat(buf, ");", sizeof(buf));
+
+	return pkgindb_stmt_prepare(buf);
+}
+
 static void
 prepare_stmts(struct Summary sum)
 {
+	stmts.pkg = prepare_pkg_stmt(sum);
 	stmts.conflicts = prepare_stmt(INSERT_CONFLICTS, sum.conflicts);
 	stmts.depends = prepare_stmt(INSERT_DEPENDS, sum.depends);
 	stmts.provides = prepare_stmt(INSERT_PROVIDES, sum.provides);
@@ -300,6 +285,7 @@ prepare_stmts(struct Summary sum)
 static void
 finalize_stmts(struct Summary sum)
 {
+	pkgindb_stmt_finalize(stmts.pkg);
 	pkgindb_stmt_finalize(stmts.conflicts);
 	pkgindb_stmt_finalize(stmts.depends);
 	pkgindb_stmt_finalize(stmts.provides);
@@ -334,6 +320,40 @@ insert_value(sqlite3_stmt *stmt, int pkgid, const char *value)
 		errx(EXIT_FAILURE, "Failed to bind %s", value);
 
 	pkgindb_stmt_exec(stmt);
+}
+
+/*
+ * Bind the accumulated fields for a package to the prepared INSERT and
+ * execute it.  Unbound columns are inserted as NULL.  Failures are logged
+ * and skipped as they may be expected, for example UNIQUE constraint
+ * violations when the same package exists in multiple repositories.
+ */
+static void
+insert_pkg(int pkgid)
+{
+	Insertlist	*pi;
+	int		i;
+
+	(void) sqlite3_clear_bindings(stmts.pkg);
+
+	SLIST_FOREACH(pi, &inserthead, next) {
+		for (i = 0; i < cols.num; i++) {
+			if (strcmp(pi->field, cols.name[i]) == 0) {
+				(void) sqlite3_bind_text(stmts.pkg, i + 1,
+				    pi->value, -1, SQLITE_STATIC);
+				break;
+			}
+		}
+	}
+
+	for (i = 0; i < cols.num; i++) {
+		if (strcmp(cols.name[i], "PKG_ID") == 0) {
+			(void) sqlite3_bind_int(stmts.pkg, i + 1, pkgid);
+			break;
+		}
+	}
+
+	(void) pkgindb_stmt_exec(stmts.pkg);
 }
 
 /**
@@ -467,7 +487,8 @@ insert_local_summary(FILE *fp)
 		errx(EXIT_FAILURE, "Couldn't read local pkg_info");
 	}
 
-	/* record columns names to cols */
+	/* record columns names to cols, resetting any previous import */
+	freecols();
 	sqlite3_snprintf(BUFSIZ, buf, "PRAGMA table_info(%w);",
 	    sumsw[LOCAL_SUMMARY].pkg);
 	pkgindb_doquery(buf, colnames, NULL);
@@ -483,7 +504,7 @@ insert_local_summary(FILE *fp)
 		 * End of current package entry, commit and reset.
 		 */
 		if (*buf == '\n') {
-			prepare_insert(pkgid++, sumsw[LOCAL_SUMMARY]);
+			insert_pkg(pkgid++);
 			free_insertlist();
 			continue;
 		}
@@ -521,7 +542,8 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 	buflen = 32768;
 	buf = xmalloc(buflen + 1);
 
-	/* record columns names to cols */
+	/* record columns names to cols, resetting any previous import */
+	freecols();
 	sqlite3_snprintf(buflen, buf, "PRAGMA table_info(%w);",
 	    sumsw[REMOTE_SUMMARY].pkg);
 	pkgindb_doquery(buf, colnames, NULL);
@@ -591,7 +613,7 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 			 * At this point we should have a fully populated slist
 			 * and all the data we need to construct the INSERT.
 			 */
-			prepare_insert(pkgid++, sumsw[REMOTE_SUMMARY]);
+			insert_pkg(pkgid++);
 
 			/* Set up for next pkg_info */
 			free_insertlist();
@@ -902,11 +924,7 @@ update_db(int which, int verbose)
 		update_remotedb(verbose);
 
 	/* columns name not needed anymore */
-	if (cols.name != NULL) {
-		/* reset colums count */
-		colcount = 0;
-		freecols();
-	}
+	freecols();
 
 	return EXIT_SUCCESS;
 }

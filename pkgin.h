@@ -469,7 +469,7 @@ int		pkgindb_doquery(const char *,
 		    int (*)(void *, int, char *[], char *[]), void *);
 int		pkgindb_dovaquery(const char *, ...);
 struct sqlite3_stmt *pkgindb_stmt_prepare(const char *);
-void		pkgindb_stmt_exec(struct sqlite3_stmt *);
+int		pkgindb_stmt_exec(struct sqlite3_stmt *);
 void		pkgindb_stmt_finalize(struct sqlite3_stmt *);
 uint64_t	pkgindb_savepoint(void);
 void		pkgindb_savepoint_rollback(uint64_t);

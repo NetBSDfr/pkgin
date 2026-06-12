@@ -325,16 +325,21 @@ pkgindb_stmt_prepare(const char *query)
 
 /*
  * Execute a prepared statement with values already bound by the caller, and
- * reset it ready for the next execution.  Errors are fatal.
+ * reset it ready for the next execution.  As with pkgindb_doquery(), errors
+ * are returned to the caller and logged to the SQL log, they may be expected
+ * (for example UNIQUE constraint failures for duplicate packages).
  */
-void
+int
 pkgindb_stmt_exec(sqlite3_stmt *stmt)
 {
+	int rv;
+
 	curquery = sqlite3_sql(stmt);
-	if (sqlite3_step(stmt) != SQLITE_DONE)
-		pkgindb_sqlfail();
+	rv = sqlite3_step(stmt);
 	(void) sqlite3_reset(stmt);
 	curquery = NULL;
+
+	return (rv == SQLITE_DONE) ? PDB_OK : PDB_ERR;
 }
 
 void
