@@ -910,13 +910,7 @@ installend:
 	XFREE(unmet_reqs);
 	free_pkglist(&impacthead);
 	free_pkglist(&downloadhead);
-	/*
-	 * installhead may be NULL, for example if trying to install a package
-	 * that conflicts.
-	 */
-	if (installhead != NULL)
-		free_pkglist(&installhead);
-	free(installhead);
+	free_pkglist(&installhead);
 
 	return rc;
 }
