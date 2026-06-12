@@ -73,6 +73,7 @@ static const struct Summary {
 struct Columns {
 	int	num;
 	char	**name;
+	size_t	*len;
 } cols;
 
 typedef struct Insertlist {
@@ -174,6 +175,7 @@ freecols(void)
 		XFREE(cols.name[i]);
 
 	XFREE(cols.name);
+	XFREE(cols.len);
 }
 
 static void
@@ -202,10 +204,13 @@ colnames(void *unused, int argc, char **argv, char **colname)
 
 	cols.num = colcount;
 	cols.name = xrealloc(cols.name, (size_t)colcount * sizeof(char *));
+	cols.len = xrealloc(cols.len, (size_t)colcount * sizeof(size_t));
 
 	for (i = 0; i < argc; i++)
-		if (argv[i] != NULL && strncmp(colname[i], "name", 4) == 0)
+		if (argv[i] != NULL && strncmp(colname[i], "name", 4) == 0) {
 			cols.name[colcount - 1] = xstrdup(argv[i]);
+			cols.len[colcount - 1] = strlen(argv[i]);
+		}
 
 	return PDB_OK;
 }
@@ -359,9 +364,8 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	 * Handle remaining columns.
 	 */
 	for (i = 0; i < cols.num; i++) {
-		snprintf(buf, BUFSIZ, "%s=", cols.name[i]);
-
-		if (strncmp(buf, line, strlen(buf)) == 0) {
+		if (strncmp(line, cols.name[i], cols.len[i]) == 0 &&
+		    line[cols.len[i]] == '=') {
 			/* Split PKGNAME into parts */
 			if (strncmp(cols.name[i], "PKGNAME", 7) == 0) {
 				/* some rare packages have no version */
