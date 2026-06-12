@@ -346,6 +346,7 @@ extern uint8_t		parsable;
 extern uint8_t		pflag;
 extern char		*env_repos;
 extern char		**pkg_repos;
+extern char		fetchflags[4];
 extern char  		lslimit;
 extern int		l_plistcounter;
 extern int		r_plistcounter;

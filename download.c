@@ -30,8 +30,6 @@
 #include "pkgin.h"
 #include "external/progressmeter.h"
 
-extern char fetchflags[3];
-
 /*
  * Open a pkg_summary and if newer than local return an open libfetch
  * connection to it.
