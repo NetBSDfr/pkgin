@@ -40,8 +40,6 @@ Plisthead	l_plisthead[LOCAL_PKG_HASH_SIZE];
 Plisthead	r_plisthead[REMOTE_PKG_HASH_SIZE];
 int		r_plistcounter, l_plistcounter;
 
-static void setfmt(char *, char *);
-
 /*
  * Small structure for sorting package results.
  */
@@ -506,16 +504,15 @@ pkg_is_installed(Pkglist *pkg)
 	return -1;
 }
 
+/*
+ * Set plain or parsable (-p) output formats used by list and search,
+ * sfmt builds the package/status string, pfmt prints the final line.
+ */
 static void
-setfmt(char *sfmt, char *pfmt)
+setfmt(const char **sfmt, const char **pfmt)
 {
-	if (pflag) {
-		strncpy(sfmt, "%s;%c", 6); /* snprintf(outpkg) */
-		strncpy(pfmt, "%s;%s\n", 7); /* final printf */
-	} else {
-		strncpy(sfmt, "%s %c", 6);
-		strncpy(pfmt, "%-20s %s\n", 10);
-	}
+	*sfmt = pflag ? "%s;%c" : "%s %c";
+	*pfmt = pflag ? "%s;%s\n" : "%-20s %s\n";
 }
 
 void
@@ -525,9 +522,9 @@ list_pkgs(const char *pkgquery, int lstype)
 	Plistnumbered	*plisthead;
 	int		i, rc;
 	char		pkgstatus, outpkg[BUFSIZ];
-	char		sfmt[10], pfmt[10];
+	const char	*sfmt, *pfmt;
 
-	setfmt(&sfmt[0], &pfmt[0]);
+	setfmt(&sfmt, &pfmt);
 
 	/* list installed packages + status */
 	if (lstype == PKG_LLIST_CMD && lslimit != '\0') {
@@ -616,9 +613,9 @@ search_pkg(const char *pattern)
 	int		rc;
 	char		eb[64], is_inst, outpkg[BUFSIZ];
 	int		matched = 0;
-	char		sfmt[10], pfmt[10];
+	const char	*sfmt, *pfmt;
 
-	setfmt(&sfmt[0], &pfmt[0]);
+	setfmt(&sfmt, &pfmt);
 
 	if ((rc = regcomp(&re, pattern,
 	    REG_EXTENDED|REG_NOSUB|REG_ICASE)) != 0) {
