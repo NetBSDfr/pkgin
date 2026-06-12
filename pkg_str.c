@@ -315,7 +315,7 @@ pkgname_from_pattern(const char *pattern)
 	if ((p = strpbrk(pkgname, "<>"))) {
 		*p = '\0';
 		if (strpbrk(pkgname, "[]*"))
-			return NULL;
+			goto bad;
 		return pkgname;
 	}
 
@@ -328,12 +328,14 @@ pkgname_from_pattern(const char *pattern)
 	 */
 	if ((p = strrchr(pkgname, '[')) && --p > pkgname) {
 		if (strcmp(p, "-[0-9]*") != 0)
-			return NULL;
+			goto bad;
 		*p = '\0';
 		if (strpbrk(pkgname, "[]*"))
-			return NULL;
+			goto bad;
 		return pkgname;
 	}
 
+bad:
+	free(pkgname);
 	return NULL;
 }
