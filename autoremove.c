@@ -42,9 +42,10 @@ pkgin_autoremove(void)
 	Plistarray	*depshead;
 	Plistnumbered	*nokeephead, *keephead;
 	Plisthead	*removehead, *orderedhead;
-	Pkglist		*pkglist, *premove, *pdp, *p;
+	Pkglist		*pkglist, *premove, *p;
+	size_t		slot;
 	char		*toremove = NULL, preserve[BUFSIZ];
-	int		is_keep_dep, removenb = 0;
+	int		removenb = 0;
 
 	/*
 	 * Record all keep and no-keep packages.  If either are empty then
@@ -64,7 +65,7 @@ pkgin_autoremove(void)
 	 * Record all recursive dependencies for each keep package.  This then
 	 * contains a list of all packages that are required.
 	 */
-	depshead = init_array(1);
+	depshead = init_array(DEPS_HASH_SIZE);
 	SLIST_FOREACH(p, keephead->P_Plisthead, next) {
 		get_depends_recursive(p->full, depshead, DEPENDS_LOCAL);
 	}
@@ -72,18 +73,20 @@ pkgin_autoremove(void)
 	removehead = init_head();
 
 	/*
-	 * For each non-keep package, get all of its reverse dependencies, and
-	 * if any of them are in keeplist then this package is still required.
+	 * For each non-keep package, check whether it is a recursive
+	 * dependency of a keep package, in which case it is still required.
+	 *
+	 * Check the hash slot matching the package name, then slot 0 if not
+	 * already checked, as that's where any dependencies recorded from a
+	 * complicated pattern with no pkgbase are stored.
 	 */
 	SLIST_FOREACH(pkglist, nokeephead->P_Plisthead, next) {
-		is_keep_dep = 0;
-		SLIST_FOREACH(pdp, &depshead->head[0], next) {
-			if (strcmp(pdp->lpkg->full, pkglist->full) == 0) {
-				is_keep_dep = 1;
-				break;
-			}
-		}
-		if (is_keep_dep)
+		slot = pkg_hash_entry(pkglist->name, depshead->size);
+		if (pkgname_in_local_pkglist(pkglist->full,
+		    &depshead->head[slot], 1))
+			continue;
+		if (slot != 0 && pkgname_in_local_pkglist(pkglist->full,
+		    &depshead->head[0], 1))
 			continue;
 
 		/*
