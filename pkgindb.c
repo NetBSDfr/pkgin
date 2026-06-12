@@ -306,6 +306,43 @@ pkgindb_sqlfail(void)
 	errx(EXIT_FAILURE, "SQL query failed, see %s", pkgin_sqllog);
 }
 
+/*
+ * Prepare a statement for repeated execution with bound values, avoiding the
+ * cost of parsing the same query for every row.  Errors are fatal.
+ */
+sqlite3_stmt *
+pkgindb_stmt_prepare(const char *query)
+{
+	sqlite3_stmt *stmt;
+
+	curquery = query;
+	if (sqlite3_prepare_v2(pdb, query, -1, &stmt, NULL) != SQLITE_OK)
+		pkgindb_sqlfail();
+	curquery = NULL;
+
+	return stmt;
+}
+
+/*
+ * Execute a prepared statement with values already bound by the caller, and
+ * reset it ready for the next execution.  Errors are fatal.
+ */
+void
+pkgindb_stmt_exec(sqlite3_stmt *stmt)
+{
+	curquery = sqlite3_sql(stmt);
+	if (sqlite3_step(stmt) != SQLITE_DONE)
+		pkgindb_sqlfail();
+	(void) sqlite3_reset(stmt);
+	curquery = NULL;
+}
+
+void
+pkgindb_stmt_finalize(sqlite3_stmt *stmt)
+{
+	(void) sqlite3_finalize(stmt);
+}
+
 int
 pkg_db_mtime(struct stat *st)
 {

@@ -175,19 +175,19 @@ const char DELETE_REPO_URL[] =
 	"DELETE FROM REPOS WHERE REPO_URL = %Q;";
 
 const char INSERT_CONFLICTS[] =
-	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (%d, %Q, %Q);";
+	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (?, ?, ?);";
 
 const char INSERT_DEPENDS[] =
-	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (%d, %Q, %Q);";
+	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (?, ?, ?);";
 
 const char INSERT_PROVIDES[] =
-	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (%d, %Q);";
+	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (?, ?);";
 
 const char INSERT_REQUIRES[] =
-	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (%d, %Q);";
+	"INSERT INTO %s (PKG_ID, FILENAME) VALUES (?, ?);";
 
 const char INSERT_SUPERSEDES[] =
-	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (%d, %Q, %Q);";
+	"INSERT INTO %s (pkg_id, pattern, pkgbase) VALUES (?, ?, ?);";
 
 const char INSERT_REQUIRED_BY[] =
 	"INSERT INTO LOCAL_REQUIRED_BY (PKGNAME, REQUIRED_BY) VALUES (%Q, %Q);";

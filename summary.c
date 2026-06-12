@@ -264,6 +264,78 @@ err:
 	errx(EXIT_FAILURE, "Increase query buffer");
 }
 
+/*
+ * Prepared statements for the per-row CONFLICTS/DEPENDS/PROVIDES/REQUIRES/
+ * SUPERSEDES inserts, prepared once per summary import.
+ */
+static struct {
+	sqlite3_stmt	*conflicts;
+	sqlite3_stmt	*depends;
+	sqlite3_stmt	*provides;
+	sqlite3_stmt	*requires;
+	sqlite3_stmt	*supersedes;
+} stmts;
+
+static sqlite3_stmt *
+prepare_stmt(const char *fmt, const char *table)
+{
+	char buf[BUFSIZ];
+
+	snprintf(buf, BUFSIZ, fmt, table);
+	return pkgindb_stmt_prepare(buf);
+}
+
+static void
+prepare_stmts(struct Summary sum)
+{
+	stmts.conflicts = prepare_stmt(INSERT_CONFLICTS, sum.conflicts);
+	stmts.depends = prepare_stmt(INSERT_DEPENDS, sum.depends);
+	stmts.provides = prepare_stmt(INSERT_PROVIDES, sum.provides);
+	stmts.requires = prepare_stmt(INSERT_REQUIRES, sum.requires);
+	if (sum.type == REMOTE_SUMMARY)
+		stmts.supersedes = prepare_stmt(INSERT_SUPERSEDES,
+		    sum.supersedes);
+}
+
+static void
+finalize_stmts(struct Summary sum)
+{
+	pkgindb_stmt_finalize(stmts.conflicts);
+	pkgindb_stmt_finalize(stmts.depends);
+	pkgindb_stmt_finalize(stmts.provides);
+	pkgindb_stmt_finalize(stmts.requires);
+	if (sum.type == REMOTE_SUMMARY)
+		pkgindb_stmt_finalize(stmts.supersedes);
+}
+
+/*
+ * Insert a pattern row (pkg_id, pattern, pkgbase) or a value row
+ * (pkg_id, value) using a prepared statement.
+ */
+static void
+insert_pattern(sqlite3_stmt *stmt, int pkgid, const char *pattern)
+{
+	char *pkgbase = pkgname_from_pattern(pattern);
+
+	if (sqlite3_bind_int(stmt, 1, pkgid) != SQLITE_OK ||
+	    sqlite3_bind_text(stmt, 2, pattern, -1, SQLITE_STATIC) != SQLITE_OK ||
+	    sqlite3_bind_text(stmt, 3, pkgbase, -1, SQLITE_STATIC) != SQLITE_OK)
+		errx(EXIT_FAILURE, "Failed to bind %s", pattern);
+
+	pkgindb_stmt_exec(stmt);
+	free(pkgbase);
+}
+
+static void
+insert_value(sqlite3_stmt *stmt, int pkgid, const char *value)
+{
+	if (sqlite3_bind_int(stmt, 1, pkgid) != SQLITE_OK ||
+	    sqlite3_bind_text(stmt, 2, value, -1, SQLITE_STATIC) != SQLITE_OK)
+		errx(EXIT_FAILURE, "Failed to bind %s", value);
+
+	pkgindb_stmt_exec(stmt);
+}
+
 /**
  * add item to the main SLIST
  */
@@ -310,27 +382,22 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 	}
 
 	if (strncmp(line, "CONFLICTS=", 10) == 0) {
-		v = pkgname_from_pattern(val);
-		pkgindb_dovaquery(INSERT_CONFLICTS, sum.conflicts, pkgid, val,
-		    v);
-		free(v);
+		insert_pattern(stmts.conflicts, pkgid, val);
 		return;
 	}
 
 	if (strncmp(line, "DEPENDS=", 8) == 0) {
-		v = pkgname_from_pattern(val);
-		pkgindb_dovaquery(INSERT_DEPENDS, sum.depends, pkgid, val, v);
-		free(v);
+		insert_pattern(stmts.depends, pkgid, val);
 		return;
 	}
 
 	if (strncmp(line, "PROVIDES=", 9) == 0) {
-		pkgindb_dovaquery(INSERT_PROVIDES, sum.provides, pkgid, val);
+		insert_value(stmts.provides, pkgid, val);
 		return;
 	}
 
 	if (strncmp(line, "REQUIRES=", 9) == 0) {
-		pkgindb_dovaquery(INSERT_REQUIRES, sum.requires, pkgid, val);
+		insert_value(stmts.requires, pkgid, val);
 		return;
 	}
 
@@ -338,12 +405,8 @@ parse_entry(struct Summary sum, int pkgid, char *line)
 		/*
 		 * Only remote SUPERSEDES are supported.
 		 */
-		if (sum.type == REMOTE_SUMMARY) {
-			v = pkgname_from_pattern(val);
-			pkgindb_dovaquery(INSERT_SUPERSEDES, sum.supersedes,
-			    pkgid, val, v);
-			free(v);
-		}
+		if (sum.type == REMOTE_SUMMARY)
+			insert_pattern(stmts.supersedes, pkgid, val);
 		return;
 	}
 
@@ -411,6 +474,8 @@ insert_local_summary(FILE *fp)
 
 	SLIST_INIT(&inserthead);
 
+	prepare_stmts(sumsw[LOCAL_SUMMARY]);
+
 	savepoint = pkgindb_savepoint();
 
 	while (fgets(buf, BUFSIZ, fp) != NULL) {
@@ -427,6 +492,8 @@ insert_local_summary(FILE *fp)
 	}
 
 	pkgindb_savepoint_release(savepoint);
+
+	finalize_stmts(sumsw[LOCAL_SUMMARY]);
 }
 
 /*
@@ -460,6 +527,8 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 	pkgindb_doquery(buf, colnames, NULL);
 
 	SLIST_INIT(&inserthead);
+
+	prepare_stmts(sumsw[REMOTE_SUMMARY]);
 
 	savepoint = pkgindb_savepoint();
 
@@ -539,6 +608,8 @@ insert_remote_summary(struct archive *a, char *cur_repo)
 	}
 
 	pkgindb_savepoint_release(savepoint);
+
+	finalize_stmts(sumsw[REMOTE_SUMMARY]);
 
 #if ARCHIVE_VERSION_NUMBER < 3000000
 	archive_read_finish(a);
