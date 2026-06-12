@@ -420,58 +420,116 @@ do_pkg_install(Plisthead *installhead)
 /* build the output line */
 #define DEFAULT_WINSIZE	80
 #define MAX_WINSIZE	512
-static char *
-action_list(char *flatlist, char *str)
+
+/*
+ * Growable buffer for building package display lists, avoiding a rescan
+ * and full copy of the list for every package appended.  curlen tracks
+ * the current output line length for wrapping.
+ */
+typedef struct {
+	char	*buf;
+	size_t	len;
+	size_t	cap;
+	size_t	curlen;
+	size_t	cols;
+} action_list_t;
+
+static action_list_t *
+action_list_start(void)
 {
 	struct winsize	winsize;
-	size_t		curlen, cols = 0;
-	char		*endl, *newlist = NULL;
+	action_list_t	*al;
+
+	al = xmalloc(sizeof(*al));
+	al->cap = 1024;
+	al->buf = xmalloc(al->cap);
+	al->buf[0] = '\0';
+	al->len = 0;
+	al->curlen = 0;
 
 	/* XXX: avoid duplicate in progressmeter.c */
-	/* this is called for every package so no point handling sigwinch */
+	/* this is called once per list so no point handling sigwinch */
 	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &winsize) != -1 &&
 			winsize.ws_col != 0) {
 		if (winsize.ws_col > MAX_WINSIZE)
-			cols = MAX_WINSIZE;
+			al->cols = MAX_WINSIZE;
 		else
-			cols = winsize.ws_col;
+			al->cols = winsize.ws_col;
 	} else
-		cols = DEFAULT_WINSIZE;
+		al->cols = DEFAULT_WINSIZE;
 
-	/*
-	 * If the user requested -n then we print a package per line, otherwise
-	 * we try to fit them indented into the current line length.
-	 */
-	if (flatlist == NULL) {
-		flatlist = xasprintf("%s%s", noflag ? "" : "  ", str);
-		return flatlist;
+	return al;
+}
+
+static void
+action_list_cat(action_list_t *al, const char *s)
+{
+	size_t slen = strlen(s);
+
+	while (al->len + slen + 1 > al->cap) {
+		al->cap *= 2;
+		al->buf = xrealloc(al->buf, al->cap);
 	}
+	memcpy(al->buf + al->len, s, slen + 1);
+	al->len += slen;
+}
 
-	if (str == NULL)
-		return flatlist;
+/*
+ * Append a package name to the list.  If the user requested -n then we
+ * print a package per line, otherwise we try to fit them indented into
+ * the current line length.
+ */
+static void
+action_list_add(action_list_t *al, const char *str)
+{
+	size_t slen = strlen(str);
+
+	if (al->len == 0) {
+		if (!noflag)
+			action_list_cat(al, "  ");
+		action_list_cat(al, str);
+		al->curlen = al->len;
+		return;
+	}
 
 	/*
 	 * No need to calculate line length if -n was requested.
 	 */
 	if (noflag) {
-		newlist = xasprintf("%s\n%s", flatlist, str);
-		free(flatlist);
-		return newlist;
+		action_list_cat(al, "\n");
+		action_list_cat(al, str);
+		return;
 	}
 
-	endl = strrchr(flatlist, '\n');
-	if (endl)
-		curlen = strlen(endl);
-	else
-		curlen = strlen(flatlist);
+	if (al->curlen + slen >= al->cols) {
+		action_list_cat(al, "\n  ");
+		action_list_cat(al, str);
+		al->curlen = 3 + slen;
+	} else {
+		action_list_cat(al, " ");
+		action_list_cat(al, str);
+		al->curlen += 1 + slen;
+	}
+}
 
-	if ((curlen + strlen(str)) >= cols)
-		newlist = xasprintf("%s\n  %s", flatlist, str);
-	else
-		newlist = xasprintf("%s %s", flatlist, str);
+/*
+ * Return the completed list for the caller to free, or NULL if no
+ * packages were added.
+ */
+static char *
+action_list_end(action_list_t *al)
+{
+	char *list;
 
-	free(flatlist);
-	return newlist;
+	if (al->len == 0) {
+		free(al->buf);
+		list = NULL;
+	} else
+		list = al->buf;
+
+	free(al);
+
+	return list;
 }
 
 /*
@@ -481,16 +539,17 @@ action_list(char *flatlist, char *str)
 char *
 action_list_sorted(Plisthead *pkgs, action_t action)
 {
+	action_list_t *al;
 	Pkglist **sorted;
-	char *list = NULL;
 	int i;
 
+	al = action_list_start();
 	sorted = sorted_pkglist(pkgs, action);
 	for (i = 0; sorted[i] != NULL; i++)
-		list = action_list(list, pkglist_full(sorted[i]));
+		action_list_add(al, pkglist_full(sorted[i]));
 	free(sorted);
 
-	return list;
+	return action_list_end(al);
 }
 
 /*
@@ -610,11 +669,14 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	}
 
 	/* check for required files */
-	if (!pkg_met_reqs(impacthead))
+	if (!pkg_met_reqs(impacthead)) {
+		action_list_t *al = action_list_start();
+
 		SLIST_FOREACH(p, impacthead, next)
 			if (p->action == ACTION_UNMET_REQ)
-				unmet_reqs =
-				    action_list(unmet_reqs, p->rpkg->full);
+				action_list_add(al, p->rpkg->full);
+		unmet_reqs = action_list_end(al);
+	}
 
 	/*
 	 * Set up counters.
@@ -886,6 +948,7 @@ installend:
 int
 pkgin_remove(char **pkgargs)
 {
+	action_list_t	*al;
 	Plistarray	*rmhead;
 	Plisthead	*removehead;
 	Pkglist		*lpkg, *p;
@@ -934,10 +997,12 @@ pkgin_remove(char **pkgargs)
 	/* order remove list */
 	removehead = order_remove(&rmhead->head[0]);
 
+	al = action_list_start();
 	SLIST_FOREACH(p, removehead, next) {
 		deletenum++;
-		todelete = action_list(todelete, p->lpkg->full);
+		action_list_add(al, p->lpkg->full);
 	}
+	todelete = action_list_end(al);
 
 	if (todelete != NULL) {
 		printf(MSG_PKGS_TO_DELETE, deletenum, todelete);
