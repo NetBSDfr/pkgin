@@ -746,30 +746,27 @@ out:
 		errx(EXIT_FAILURE, "failed to commit transaction");
 }
 
+/*
+ * Check to see if database repositories are still configured.  If not, delete
+ * and force a refresh.
+ */
 static int
-pdb_clean_remote(void *param, int argc, char **argv, char **colname)
+pdb_delete_remote(void *param, int argc, char **argv, char **colname)
 {
-	int	i;
-	size_t	repolen;
-	char	**repos = pkg_repos;
+	int i;
 
 	if (argv == NULL)
 		return PDB_ERR;
 
-	for (i = 0; repos[i] != NULL; i++) {
-		repolen = strlen(repos[i]);
-		if (repolen == strlen(argv[0]) &&
-		    strncmp(repos[i], argv[0], repolen) == 0)
-		   	return PDB_OK;
+	for (i = 0; pkg_repos[i] != NULL; i++) {
+		if (strcmp(pkg_repos[i], argv[0]) == 0)
+			return PDB_OK;
 	}
-	/* did not find argv[0] (db repository) in pkg_repos */
+
 	printf(MSG_CLEANING_DB_FROM_REPO, argv[0]);
-
 	delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[0]);
-
 	pkgindb_dovaquery(DELETE_REPO_URL, argv[0]);
 
-	/* force pkg_summary reload for available repository */
 	force_fetch = 1;
 
 	return PDB_OK;
@@ -796,12 +793,9 @@ update_remotedb(int verbose)
 			continue;
 		}
 
-		/*
-		 * do not cleanup repos before being sure new repo is reachable
-		 */
+		/* Delete any unused repositories. */
 		if (!cleaned) {
-			/* delete unused repositories */
-			pkgindb_doquery(SELECT_REPO_URLS, pdb_clean_remote,
+			pkgindb_doquery(SELECT_REPO_URLS, pdb_delete_remote,
 			    NULL);
 			cleaned = 1;
 		}
@@ -876,36 +870,13 @@ split_repos(void)
 	repo_record(pkg_repos);
 }
 
-/* check if repositories listed in REPO_URL table are still relevant */
-static int
-cmp_repo_list(void *param, int argc, char **argv, char **colname)
-{
-	int	i, j, match;
-
-	if (argv == NULL)
-		return PDB_ERR; /* no repo yet? */
-
-	for (i = 0; i < argc; i++) {
-		match = 0;
-		for (j = 0; pkg_repos[j] != NULL; j++)
-			if (strcmp(argv[i], pkg_repos[j]) == 0)
-				match = 1;
-		if (match == 0) {
-			printf(MSG_CLEANING_DB_FROM_REPO, argv[i]);
-			delete_remote_tbl(sumsw[REMOTE_SUMMARY], argv[i]);
-			pkgindb_dovaquery(DELETE_REPO_URL, argv[i]);
-
-			force_fetch = 1;
-		}
-	}
-
-	return PDB_OK;
-}
-
+/*
+ * Delete any repositories from the database if they are no longer configured.
+ */
 int
 chk_repo_list(int force)
 {
-	pkgindb_doquery(SELECT_REPO_URLS, cmp_repo_list, NULL);
+	pkgindb_doquery(SELECT_REPO_URLS, pdb_delete_remote, NULL);
 
 	if (force)
 		force_fetch = 1;
