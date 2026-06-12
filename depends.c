@@ -137,9 +137,10 @@ update_pkg_level(Pkglist *cur, Pkglist *new)
 }
 
 static Pkglist *
-new_local_depend(Pkglist *pkg, Plisthead *depends, int depsize)
+new_pattern_depend(Pkglist *pkg, Plisthead *depends, int depsize,
+    depends_t type)
 {
-	Pkglist *epkg, *lpkg;
+	Pkglist *epkg, *fpkg;
 
 	/*
 	 * Have we already seen this DEPENDS pattern?  If so update its level
@@ -152,12 +153,20 @@ new_local_depend(Pkglist *pkg, Plisthead *depends, int depsize)
 	}
 
 	/*
-	 * It shouldn't be possible for a local package to not find its own
-	 * dependencies, other than pkgdb corruption, so log and continue.
+	 * Find the matching package.  It shouldn't be possible for a local
+	 * package to not find its own dependencies, other than pkgdb
+	 * corruption.  Remote packages also generally shouldn't fail,
+	 * certainly not if using pbulk etc, but it can happen, for example
+	 * with self-built repositories.  Log and continue.
 	 */
-	if ((lpkg = find_local_pkg(pkg->patterns[0], pkg->name)) == NULL) {
-		TRACE("ERROR: no match found for %s, corrupt pkgdb?\n",
-		    pkg->patterns[0]);
+	if (type == DEPENDS_LOCAL)
+		fpkg = find_local_pkg(pkg->patterns[0], pkg->name);
+	else
+		fpkg = find_remote_pkg(pkg->patterns[0], pkg->name, NULL);
+
+	if (fpkg == NULL) {
+		TRACE(" < ERROR no match found for %s%s\n", pkg->patterns[0],
+		    (type == DEPENDS_LOCAL) ? ", corrupt pkgdb?" : "");
 		return NULL;
 	}
 
@@ -166,57 +175,22 @@ new_local_depend(Pkglist *pkg, Plisthead *depends, int depsize)
 	 * DEPENDS match.  Add this match and update its level if ours is
 	 * higher to ensure correct install ordering.
 	 */
-	if ((epkg = pkgname_in_local_pkglist(lpkg->full, depends, depsize))) {
-		TRACE(" < package %s already recorded\n", lpkg->full);
+	epkg = (type == DEPENDS_LOCAL)
+	    ? pkgname_in_local_pkglist(fpkg->full, depends, depsize)
+	    : pkgname_in_remote_pkglist(fpkg->full, depends, depsize);
+	if (epkg) {
+		TRACE(" < package %s already recorded\n", fpkg->full);
 		add_new_pattern(epkg, pkg->patterns[0]);
 		update_pkg_level(epkg, pkg);
 		return NULL;
 	}
 
-	pkg->lpkg = lpkg;
-	return lpkg;
-}
+	if (type == DEPENDS_LOCAL)
+		pkg->lpkg = fpkg;
+	else
+		pkg->rpkg = fpkg;
 
-static Pkglist *
-new_remote_depend(Pkglist *pkg, Plisthead *depends, int depsize)
-{
-	Pkglist *rpkg, *epkg;
-
-	/*
-	 * Have we already seen this DEPENDS pattern?  If so update its level
-	 * if previously seen via a shallower dependency tree.
-	 */
-	if ((epkg = pattern_in_pkglist(pkg->patterns[0], depends, depsize))) {
-		TRACE(" < dependency %s already recorded\n", pkg->patterns[0]);
-		update_pkg_level(epkg, pkg);
-		return NULL;
-	}
-
-	/*
-	 * Generally it should not be possible for a remote package to not find
-	 * its DEPENDS, and certainly not if using pbulk etc, but it can
-	 * happen, for example with self-built repositories.
-	 */
-	rpkg = find_remote_pkg(pkg->patterns[0], pkg->name, NULL);
-	if (rpkg == NULL) {
-		TRACE(" < ERROR no match found for %s\n", pkg->patterns[0]);
-		return NULL;
-	}
-
-	/*
-	 * This package name is already in the depends list via a different
-	 * DEPENDS match.  Add this match and update its level if ours is
-	 * higher to ensure correct install ordering.
-	 */
-	if ((epkg = pkgname_in_remote_pkglist(rpkg->full, depends, depsize))) {
-		TRACE(" < package %s already recorded\n", rpkg->full);
-		add_new_pattern(epkg, pkg->patterns[0]);
-		update_pkg_level(epkg, pkg);
-		return NULL;
-	}
-
-	pkg->rpkg = rpkg;
-	return rpkg;
+	return fpkg;
 }
 
 static Pkglist *
@@ -254,10 +228,8 @@ new_depend(Pkglist *dep, Plisthead *depends, int depsize, depends_t type)
 
 	switch (type) {
 	case DEPENDS_LOCAL:
-		d = new_local_depend(dep, depends, depsize);
-		break;
 	case DEPENDS_REMOTE:
-		d = new_remote_depend(dep, depends, depsize);
+		d = new_pattern_depend(dep, depends, depsize, type);
 		break;
 	case DEPENDS_REVERSE:
 		d = new_reverse_depend(dep, depends, depsize);
