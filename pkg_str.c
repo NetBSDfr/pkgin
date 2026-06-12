@@ -72,11 +72,16 @@ find_preferred_pkg(const char *pkgname, Pkglist **pkg, char **match)
 
 	/*
 	 * Save match if requested.  If there was a successful match then
-	 * return the full package name, otherwise the unsuccessful match
+	 * return the full package name, otherwise transfer the unsuccessful
+	 * match to the caller.
 	 */
-	if (match != NULL)
-		*match = best ? xstrdup(best->full) : result;
-	else
+	if (match != NULL) {
+		if (best != NULL) {
+			*match = xstrdup(best->full);
+			free(result);
+		} else
+			*match = result;
+	} else
 		free(result);
 
 	/*
