@@ -51,7 +51,7 @@ verb_flag(const char *flags)
 	strcpy(pkgtools_flags, flags);
 
 	if (verbosity)
-		strlcat(pkgtools_flags, "v", 1);
+		strlcat(pkgtools_flags, "v", sizeof(pkgtools_flags));
 
 	return pkgtools_flags;
 }
