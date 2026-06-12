@@ -505,10 +505,10 @@ static int
 pkg_is_installed(Pkglist *pkg)
 {
 	Pkglist *p;
-	int l;
+	size_t slot;
 
-	for (l = 0; l < LOCAL_PKG_HASH_SIZE; l++ ) {
-	SLIST_FOREACH(p, &l_plisthead[l], next) {
+	slot = pkg_hash_entry(pkg->name, LOCAL_PKG_HASH_SIZE);
+	SLIST_FOREACH(p, &l_plisthead[slot], next) {
 		/* make sure packages match */
 		if (strcmp(p->name, pkg->name) != 0)
 			continue;
@@ -518,7 +518,6 @@ pkg_is_installed(Pkglist *pkg)
 			return 0;
 
 		return version_check(p->full, pkg->full);
-	}
 	}
 
 	return -1;
