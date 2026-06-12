@@ -387,6 +387,7 @@ size_t		pkg_hash_entry(const char *, int);
 void		free_local_pkglist(void);
 void		free_remote_pkglist(void);
 Pkglist		*malloc_pkglist(void);
+Pkglist		*pattern_pkglist(const char *, const char *);
 void		free_pkglist_entry(Pkglist **);
 void		free_pkglist(Plisthead **);
 Plistarray	*init_array(int);

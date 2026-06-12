@@ -85,6 +85,26 @@ malloc_pkglist(void)
 	return pkglist;
 }
 
+/*
+ * Allocate a Pkglist entry for a DEPENDS-style pattern, with an optional
+ * package name if it can be determined from the pattern.
+ */
+Pkglist *
+pattern_pkglist(const char *pattern, const char *name)
+{
+	Pkglist *p;
+
+	p = malloc_pkglist();
+	p->patterns = xmalloc(2 * sizeof(char *));
+	p->patterns[0] = xstrdup(pattern);
+	p->patterns[1] = NULL;
+	p->patcount = 1;
+	if (name)
+		p->name = xstrdup(name);
+
+	return p;
+}
+
 /**
  * \fn free_pkglist_entry
  *

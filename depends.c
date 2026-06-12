@@ -46,12 +46,7 @@ record_depends(void *param, int argc, char **argv, char **colname)
 	if (argv == NULL)
 		return PDB_ERR;
 
-	d = malloc_pkglist();
-	d->patterns = xmalloc(2 * sizeof(char *));
-	d->patterns[0] = xstrdup(argv[0]);
-	d->patterns[1] = NULL;
-	d->patcount = 1;
-	d->name = (argv[1]) ? xstrdup(argv[1]) : NULL;
+	d = pattern_pkglist(argv[0], argv[1]);
 	SLIST_INSERT_HEAD(depends, d, next);
 
 	return PDB_OK;

@@ -142,11 +142,7 @@ record_supersedes(void *param, int argc, char **argv, char **colname)
 	/*
 	 * An entry we've matched and haven't seen before, add it.
 	 */
-	p = malloc_pkglist();
-	p->patterns = xmalloc(2 * sizeof(char *));
-	p->patterns[0] = xstrdup(argv[0]);
-	p->patterns[1] = NULL;
-	p->patcount = 1;
+	p = pattern_pkglist(argv[0], NULL);
 	p->lpkg = lpkg;
 	p->replace = xstrdup(argv[2]);
 	SLIST_INSERT_HEAD(supersedes, p, next);
