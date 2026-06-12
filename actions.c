@@ -168,7 +168,8 @@ analyse_pkglog(long int filepos)
 	if (filepos < 0)
 		return;
 
-	err_ro = fopen(pkgin_errlog, "r");
+	if ((err_ro = fopen(pkgin_errlog, "r")) == NULL)
+		return;
 
 	(void)fseek(err_ro, filepos, SEEK_SET);
 
