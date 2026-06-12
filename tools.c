@@ -42,10 +42,10 @@ trimcr(char *str)
 
 	len = strlen(str);
 
-	if (str[len - 1] == '\n')
+	if (len > 0 && str[len - 1] == '\n')
 		str[--len] = '\0';
 
-	if (str[len - 1] == '\r')
+	if (len > 0 && str[len - 1] == '\r')
 		str[--len] = '\0';
 
 	return (len);
