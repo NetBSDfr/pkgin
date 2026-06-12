@@ -36,30 +36,16 @@
 static Pkglist *
 local_pkg_in_impact(Plistarray *impacthead, Pkglist *pkg)
 {
-	Plisthead *head;
-	Pkglist *epkg;
-	int slot;
+	int slot = pkg_hash_entry(pkg->name, impacthead->size);
 
-	slot = pkg_hash_entry(pkg->name, impacthead->size);
-	head = &impacthead->head[slot];
-
-	epkg = pkgname_in_local_pkglist(pkg->full, head, 1);
-
-	return epkg;
+	return pkgname_in_local_pkglist(pkg->full, &impacthead->head[slot], 1);
 }
 static Pkglist *
 remote_pkg_in_impact(Plistarray *impacthead, Pkglist *pkg)
 {
-	Plisthead *head;
-	Pkglist *epkg;
-	int slot;
+	int slot = pkg_hash_entry(pkg->name, impacthead->size);
 
-	slot = pkg_hash_entry(pkg->name, impacthead->size);
-	head = &impacthead->head[slot];
-
-	epkg = pkgname_in_remote_pkglist(pkg->full, head, 1);
-
-	return epkg;
+	return pkgname_in_remote_pkglist(pkg->full, &impacthead->head[slot], 1);
 }
 
 /*

@@ -229,58 +229,54 @@ init_remote_pkglist(void)
 	r_plistcounter = plist.P_count;
 }
 
-int
-is_empty_plistarray(Plistarray *a)
+/*
+ * Check whether an array of Plistheads contains any entries.
+ */
+static int
+is_empty_plisthead_array(Plisthead *plist, int size)
 {
 	int i;
 
-	for (i = 0; i < a->size; i++) {
-		if (!SLIST_EMPTY(&a->head[i]))
+	for (i = 0; i < size; i++) {
+		if (!SLIST_EMPTY(&plist[i]))
 			return 0;
 	}
 
 	return 1;
+}
+
+int
+is_empty_plistarray(Plistarray *a)
+{
+	return is_empty_plisthead_array(a->head, a->size);
 }
 
 int
 is_empty_local_pkglist(void)
 {
-	int i;
-
-	for (i = 0; i < LOCAL_PKG_HASH_SIZE; i++) {
-		if (!SLIST_EMPTY(&l_plisthead[i]))
-			return 0;
-	}
-
-	return 1;
+	return is_empty_plisthead_array(l_plisthead, LOCAL_PKG_HASH_SIZE);
 }
 
 int
 is_empty_remote_pkglist(void)
 {
-	int i;
-
-	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
-		if (!SLIST_EMPTY(&r_plisthead[i]))
-			return 0;
-	}
-
-	return 1;
+	return is_empty_plisthead_array(r_plisthead, REMOTE_PKG_HASH_SIZE);
 }
 
 /*
  * These functions look for identical lpkg, rpkg, or pattern entries in a given
  * plist.  If size is non-zero then look through an array of plists.
  */
-Pkglist *
-pkgname_in_local_pkglist(const char *pkgname, Plisthead *plist, int size)
+static Pkglist *
+pkgname_in_pkglist(const char *pkgname, Plisthead *plist, int size, int remote)
 {
-	Pkglist *p;
+	Pkglist *p, *cmp;
 	int i;
 
 	for (i = 0; i < size; i++) {
 		SLIST_FOREACH(p, &plist[i], next) {
-			if (p->lpkg && strcmp(p->lpkg->full, pkgname) == 0)
+			cmp = remote ? p->rpkg : p->lpkg;
+			if (cmp && strcmp(cmp->full, pkgname) == 0)
 				return p;
 		}
 	}
@@ -288,19 +284,14 @@ pkgname_in_local_pkglist(const char *pkgname, Plisthead *plist, int size)
 	return NULL;
 }
 Pkglist *
+pkgname_in_local_pkglist(const char *pkgname, Plisthead *plist, int size)
+{
+	return pkgname_in_pkglist(pkgname, plist, size, 0);
+}
+Pkglist *
 pkgname_in_remote_pkglist(const char *pkgname, Plisthead *plist, int size)
 {
-	Pkglist *p;
-	int i;
-
-	for (i = 0; i < size; i++) {
-		SLIST_FOREACH(p, &plist[i], next) {
-			if (p->rpkg && strcmp(p->rpkg->full, pkgname) == 0)
-				return p;
-		}
-	}
-
-	return NULL;
+	return pkgname_in_pkglist(pkgname, plist, size, 1);
 }
 Pkglist *
 pattern_in_pkglist(const char *pattern, Plisthead *plist, int size)
@@ -320,37 +311,34 @@ pattern_in_pkglist(const char *pattern, Plisthead *plist, int size)
 	return NULL;
 }
 
+/*
+ * Free all entries from an array of Plistheads.
+ */
 static void
-free_global_pkglist(Plisthead *plisthead)
+free_pkglist_entries(Plisthead *plist, int size)
 {
-	Pkglist *plist;
+	Pkglist *p;
+	int i;
 
-	while (!SLIST_EMPTY(plisthead)) {
-		plist = SLIST_FIRST(plisthead);
-		SLIST_REMOVE_HEAD(plisthead, next);
-
-		free_pkglist_entry(&plist);
+	for (i = 0; i < size; i++) {
+		while (!SLIST_EMPTY(&plist[i])) {
+			p = SLIST_FIRST(&plist[i]);
+			SLIST_REMOVE_HEAD(&plist[i], next);
+			free_pkglist_entry(&p);
+		}
 	}
 }
 
 void
 free_local_pkglist(void)
 {
-	int i;
-
-	for (i = 0; i < LOCAL_PKG_HASH_SIZE; i++) {
-		free_global_pkglist(&l_plisthead[i]);
-	}
+	free_pkglist_entries(l_plisthead, LOCAL_PKG_HASH_SIZE);
 }
 
 void
 free_remote_pkglist(void)
 {
-	int i;
-
-	for (i = 0; i < REMOTE_PKG_HASH_SIZE; i++) {
-		free_global_pkglist(&r_plisthead[i]);
-	}
+	free_pkglist_entries(r_plisthead, REMOTE_PKG_HASH_SIZE);
 }
 
 Plistarray *
@@ -372,23 +360,13 @@ init_array(int size)
 void
 free_array(Plistarray *a)
 {
-	Pkglist *p;
-	int i;
-
 	if (a == NULL)
 		return;
 
-	for (i = 0; i < a->size; i++) {
-		while (!SLIST_EMPTY(&a->head[i])) {
-			p = SLIST_FIRST(&a->head[i]);
-			SLIST_REMOVE_HEAD(&a->head[i], next);
-			free_pkglist_entry(&p);
-		}
-	}
+	free_pkglist_entries(a->head, a->size);
 
 	XFREE(a->head);
 	XFREE(a);
-	a = NULL;
 }
 
 /**
