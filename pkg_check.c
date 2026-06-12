@@ -84,30 +84,26 @@ char *
 pkg_conflicts(Pkglist *pkg)
 {
 	Pkglist *p;
-	int i, slot;
+	int i, s, nslots, slots[2];
 
 	if (is_empty_plistarray(l_conflicthead))
 		return NULL;
 
-	slot = pkg_hash_entry(pkg->rpkg->name, CONFLICTS_HASH_SIZE);
-	SLIST_FOREACH(p, &l_conflicthead->head[slot], next) {
-		for (i = 0; i < p->patcount; i++) {
-			if (pkg_match(p->patterns[i], pkg->rpkg->full))
-				return p->patterns[i];
-		}
-	}
-
 	/*
-	 * We also need to check slot 0 if not already checked as that's where
-	 * any CONFLICTS that have a complicated pattern and no pkgbase are
-	 * stored.
+	 * Check the hash slot matching the package name, then slot 0 if not
+	 * already checked, as that's where any CONFLICTS that have a
+	 * complicated pattern and no pkgbase are stored.
 	 */
-	if (slot == 0)
-		return NULL;
-	SLIST_FOREACH(p, &l_conflicthead->head[0], next) {
-		for (i = 0; i < p->patcount; i++) {
-			if (pkg_match(p->patterns[i], pkg->rpkg->full))
-				return p->patterns[i];
+	slots[0] = pkg_hash_entry(pkg->rpkg->name, CONFLICTS_HASH_SIZE);
+	slots[1] = 0;
+	nslots = (slots[0] == 0) ? 1 : 2;
+
+	for (s = 0; s < nslots; s++) {
+		SLIST_FOREACH(p, &l_conflicthead->head[slots[s]], next) {
+			for (i = 0; i < p->patcount; i++) {
+				if (pkg_match(p->patterns[i], pkg->rpkg->full))
+					return p->patterns[i];
+			}
 		}
 	}
 
