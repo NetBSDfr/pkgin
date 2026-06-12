@@ -94,6 +94,9 @@ is_preferred(char *fullpkg)
 	Preflist *pref;
 	char pkg[BUFSIZ];
 
+	if (SLIST_EMPTY(&prefhead))
+		return NULL;
+
 	XSTRCPY(pkg, fullpkg);
 	trunc_str(pkg, '-', STR_BACKWARD);
 
