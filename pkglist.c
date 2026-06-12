@@ -73,36 +73,15 @@ pkg_hash_entry(const char *s, int size)
  * \fn malloc_pkglist
  *
  * \brief Pkglist allocation for all types of lists
+ *
+ * All defaults are zero except action, which is set explicitly.
  */
 Pkglist *
 malloc_pkglist(void)
 {
 	Pkglist *pkglist;
 
-	pkglist = xmalloc(sizeof(Pkglist));
-
-	/*!< Init all the things! (http://knowyourmeme.com/memes/x-all-the-y) */
-	pkglist->ipkg = NULL;
-	pkglist->lpkg = NULL;
-	pkglist->rpkg = NULL;
-	pkglist->full = NULL;
-	pkglist->name = NULL;
-	pkglist->version = NULL;
-	pkglist->build_date = NULL;
-	pkglist->patterns = NULL;
-	pkglist->patcount = 0;
-	pkglist->replace = NULL;
-	pkglist->size_pkg = 0;
-	pkglist->file_size = 0;
-	pkglist->level = 0;
-	pkglist->download = 0;
-	pkglist->pkgfs = NULL;
-	pkglist->pkgurl = NULL;
-	pkglist->comment = NULL;
-	pkglist->category = NULL;
-	pkglist->pkgpath = NULL;
-	pkglist->skip = 0;
-	pkglist->keep = 0;
+	pkglist = xcalloc(1, sizeof(Pkglist));
 	pkglist->action = ACTION_NONE;
 
 	return pkglist;
