@@ -42,9 +42,9 @@ pkgin_autoremove(void)
 	Plistarray	*depshead;
 	Plistnumbered	*nokeephead, *keephead;
 	Plisthead	*removehead, *orderedhead;
-	Pkglist		*pkglist, *premove, *pdp, *p, **sorted;
+	Pkglist		*pkglist, *premove, *pdp, *p;
 	char		*toremove = NULL, preserve[BUFSIZ];
-	int		argn, is_keep_dep, removenb = 0;
+	int		is_keep_dep, removenb = 0;
 
 	/*
 	 * Record all keep and no-keep packages.  If either are empty then
@@ -126,10 +126,7 @@ pkgin_autoremove(void)
 		return;
 	}
 
-	sorted = sorted_pkglist(orderedhead, ACTION_NONE);
-	for (argn = 0; sorted[argn] != NULL; argn++)
-		toremove = action_list(toremove, pkglist_full(sorted[argn]));
-	free(sorted);
+	toremove = action_list_sorted(orderedhead, ACTION_NONE);
 
 	printf(MSG_AUTOREMOVE_PKGS, removenb, toremove);
 	if (!noflag)

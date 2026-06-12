@@ -408,7 +408,7 @@ int		action_is_remove(action_t);
 void		do_pkg_remove(Plisthead *);
 int		pkgin_remove(char **);
 int		pkgin_install(char **, int, int);
-char		*action_list(char *, char *);
+char		*action_list_sorted(Plisthead *, action_t);
 int		pkgin_upgrade(int);
 /* order.c */
 Plisthead	*order_remove(Plisthead *);

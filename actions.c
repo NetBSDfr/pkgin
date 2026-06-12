@@ -436,7 +436,7 @@ do_pkg_install(Plisthead *installhead)
 /* build the output line */
 #define DEFAULT_WINSIZE	80
 #define MAX_WINSIZE	512
-char *
+static char *
 action_list(char *flatlist, char *str)
 {
 	struct winsize	winsize;
@@ -488,6 +488,25 @@ action_list(char *flatlist, char *str)
 
 	free(flatlist);
 	return newlist;
+}
+
+/*
+ * Return display list of packages in pkgs matching action, sorted
+ * alphabetically.  Caller frees.
+ */
+char *
+action_list_sorted(Plisthead *pkgs, action_t action)
+{
+	Pkglist **sorted;
+	char *list = NULL;
+	int i;
+
+	sorted = sorted_pkglist(pkgs, action);
+	for (i = 0; sorted[i] != NULL; i++)
+		list = action_list(list, pkglist_full(sorted[i]));
+	free(sorted);
+
+	return list;
 }
 
 #define H_BUF 6
@@ -558,7 +577,6 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	Pkglist		*p;
 	Plisthead	*impacthead = NULL;
 	Plisthead	*downloadhead = NULL, *installhead = NULL;
-	Pkglist		**sorted;
 	char		*toinstall = NULL, *toupgrade = NULL;
 	char		*torefresh = NULL, *todownload = NULL;
 	char		*toremove = NULL, *tosupersede = NULL;
@@ -749,38 +767,14 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	 * Separate package lists according to action and sort alphabetically.
 	 */
 	downloadhead = order_download(impacthead);
-
-	sorted = sorted_pkglist(downloadhead, ACTION_NONE);
-	for (argn = 0; sorted[argn] != NULL; argn++)
-		todownload = action_list(todownload, pkglist_full(sorted[argn]));
-	free(sorted);
+	todownload = action_list_sorted(downloadhead, ACTION_NONE);
 
 	installhead = order_install(impacthead);
-
-	sorted = sorted_pkglist(installhead, ACTION_REFRESH);
-	for (argn = 0; sorted[argn] != NULL; argn++)
-		torefresh = action_list(torefresh, pkglist_full(sorted[argn]));
-	free(sorted);
-
-	sorted = sorted_pkglist(installhead, ACTION_UPGRADE);
-	for (argn = 0; sorted[argn] != NULL; argn++)
-		toupgrade = action_list(toupgrade, pkglist_full(sorted[argn]));
-	free(sorted);
-
-	sorted = sorted_pkglist(installhead, ACTION_INSTALL);
-	for (argn = 0; sorted[argn] != NULL; argn++)
-		toinstall = action_list(toinstall, pkglist_full(sorted[argn]));
-	free(sorted);
-
-	sorted = sorted_pkglist(installhead, ACTION_REMOVE);
-	for (argn = 0; sorted[argn] != NULL; argn++)
-		toremove = action_list(toremove, pkglist_full(sorted[argn]));
-	free(sorted);
-
-	sorted = sorted_pkglist(installhead, ACTION_SUPERSEDED);
-	for (argn = 0; sorted[argn] != NULL; argn++)
-		tosupersede = action_list(tosupersede, pkglist_full(sorted[argn]));
-	free(sorted);
+	torefresh = action_list_sorted(installhead, ACTION_REFRESH);
+	toupgrade = action_list_sorted(installhead, ACTION_UPGRADE);
+	toinstall = action_list_sorted(installhead, ACTION_INSTALL);
+	toremove = action_list_sorted(installhead, ACTION_REMOVE);
+	tosupersede = action_list_sorted(installhead, ACTION_SUPERSEDED);
 
 	printf("\n");
 
