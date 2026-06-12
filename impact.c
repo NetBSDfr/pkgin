@@ -370,6 +370,17 @@ pkg_impact_upgrade(int verbose)
 			if ((newp = find_local_pkg(repmatch, lpkg->replace)) == NULL) {
 				newp = malloc_pkglist();
 				newp->rpkg = find_remote_pkg(repmatch, lpkg->replace, NULL);
+				/*
+				 * The replacement may not exist in any repository, for
+				 * example with self-built or incomplete repositories.
+				 */
+				if (newp->rpkg == NULL) {
+					TRACE(" < ERROR no remote match for "
+					    "supersedes replacement %s\n",
+					    lpkg->replace);
+					free_pkglist_entry(&newp);
+					continue;
+				}
 				newp->keep = oldp->lpkg->keep;
 				if (verbose)
 					update_deps_spinner(istty);
