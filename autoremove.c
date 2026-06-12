@@ -141,16 +141,14 @@ pkgin_autoremove(void)
 	free_pkglist(&orderedhead);
 }
 
-void
-show_pkg_keep(void)
+static void
+show_keep_list(const char *query, const char *emptymsg)
 {
 	Plistnumbered	*plisthead;
 	Pkglist		*pkglist;
 
-	plisthead = rec_pkglist(KEEP_LOCAL_PKGS);
-
-	if (plisthead == NULL) {
-		printf("%s\n", MSG_EMPTY_KEEP_LIST);
+	if ((plisthead = rec_pkglist(query)) == NULL) {
+		printf("%s\n", emptymsg);
 		return;
 	}
 
@@ -162,23 +160,15 @@ show_pkg_keep(void)
 }
 
 void
+show_pkg_keep(void)
+{
+	show_keep_list(KEEP_LOCAL_PKGS, MSG_EMPTY_KEEP_LIST);
+}
+
+void
 show_pkg_nokeep(void)
 {
-	Plistnumbered	*plisthead;
-	Pkglist		*pkglist;
-
-	plisthead = rec_pkglist(NOKEEP_LOCAL_PKGS);
-
-	if (plisthead == NULL) {
-		printf("%s\n", MSG_EMPTY_NOKEEP_LIST);
-		return;
-	}
-
-	SLIST_FOREACH(pkglist, plisthead->P_Plisthead, next)
-		printf("%-20s %s\n", pkglist->full, pkglist->comment);
-
-	free_pkglist(&plisthead->P_Plisthead);
-	free(plisthead);
+	show_keep_list(NOKEEP_LOCAL_PKGS, MSG_EMPTY_NOKEEP_LIST);
 }
 
 /*
