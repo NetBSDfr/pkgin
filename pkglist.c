@@ -382,7 +382,7 @@ init_array(int size)
 
 	a = xmalloc(sizeof(Plistarray));
 	a->size = size;
-	a->head = xmalloc(sizeof(Plisthead *) * size);
+	a->head = xmalloc(sizeof(*a->head) * size);
 
 	for (i = 0; i < size; i++)
 		SLIST_INIT(&a->head[i]);
