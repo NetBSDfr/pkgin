@@ -51,6 +51,17 @@ trimcr(char *str)
 	return (len);
 }
 
+/*
+ * Format a size in human-readable form into buf, which must be at least
+ * H_BUF bytes.
+ */
+void
+humanize_size(char *buf, int64_t size)
+{
+	(void)humanize_number(buf, H_BUF, size, "", HN_AUTOSCALE,
+	    HN_B | HN_NOSPACE | HN_DECIMAL);
+}
+
 void
 free_list(char **list)
 {

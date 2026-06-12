@@ -66,6 +66,9 @@
 #define STR_FORWARD 0
 #define STR_BACKWARD 1
 
+/* Buffer size for humanize_size() output */
+#define H_BUF 6
+
 #define DSTSRC_CHK(dst, src)			\
 	if (dst == NULL) {			\
 		warn("NULL destination");	\
@@ -101,6 +104,7 @@ extern uint8_t yesflag;
 extern uint8_t noflag;
 
 extern size_t trimcr(char *);
+extern void humanize_size(char *, int64_t);
 extern void free_list(char **);
 extern void trunc_str(char *, char, int);
 extern char *strreplace(char *, const char *, const char *);

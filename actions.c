@@ -493,8 +493,6 @@ action_list_sorted(Plisthead *pkgs, action_t action)
 	return list;
 }
 
-#define H_BUF 6
-
 /*
  * If any of the installed core packages have an upgrade available then return
  * the list of all installed core packages, as if one of them is being upgraded
@@ -711,30 +709,22 @@ pkgin_install(char **pkgargs, int do_inst, int upgrade)
 	}
 
 	/*
-	 * Ensure pretty-printed h_psize is always positive, and adjust output
-	 * messages based on size_pkg.
+	 * Ensure pretty-printed h_psize is always positive, output messages
+	 * are adjusted based on size_pkg.
 	 */
-	(void)humanize_number(h_fsize, H_BUF, file_size, "",
-		HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-	if (size_pkg < 0)
-		(void)humanize_number(h_psize, H_BUF, 0 - size_pkg, "",
-			HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
-	else
-		(void)humanize_number(h_psize, H_BUF, size_pkg, "",
-			HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+	humanize_size(h_fsize, file_size);
+	humanize_size(h_psize, size_pkg < 0 ? -size_pkg : size_pkg);
 
 	/* check disk space */
 	free_space = fs_room(pkgin_cache);
 	if (free_space < (uint64_t)file_size) {
-		(void)humanize_number(h_free, H_BUF, (int64_t)free_space, "",
-				HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+		humanize_size(h_free, (int64_t)free_space);
 		errx(EXIT_FAILURE, MSG_NO_CACHE_SPACE,
 			pkgin_cache, h_fsize, h_free);
 	}
 	free_space = fs_room(PREFIX);
 	if (size_pkg > 0 && free_space < (uint64_t)size_pkg) {
-		(void)humanize_number(h_free, H_BUF, (int64_t)free_space, "",
-				HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+		humanize_size(h_free, (int64_t)free_space);
 		errx(EXIT_FAILURE, MSG_NO_INSTALL_SPACE, PREFIX, h_psize,
 		    h_free);
 	}

@@ -30,8 +30,6 @@
 #include <sqlite3.h>
 #include "pkgin.h"
 
-#define H_BUF   6
-
 static sqlite3	*pdb;
 static int              repo_counter = 0;
 static uint64_t		savepoint_counter = 0;
@@ -441,11 +439,9 @@ pkgindb_stats(void)
 	 * format.
 	 */
 	lcount = sqlite3_column_int(stmt, 0);
-	humanize_number(lsize, H_BUF, sqlite3_column_int64(stmt, 1), "",
-	    HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+	humanize_size(lsize, sqlite3_column_int64(stmt, 1));
 	rcount = sqlite3_column_int(stmt, 2);
-	humanize_number(rsize, H_BUF, sqlite3_column_int64(stmt, 3), "",
-	    HN_AUTOSCALE, HN_B | HN_NOSPACE | HN_DECIMAL);
+	humanize_size(rsize, sqlite3_column_int64(stmt, 3));
 
 	sqlite3_finalize(stmt);
 
