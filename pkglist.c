@@ -168,7 +168,7 @@ free_pkglist(Plisthead **plisthead)
  * See LOCAL_PKGS_QUERY_ASC and REMOTE_PKGS_QUERY_ASC for the order of entries.
  */
 #define DUP_OR_NULL(x, y)	x = (y) ? xstrdup(y) : NULL
-#define NUM_OR_NULL(x, y)	x = (y) ? strtol(y, (char **)NULL, 10) : 0
+#define NUM_OR_NULL(x, y)	x = (y) ? strtoll(y, (char **)NULL, 10) : 0
 static int
 record_pkglist(void *param, int argc, char **argv, char **colname)
 {

@@ -86,11 +86,11 @@ pdb_rec_list(void *param, int argc, char **argv, char **colname)
 			continue;
 		}
 		if (strcmp(colname[i], "FILE_SIZE") == 0) {
-			plist->file_size = strtol(argv[i], (char **)NULL, 10);
+			plist->file_size = strtoll(argv[i], (char **)NULL, 10);
 			continue;
 		}
 		if (strcmp(colname[i], "SIZE_PKG") == 0) {
-			plist->size_pkg = strtol(argv[i], (char **)NULL, 10);
+			plist->size_pkg = strtoll(argv[i], (char **)NULL, 10);
 			continue;
 		}
 	}
