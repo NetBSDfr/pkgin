@@ -83,12 +83,6 @@
 		strcpy(dst, src);	\
 	} while (/* CONSTCOND */ 0)
 
-#define XSTRCAT(dst, src)		\
-	do {				\
-		DSTSRC_CHK(dst, src);	\
-		strcat(dst, src);	\
-	} while (/* CONSTCOND */ 0)
-
 #define XFREE(elm)		   	\
 	do {				\
 		if (elm != NULL) {	\
@@ -96,9 +90,6 @@
 			elm = NULL;	\
 		}			\
 	} while (/* CONSTCOND */ 0)
-
-#define KVPRINTF(k, v)				\
-	printf("key: %s, val: %s\n", k, v);	\
 
 #define ANSW_NO 0
 #define ANSW_YES 1
@@ -109,10 +100,8 @@
 extern uint8_t yesflag;
 extern uint8_t noflag;
 
-extern int charcount(char *, char);
 extern size_t trimcr(char *);
 extern void free_list(char **);
-extern void do_log(const char *, const char *, ...);
 extern void trunc_str(char *, char, int);
 extern char *strreplace(char *, const char *, const char *);
 extern char *getosarch(void);

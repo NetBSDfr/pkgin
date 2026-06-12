@@ -68,8 +68,6 @@
 #define DO_INST 1
 #define DONT_INST 0
 
-#define ALNUM "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-#define DELIMITER '|'
 #define ICON_WAIT "-\\|/"
 #define ICON_LEN 4
 

@@ -29,22 +29,6 @@
 
 #include "tools.h"
 
-int
-charcount(char *str, char c)
-{
-	char	*p;
-	int		count = 0;
-
-	if (str == NULL)
-		return 0;
-
-	for (p = str; *p != '\0'; p++)
-		if (*p == c)
-			count++;
-
-	return count;
-}
-
 /*
  * Remove trailing \n or \r\n, returning length of resulting string.
  */
@@ -94,24 +78,6 @@ trunc_str(char *str, char limit, int direction)
 			*p = '\0';
 		break;
 	}
-}
-
-__attribute__((__format__ (__printf__, 2, 3)))
-void
-do_log(const char *path, const char *fmt, ...)
-{
-	FILE *fp;
-	char buffer[MAXLEN];
-
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf(buffer, MAXLEN, fmt, args);
-
-	fp = fopen(path, "a");
-	fputs(buffer, fp);
-	fclose(fp);
-
-	va_end(args);
 }
 
 /* Return architecture name or NULL in case of failure */
