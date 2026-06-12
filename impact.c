@@ -242,6 +242,31 @@ update_level_if_higher(Pkglist *pkg, int level)
 }
 
 /*
+ * Drain a deps array into the impact list.  An entry may already have been
+ * seen via a different dependency path, but without its correct dependency
+ * depth, so update it if we found a deeper path so that install ordering is
+ * correct.
+ */
+static void
+add_deps_to_impact(Plistarray *impacthead, Plistarray *deps)
+{
+	Pkglist *dpkg, *epkg, *save;
+	int i;
+
+	for (i = 0; i < deps->size; i++) {
+	SLIST_FOREACH_SAFE(dpkg, &deps->head[i], next, save) {
+		SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
+		if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
+			update_level_if_higher(epkg, dpkg->level);
+			free_pkglist_entry(&dpkg);
+			continue;
+		}
+		add_remote_to_impact(impacthead, dpkg);
+	}
+	}
+}
+
+/*
  * Progress spinner.
  */
 static char *icon = __UNCONST(ICON_WAIT);
@@ -281,9 +306,9 @@ pkg_impact_upgrade(int verbose)
 {
 	Plistarray *deps, *impacthead;
 	Plisthead *supersedes;
-	Pkglist *dpkg, *epkg, *lpkg, *p, *save;
+	Pkglist *lpkg, *p;
 	size_t slot;
-	int i, l, istty;
+	int l, istty;
 
 	istty = isatty(fileno(stdout));
 
@@ -380,22 +405,9 @@ pkg_impact_upgrade(int verbose)
 
 	/*
 	 * We now have a full list of dependencies for all local packages,
-	 * process them in turn, adding to impact list.  As we may have already
-	 * seen an entry as part of looping through all packages, but without
-	 * its correct dependency depth, update it if we found a deeper path so
-	 * that install ordering is correct.
+	 * process them in turn, adding to the impact list.
 	 */
-	for (i = 0; i < deps->size; i++) {
-	SLIST_FOREACH_SAFE(dpkg, &deps->head[i], next, save) {
-		SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
-		if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
-			update_level_if_higher(epkg, dpkg->level);
-			free_pkglist_entry(&dpkg);
-			continue;
-		}
-		add_remote_to_impact(impacthead, dpkg);
-	}
-	}
+	add_deps_to_impact(impacthead, deps);
 	free_array(deps);
 
 	return impacthead;
@@ -547,7 +559,7 @@ pkg_impact_install(char **pkgargs, int *rc, int verbose)
 {
 	Plistarray *deps, *impacthead;
 	Plisthead *ipkgs;
-	Pkglist *dpkg, *epkg, *rpkg, *p, *r, *save;
+	Pkglist *dpkg, *rpkg, *p, *r;
 	char **arg, *pkgname = NULL;
 	int i, istty, rv;
 
@@ -602,17 +614,7 @@ pkg_impact_install(char **pkgargs, int *rc, int verbose)
 			update_deps_spinner(istty);
 		deps = init_array(DEPS_HASH_SIZE);
 		get_depends_recursive(p->rpkg->full, deps, DEPENDS_REMOTE);
-		for (i = 0; i < deps->size; i++) {
-		SLIST_FOREACH_SAFE(dpkg, &deps->head[i], next, save) {
-			SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
-			if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
-				update_level_if_higher(epkg, dpkg->level);
-				free_pkglist_entry(&dpkg);
-				continue;
-			}
-			add_remote_to_impact(impacthead, dpkg);
-		}
-		}
+		add_deps_to_impact(impacthead, deps);
 		free_array(deps);
 	}
 
