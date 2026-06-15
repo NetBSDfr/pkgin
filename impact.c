@@ -230,13 +230,6 @@ add_remote_to_impact(Plistarray *impacthead, Pkglist *pkg)
 	return pkg->action;
 }
 
-static void
-update_level_if_higher(Pkglist *pkg, int level)
-{
-	if (pkg->level < level)
-		pkg->level = level;
-}
-
 /*
  * Drain a deps array into the impact list.  An entry may already have been
  * seen via a different dependency path, but without its correct dependency
@@ -253,7 +246,8 @@ add_deps_to_impact(Plistarray *impacthead, Plistarray *deps)
 	SLIST_FOREACH_SAFE(dpkg, &deps->head[i], next, save) {
 		SLIST_REMOVE(&deps->head[i], dpkg, Pkglist, next);
 		if ((epkg = remote_pkg_in_impact(impacthead, dpkg->rpkg))) {
-			update_level_if_higher(epkg, dpkg->level);
+			if (epkg->level < dpkg->level)
+				epkg->level = dpkg->level;
 			free_pkglist_entry(&dpkg);
 			continue;
 		}
