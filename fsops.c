@@ -82,7 +82,6 @@ read_repos(void)
 {
 	FILE	*fp;
 	char	*tmp, *b, *repos = NULL, buf[BUFSIZ];
-	size_t	curlen = 0, repolen = 0;
 	const struct VarParam	*vp;
 
 	if ((fp = fopen(PKGIN_CONF"/"REPOS_FILE, "r")) == NULL)
@@ -121,21 +120,16 @@ read_repos(void)
 			}
 		}
 
-		curlen = trimcr(buf) + 2; /* ' ' + '\0' */
-		repolen += curlen;
+		trimcr(buf);
 
-		repos = xrealloc(repos, repolen * sizeof(char));
-
-		if (repolen > curlen) /* more than one repo */ {
-			/* add a space character */
-			curlen = strlen(repos);
-			repos[curlen] = ' ';
-			repos[curlen + 1] = '\0';
-		} else
-			/* 1st entry */
-			memset(repos, 0, curlen);
-
-		strcat(repos, buf);
+		/* Accumulate repos into a space-separated string. */
+		if (repos == NULL)
+			repos = xstrdup(buf);
+		else {
+			tmp = repos;
+			repos = xasprintf("%s %s", tmp, buf);
+			free(tmp);
+		}
 	}
 
 	fclose(fp);
