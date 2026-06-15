@@ -153,43 +153,28 @@ strreplace(char *str, const char *from, const char *to)
 int
 check_yesno(uint8_t default_answer)
 {
-	const struct Answer	{
-		const uint8_t	numval;
-		const char		charval;
-	} answer[] = { { ANSW_NO, 'n' }, { ANSW_YES, 'y' } };
-
-	uint8_t	r, reverse_answer;
-	int		c;
+	int c, r;
 
 	if (yesflag)
 		return ANSW_YES;
-	else if (noflag)
+	if (noflag)
 		return ANSW_NO;
 
-	/* reverse answer is default's answer opposite (you don't say!) */
-	reverse_answer = (default_answer == ANSW_YES) ? ANSW_NO : ANSW_YES;
-
-	if (default_answer == answer[ANSW_YES].numval)
-		printf(MSG_PROCEED_YES);
-	else
-		printf(MSG_PROCEED_NO);
+	printf(default_answer == ANSW_YES ? MSG_PROCEED_YES : MSG_PROCEED_NO);
 	fflush(stdout);
 
 	c = tolower(getchar());
-	
-	/* default answer */
-	if (c == answer[default_answer].charval || c == '\n')
-		r = answer[default_answer].numval;
-	/* reverse answer */
-	else if (c == answer[reverse_answer].charval)
-		r = answer[reverse_answer].numval;
-	/* bad key was given, default to No */
+
+	if (c == '\n')
+		r = default_answer;
+	else if (c == 'y')
+		r = ANSW_YES;
 	else
 		r = ANSW_NO;
-	
+
 	/* avoid residual char */
 	if (c != '\n')
-		while((c = getchar()) != '\n' && c != EOF)
+		while ((c = getchar()) != '\n' && c != EOF)
 			continue;
 
 	return r;
