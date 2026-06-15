@@ -63,8 +63,6 @@
 #else
 #define MAXLEN 2048
 #endif
-#define STR_FORWARD 0
-#define STR_BACKWARD 1
 
 /* Buffer size for humanize_size() output */
 #define H_BUF 6
@@ -106,7 +104,6 @@ extern uint8_t noflag;
 extern size_t trimcr(char *);
 extern void humanize_size(char *, int64_t);
 extern void free_list(char **);
-extern void trunc_str(char *, char, int);
 extern char *strreplace(char *, const char *, const char *);
 extern char *getosarch(void);
 extern char *getosrelease(void);

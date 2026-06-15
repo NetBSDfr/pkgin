@@ -74,23 +74,6 @@ free_list(char **list)
 	}
 }
 
-void
-trunc_str(char *str, char limit, int direction)
-{
-	char *p;
-
-	switch(direction) {
-	case STR_FORWARD:
-		if ((p = strchr(str, limit)) != NULL)
-			*p = '\0';
-		break;
-	case STR_BACKWARD:
-		if ((p = strrchr(str, limit)) != NULL)
-			*p = '\0';
-		break;
-	}
-}
-
 /* Return architecture name or NULL in case of failure */
 char *
 getosarch(void)

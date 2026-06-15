@@ -92,13 +92,15 @@ static char *
 is_preferred(char *fullpkg)
 {
 	Preflist *pref;
-	char pkg[BUFSIZ];
+	char pkg[BUFSIZ], *p;
 
 	if (SLIST_EMPTY(&prefhead))
 		return NULL;
 
 	strlcpy(pkg, fullpkg, sizeof(pkg));
-	trunc_str(pkg, '-', STR_BACKWARD);
+	/* FULLPKGNAME -> PKGNAME */
+	if ((p = strrchr(pkg, '-')) != NULL)
+		*p = '\0';
 
 	SLIST_FOREACH(pref, &prefhead, next) {
 		if (strcmp(pref->pkg, pkg) == 0)
