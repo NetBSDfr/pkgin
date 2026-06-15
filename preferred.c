@@ -97,7 +97,7 @@ is_preferred(char *fullpkg)
 	if (SLIST_EMPTY(&prefhead))
 		return NULL;
 
-	XSTRCPY(pkg, fullpkg);
+	strlcpy(pkg, fullpkg, sizeof(pkg));
 	trunc_str(pkg, '-', STR_BACKWARD);
 
 	SLIST_FOREACH(pref, &prefhead, next) {
