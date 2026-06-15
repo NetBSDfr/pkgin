@@ -125,29 +125,23 @@ getosrelease(void)
 char *
 strreplace(char *str, const char *from, const char *to)
 {
-	size_t	fromlen, tolen, i;
-	char	*p, *ret, buf[MAXLEN];
-
-	memset(buf, 0, sizeof(buf));
+	size_t	fromlen, tolen;
+	char	buf[MAXLEN], *dst, *m;
 
 	fromlen = strlen(from);
 	tolen = strlen(to);
+	dst = buf;
 
-	for (i = 0, p = str; *p != '\0';) {
-		if (strncmp(p, from, fromlen) == 0) {
-			strlcat(buf, to, sizeof(buf));
-			p += fromlen;
-			i += tolen;
-		} else {
-			buf[i] = *p;
-			p++;
-			i++;
-		}
+	while ((m = strstr(str, from)) != NULL) {
+		memcpy(dst, str, m - str);
+		dst += m - str;
+		memcpy(dst, to, tolen);
+		dst += tolen;
+		str = m + fromlen;
 	}
-	buf[i] = '\0';
+	strcpy(dst, str);
 
-	ret = xstrdup(buf);
-	return(ret);
+	return xstrdup(buf);
 }
 
 int
