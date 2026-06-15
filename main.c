@@ -59,7 +59,7 @@ main(int argc, char *argv[])
 	/* Default to not doing \r printouts if we don't send to a tty */
 	parsable = !isatty(fileno(stdout));
 
-	while ((ch = getopt(argc, argv, "46dhyfFPvVl:nc:t:p")) != -1) {
+	while ((ch = getopt(argc, argv, "46dhyfPvVl:nc:t:p")) != -1) {
 		switch (ch) {
 		case '4':
 			v4flag = 1;
@@ -69,9 +69,6 @@ main(int argc, char *argv[])
 			break;
 		case 'f':
 			force_update = 1;
-			break;
-		case 'F':
-			/* Previously "force reinstall", now ignored. */
 			break;
 		case 'y':
 			yesflag = 1;
