@@ -43,18 +43,6 @@ static int	warn_count = 0, err_count = 0;
 static uint8_t	said = 0;
 FILE		*err_fp = NULL;
 long int	rm_filepos = -1;
-char		pkgtools_flags[5];
-
-static char *
-verb_flag(const char *flags)
-{
-	strcpy(pkgtools_flags, flags);
-
-	if (verbosity)
-		strlcat(pkgtools_flags, "v", sizeof(pkgtools_flags));
-
-	return pkgtools_flags;
-}
 
 static int
 pkg_download(Plisthead *installhead)
@@ -324,7 +312,7 @@ do_pkg_remove(Plisthead *removehead)
 			continue;
 
 		log_tag("[%d/%d] removing %s...\n", i++, count, p->lpkg->full);
-		if (fexec(pkg_delete, verb_flag("-f"), p->lpkg->full, NULL)
+		if (fexec(pkg_delete, verbosity ? "-fv" : "-f", p->lpkg->full, NULL)
 		    != EXIT_SUCCESS)
 			err_count++;
 	}
