@@ -54,8 +54,6 @@
 #define MSG_ERR_OPEN "error opening %s"
 #define MSG_REQT_NOT_PRESENT \
 	"%s, needed by %s is not present in this system.\n"
-#define MSG_REQT_NOT_PRESENT_DEPS \
-	"warning: %s is not present in this system nor package's dependencies\n"
 #define MSG_NOTHING_TO_DO "nothing to do.\n"
 #define MSG_REQT_MISSING "the following packages have unmet requirements: %s\n\n"
 #define MSG_NO_CACHE_SPACE "%s does not have enough space for download, (%s required but only %s are available)\n"
@@ -111,7 +109,6 @@
 #define MSG_PROCESSING_REMOTE_SUMMARY "processing remote summary (%s)...\n"
 #define MSG_COULDNT_FETCH "Could not fetch %s: %s"
 #define MSG_ARCH_DONT_MATCH "\r\n/!\\ Warning /!\\ %s doesn't match your current architecture (%s)\nYou probably want to modify "PKGIN_CONF"/"REPOS_FILE".\nStill want to "
-#define MSG_COULD_NOT_GET_PKGNAME "Could not get package name from dependency: %s\n"
 
 /* impact.c */
 #define MSG_PKG_NOT_AVAIL "%s is not available in the repository\n"
