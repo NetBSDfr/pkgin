@@ -113,7 +113,6 @@ pkg_conflicts(Pkglist *pkg)
 void
 show_prov_req(const char *query, const char *pkgname)
 {
-	const char	*out[] = { "provided", "required" };
 	const char	*say;
 	char		*fullpkgname;
 	Plistnumbered	*plisthead;
@@ -122,7 +121,7 @@ show_prov_req(const char *query, const char *pkgname)
 	if ((fullpkgname = unique_pkg(pkgname, REMOTE_PKG)) == NULL)
 		errx(EXIT_FAILURE, MSG_PKG_NOT_AVAIL, pkgname);
 
-	say = (query == REMOTE_PROVIDES) ? out[0] : out[1];
+	say = (query == REMOTE_PROVIDES) ? "provided" : "required";
 
 	if ((plisthead = rec_pkglist(query, fullpkgname)) == NULL) {
 		printf(MSG_NO_PROV_REQ, say, fullpkgname);
