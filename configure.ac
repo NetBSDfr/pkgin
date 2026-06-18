@@ -2,6 +2,7 @@ AC_PREREQ([2.61])
 AC_INIT([pkgin], [26.4.0], [https://github.com/NetBSDfr/pkgin/issues])
 AC_CONFIG_SRCDIR([actions.c])
 AC_CONFIG_HEADERS([config.h])
+AC_CANONICAL_HOST
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AM_MAINTAINER_MODE([enable])
@@ -19,9 +20,16 @@ AC_PROG_INSTALL
 # that maintainer mode is explicitly disabled in the pkgsrc build to avoid
 # user failures (the bug reports are nice, the user experience is not).
 #
-AS_IF([test "x$USE_MAINTAINER_MODE" = "xyes"],
+AS_IF([test "x$USE_MAINTAINER_MODE" = "xyes"], [
 	CFLAGS="$CFLAGS -Werror -Wall -Wextra -Wunused -Wno-unused-parameter"
-)
+	AS_CASE([$host_os], [darwin*], [
+		# Order here is important
+		CFLAGS="$CFLAGS -fno-omit-frame-pointer"
+		CFLAGS="$CFLAGS -fno-sanitize-recover=all"
+		CFLAGS="$CFLAGS -fsanitize=address,integer,undefined"
+		CFLAGS="$CFLAGS -fno-sanitize=unsigned-integer-overflow"
+	])
+])
 
 #
 # --with-dbdir=/path/to/pkgin/db
