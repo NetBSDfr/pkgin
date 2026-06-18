@@ -110,7 +110,7 @@ var_get(const char *fname, const char *variable)
 		else {
 			value = xmalloc(thislen+1);
 		}
-		sprintf(value+valuelen, "%.*s", (int)thislen, p);
+		snprintf(value+valuelen, thislen+1, "%.*s", (int)thislen, p);
 		valuelen += thislen;
 	}
 	(void) fclose(fp);
@@ -153,7 +153,7 @@ var_get_memory(const char *buf, const char *variable)
 		else {
 			value = xmalloc(thislen+1);
 		}
-		sprintf(value + valuelen, "%.*s", (int)thislen, data);
+		snprintf(value + valuelen, thislen+1, "%.*s", (int)thislen, data);
 		valuelen += thislen;
 	}
 	return value;
