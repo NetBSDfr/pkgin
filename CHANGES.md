@@ -1,3 +1,17 @@
+## Version 26.11.0 (2026-11-09)
+
+ * Many internal code cleanups, optimisations, and robustness improvements.
+
+ * Officially drop support for `-F`, which has been deprecated and ignored
+   now for at least 6 years.
+
+ * Optimise performance of `pkgin update` by around 2x.
+
+ * Avoid a potential crash with missing SUPERSEDES, and handle empty COMMENT
+   fields correctly.
+
+ * Ensure `-V` correctly passes the `-v` flag to `pkg_delete`.
+
 ## Version 26.4.0 (2026-04-20)
 
  * Avoid triggering a core package upgrade if only dependencies are upgraded.
