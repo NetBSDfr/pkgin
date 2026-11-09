@@ -334,8 +334,6 @@ insert_pkg(int pkgid)
 	Insertlist	*pi;
 	int		i;
 
-	(void) sqlite3_clear_bindings(stmts.pkg);
-
 	SLIST_FOREACH(pi, &inserthead, next) {
 		for (i = 0; i < cols.num; i++) {
 			if (strcmp(pi->field, cols.name[i]) == 0) {
